@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test e2e-tests",
     "lint": "tsc --noEmit",
-    "verify": "npm-run-all lint test build test:e2e"
+    "lint:e2e": "tsc -p tsconfig.e2e.json --noEmit",
+    "verify": "npm-run-all lint lint:e2e test build test:e2e"
   },
   "keywords": [],
   "author": "",

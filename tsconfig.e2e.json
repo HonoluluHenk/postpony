@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "rootDir": "e2e-tests"
+  },
+  "include": [
+    "e2e-tests/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

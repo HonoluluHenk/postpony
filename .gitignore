@@ -29,3 +29,6 @@ node_modules/
 .env
 /playwright-report/
 /test-results/
+# generated on typscript incremental builds
+*.tsbuildinfo
+

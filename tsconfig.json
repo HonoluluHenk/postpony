@@ -16,5 +16,9 @@
     "lib": ["ESNext"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "e2e-tests"],
+  "references": [
+    {"path": "./tsconfig.e2e.json"}
+  ]
 }
+
