@@ -4,6 +4,6 @@
 <p>Streamline your sports match rescheduling with ease.</p>
 
 <div id="reschedule-options">
-  <button hx-get="/create" hx-target="#reschedule-options">Create a new ReSchedule</button>
-  <button hx-get="/edit" hx-target="#reschedule-options">Edit an existing ReSchedule</button>
+  <button hx-get="/create" hx-target="main">Create a new ReSchedule</button>
+  <button hx-get="/edit" hx-target="main">Edit an existing ReSchedule</button>
 </div>

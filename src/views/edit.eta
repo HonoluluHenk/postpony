@@ -1,4 +1,19 @@
+<% if (!it.isPartial) { %>
 <% layout('./layouts/main.eta') %>
+<% } %>
 
-<h2>Edit an Existing ReSchedule</h2>
-<p>Form will go here.</p>
+<h2>Editing ReSchedule: <%= it.session.name %></h2>
+
+<% if (it.ownerPassword) { %>
+  <div class="alert" role="alert">
+    <p>ReSchedule created successfully!</p>
+    <p>Your <strong>Owner Password</strong> is: <span class="password-display"><%= it.ownerPassword %></span></p>
+    <p>Please save this password. You will need it to edit this ReSchedule later.</p>
+  </div>
+<% } %>
+
+<p>Status: <%= it.session.status %></p>
+<p>Invite participants using this link: <a href="/join/<%= it.session.id %>">/join/<%= it.session.id %></a></p>
+
+<h3>Scheduling Engine Info</h3>
+<p>Form to enter venue data, bookings, etc. goes here.</p>
