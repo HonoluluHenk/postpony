@@ -48,3 +48,4 @@ When working on this codebase, please ensure:
 3. **Consistency**: Follow the patterns established in existing ADRs and documentation.
 4. **Localization**: Use framework-level i18n support for all UI text.
 5. **Testing**: Add or update Playwright tests for any new features or UI changes.
+6. **Tools**: Use mise-en-place to install tools. Update the lockfile for tools required by the app.
