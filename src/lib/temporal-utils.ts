@@ -32,7 +32,7 @@ export function formatLocalizedDateTime(
   options: Intl.DateTimeFormatOptions = {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }
+  },
 ): string {
   return dateTime.toLocaleString(locale, options);
 }
@@ -59,8 +59,12 @@ export function intersectRanges<T extends Temporal.PlainDateTime | Temporal.Zone
   start1: T,
   end1: T,
   start2: T,
-  end2: T
-): { start: T; end: T } | null {
+  end2: T,
+): {
+  start: T;
+  end: T
+} | null
+{
   const compare = (a: any, b: any) => {
     if (a instanceof Temporal.PlainDateTime && b instanceof Temporal.PlainDateTime) {
       return Temporal.PlainDateTime.compare(a, b);
@@ -75,7 +79,7 @@ export function intersectRanges<T extends Temporal.PlainDateTime | Temporal.Zone
   const end = (compare(end1, end2) < 0 ? end1 : end2) as T;
 
   if (compare(start, end) < 0) {
-    return { start, end };
+    return {start, end};
   }
   return null;
 }
@@ -85,7 +89,7 @@ export function intersectRanges<T extends Temporal.PlainDateTime | Temporal.Zone
  */
 export function intersectDateTimeRanges(
   range1: DateTimeRange,
-  range2: DateTimeRange
+  range2: DateTimeRange,
 ): DateTimeRange | null {
   const intersection = intersectRanges(range1.start, range1.end, range2.start, range2.end);
   return intersection as DateTimeRange | null;

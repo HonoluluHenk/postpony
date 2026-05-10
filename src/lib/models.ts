@@ -1,5 +1,3 @@
-import { Temporal } from '@js-temporal/polyfill';
-
 export type RescheduleStatus = 'Draft' | 'Proposed' | 'Voting' | 'Confirmed by Opponent' | 'Confirmed';
 
 export interface RescheduleSession {

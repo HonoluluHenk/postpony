@@ -1,10 +1,12 @@
-import { randomBytes, createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 
 /**
  * Generates a random secure password string.
  */
 export function generateRandomPassword(length: number = 12): string {
-  return randomBytes(length).toString('base64url').slice(0, length);
+  return randomBytes(length)
+    .toString('base64url')
+    .slice(0, length);
 }
 
 /**
@@ -13,12 +15,15 @@ export function generateRandomPassword(length: number = 12): string {
  * as per guidelines we use standard node crypto if needed.
  */
 export function hashPassword(password: string): string {
-  return createHash('sha256').update(password).digest('hex');
+  return createHash('sha256')
+    .update(password)
+    .digest('hex');
 }
 
 /**
  * Generates a random UUID/ID.
  */
 export function generateId(): string {
-  return randomBytes(16).toString('hex');
+  return randomBytes(16)
+    .toString('hex');
 }
