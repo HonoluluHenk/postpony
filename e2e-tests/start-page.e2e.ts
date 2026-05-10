@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test } from './fixtures';
+import { expect } from '@playwright/test';
 
 test.describe('Start Page', () => {
   test.beforeEach(async ({ page }) => {
@@ -22,8 +23,11 @@ test.describe('Start Page', () => {
     await expect(page.locator('main p')).toContainText('Streamline your sports match rescheduling with ease.');
   });
 
-  test('accessibility check', async ({ page }) => {
-    // Basic accessibility checks
+  test('should not have any automatically detectable accessibility violations', async ({ checkA11y }) => {
+    await checkA11y();
+  });
+
+  test('accessibility landmarks check', async ({ page }) => {
     // 1. Check for main landmark
     await expect(page.locator('main')).toBeVisible();
 

@@ -1,0 +1,4 @@
+<% layout('./layouts/main.eta') %>
+
+<h2>Create a New ReSchedule</h2>
+<p>Form will go here.</p>

@@ -29,10 +29,11 @@ For more details, see:
 
 1. Entity-Names are singular
 
-### Indentation
+### Indentation / Line-Breaks
 
 1. Use 2 characters for indentation by default.
 2. Use 4 characters for Markdown files (required by nested lists).
+3. For chained method calls: insert newlines before each method call except the first.
 
 ### Line Length
 

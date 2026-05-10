@@ -16,6 +16,16 @@ app.get('/', (c) => {
   return c.html(html);
 });
 
+app.get('/create', (c) => {
+  const html = eta.render('create.eta', { title: 'Create a new ReSchedule' });
+  return c.html(html);
+});
+
+app.get('/edit', (c) => {
+  const html = eta.render('edit.eta', { title: 'Edit an existing ReSchedule' });
+  return c.html(html);
+});
+
 const port = 3000;
 console.log(`Server is running on port ${port}`);
 
