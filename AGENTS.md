@@ -16,7 +16,7 @@ It also helps users to vote and eventually decide on the best rescheduling optio
 For more details, see:
 - [Project Specification](docs/specification.md)
 - [Implementation Plan](docs/implementation_plan.md)
-- [Architecture Decision Records (ADRs)](docs/ADR/)
+- [Architecture Decision Records (ADRs)](docs/ADR)
 
 ## Key Entities
 - **Reschedule**: The primary entity representing a rescheduling process.
@@ -32,12 +32,12 @@ For more details, see:
 ### Indentation
 
 1. Use 2 characters for indentation by default.
-2. Use 4 characters for markdown files (required by nested lists).
+2. Use 4 characters for Markdown files (required by nested lists).
 
 ### Line Length
 
 1. Use a maximum of 120 characters per line.
-2. In markdown files, prefer soft-breaks at sentence or word boundaries.
+2. In Markdown files, prefer soft-breaks at sentence or word boundaries.
 
 ## AI Agent Instructions
 When working on this codebase, please ensure:
@@ -47,5 +47,8 @@ When working on this codebase, please ensure:
    reviewing [ADR 0002](docs/ADR/0002-security-model-dual-password.md).
 3. **Consistency**: Follow the patterns established in existing ADRs and documentation.
 4. **Localization**: Use framework-level i18n support for all UI text.
-5. **Testing**: Add or update Playwright tests for any new features or UI changes.
+5. **Testing**:
+    * Add or update unit-tests for any new features.
+    * Add or update Playwright tests for any new features or UI changes.
+    * Place test files alongside the respective source files.
 6. **Tools**: Use mise-en-place to install tools. Update the lockfile for tools required by the app.

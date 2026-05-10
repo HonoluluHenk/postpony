@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= it.title %></title>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1><%= it.title %></h1>
+  </header>
+  <main>
+    <%~ it.body %>
+  </main>
+  <footer>
+    <p>&copy; 2024 Game Re-scheduler</p>
+  </footer>
+</body>
+</html>

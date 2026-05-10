@@ -23,4 +23,9 @@ out/
 .LSOverride
 
 
-### Linux ###
+### Temp-Files and Output ###
+node_modules/
+dist/
+.env
+/playwright-report/
+/test-results/

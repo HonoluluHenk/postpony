@@ -1,0 +1,9 @@
+<% layout('./layouts/main.eta') %>
+
+<h2>Welcome to the Game Re-scheduler</h2>
+<p>Streamline your sports match rescheduling with ease.</p>
+
+<div id="reschedule-options">
+  <button hx-get="/create" hx-target="#reschedule-options">Create a new ReSchedule</button>
+  <button hx-get="/edit" hx-target="#reschedule-options">Edit an existing ReSchedule</button>
+</div>
