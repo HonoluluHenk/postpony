@@ -25,7 +25,7 @@ out/
 
 ### Temp-Files and Output ###
 node_modules/
-dist/
+/dist/
 .env
 /playwright-report/
 /test-results/
