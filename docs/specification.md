@@ -13,7 +13,7 @@ optimal dates and times for matches.
 ### 2.1. Multi-Club & Team Management
 * **Multi-Tenancy Support**: The system supports multiple independent clubs.
 * **Club Manager Role**: Each club has one or more Club Managers responsible for high-level administration.
-* **Onboarding**: Club Managers can generate an onboarding link to invite Team Captains to their specific club.
+* **Onboarding**: Club Managers can generate an onboarding link (including a secure token - see [ADR 0011](ADR/0011-token-security-and-structure.md)) to invite Team Captains to their specific club.
 * **Venue & Team Management**: Club Managers can create and manage venue and team entities within their specific club.
 
 ### 2.2. Reschedule Management
@@ -25,7 +25,7 @@ optimal dates and times for matches.
 * **Security**: (See [ADR 0002: Security Model - Dual-Password System](ADR/0002-security-model-dual-password.md))
     * **Owner Password**: A random password generated for the owner (initiator) of the Reschedule.
     * **Invitation Password**: A password for participants (players, opponent captains/players) to access the specific
-      Reschedule instance via an invitation link. For the MVP, the invitation link itself is sufficient for access (no manual password entry required for participants).
+      Reschedule instance via an invitation link. For the MVP, the invitation link itself is sufficient for access as it includes the invitation password as a token (see [ADR 0011](ADR/0011-token-security-and-structure.md)).
 
 ### 2.2. Scheduling Engine
 The system suggests possible dates and times based on the following restrictions (Note: Initial MVP focuses primarily on **Venue Availability**):
@@ -72,8 +72,8 @@ The system suggests possible dates and times based on the following restrictions
 * **Player (Opponent)**: Provides personal availability (optional, depending on opponent captain's choice) via invitation link.
 
 ## 4. Technical Requirements (Draft)
-* **Architecture**: Server-side rendered (SSR) backend in **TypeScript** (e.g., Hono, Express) using **HTMX** for dynamic UI updates.
-* **Frontend**: Plain HTML with a templating engine (e.g., EJS) and plain CSS.
+* **Architecture**: Server-side rendered (SSR) backend in **TypeScript** using **Hono** and **HTMX** for dynamic UI updates.
+* **Frontend**: Plain HTML with the **Eta** templating engine and plain CSS.
 * **Data Store**: **Google Firestore** (Document store with streaming support).
 * **Localized UI**: Framework-level support for i18n.
 * **Security**: Password-protected access to specific rescheduling events. No permanent accounts for players. No password recovery mechanism for session owners in the initial version.

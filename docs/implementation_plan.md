@@ -12,6 +12,9 @@ We need to define the collection structure for Firestore to support multiple clu
     *   `Document ID`: `club_id`.
     *   `name`, `settings`.
     *   `adminPasswordHash`: Hashed password for the Club Manager.
+*   **OnboardingToken (Collection)**: See [ADR 0011](ADR/0011-token-security-and-structure.md).
+    *   `tokenHash`: Hashed random token.
+    *   `club_id`, `role`, `expiresAt`, `used`.
 *   **Team (Sub-collection of Club)**:
     *   `name`, `manager_id`.
 *   **Venue (Sub-collection of Club)**:
@@ -44,14 +47,15 @@ We need to define the collection structure for Firestore to support multiple clu
 *   **Holiday API**: (Out of Scope)
 *   **Hosting**: Priority on zero-cost infrastructure in Switzerland/EU.
     See [ADR 0006: Cloud Hosting & Deployment](ADR/0006-cloud-hosting.md).
-*   **CI/CD Pipeline**: Automated deployments via GitHub/GitLab integration.
+*   **CI/CD Pipeline**: Automated deployments via **GitHub Actions** (see [ADR 0010](ADR/0010-ci-cd-pipeline-selection.md)).
 
 ## 5. Security & Privacy
 *   **Data Protection**: Ensure GDPR/CCPA compliance, especially since player availability can be sensitive.
 *   **Authentication**: Defining the "Password-only" access flow vs. traditional "Email/Login" accounts.
     *   Club Manager: Secure login (password).
-    *   Reschedule Sessions: Dual-password model (Owner vs. Invitation). Invitation access is tokenized via the link.
-    (See [ADR 0002: Security Model - Dual-Password System](ADR/0002-security-model-dual-password.md))
+    *   Reschedule Sessions: Dual-password model (Owner vs. Invitation). Invitation access is tokenized via the link using the `invitationPassword` as the token.
+    *   Onboarding: Token-based onboarding for Team Captains (single-use, time-bound).
+    (See [ADR 0002](ADR/0002-security-model-dual-password.md) and [ADR 0011](ADR/0011-token-security-and-structure.md))
 
 ## 6. Design & UX
 *   **Wireframes/Mockups**: To ensure **WCAG 2.2 AA** requirements are met from the start (e.g., color contrast, focus

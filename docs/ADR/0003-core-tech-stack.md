@@ -10,11 +10,13 @@ logic with relational data patterns.
 ## Decision
 The following technology stack is proposed:
 *   **Frontend**: **HTMX** for dynamic UI components and interactions.
-*   **Backend**: Server-side rendered (SSR) application using **TypeScript** (e.g., **Hono**, **Express**, or **Fastify**).
-*   **Templating**: Plain HTML with a simple templating engine (e.g., **EJS**, **Eta**, or **Pug**).
+*   **Backend**: Server-side rendered (SSR) application using **TypeScript** (**Hono** - see [ADR 0009](0009-backend-framework-selection.md)).
+*   **Templating**: Plain HTML with a simple templating engine (**Eta** - see [ADR 0008](0008-templating-engine-selection.md)).
 *   **Styling**: Plain **CSS** (utilizing modern features like CSS Grid, Flexbox, and CSS Variables).
 *   **Data Store**: **Google Firestore** (or Firebase Realtime Database) - a document store supporting real-time streaming.
 *   **E2E Testing**: **Playwright** (see [ADR 0005](0005-e2e-testing-playwright.md)).
+*   **CI/CD**: **GitHub Actions** (see [ADR 0010](0010-ci-cd-pipeline-selection.md)).
+*   **Tokenization**: Opaque tokens for onboarding and rescheduling (see [ADR 0011](0011-token-security-and-structure.md)).
 *   **Deployment**: **Docker** for the backend; Firebase Hosting/Functions if using the Firebase ecosystem.
 
 ## Rationale

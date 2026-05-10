@@ -75,7 +75,7 @@ Reschedule session after receiving an invitation.
 
 1.  **Access Invitation Link**: The participant clicks the link provided in the invitation.
 2.  **Authentication**:
-    *   The system grants access to the participant dashboard via the tokenized **Invitation Link**.
+    *   The system grants access to the participant dashboard via the tokenized **Invitation Link** (using the `invitationPassword` as the token - see [ADR 0011](ADR/0011-token-security-and-structure.md)).
     *   (No manual password entry is required for participants in the MVP).
 3.  **Provide Availability or Propose Date**:
     *   **Data Entry Path**: The participant can provide or update their personal/team availability (venue availability, existing matches, etc.) to help the suggestion engine.
@@ -122,7 +122,7 @@ This use case describes how the system handles multiple clubs and how Club Manag
 1.  **Access Club Management**: The Club Manager logs into their club administration dashboard.
 2.  **Generate Onboarding Link**: The Club Manager selects "Invite Team Captain".
 3.  **Specify Role/Team**: The Club Manager optionally specifies which team the captain will manage.
-4.  **Send Link**: The system generates a unique onboarding link (including a temporary token or password) scoped to that `club_id`.
+4. **Send Link**: The system generates a unique onboarding link (including a single-use token - see [ADR 0011](ADR/0011-token-security-and-structure.md)) scoped to that `club_id`.
 5.  **Captain Acceptance**:
     *   The Team Captain clicks the link.
     *   The Captain sets up their access.
