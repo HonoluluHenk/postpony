@@ -32,3 +32,6 @@ node_modules/
 # generated on typscript incremental builds
 *.tsbuildinfo
 
+### Always keep files
+!.gitkeep
+

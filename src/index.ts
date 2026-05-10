@@ -1,8 +1,10 @@
 import { serve } from '@hono/node-server';
-
 import { serveStatic } from '@hono/node-server/serve-static';
 import { Eta } from 'eta';
+import * as fs from 'fs';
 import { Hono } from 'hono';
+
+import { createServer as createHttpsServer } from 'node:https';
 import * as path from 'path';
 import { generateId, generateRandomPassword, hashPassword } from './lib/crypto-utils';
 import { RescheduleSession } from './lib/models';
@@ -75,13 +77,30 @@ app.get('/edit', (c) => {
   return c.html(html);
 });
 
-const port = 3000;
-console.log(`Server is running on port ${port}`);
+const port = parseInt(process.env['PORT'] ?? '3000', 10);
+const hostname = process.env['HOSTNAME'] ?? 'game-scheduler.localhost';
 
-const server = serve({
-  fetch: app.fetch,
+const certPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.pem`);
+const keyPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.key`);
+
+if (!(fs.existsSync(certPath) && fs.existsSync(keyPath))) {
+  const missingFile = !fs.existsSync(certPath) ? certPath : keyPath;
+  throw new Error(`SSL certificate file is missing: ${missingFile}. Run 'npm run certs' to generate certificates.`);
+}
+
+const serverOptions = {
+  hostname,
   port,
-});
+  fetch: app.fetch,
+  createServer: createHttpsServer,
+  serverOptions: {
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath),
+  },
+};
+console.log(`Server is running on https://${hostname}:${port}`);
+
+const server = serve(serverOptions);
 
 process.on('SIGTERM', () => {
   server.close(() => {
