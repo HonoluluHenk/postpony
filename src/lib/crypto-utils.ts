@@ -11,7 +11,7 @@ export function generateRandomPassword(length: number = 12): string {
 
 /**
  * Hashes a password using SHA-256.
- * Note: For production, use bcrypt or argon2, but for this MVP/prototype
+ * FIXME: For production, use bcrypt or argon2, but for this MVP/prototype
  * as per guidelines we use standard node crypto if needed.
  */
 export function hashPassword(password: string): string {
