@@ -5,11 +5,11 @@ Accepted
 
 ## Context
 The application must support multiple independent clubs (multi-tenancy) from the start. Each club will have its
-own users, teams, and venues. Different strategies were considered: logical separation, schema-per-tenant,
+own user, team, and venue. Different strategies were considered: logical separation, schema-per-tenant,
 database-per-tenant, and multiple deployments.
 
 ## Decision
-We will use **Logical Separation (Column-based)** with a shared database to implement the multi-club requirement.
+We will use **Logical Separation (Column-based)** with a shared database to implement the multi-club requirement. Each club owns its specific entities (Team, Venue); sharing venues between clubs is not supported in the initial architecture.
 
 ## Rationale
 *   **Efficiency**: It is the most efficient way to handle multiple clubs within a single application instance.

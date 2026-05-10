@@ -20,11 +20,28 @@ For more details, see:
 
 ## Key Entities
 - **Reschedule**: The primary entity representing a rescheduling process.
-- **Venues**: Management of operating hours and bookings.
-- **Teams/Players**: Management of availability.
+- **Venue**: Management of operating hours and bookings.
+- **Team/Player**: Management of availability.
+
+## Code Style
+
+### Naming
+
+1. Entity-Names are singular
+
+### Indentation
+
+1. Use 2 characters for indentation by default.
+2. Use 4 characters for markdown files (required by nested lists).
+
+### Line Length
+
+1. Use a maximum of 120 characters per line.
+2. In markdown files, prefer soft-breaks at sentence or word boundaries.
 
 ## AI Agent Instructions
 When working on this codebase, please ensure:
+
 1. **Accessibility**: All UI changes must adhere to WCAG 2.2 AA. Use automated checks (e.g., Axe) during testing.
 2. **Security**: Respect the dual-password security model. Do not introduce traditional login systems without
    reviewing [ADR 0002](docs/ADR/0002-security-model-dual-password.md).

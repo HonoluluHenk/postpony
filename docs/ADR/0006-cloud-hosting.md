@@ -9,24 +9,21 @@ GDPR considerations, the hosting should be located in Switzerland or the Europea
 
 ## Decision
 We will prioritize **Zero-Cost / Open-Source** hosting strategies within the EU/Switzerland:
-1.  **Primary Strategy (Zero Cost)**: **Oracle Cloud "Always Free" Tier**.
-    *   **Region**: `eu-zurich-1` (Switzerland) or `eu-frankfurt-1` (Germany).
-    *   **Resources**: Up to 4 ARM Ampere A1 Compute instances with 24 GB of RAM (shared). This is more than sufficient for the MVP and multiple tenants.
-2.  **Management Layer**: **Coolify** (Open-source PaaS).
-    *   Self-hosted on the Oracle Cloud instance to manage Next.js deployments, PostgreSQL databases, and SSL certificates (via Let's Encrypt) without subscription fees.
-3.  **Database**: **PostgreSQL** (Dockerized via Coolify).
-    *   Runs on the same "Always Free" instance, eliminating external DBaaS costs (like Neon/Supabase overages).
-4.  **Static Frontend (Backup)**: **Vercel** (Hobby Tier).
-    *   Can be used for the frontend if specialized features like Image Optimization or global CDN are required, while keeping the API/DB on the free VPS.
+1.  **Primary Strategy (Backend)**: **Dockerized Deployment** on any low-cost or free-tier VPS.
+    *   **Management**: **Coolify** to manage the Dockerized TypeScript SSR application.
+2.  **Primary Strategy (Data Store)**: **Google Firestore**.
+    *   **Location**: `europe-west6` (Zurich) or `europe-west3` (Frankfurt).
+    *   **Free Tier**: Generous daily limits for read, write, and storage operations.
+3.  **Alternative (Serverless)**: **Firebase Hosting & Functions**.
+    *   Can be used to host the entire application (SSR backend as Cloud Functions) within the Firebase ecosystem, benefiting from integrated authentication and streaming.
 
 ## Rationale
-*   **True Zero Cost**: Oracle Cloud's "Always Free" tier is one of the most generous in the industry, offering substantial resources for free indefinitely, specifically in Swiss and EU regions.
-*   **Sovereignty**: Self-hosting via Coolify on a Swiss-based VPS (Zurich) ensures full data residency and control, minimizing dependence on US-based PaaS providers.
-*   **No "Scale-to-Zero"**: Unlike free tiers on Neon or Render, a dedicated free VPS ensures the database is always available, avoiding cold starts.
-*   **Scalability**: If the application exceeds the free tier, migrating to a low-cost VPS provider like **Hetzner** (€4-10/mo) or **Infomaniak** is straightforward.
+*   **True Zero Cost**: Google Firestore's free tier is generous for starting projects.
+*   **Sovereignty**: Using European regions (`europe-west3`, `europe-west6`) ensures data residency.
+*   **Flexibility**: Dockerized deployment via Coolify allows moving between providers (e.g., Hetzner, Infomaniak, Exoscale) easily if free tiers are insufficient or if specific regional hosting is required.
+*   **No "Scale-to-Zero"**: Unlike some serverless platforms, a managed VPS ensures the application is always responsive, avoiding cold starts.
 
 ## Consequences
-*   **Infrastructure Management**: Moving from PaaS (Vercel/Neon) to self-hosted VPS (Coolify/Oracle) requires more operational knowledge (e.g., setting up the VPS, backups, and security groups).
-*   **Availability Risk**: While "Always Free," Oracle Cloud instances are subject to availability. If a region's free capacity is full, deployment might be delayed.
+*   **Infrastructure Management**: Moving from PaaS (Vercel/Neon) to self-hosted VPS (Coolify) requires more operational knowledge (e.g., setting up the VPS, backups, and security groups).
 *   **Backups**: Responsibility for database backups shifts to the self-hosted setup (Coolify supports automated S3-compatible backups).
 *   **Data Residency**: Using the `eu-zurich-1` region provides strict Swiss data residency, while `eu-frankfurt-1` provides EU residency.

@@ -14,10 +14,10 @@ optimal dates and times for matches.
 * **Multi-Tenancy Support**: The system supports multiple independent clubs.
 * **Club Manager Role**: Each club has one or more Club Managers responsible for high-level administration.
 * **Onboarding**: Club Managers can generate an onboarding link to invite Team Captains to their specific club.
-* **Venue & Team Management**: Club Managers can create and manage venues and teams within their specific club.
+* **Venue & Team Management**: Club Managers can create and manage venue and team entities within their specific club.
 
-### 2.2. Rescheduling Management
-* **Reschedule Object**: Each rescheduling process is encapsulated in a top-level "Reschedule"
+### 2.2. Reschedule Management
+* **Reschedule Entity**: Each rescheduling process is encapsulated in a top-level "Reschedule"
   entity.
 * **Initialization Workflow**: See
   [Use Cases: Rescheduling Initialization](use_cases.md#1-rescheduling-initialization-main-use-case)
@@ -25,25 +25,25 @@ optimal dates and times for matches.
 * **Security**: (See [ADR 0002: Security Model - Dual-Password System](ADR/0002-security-model-dual-password.md))
     * **Owner Password**: A random password generated for the owner (initiator) of the Reschedule.
     * **Invitation Password**: A password for participants (players, opponent captains/players) to access the specific
-      Reschedule instance via an invitation link.
+      Reschedule instance via an invitation link. For the MVP, the invitation link itself is sufficient for access (no manual password entry required for participants).
 
 ### 2.2. Scheduling Engine
-The system suggests possible dates and times based on the following restrictions:
-* **Venue Management**: Each club can manage multiple venues. Club Managers (and Team Captains, if authorized) can manually enter and manage venue data.
+The system suggests possible dates and times based on the following restrictions (Note: Initial MVP focuses primarily on **Venue Availability**):
+* **Venue Management**: Each club can manage multiple venues. Venues are strictly owned by a single club. Club Managers (and Team Captains, if authorized) can manually enter and manage venue data.
 * **Venue General Availability**: Standard operating hours of the home venue, defined by date and time ranges.
-* **Venue Bookings**: Specific dates and times when a venue is already occupied.
+* **Venue Booking**: Specific dates and times when a venue is already occupied.
 * **Overlapping Matches**: By default, unlimited overlapping matches are allowed at a venue. Club Managers or Team Captains can optionally specify a maximum number of allowed overlaps for a venue or a specific rescheduling event.
-* **Opponent Schedule**: Known constraints or games already scheduled for the opposing team. If the opponent team's data (e.g., venue availability, existing matches) is already present in the system, it will be automatically integrated.
-* **Holidays**: Public or school holidays that might affect participation.
+* **Opponent Schedule**: (Future Feature) Known constraints or games already scheduled for the opposing team. If the opponent team's data (e.g., venue availability, existing matches) is already present in the system, it will be automatically integrated.
+* **Holidays**: (Out of Scope) Public or school holidays that might affect participation.
 * **Team Management**: The owner can add and manage players for their own team.
-* **Player Availability**:
+* **Player Availability**: (Future Feature)
     * Home team players must provide their availability.
     * Captains can enter availability on behalf of players.
     * Opposing team captains and players can provide availability for away games.
-    * **Opponent Proposals**: For away games, the opposing team captain can choose to either provide full availability constraints (to use the suggestion engine) or directly propose specific dates and times. If they provide constraints, they have full access to the automated suggestion engine to identify suitable slots.
+    * **Opponent Proposal**: For away games, the opposing team captain can choose to either provide full availability constraints (to use the suggestion engine) or directly propose specific dates and times. If they provide constraints, they have full access to the automated suggestion engine to identify suitable slots.
 
 ### 2.3. Voting & Decision Making
-* **Date & Time Proposals**: Based on the suggestions, the owner or participants can propose one or more
+* **Date & Time Proposal**: Based on the suggestions, the owner or participants can propose one or more
   specific dates and times.
 * **Voting**: Participants (players, opponent captains) can vote for their preferred date(s) and time(s) from
   the proposed options.
@@ -60,7 +60,7 @@ The system suggests possible dates and times based on the following restrictions
   or view suggestions.
 
 ### 2.5. Accessibility & Localization
-* **Full Localization**: Support for multiple languages and regional formats (dates, times).
+* **Localization**: Support for **German** and **English** languages and regional formats (dates, times).
 * **Accessibility**: The system must adhere to **WCAG 2.2 AA** standards to ensure it is usable by people with various
   needs. (See [ADR 0004: Accessibility Standards](ADR/0004-accessibility-standards.md))
 
@@ -72,8 +72,10 @@ The system suggests possible dates and times based on the following restrictions
 * **Player (Opponent)**: Provides personal availability (optional, depending on opponent captain's choice) via invitation link.
 
 ## 4. Technical Requirements (Draft)
-* **Web-based Application**: Accessible via browser for both desktop and mobile.
+* **Architecture**: Server-side rendered (SSR) backend in **TypeScript** (e.g., Hono, Express) using **HTMX** for dynamic UI updates.
+* **Frontend**: Plain HTML with a templating engine (e.g., EJS) and plain CSS.
+* **Data Store**: **Google Firestore** (Document store with streaming support).
 * **Localized UI**: Framework-level support for i18n.
-* **Security**: Password-protected access to specific rescheduling events. No permanent accounts for players.
+* **Security**: Password-protected access to specific rescheduling events. No permanent accounts for players. No password recovery mechanism for session owners in the initial version.
 
 ---

@@ -6,46 +6,43 @@ required.
 ## 1. Technical Stack (Proposed)
 See [ADR 0003: Core Tech Stack](ADR/0003-core-tech-stack.md) for details.
 
-## 2. Data Models
-We need to define the schema to support multiple clubs (multi-tenancy):
-*   **Clubs**: The top-level tenant entity.
-    *   `club_id` (Primary Key).
+## 2. Data Models (Document Store)
+We need to define the collection structure for Firestore to support multiple clubs:
+*   **Club (Collection)**: The top-level tenant entity.
+    *   `Document ID`: `club_id`.
     *   `name`, `settings`.
-    *   **Club Admin Password**: Hashed password for the Club Manager.
-*   **Teams**: Linked to a Club (`club_id`). Managed by Club Managers and Team Captains.
-*   **Users/Players**: Profiles for Club Managers (permanent accounts) or names linked to teams for players.
-    *   **Players**: No permanent accounts. Access via invitation link. Data includes `name` and `availability`.
-    *   `club_id` (Mandatory for isolation).
-    *   Roles: Club Manager, Team Captain, Player.
-*   **Venues**: Linked to a Club (`club_id`).
-    *   Name, Location.
-    *   **Availability**: (JSONB) Stores general operating hours using date/time ranges.
-    *   **Bookings**: (JSONB or separate table) Stores specific blackout date/time ranges.
-    *   **Max Overlaps**: Integer (optional, defaults to null/unlimited).
-*   **Reschedule Sessions**:
-    *   Unique ID (Slug/UUID).
-    *   Owner Password (hashed).
-    *   Invitation Password (hashed).
-    *   Current status (Draft, Proposed, Voting, Confirmed by Opponent, Confirmed).
-    *   **Max Overlaps**: Integer (optional, overrides venue default).
-    *   Session Metadata: (JSONB) For flexible session-specific settings.
-*   **Proposed Dates & Times**: Specific dates and times selected by the owner or opponent captain for voting.
-*   **Votes**: Records of participant votes (User/Participant ID, Proposed Date/Time ID, Vote Type).
-*   **Availability Records**: Time ranges provided by players or captains. Can use JSONB for complex recurring patterns.
+    *   `adminPasswordHash`: Hashed password for the Club Manager.
+*   **Team (Sub-collection of Club)**:
+    *   `name`, `manager_id`.
+*   **Venue (Sub-collection of Club)**:
+    *   `name`, `location`.
+    *   `availability`: Array/Map of date/time ranges.
+    *   `bookings`: Array/Map of specific blackout date/time ranges.
+    *   `maxOverlaps`: Number (optional).
+*   **RescheduleSession (Collection)**:
+    *   `Document ID`: Unique slug/UUID.
+    *   `club_id`: Reference for multi-tenant isolation.
+    *   `ownerPasswordHash`, `invitationPasswordHash`.
+    *   `status`: (Draft, Proposed, Voting, Confirmed by Opponent, Confirmed).
+    *   `maxOverlaps`: Number (optional).
+    *   `metadata`: Map for flexible settings.
+    *   **ProposedDate (Sub-collection of RescheduleSession)**:
+        *   `dateTimeRange`, `proposerId`.
+    *   **Vote (Sub-collection of ProposedDate)**:
+        *   `participantId`, `type`.
+*   **AvailabilityRecord (Sub-collection of RescheduleSession)**:
+    *   `participantId`, `ranges`.
 
 ## 3. Core Algorithms
-*   **Suggestion Engine**: A logic component that performs "intersection" operations on date and time ranges:
-    *   `Venue Open Hours` MINUS `Existing Bookings` (considering `Max Overlaps`).
-    *   INTERSECT `Opponent Team Availability` (Automatically fetched if opponent exists in the system).
-    *   INTERSECT `Our Team Player Availability` (considering a minimum player threshold).
-    *   MINUS `Holidays`.
+*   **Suggestion Engine (MVP)**: A TypeScript-based logic component that performs "intersection" operations on date and time ranges fetched from Firestore:
+    *   Logic (Initial): `Venue Open Hours` MINUS `Existing Bookings` MINUS `Overlapping Match Limits`.
+    *   Future Iterations: INTERSECT `Opponent Availability` INTERSECT `Home Team Availability`.
+    *   Implementation: Since Firestore does not support complex joins, the engine will fetch relevant documents and perform the intersection in-memory on the backend.
 
 ## 4. Integration & Infrastructure
-*   **Email/WhatsApp Gateway**: While the system generates text, we need to decide if the *app* sends it (requiring
-    Twilio, SendGrid, etc.) or if the *user* copies it to their own client.
-*   **Holiday API**: Integration with a public holiday API (e.g., Abstract API or Nager.Date) to automate holiday
-    detection based on region.
-*   **Hosting**: Priority on zero-cost infrastructure in Switzerland/EU (e.g., Oracle Cloud Always Free with Coolify).
+*   **Communication**: The system generates pre-formatted text (WhatsApp/Email templates) for the user to copy-paste into their own clients. Automated sending (Twilio/SendGrid) is considered out of scope for the MVP.
+*   **Holiday API**: (Out of Scope)
+*   **Hosting**: Priority on zero-cost infrastructure in Switzerland/EU.
     See [ADR 0006: Cloud Hosting & Deployment](ADR/0006-cloud-hosting.md).
 *   **CI/CD Pipeline**: Automated deployments via GitHub/GitLab integration.
 
@@ -53,21 +50,21 @@ We need to define the schema to support multiple clubs (multi-tenancy):
 *   **Data Protection**: Ensure GDPR/CCPA compliance, especially since player availability can be sensitive.
 *   **Authentication**: Defining the "Password-only" access flow vs. traditional "Email/Login" accounts.
     *   Club Manager: Secure login (password).
-    *   Reschedule Sessions: Dual-password model (Owner vs. Invitation).
+    *   Reschedule Sessions: Dual-password model (Owner vs. Invitation). Invitation access is tokenized via the link.
     (See [ADR 0002: Security Model - Dual-Password System](ADR/0002-security-model-dual-password.md))
 
 ## 6. Design & UX
 *   **Wireframes/Mockups**: To ensure **WCAG 2.2 AA** requirements are met from the start (e.g., color contrast, focus
-    indicators, keyboard navigation).
+    indicators, keyboard navigation). We will use modern CSS (Grid, Flexbox, Variables) to implement a responsive and accessible design without heavy frameworks.
 *   **Accessibility Testing**: Plan for automated and manual accessibility audits (e.g., using Axe, Lighthouse, and
     screen readers).
 *   **E2E Testing**: Use **Playwright** for cross-browser functional testing and automated accessibility checks
     (see [ADR 0005](ADR/0005-e2e-testing-playwright.md)).
-*   **Localization Strategy**: Determining which languages to support initially.
+*   **Localization Strategy**: Initial support for **German** and **English**.
 
 ---
 
 ### Immediate Next Steps
 1.  **Select the Tech Stack**: (See [ADR 0003](ADR/0003-core-tech-stack.md))
 2.  **Define MVP Scope**: Which of the "suggestions" features are most critical for the first version?
-3.  **Confirm Infrastructure**: Oracle Cloud "Always Free" (Zurich or Frankfurt) with Coolify.
+3.  **Confirm Infrastructure**: Dockerized deployment via Coolify in Switzerland or EU.
