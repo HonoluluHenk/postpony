@@ -1,7 +1,7 @@
 // app-handler.spec.ts
 import { describe, expect, it } from 'vitest';
 import { App } from './app';
-import { AppFailure } from './app-failure';
+import { AppError } from './lib/errors';
 
 const mockContext = {
   req: {
@@ -36,12 +36,12 @@ describe('App.requireParam', () => {
       .toBe('number');
   });
 
-  it('should throw an AppFailure if the parameter is missing', () => {
+  it('should throw a AppError if the parameter is missing', () => {
     mockContext.req.param = (name: string) => undefined;
     const app = createApp(mockContext);
 
     expect(() => app.requireParam('missingParam'))
-      .toThrowError(new AppFailure('Missing required parameter: missingParam'));
+      .toThrowError(new AppError('Missing required parameter: missingParam'));
   });
 
 });

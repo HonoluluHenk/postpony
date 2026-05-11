@@ -2,11 +2,13 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import * as fs from 'fs';
 import { type Context, Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
 
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { createServer as createHttpsServer } from 'node:https';
 import * as path from 'path';
 import { App } from './app';
-import { AppFailure } from './app-failure';
+import { AppError } from './lib/errors';
 import { handleCreateGet } from './routes/create/get';
 import { handleCreatePost } from './routes/create/post';
 import { handleEditGet } from './routes/edit/id/get';
@@ -30,7 +32,30 @@ app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from 
 
 app.onError((err, c) => {
   console.error('Error occurred:', err);
-  return c.text('Internal Server Error', 500);
+
+  let status: ContentfulStatusCode;
+  let message: string;
+
+  if (err instanceof HTTPException) {
+    status = err.status;
+    message = err.message;
+  } else if (err instanceof AppError) {
+    status = err.status;
+    message = err.message;
+  } else if (err instanceof Error) {
+    status = 500;
+    message = err.message;
+  } else {
+    status = 500;
+    message = 'Internal Server Error';
+  }
+
+  if (c.req.header('HX-Request')) {
+    return c.html(`<div class="alert alert-error" role="alert">${message}</div>`, {status});
+  }
+
+  const appInstance = new App(false, c);
+  return c.html(appInstance.render('error.eta', {title: 'Error', message}), {status});
 });
 
 const port = parseInt(process.env['APP_PORT'] ?? '3000', 10);
@@ -73,16 +98,9 @@ process.on('SIGINT', () => {
 
 function handleAppRequest(handler: (app: App) => Response | Promise<Response>) {
   return async (c: Context) => {
-    try {
-      return await handler(new App(
-        !!c.req.header('HX-Request'),
-        c,
-      ));
-    } catch (e) {
-      if (e instanceof AppFailure) {
-        return c.text(e.message, 400);
-      }
-      throw e;
-    }
+    return await handler(new App(
+      !!c.req.header('HX-Request'),
+      c,
+    ));
   };
 }

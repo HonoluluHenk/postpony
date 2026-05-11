@@ -58,8 +58,11 @@ test.describe('Reschedule Creation', () => {
     // Submit and check Edit page
     await page.getByLabel('ReSchedule Name')
       .fill('A11y Test');
-    await page.getByRole('button', {name: 'Create ReSchedule'})
-      .click();
+    await Promise.all([
+      page.waitForURL(/\/edit\/.+/),
+      page.getByRole('button', {name: 'Create ReSchedule'})
+        .click(),
+    ]);
     await checkA11y();
   });
 });

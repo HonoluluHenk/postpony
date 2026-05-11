@@ -1,7 +1,8 @@
 import { Eta } from 'eta';
 import type { Context } from 'hono';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import path from 'node:path';
-import { AppFailure } from './app-failure';
+import { AppError, InternalError, StateError, ValidationError } from './lib/errors';
 import type { RescheduleSession } from './lib/models';
 
 export const eta = new Eta({views: path.join(process.cwd(), 'src/views')});
@@ -28,7 +29,6 @@ export class App {
     const value = this.c.req.param(name);
     if (value === undefined) {
       this.failure(`Missing required parameter: ${name}`);
-
     }
 
     if (!transform) {
@@ -38,7 +38,19 @@ export class App {
     return transform(value);
   }
 
-  failure(message: string): never {
-    throw new AppFailure(message);
+  validation(message: string): never {
+    throw new ValidationError(message);
+  }
+
+  notFound(message: string = 'Not Found'): never {
+    throw new StateError(message, 404);
+  }
+
+  internal(message: string = 'Internal Server Error'): never {
+    throw new InternalError(message);
+  }
+
+  failure(message: string, status: ContentfulStatusCode = 400): never {
+    throw new AppError(message, status);
   }
 }

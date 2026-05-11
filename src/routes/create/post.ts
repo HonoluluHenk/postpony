@@ -7,7 +7,7 @@ export const handleCreatePost = async (app: App) => {
   const name = body['name'] as string;
 
   if (!name) {
-    return app.c.text('Name is required', 400);
+    app.validation('Name is required');
   }
 
   const id = generateId();

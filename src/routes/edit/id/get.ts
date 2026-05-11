@@ -4,7 +4,7 @@ export const handleEditGet = (app: App) => {
   const id = app.requireParam('id');
   const session = app.sessions[id];
   if (!session) {
-    return app.c.text('Session not found', 404);
+    app.notFound('Session not found');
   }
 
   const ownerPassword = app.c.req.query('ownerPassword') || null;

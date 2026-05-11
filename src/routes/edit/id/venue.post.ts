@@ -4,7 +4,7 @@ export const handleEditVenuePost = async (app: App) => {
   const id = app.requireParam('id');
   const session = app.sessions[id];
   if (!session) {
-    return app.c.text('Session not found', 404);
+    app.notFound('Session not found');
   }
 
   const body = await app.c.req.parseBody();
