@@ -27,6 +27,18 @@ test.describe('Start Page', () => {
       .toContainText('Streamline your sports match rescheduling with ease.');
   });
 
+  test('should have a favicon', async ({page}) => {
+    const favicon = page.locator('link[rel="icon"]');
+    await expect(favicon)
+      .toHaveAttribute('href', '/favicon.ico');
+
+    const response = await page.request.get('/favicon.ico');
+    expect(response.status())
+      .toBe(200);
+    expect(response.headers()['content-type'])
+      .toContain('image/x-icon');
+  });
+
   test('should not have any automatically detectable accessibility violations', async ({checkA11y}) => {
     await checkA11y();
   });

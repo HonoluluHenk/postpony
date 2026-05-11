@@ -15,6 +15,7 @@ const eta = new Eta({views: path.join(process.cwd(), 'src/views')});
 // In-memory store for MVP (will be replaced by Firestore)
 const sessions: Record<string, RescheduleSession> = {};
 
+app.use('/favicon.svg', serveStatic({path: './src/public/favicon.svg'}));
 app.use('/css/*', serveStatic({root: './src/public'}));
 app.use('/js/*', serveStatic({root: './src/public'}));
 
