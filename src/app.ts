@@ -4,15 +4,35 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import path from 'node:path';
 import { AppError, InternalError, StateError } from './lib/errors';
 import type { RescheduleSession } from './lib/models';
+import { defaultLocale, getTranslation, type Locale, type TranslationKeys } from './locales';
 
 export const eta = new Eta({views: path.join(process.cwd(), 'src/views')});
 
 export class App {
+  readonly locale: Locale;
+
   constructor(
     readonly isPartial: boolean,
     readonly c: Context,
   )
   {
+    this.locale = this.detectLocale();
+  }
+
+  private detectLocale(): Locale {
+    const acceptLanguage = this.c.req.header('Accept-Language');
+    if (!acceptLanguage) {
+      return defaultLocale;
+    }
+
+    if (acceptLanguage.startsWith('de')) {
+      return 'de';
+    }
+    return defaultLocale;
+  }
+
+  t(key: TranslationKeys, params: Record<string, string> = {}): string {
+    return getTranslation(this.locale, key, params);
   }
 
   private static readonly sessions: Record<string, RescheduleSession> = {};
@@ -20,7 +40,11 @@ export class App {
   readonly sessions: Record<string, RescheduleSession> = App.sessions;
 
   render(template: string, data: object): string {
-    return eta.render(template, data);
+    return eta.render(template, {
+      ...data,
+      t: (key: TranslationKeys, params: Record<string, string>) => this.t(key, params),
+      locale: this.locale,
+    });
   }
 
   requireParam(name: string): string;
@@ -28,7 +52,7 @@ export class App {
   requireParam<P>(name: string, transform?: (value: string) => P): P {
     const value = this.c.req.param(name);
     if (value === undefined) {
-      this.failure(`Missing required parameter: ${name}`);
+      this.failure(this.t('missing_param', {name}));
     }
 
     if (!transform) {
@@ -39,11 +63,11 @@ export class App {
   }
 
 
-  notFound(message: string = 'Not Found'): never {
+  notFound(message: string = this.t('not_found')): never {
     throw new StateError(message, 404);
   }
 
-  internal(message: string = 'Internal Server Error'): never {
+  internal(message: string = this.t('internal_server_error')): never {
     throw new InternalError(message);
   }
 

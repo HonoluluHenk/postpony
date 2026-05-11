@@ -2,37 +2,37 @@
 <% layout('./layouts/main.eta') %>
 <% } %>
 
-<h2>Editing ReSchedule: <%= it.session.name %></h2>
+<h2><%~ it.t('edit_reschedule_title', {name: it.session.name}) %></h2>
 
 <% if (it.ownerPassword) { %>
   <div class="alert" role="alert">
-    <p>ReSchedule created successfully!</p>
-    <p>Your <strong>Owner Password</strong> is: <span class="password-display"><%= it.ownerPassword %></span></p>
-    <p>Please save this password. You will need it to edit this ReSchedule later.</p>
+    <p><%= it.t('reschedule_created_success') %></p>
+    <p><%~ it.t('owner_password_label') %> <span class="password-display"><%= it.ownerPassword %></span></p>
+    <p><%= it.t('save_password_warning') %></p>
   </div>
 <% } %>
 
-<p>Status: <%= it.session.status %></p>
-<p>Invite participants using this link: <a href="/join/<%= it.session.id %>">/join/<%= it.session.id %></a></p>
+<p><%= it.t('status_label', {status: it.session.status}) %></p>
+<p><%= it.t('invite_link_label') %> <a href="/join/<%= it.session.id %>">/join/<%= it.session.id %></a></p>
 
-<h3>Scheduling Engine Info</h3>
+<h3><%= it.t('scheduling_engine_info') %></h3>
 
 <div id="scheduling-info">
   <section id="venue-management">
-    <h4>Venue Management</h4>
+    <h4><%= it.t('venue_management') %></h4>
     <form hx-post="/edit/<%= it.session.id %>/venue" hx-target="#venue-management" hx-swap="outerHTML">
       <div class="form-group">
-        <label for="maxOverlaps">Maximum Overlapping Matches (for this session)</label>
+        <label for="maxOverlaps"><%= it.t('max_overlaps') %></label>
         <input type="number" id="maxOverlaps" name="maxOverlaps" value="<%= it.session.maxOverlaps || '' %>" min="0">
       </div>
-      <button type="submit">Update Venue Settings</button>
+      <button type="submit"><%= it.t('update_venue_settings') %></button>
     </form>
   </section>
 
   <hr>
 
   <section id="team-management">
-    <h4>Home Team Players</h4>
+    <h4><%= it.t('home_team_players') %></h4>
     <ul id="player-list">
       <% it.session.players.forEach(player => { %>
         <li><%= player.name %></li>
@@ -40,10 +40,10 @@
     </ul>
     <form hx-post="/edit/<%= it.session.id %>/players" hx-target="#team-management" hx-swap="outerHTML">
       <div class="form-group">
-        <label for="playerName">New Player Name</label>
+        <label for="playerName"><%= it.t('new_player_name') %></label>
         <input type="text" id="playerName" name="playerName" required>
       </div>
-      <button type="submit">Add Player</button>
+      <button type="submit"><%= it.t('add_player') %></button>
     </form>
   </section>
 </div>

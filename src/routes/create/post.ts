@@ -4,12 +4,11 @@ import { generateId, generateRandomPassword, hashPassword } from '../../lib/cryp
 import { mapValidationToErrors } from '../../lib/map-validation-to-errors';
 import { RescheduleSession } from '../../lib/models';
 
-const CreateSchema = v.object({
-  name: v.pipe(v.string(), v.minLength(2, 'Name is required')),
-});
-
-
 export const handleCreatePost = async (app: App) => {
+  const CreateSchema = v.object({
+    name: v.pipe(v.string(), v.minLength(2, app.t('name_required'))),
+  });
+
   const values = await app.c.req.parseBody();
   const validation = v.safeParse(CreateSchema, values);
 
@@ -17,7 +16,7 @@ export const handleCreatePost = async (app: App) => {
     const errors = mapValidationToErrors(validation);
 
     const html = app.render('create.eta', {
-      title: 'Create a new ReSchedule',
+      title: app.t('create_reschedule_title'),
       isPartial: app.isPartial,
       errors,
       values,

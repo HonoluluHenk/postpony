@@ -7,30 +7,32 @@ test.describe('Reschedule Creation', () => {
 
   test('should create a new Reschedule session', async ({page}) => {
     // 1. Click on "Create a new ReSchedule"
-    await page.getByRole('button', {name: 'Create a new ReSchedule'})
+    await page.getByRole('button', {name: /Create a new ReSchedule/i})
       .click();
 
     // 2. Check if we are on the create form (HTMX swap happened)
     await expect(page.locator('h2'))
-      .toContainText('Create a New ReSchedule');
+      .toContainText(/Create a New ReSchedule/i);
 
     // 3. Fill in the name and submit
     const sessionName = 'Test Tournament 2024';
-    await page.getByLabel('ReSchedule Name')
+    await page.getByLabel(/ReSchedule Name/i)
       .fill(sessionName);
-    await page.getByRole('button', {name: 'Create ReSchedule'})
+    await page.getByRole('button', {name: /Create ReSchedule/i})
       .click();
 
     // 4. Check if we moved to the edit screen
     await expect(page.locator('h2'))
-      .toContainText(`Editing ReSchedule: ${sessionName}`);
+      .toContainText(/Editing ReSchedule/i);
+    await expect(page.locator('h2'))
+      .toContainText(sessionName);
 
     // 5. Verify the owner password is displayed
     const alert = page.locator('.alert');
     await expect(alert)
       .toBeVisible();
     await expect(alert)
-      .toContainText('Your Owner Password is:');
+      .toContainText(/Your Owner Password is/i);
 
     const password = await page.locator('.password-display')
       .textContent();
@@ -41,9 +43,11 @@ test.describe('Reschedule Creation', () => {
 
     // 6. Verify status and invite link
     await expect(page.locator('main'))
-      .toContainText('Status: Draft');
+      .toContainText(/Status:/i);
     await expect(page.locator('main'))
-      .toContainText('Invite participants using this link:');
+      .toContainText('Draft');
+    await expect(page.locator('main'))
+      .toContainText(/Invite participants using this link/i);
   });
 
   test('should pass accessibility on create and edit pages', async ({page, checkA11y}) => {
@@ -51,16 +55,16 @@ test.describe('Reschedule Creation', () => {
     await checkA11y();
 
     // Create page
-    await page.getByRole('button', {name: 'Create a new ReSchedule'})
+    await page.getByRole('button', {name: /Create a new ReSchedule/i})
       .click();
     await checkA11y();
 
     // Submit and check Edit page
-    await page.getByLabel('ReSchedule Name')
+    await page.getByLabel(/ReSchedule Name/i)
       .fill('A11y Test');
     await Promise.all([
       page.waitForURL(/\/edit\/.+/),
-      page.getByRole('button', {name: 'Create ReSchedule'})
+      page.getByRole('button', {name: /Create ReSchedule/i})
         .click(),
     ]);
     await checkA11y();

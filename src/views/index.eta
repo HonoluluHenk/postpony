@@ -1,9 +1,9 @@
 <% layout('./layouts/main.eta') %>
 
-<h2>Welcome to the Game Re-scheduler</h2>
-<p>Streamline your sports match rescheduling with ease.</p>
+<h2><%= it.t('welcome') %></h2>
+<p><%= it.t('tagline') %></p>
 
 <div id="reschedule-options">
-  <button hx-get="/create" hx-target="main">Create a new ReSchedule</button>
-  <button hx-get="/edit" hx-target="main">Edit an existing ReSchedule</button>
+  <button hx-get="/create" hx-target="main"><%= it.t('create_new') %></button>
+  <button hx-get="/edit" hx-target="main"><%= it.t('edit_existing') %></button>
 </div>

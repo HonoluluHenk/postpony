@@ -2,11 +2,11 @@
 <% layout('./layouts/main.eta') %>
 <% } %>
 
-<h2>Create a New ReSchedule</h2>
+<h2><%= it.t('create_reschedule_title') %></h2>
 
 <form hx-post="/create" hx-target="main">
   <div class="form-group">
-    <label for="reschedule-name">ReSchedule Name</label>
+    <label for="reschedule-name"><%= it.t('reschedule_name') %></label>
     <input type="text" id="reschedule-name" name="name" required aria-required="true"
            value="<%= it.values?.name || '' %>"
            <% if (it.errors?.name) { %> aria-invalid="true" aria-describedby="name-error" <% } %>>
@@ -14,5 +14,5 @@
       <span id="name-error" class="error-message" role="alert"><%= it.errors.name %></span>
     <% } %>
   </div>
-  <button type="submit">Create ReSchedule</button>
+  <button type="submit"><%= it.t('create_button') %></button>
 </form>
