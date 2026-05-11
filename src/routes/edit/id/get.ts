@@ -7,11 +7,12 @@ export const handleEditGet = (app: App) => {
     return app.c.text('Session not found', 404);
   }
 
+  const ownerPassword = app.c.req.query('ownerPassword') || null;
   const isPartial = app.isPartial;
   const html = app.render('edit.eta', {
     title: `Editing ${session.name}`,
     session,
-    ownerPassword: null,
+    ownerPassword,
     isPartial,
   });
   return app.c.html(html);

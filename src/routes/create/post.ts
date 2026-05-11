@@ -27,13 +27,11 @@ export const handleCreatePost = async (app: App) => {
 
   app.sessions[id] = session;
 
-  const data = {
-    title: `Editing ${name}`,
-    session,
-    ownerPassword,
-    isPartial: app.isPartial,
-  };
+  const redirectUrl = `/edit/${id}?ownerPassword=${ownerPassword}`;
+  if (app.isPartial) {
+    app.c.header('HX-Redirect', redirectUrl);
+    return app.c.text('', 200);
+  }
 
-  const html = app.render('edit.eta', data);
-  return app.c.html(html);
+  return app.c.redirect(redirectUrl);
 };
