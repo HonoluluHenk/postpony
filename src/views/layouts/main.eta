@@ -9,6 +9,14 @@
   <script src="https://unpkg.com/htmx.org@1.9.12"
   integrity="sha512-JvpjarJlOl4sW26MnEb3IdSAcGdeTeOaAlu2gUZtfFrRgnChdzELOZKl0mN6ZvI0X+xiX5UMvxjK2Rx2z/fliw=="
   crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener('htmx:beforeOnLoad', function (evt) {
+        if (evt.detail.xhr.status === 400) {
+            evt.detail.shouldSwap = true;
+            evt.detail.isError = false;
+        }
+    });
+  </script>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>

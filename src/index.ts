@@ -30,16 +30,16 @@ app.post('/edit/:id/players', handleAppRequest(handleEditPlayersPost));
 app.get('/edit/:id', handleAppRequest(handleEditGet));
 app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from foo')));
 
-app.onError((err, c) => {
+app.onError(async (err, c) => {
   console.error('Error occurred:', err);
 
   let status: ContentfulStatusCode;
   let message: string;
 
-  if (err instanceof HTTPException) {
+  if (err instanceof AppError) {
     status = err.status;
     message = err.message;
-  } else if (err instanceof AppError) {
+  } else if (err instanceof HTTPException) {
     status = err.status;
     message = err.message;
   } else if (err instanceof Error) {

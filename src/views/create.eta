@@ -7,7 +7,12 @@
 <form hx-post="/create" hx-target="main">
   <div class="form-group">
     <label for="reschedule-name">ReSchedule Name</label>
-    <input type="text" id="reschedule-name" name="name" required aria-required="true">
+    <input type="text" id="reschedule-name" name="name" required aria-required="true"
+           value="<%= it.values?.name || '' %>"
+           <% if (it.errors?.name) { %> aria-invalid="true" aria-describedby="name-error" <% } %>>
+    <% if (it.errors?.name) { %>
+      <span id="name-error" class="error-message" role="alert"><%= it.errors.name %></span>
+    <% } %>
   </div>
   <button type="submit">Create ReSchedule</button>
 </form>

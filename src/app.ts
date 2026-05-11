@@ -2,7 +2,7 @@ import { Eta } from 'eta';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import path from 'node:path';
-import { AppError, InternalError, StateError, ValidationError } from './lib/errors';
+import { AppError, InternalError, StateError } from './lib/errors';
 import type { RescheduleSession } from './lib/models';
 
 export const eta = new Eta({views: path.join(process.cwd(), 'src/views')});
@@ -38,9 +38,6 @@ export class App {
     return transform(value);
   }
 
-  validation(message: string): never {
-    throw new ValidationError(message);
-  }
 
   notFound(message: string = 'Not Found'): never {
     throw new StateError(message, 404);

@@ -25,6 +25,7 @@
     "@js-temporal/polyfill": "^0.5.1",
     "eta": "^3.4.0",
     "hono": "^4.3.7",
+    "valibot": "^1.4.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

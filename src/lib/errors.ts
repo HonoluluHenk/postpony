@@ -27,12 +27,3 @@ export class StateError extends AppError {
   }
 }
 
-/**
- * Input validation errors
- */
-export class ValidationError extends AppError {
-  constructor(message: string) {
-    super(message, 400);
-    this.name = 'ValidationError';
-  }
-}
