@@ -1,7 +1,6 @@
 import type { App } from '../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../lib/crypto-utils';
 import { RescheduleSession } from '../../lib/models';
-import { render } from '../../lib/renderer';
 
 export const handleCreatePost = async (app: App) => {
   const body = await app.c.req.parseBody();
@@ -35,6 +34,6 @@ export const handleCreatePost = async (app: App) => {
     isPartial: app.isPartial,
   };
 
-  const html = render('edit.eta', data);
+  const html = app.render('edit.eta', data);
   return app.c.html(html);
 };

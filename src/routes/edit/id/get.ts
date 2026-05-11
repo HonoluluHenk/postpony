@@ -1,5 +1,4 @@
 import type { App } from '../../../app';
-import { render } from '../../../lib/renderer';
 
 export const handleEditGet = (app: App) => {
   const id = app.requireParam('id');
@@ -9,7 +8,7 @@ export const handleEditGet = (app: App) => {
   }
 
   const isPartial = app.isPartial;
-  const html = render('edit.eta', {
+  const html = app.render('edit.eta', {
     title: `Editing ${session.name}`,
     session,
     ownerPassword: null,
