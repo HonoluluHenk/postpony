@@ -1,19 +1,16 @@
-import { Context } from 'hono';
+import type { App } from '../../../app';
 import { generateId } from '../../../lib/crypto-utils';
 import { Player } from '../../../lib/models';
 import { sessions } from '../../../lib/session-store';
 
-export const handleEditPlayersPost = async (c: Context) => {
-  const id = c.req.param('id');
-  if (!id) {
-    return c.text('ID is required', 400);
-  }
+export const handleEditPlayersPost = async (app: App) => {
+  const id = app.requireParam('id');
   const session = sessions[id];
   if (!session) {
-    return c.text('Session not found', 404);
+    return app.c.text('Session not found', 404);
   }
 
-  const body = await c.req.parseBody();
+  const body = await app.c.req.parseBody();
   const playerName = body['playerName'] as string;
 
   if (playerName) {
@@ -24,11 +21,10 @@ export const handleEditPlayersPost = async (c: Context) => {
     });
   }
 
-  const isPartial = !!c.req.header('HX-Request');
-  if (isPartial) {
+  if (app.isPartial) {
     const playerList = session.players.map((p: Player) => `<li>${p.name}</li>`)
       .join('');
-    return c.html(`
+    return app.c.html(`
       <section id="team-management">
         <h4>Home Team Players</h4>
         <ul id="player-list">
@@ -44,5 +40,5 @@ export const handleEditPlayersPost = async (c: Context) => {
       </section>
     `);
   }
-  return c.redirect(`/edit/${id}`);
+  return app.c.redirect(`/edit/${id}`);
 };

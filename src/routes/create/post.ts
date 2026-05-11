@@ -1,15 +1,15 @@
-import { Context } from 'hono';
+import type { App } from '../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../lib/crypto-utils';
 import { RescheduleSession } from '../../lib/models';
 import { render } from '../../lib/renderer';
 import { sessions } from '../../lib/session-store';
 
-export const handleCreatePost = async (c: Context) => {
-  const body = await c.req.parseBody();
+export const handleCreatePost = async (app: App) => {
+  const body = await app.c.req.parseBody();
   const name = body['name'] as string;
 
   if (!name) {
-    return c.text('Name is required', 400);
+    return app.c.text('Name is required', 400);
   }
 
   const id = generateId();
@@ -29,14 +29,13 @@ export const handleCreatePost = async (c: Context) => {
 
   sessions[id] = session;
 
-  const isPartial = !!c.req.header('HX-Request');
   const data = {
     title: `Editing ${name}`,
     session,
     ownerPassword,
-    isPartial,
+    isPartial: app.isPartial,
   };
 
   const html = render('edit.eta', data);
-  return c.html(html);
+  return app.c.html(html);
 };

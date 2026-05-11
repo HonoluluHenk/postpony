@@ -1,8 +1,7 @@
-import { Context } from 'hono';
+import type { App } from '../../app';
 import { render } from '../../lib/renderer';
 
-export const handleCreateGet = (c: Context) => {
-  const isPartial = !!c.req.header('HX-Request');
-  const html = render('create.eta', {title: 'Create a new ReSchedule', isPartial});
-  return c.html(html);
+export const handleCreateGet = (app: App) => {
+  const html = render('create.eta', {title: 'Create a new ReSchedule', isPartial: app.isPartial});
+  return app.c.html(html);
 };

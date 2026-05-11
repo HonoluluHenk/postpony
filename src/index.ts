@@ -1,10 +1,12 @@
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import * as fs from 'fs';
-import { Hono } from 'hono';
+import { type Context, Hono } from 'hono';
 
 import { createServer as createHttpsServer } from 'node:https';
 import * as path from 'path';
+import { App } from './app';
+import { AppFailure } from './app-failure';
 import { handleCreateGet } from './routes/create/get';
 import { handleCreatePost } from './routes/create/post';
 import { handleEditGet } from './routes/edit/id/get';
@@ -18,12 +20,18 @@ app.use('/favicon.svg', serveStatic({path: './src/public/favicon.svg'}));
 app.use('/css/*', serveStatic({root: './src/public'}));
 app.use('/js/*', serveStatic({root: './src/public'}));
 
-app.get('/', handleIndexGet);
-app.get('/create', handleCreateGet);
-app.post('/create', handleCreatePost);
-app.post('/edit/:id/venue', handleEditVenuePost);
-app.post('/edit/:id/players', handleEditPlayersPost);
-app.get('/edit/:id', handleEditGet);
+app.get('/', handleAppRequest(handleIndexGet));
+app.get('/create', handleAppRequest(handleCreateGet));
+app.post('/create', handleAppRequest(handleCreatePost));
+app.post('/edit/:id/venue', handleAppRequest(handleEditVenuePost));
+app.post('/edit/:id/players', handleAppRequest(handleEditPlayersPost));
+app.get('/edit/:id', handleAppRequest(handleEditGet));
+app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from foo')));
+
+app.onError((err, c) => {
+  console.error('Error occurred:', err);
+  return c.text('Internal Server Error', 500);
+});
 
 const port = parseInt(process.env['APP_PORT'] ?? '3000', 10);
 const hostname = process.env['APP_HOSTNAME'] ?? 'game-scheduler.localhost';
@@ -61,3 +69,20 @@ process.on('SIGINT', () => {
     process.exit(0);
   });
 });
+
+
+function handleAppRequest(handler: (app: App) => Response | Promise<Response>) {
+  return async (c: Context) => {
+    try {
+      return await handler(new App(
+        !!c.req.header('HX-Request'),
+        c,
+      ));
+    } catch (e) {
+      if (e instanceof AppFailure) {
+        return c.text(e.message, 400);
+      }
+      throw e;
+    }
+  };
+}
