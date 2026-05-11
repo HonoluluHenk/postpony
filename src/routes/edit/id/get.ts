@@ -1,10 +1,9 @@
 import type { App } from '../../../app';
 import { render } from '../../../lib/renderer';
-import { sessions } from '../../../lib/session-store';
 
 export const handleEditGet = (app: App) => {
   const id = app.requireParam('id');
-  const session = sessions[id];
+  const session = app.sessions[id];
   if (!session) {
     return app.c.text('Session not found', 404);
   }

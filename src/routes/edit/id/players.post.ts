@@ -1,11 +1,10 @@
 import type { App } from '../../../app';
 import { generateId } from '../../../lib/crypto-utils';
 import { Player } from '../../../lib/models';
-import { sessions } from '../../../lib/session-store';
 
 export const handleEditPlayersPost = async (app: App) => {
   const id = app.requireParam('id');
-  const session = sessions[id];
+  const session = app.sessions[id];
   if (!session) {
     return app.c.text('Session not found', 404);
   }

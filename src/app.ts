@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import { AppFailure } from './app-failure';
+import type { RescheduleSession } from './lib/models';
 
 export class App {
   constructor(
@@ -8,6 +9,10 @@ export class App {
   )
   {
   }
+
+  private static readonly sessions: Record<string, RescheduleSession> = {};
+
+  readonly sessions: Record<string, RescheduleSession> = App.sessions;
 
   requireParam(name: string): string;
   requireParam<P>(name: string, transform: (value: string) => P): P;

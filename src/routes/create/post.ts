@@ -2,7 +2,6 @@ import type { App } from '../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../lib/crypto-utils';
 import { RescheduleSession } from '../../lib/models';
 import { render } from '../../lib/renderer';
-import { sessions } from '../../lib/session-store';
 
 export const handleCreatePost = async (app: App) => {
   const body = await app.c.req.parseBody();
@@ -27,7 +26,7 @@ export const handleCreatePost = async (app: App) => {
     createdAt: new Date().toISOString(),
   };
 
-  sessions[id] = session;
+  app.sessions[id] = session;
 
   const data = {
     title: `Editing ${name}`,
