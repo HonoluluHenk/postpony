@@ -28,7 +28,7 @@ export const test = base.extend<AxeFixture>({
           nodes: v.nodes.map(node => ({
             target: node.target,
             html: node.html,
-            //xpath: node.xpath,
+            xpath: node.xpath,
           })),
         }));
         console.error('Accessibility violations found:', JSON.stringify(violations, null, 2));

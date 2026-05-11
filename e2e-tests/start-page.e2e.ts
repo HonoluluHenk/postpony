@@ -30,13 +30,13 @@ test.describe('Start Page', () => {
   test('should have a favicon', async ({page}) => {
     const favicon = page.locator('link[rel="icon"]');
     await expect(favicon)
-      .toHaveAttribute('href', '/favicon.ico');
+      .toHaveAttribute('href', '/favicon.svg');
 
-    const response = await page.request.get('/favicon.ico');
+    const response = await page.request.get('/favicon.svg');
     expect(response.status())
       .toBe(200);
     expect(response.headers()['content-type'])
-      .toContain('image/x-icon');
+      .toContain('image/svg+xml');
   });
 
   test('should not have any automatically detectable accessibility violations', async ({checkA11y}) => {

@@ -1,82 +1,29 @@
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { Eta } from 'eta';
 import * as fs from 'fs';
 import { Hono } from 'hono';
 
 import { createServer as createHttpsServer } from 'node:https';
 import * as path from 'path';
-import { generateId, generateRandomPassword, hashPassword } from './lib/crypto-utils';
-import { RescheduleSession } from './lib/models';
+import { handleCreateGet } from './routes/create/get';
+import { handleCreatePost } from './routes/create/post';
+import { handleEditGet } from './routes/edit/id/get';
+import { handleEditPlayersPost } from './routes/edit/id/players.post';
+import { handleEditVenuePost } from './routes/edit/id/venue.post';
+import { handleIndexGet } from './routes/index.get';
 
 const app = new Hono();
-const eta = new Eta({views: path.join(process.cwd(), 'src/views')});
-
-// In-memory store for MVP (will be replaced by Firestore)
-const sessions: Record<string, RescheduleSession> = {};
 
 app.use('/favicon.svg', serveStatic({path: './src/public/favicon.svg'}));
 app.use('/css/*', serveStatic({root: './src/public'}));
 app.use('/js/*', serveStatic({root: './src/public'}));
 
-app.get('/', (c) => {
-  const isPartial = !!c.req.header('HX-Request');
-  const html = eta.render('index.eta', {title: 'Game Re-scheduler', isPartial});
-  return c.html(html);
-});
-
-app.get('/create', (c) => {
-  const isPartial = !!c.req.header('HX-Request');
-  const html = eta.render('create.eta', {title: 'Create a new ReSchedule', isPartial});
-  return c.html(html);
-});
-
-app.post('/create', async (c) => {
-  const body = await c.req.parseBody();
-  const name = body['name'] as string;
-
-  if (!name) {
-    return c.text('Name is required', 400);
-  }
-
-  const id = generateId();
-  const ownerPassword = generateRandomPassword();
-  const invitationPassword = generateRandomPassword();
-
-  const session: RescheduleSession = {
-    id,
-    clubId: 'default-club', // Placeholder for MVP
-    name,
-    ownerPasswordHash: hashPassword(ownerPassword),
-    invitationPasswordHash: hashPassword(invitationPassword),
-    status: 'Draft',
-    createdAt: new Date().toISOString(),
-  };
-
-  sessions[id] = session;
-
-  const isPartial = !!c.req.header('HX-Request');
-  const data = {
-    title: `Editing ${name}`,
-    session,
-    ownerPassword,
-    isPartial,
-  };
-
-  const html = eta.render('edit.eta', data);
-  return c.html(html);
-});
-
-app.get('/edit', (c) => {
-  const isPartial = !!c.req.header('HX-Request');
-  const html = eta.render('edit.eta', {
-    title: 'Edit Existing ReSchedule',
-    session: {name: 'Placeholder', status: 'Draft', id: '123'},
-    ownerPassword: null,
-    isPartial,
-  });
-  return c.html(html);
-});
+app.get('/', handleIndexGet);
+app.get('/create', handleCreateGet);
+app.post('/create', handleCreatePost);
+app.post('/edit/:id/venue', handleEditVenuePost);
+app.post('/edit/:id/players', handleEditPlayersPost);
+app.get('/edit/:id', handleEditGet);
 
 const port = parseInt(process.env['APP_PORT'] ?? '3000', 10);
 const hostname = process.env['APP_HOSTNAME'] ?? 'game-scheduler.localhost';
