@@ -78,8 +78,8 @@ app.get('/edit', (c) => {
   return c.html(html);
 });
 
-const port = parseInt(process.env['PORT'] ?? '3000', 10);
-const hostname = process.env['HOSTNAME'] ?? 'game-scheduler.localhost';
+const port = parseInt(process.env['APP_PORT'] ?? '3000', 10);
+const hostname = process.env['APP_HOSTNAME'] ?? 'game-scheduler.localhost';
 
 const certPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.pem`);
 const keyPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.key`);
