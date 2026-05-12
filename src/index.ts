@@ -51,7 +51,11 @@ app.onError(async (err, c) => {
   }
 
   if (c.req.header('HX-Request')) {
-    return c.html(`<div class="alert alert-error" role="alert">${message}</div>`, {status});
+    return c.html(`
+      <aside class="toast error white-text top" role="alert">
+        <i>error</i>
+        <div class="max">${message}</div>
+      </aside>`, {status});
   }
 
   const appInstance = new App(false, c);

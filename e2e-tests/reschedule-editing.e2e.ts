@@ -8,8 +8,8 @@ test.describe('Reschedule Editing', () => {
       .fill('Edit Test Session');
     await page.getByRole('button', {name: 'Create ReSchedule'})
       .click();
-    await expect(page.locator('h2'))
-      .toContainText('Editing ReSchedule: Edit Test Session');
+    await expect(page.getByRole('heading', {name: /Editing ReSchedule/i, level: 2}))
+      .toContainText('Edit Test Session');
   });
 
   test('should update venue settings', async ({page}) => {
@@ -19,8 +19,8 @@ test.describe('Reschedule Editing', () => {
       .click();
 
     // Verify success message
-    await expect(page.locator('.success'))
-      .toContainText('Venue settings updated!');
+    await expect(page.getByText('Venue settings updated!'))
+      .toBeVisible();
     await expect(maxOverlapsInput)
       .toHaveValue('3');
   });
@@ -32,7 +32,7 @@ test.describe('Reschedule Editing', () => {
       .click();
 
     // Verify player is in the list
-    const playerList = page.locator('#player-list');
+    const playerList = page.getByRole('list');
     await expect(playerList)
       .toContainText('John Doe');
 

@@ -18,18 +18,23 @@
         }
     });
   </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beercss@3.9.4/dist/cdn/beer.min.css">
+  <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.9.4/dist/cdn/beer.min.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
+<body class="light">
   <a href="#main-content" class="skip-link"><%= it.t('skip_to_main') %></a>
   <div class="container">
-    <header>
-      <h1><%= it.title %></h1>
+    <header class="padding">
+      <h1 class="center-align"><%= it.title %></h1>
     </header>
-    <main id="main-content">
-      <%~ it.body %>
+    <main id="main-content" class="responsive">
+      <article>
+        <%~ it.body %>
+      </article>
     </main>
-    <footer>
+    <footer class="padding center-align">
       <p>&copy; 2024 Game Re-scheduler</p>
     </footer>
   </div>

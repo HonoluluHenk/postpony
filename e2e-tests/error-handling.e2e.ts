@@ -6,11 +6,11 @@ test.describe('Error Handling', () => {
     expect(response?.status())
       .toBe(404);
 
-    await expect(page.locator('h2'))
-      .toHaveText('Error');
-    await expect(page.locator('.alert-error'))
+    await expect(page.getByRole('heading', {name: 'Error', level: 2}))
+      .toBeVisible();
+    await expect(page.getByRole('alert'))
       .toContainText('Session not found');
-    await expect(page.locator('a:has-text("Return to Home")'))
+    await expect(page.getByRole('link', {name: 'Return to Home'}))
       .toBeVisible();
   });
 
@@ -33,8 +33,10 @@ test.describe('Error Handling', () => {
   test('should show HTMX error for invalid updates in edit page', async ({page}) => {
     // 1. Create a session first
     await page.goto('/create');
-    await page.fill('#reschedule-name', 'Error Test Session');
-    await page.click('button[type="submit"]');
+    await page.getByLabel('ReSchedule Name')
+      .fill('Error Test Session');
+    await page.getByRole('button', {name: 'Create ReSchedule'})
+      .click();
     await page.waitForURL(/\/edit\/.+/);
 
     const url = page.url();
@@ -53,7 +55,8 @@ test.describe('Error Handling', () => {
       document.body.appendChild(div);
     });
 
-    await expect(page.locator('#error-test .alert-error'))
+    await expect(page.getByRole('alert')
+      .last())
       .toContainText('Session not found');
   });
 

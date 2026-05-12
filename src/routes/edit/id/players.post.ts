@@ -29,18 +29,25 @@ export const handleEditPlayersPost = async (app: App) => {
 
       return app.c.html(`
         <section id="team-management">
-          <h4>Home Team Players</h4>
+          <header>
+            <h4>Home Team Players</h4>
+          </header>
           <ul id="player-list">
             ${playerList}
           </ul>
           <form hx-post="/edit/${session.id}/players" hx-target="#team-management">
-            <div class="form-group">
-              <label for="playerName">New Player Name</label>
-              <input type="text" id="playerName" name="playerName" value="${playerName}"
-                     ${error ? 'aria-invalid="true" aria-describedby="playerName-error"' : ''}>
-              ${error ? `<span id="playerName-error" class="error-message" role="alert">${error}</span>` : ''}
-            </div>
-            <button type="submit">Add Player</button>
+            <fieldset>
+              <legend class="none">Home Team Players</legend>
+              <div class="form-group">
+                <label for="playerName">New Player Name</label>
+                <input type="text" id="playerName" name="playerName" value="${playerName}"
+                       ${error ? 'aria-invalid="true" aria-describedby="playerName-error"' : ''}>
+                ${error ? `<span id="playerName-error" class="error-message" role="alert">${error}</span>` : ''}
+              </div>
+            </fieldset>
+            <nav class="right-align">
+              <button type="submit">Add Player</button>
+            </nav>
           </form>
         </section>
       `, {status: 400});
@@ -61,16 +68,23 @@ export const handleEditPlayersPost = async (app: App) => {
       .join('');
     return app.c.html(`
       <section id="team-management">
-        <h4>Home Team Players</h4>
+        <header>
+          <h4>Home Team Players</h4>
+        </header>
         <ul id="player-list">
           ${playerList}
         </ul>
         <form hx-post="/edit/${session.id}/players" hx-target="#team-management">
-          <div class="form-group">
-            <label for="playerName">New Player Name</label>
-            <input type="text" id="playerName" name="playerName" required>
-          </div>
-          <button type="submit">Add Player</button>
+          <fieldset>
+            <legend class="none">Home Team Players</legend>
+            <div class="form-group">
+              <label for="playerName">New Player Name</label>
+              <input type="text" id="playerName" name="playerName" required>
+            </div>
+          </fieldset>
+          <nav class="right-align">
+            <button type="submit">Add Player</button>
+          </nav>
         </form>
       </section>
     `);

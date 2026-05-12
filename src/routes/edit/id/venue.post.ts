@@ -32,15 +32,22 @@ export const handleEditVenuePost = async (app: App) => {
 
       return app.c.html(`
         <section id="venue-management">
-          <h4>Venue Management</h4>
+          <header>
+            <h4>Venue Management</h4>
+          </header>
           <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
-            <div class="form-group">
-              <label for="maxOverlaps">Maximum Overlapping Matches (for this session)</label>
-              <input type="number" id="maxOverlaps" name="maxOverlaps" value="${maxOverlaps}" min="0"
-                     ${error ? 'aria-invalid="true" aria-describedby="maxOverlaps-error"' : ''}>
-              ${error ? `<span id="maxOverlaps-error" class="error-message" role="alert">${error}</span>` : ''}
-            </div>
-            <button type="submit">Update Venue Settings</button>
+            <fieldset>
+              <legend class="none">Venue Management</legend>
+              <div class="form-group">
+                <label for="maxOverlaps">Maximum Overlapping Matches (for this session)</label>
+                <input type="number" id="maxOverlaps" name="maxOverlaps" value="${maxOverlaps}" min="0"
+                       ${error ? 'aria-invalid="true" aria-describedby="maxOverlaps-error"' : ''}>
+                ${error ? `<span id="maxOverlaps-error" class="error-message" role="alert">${error}</span>` : ''}
+              </div>
+            </fieldset>
+            <nav class="right-align">
+              <button type="submit">Update Venue Settings</button>
+            </nav>
           </form>
         </section>
       `, {status: 400});
@@ -57,15 +64,26 @@ export const handleEditVenuePost = async (app: App) => {
     const error = undefined; // No error if we reached here
     return app.c.html(`
       <section id="venue-management">
-        <h4>Venue Management</h4>
+        <header>
+          <h4>Venue Management</h4>
+        </header>
         <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
-          <div class="form-group">
-            <label for="maxOverlaps">Maximum Overlapping Matches (for this session)</label>
-            <input type="number" id="maxOverlaps" name="maxOverlaps" value="${session.maxOverlaps || ''}" min="0">
-          </div>
-          <button type="submit">Update Venue Settings</button>
+          <fieldset>
+            <legend class="none">Venue Management</legend>
+            <div class="form-group">
+              <label for="maxOverlaps">Maximum Overlapping Matches (for this session)</label>
+              <input type="number" id="maxOverlaps" name="maxOverlaps" value="${session.maxOverlaps || ''}" min="0">
+            </div>
+          </fieldset>
+          <nav class="right-align">
+            <button type="submit">Update Venue Settings</button>
+          </nav>
         </form>
-        <p class="success">Venue settings updated!</p>
+        <aside class="toast success top" role="alert">
+          <div class="max">
+            <p class="success">Venue settings updated!</p>
+          </div>
+        </aside>
       </section>
     `);
   }

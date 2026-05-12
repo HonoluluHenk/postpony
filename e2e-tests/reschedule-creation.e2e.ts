@@ -11,8 +11,8 @@ test.describe('Reschedule Creation', () => {
       .click();
 
     // 2. Check if we are on the create form (HTMX swap happened)
-    await expect(page.locator('h2'))
-      .toContainText(/Create a New ReSchedule/i);
+    await expect(page.getByRole('heading', {name: /Create a New ReSchedule/i}))
+      .toBeVisible();
 
     // 3. Fill in the name and submit
     const sessionName = 'Test Tournament 2024';
@@ -22,19 +22,18 @@ test.describe('Reschedule Creation', () => {
       .click();
 
     // 4. Check if we moved to the edit screen
-    await expect(page.locator('h2'))
-      .toContainText(/Editing ReSchedule/i);
-    await expect(page.locator('h2'))
+    await expect(page.getByRole('heading', {name: /Editing ReSchedule/i, level: 2}))
       .toContainText(sessionName);
 
     // 5. Verify the owner password is displayed
-    const alert = page.locator('.alert');
+    const alert = page.getByRole('alert');
     await expect(alert)
       .toBeVisible();
     await expect(alert)
       .toContainText(/Your Owner Password is/i);
 
-    const password = await page.locator('.password-display')
+    const password = await page.getByText(/Your Owner Password is/i)
+      .locator('span')
       .textContent();
     expect(password)
       .toBeTruthy();
@@ -42,12 +41,10 @@ test.describe('Reschedule Creation', () => {
       .toBeGreaterThan(0);
 
     // 6. Verify status and invite link
-    await expect(page.locator('main'))
-      .toContainText(/Status:/i);
-    await expect(page.locator('main'))
+    await expect(page.getByText('Status:'))
       .toContainText('Draft');
-    await expect(page.locator('main'))
-      .toContainText(/Invite participants using this link/i);
+    await expect(page.getByText('Invite participants using this link'))
+      .toBeVisible();
   });
 
   test('should pass accessibility on create and edit pages', async ({page, checkA11y}) => {

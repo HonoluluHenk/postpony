@@ -1,9 +1,16 @@
 <% layout('./layouts/main.eta') %>
 
-<section class="card">
-  <h2><%= it.t('error_title') %></h2>
-  <div class="alert alert-error" role="alert">
-    <p><%= it.message %></p>
-  </div>
-  <p><a href="/" class="btn"><%= it.t('return_home') %></a></p>
+<section class="padding small-round surface-variant">
+  <header>
+    <h2><%= it.t('error_title') %></h2>
+  </header>
+  <aside class="toast error white-text top" role="alert">
+    <i>error</i>
+    <div class="max">
+      <p><%= it.message %></p>
+    </div>
+  </aside>
+  <nav class="mt-4">
+    <a href="/" class="button"><%= it.t('return_home') %></a>
+  </nav>
 </section>

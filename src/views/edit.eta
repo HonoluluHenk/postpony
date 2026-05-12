@@ -2,48 +2,74 @@
 <% layout('./layouts/main.eta') %>
 <% } %>
 
-<h2><%~ it.t('edit_reschedule_title', {name: it.session.name}) %></h2>
+<header>
+  <h2><%~ it.t('edit_reschedule_title', {name: it.session.name}) %></h2>
+</header>
 
 <% if (it.ownerPassword) { %>
-  <div class="alert alert-info" role="alert">
-    <p><strong><%= it.t('reschedule_created_success') %></strong></p>
-    <p><%~ it.t('owner_password_label') %> <span class="password-display"><%= it.ownerPassword %></span></p>
-    <p><%= it.t('save_password_warning') %></p>
-  </div>
+  <aside class="toast error white-text top" role="alert">
+    <i>info</i>
+    <div class="max">
+      <p><strong><%= it.t('reschedule_created_success') %></strong></p>
+      <p><%~ it.t('owner_password_label') %> <span class="password-display"><%= it.ownerPassword %></span></p>
+      <p><%= it.t('save_password_warning') %></p>
+    </div>
+  </aside>
 <% } %>
 
-<p><%= it.t('status_label', {status: it.session.status}) %></p>
-<p><%= it.t('invite_link_label') %> <a href="/join/<%= it.session.id %>">/join/<%= it.session.id %></a></p>
+<section class="row items-center wrap">
+  <p class="chip outline"><%= it.t('status_label', {status: it.session.status}) %></p>
+  <p class="max"><%= it.t('invite_link_label') %> <a href="/join/<%= it.session.id %>">/join/<%= it.session.id %></a></p>
+</section>
 
-<h3><%= it.t('scheduling_engine_info') %></h3>
+<section>
+  <header>
+    <h3><%= it.t('scheduling_engine_info') %></h3>
+  </header>
 
-<div id="scheduling-info">
-  <section id="venue-management">
-    <h4><%= it.t('venue_management') %></h4>
-    <form hx-post="/edit/<%= it.session.id %>/venue" hx-target="#venue-management">
-      <div class="form-group">
-        <label for="maxOverlaps"><%= it.t('max_overlaps') %></label>
-        <input type="number" id="maxOverlaps" name="maxOverlaps" value="<%= it.session.maxOverlaps || '' %>" min="0">
-      </div>
-      <button type="submit"><%= it.t('update_venue_settings') %></button>
-    </form>
-  </section>
+  <div id="scheduling-info" class="grid">
+    <section id="venue-management" class="padding small-round surface-variant s12 m6">
+      <header>
+        <h4><%= it.t('venue_management') %></h4>
+      </header>
+      <form hx-post="/edit/<%= it.session.id %>/venue" hx-target="#venue-management">
+        <fieldset>
+          <legend class="none"><%= it.t('venue_management') %></legend>
+          <div class="field label border fill">
+            <input type="number" id="maxOverlaps" name="maxOverlaps" value="<%= it.session.maxOverlaps || '' %>" min="0">
+            <label for="maxOverlaps"><%= it.t('max_overlaps') %></label>
+          </div>
+        </fieldset>
+        <nav class="right-align">
+          <button type="submit"><%= it.t('update_venue_settings') %></button>
+        </nav>
+      </form>
+    </section>
 
-  <hr>
-
-  <section id="team-management">
-    <h4><%= it.t('home_team_players') %></h4>
-    <ul id="player-list">
-      <% it.session.players.forEach(player => { %>
-        <li><%= player.name %></li>
-      <% }) %>
-    </ul>
-    <form hx-post="/edit/<%= it.session.id %>/players" hx-target="#team-management">
-      <div class="form-group">
-        <label for="playerName"><%= it.t('new_player_name') %></label>
-        <input type="text" id="playerName" name="playerName" required>
-      </div>
-      <button type="submit"><%= it.t('add_player') %></button>
-    </form>
-  </section>
-</div>
+    <section id="team-management" class="padding small-round surface-variant s12 m6">
+      <header>
+        <h4><%= it.t('home_team_players') %></h4>
+      </header>
+      <ul id="player-list" class="list">
+        <% it.session.players.forEach(player => { %>
+          <li>
+            <i>person</i>
+            <div class="max"><%= player.name %></div>
+          </li>
+        <% }) %>
+      </ul>
+      <form hx-post="/edit/<%= it.session.id %>/players" hx-target="#team-management" class="mt-4">
+        <fieldset>
+          <legend class="none"><%= it.t('home_team_players') %></legend>
+          <div class="field label border fill">
+            <input type="text" id="playerName" name="playerName" required>
+            <label for="playerName"><%= it.t('new_player_name') %></label>
+          </div>
+        </fieldset>
+        <nav class="right-align">
+          <button type="submit"><%= it.t('add_player') %></button>
+        </nav>
+      </form>
+    </section>
+  </div>
+</section>

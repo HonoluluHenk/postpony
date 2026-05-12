@@ -2,19 +2,26 @@
 <% layout('./layouts/main.eta') %>
 <% } %>
 
-<section class="card">
-  <h2><%= it.t('create_reschedule_title') %></h2>
+<section class="padding small-round surface-variant">
+  <header>
+    <h2><%= it.t('create_reschedule_title') %></h2>
+  </header>
 
   <form hx-post="/create" hx-target="body" hx-push-url="true">
-    <div class="form-group">
-      <label for="reschedule-name"><%= it.t('reschedule_name') %></label>
-      <input type="text" id="reschedule-name" name="name" required aria-required="true"
-             value="<%= it.values?.name || '' %>"
-             <% if (it.errors?.name) { %> aria-invalid="true" aria-describedby="name-error" <% } %>>
-      <% if (it.errors?.name) { %>
-        <span id="name-error" class="error-message" role="alert"><%= it.errors.name %></span>
-      <% } %>
-    </div>
-    <button type="submit"><%= it.t('create_button') %></button>
+    <fieldset>
+      <legend class="none"><%= it.t('reschedule_name') %></legend>
+      <div class="field label border fill">
+        <input type="text" id="reschedule-name" name="name" required aria-required="true"
+               value="<%= it.values?.name || '' %>"
+               <% if (it.errors?.name) { %> aria-invalid="true" aria-describedby="name-error" <% } %>>
+        <label for="reschedule-name"><%= it.t('reschedule_name') %></label>
+        <% if (it.errors?.name) { %>
+          <span id="name-error" class="error-message" role="alert"><%= it.errors.name %></span>
+        <% } %>
+      </div>
+    </fieldset>
+    <nav class="right-align">
+      <button type="submit"><%= it.t('create_button') %></button>
+    </nav>
   </form>
 </section>

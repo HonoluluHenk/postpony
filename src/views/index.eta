@@ -1,11 +1,13 @@
 <% layout('./layouts/main.eta') %>
 
-<section class="card text-center">
-  <h2><%= it.t('welcome') %></h2>
-  <p><%= it.t('tagline') %></p>
+<section class="padding small-round surface-variant">
+  <header>
+    <h2 class="center-align"><%= it.t('welcome') %></h2>
+    <p class="center-align"><%= it.t('tagline') %></p>
+  </header>
 
-  <div id="reschedule-options" class="flex gap-3 mt-4" style="justify-content: center;">
+  <nav class="center-align mt-4">
     <button hx-get="/create" hx-target="#main-content" hx-swap="innerHTML"><%= it.t('create_new') %></button>
-    <button hx-get="/edit" hx-target="#main-content" hx-swap="innerHTML"><%= it.t('edit_existing') %></button>
-  </div>
+    <button class="outline" hx-get="/edit" hx-target="#main-content" hx-swap="innerHTML"><%= it.t('edit_existing') %></button>
+  </nav>
 </section>

@@ -8,7 +8,7 @@ test.describe('Start Page', () => {
   test('should have the correct title and heading', async ({page}) => {
     await expect(page)
       .toHaveTitle(/Game Re-scheduler/);
-    await expect(page.locator('h2'))
+    await expect(page.getByRole('heading', {level: 2}))
       .toContainText('Welcome to the Game Re-scheduler');
   });
 
@@ -23,8 +23,8 @@ test.describe('Start Page', () => {
   });
 
   test('should have a descriptive welcome message', async ({page}) => {
-    await expect(page.locator('main p'))
-      .toContainText('Streamline your sports match rescheduling with ease.');
+    await expect(page.getByText('Streamline your sports match rescheduling with ease.'))
+      .toBeVisible();
   });
 
   test('should have a favicon', async ({page}) => {
@@ -45,19 +45,19 @@ test.describe('Start Page', () => {
 
   test('accessibility landmarks check', async ({page}) => {
     // 1. Check for main landmark
-    await expect(page.locator('main'))
+    await expect(page.getByRole('main'))
       .toBeVisible();
 
     // 2. Check for unique H1
-    await expect(page.locator('h1'))
+    await expect(page.getByRole('heading', {level: 1}))
       .toHaveCount(1);
-    await expect(page.locator('h1'))
+    await expect(page.getByRole('heading', {level: 1}))
       .toContainText('Game Re-scheduler');
 
     // 3. Header and Footer landmarks
-    await expect(page.locator('header'))
+    await expect(page.getByRole('banner'))
       .toBeVisible();
-    await expect(page.locator('footer'))
+    await expect(page.getByRole('contentinfo'))
       .toBeVisible();
   });
 });
