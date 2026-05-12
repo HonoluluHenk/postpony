@@ -10,6 +10,7 @@
   integrity="sha512-JvpjarJlOl4sW26MnEb3IdSAcGdeTeOaAlu2gUZtfFrRgnChdzELOZKl0mN6ZvI0X+xiX5UMvxjK2Rx2z/fliw=="
   crossorigin="anonymous"></script>
   <script>
+    htmx.config.defaultSwapStyle = 'outerHTML';
     document.addEventListener('htmx:beforeOnLoad', function (evt) {
         if (evt.detail.xhr.status === 400) {
             evt.detail.shouldSwap = true;

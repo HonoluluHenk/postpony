@@ -33,7 +33,7 @@ export const handleEditVenuePost = async (app: App) => {
       return app.c.html(`
         <section id="venue-management">
           <h4>Venue Management</h4>
-          <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management" hx-swap="outerHTML">
+          <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
             <div class="form-group">
               <label for="maxOverlaps">Maximum Overlapping Matches (for this session)</label>
               <input type="number" id="maxOverlaps" name="maxOverlaps" value="${maxOverlaps}" min="0"
@@ -58,7 +58,7 @@ export const handleEditVenuePost = async (app: App) => {
     return app.c.html(`
       <section id="venue-management">
         <h4>Venue Management</h4>
-        <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management" hx-swap="outerHTML">
+        <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
           <div class="form-group">
             <label for="maxOverlaps">Maximum Overlapping Matches (for this session)</label>
             <input type="number" id="maxOverlaps" name="maxOverlaps" value="${session.maxOverlaps || ''}" min="0">

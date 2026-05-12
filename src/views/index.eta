@@ -4,6 +4,6 @@
 <p><%= it.t('tagline') %></p>
 
 <div id="reschedule-options">
-  <button hx-get="/create" hx-target="main"><%= it.t('create_new') %></button>
-  <button hx-get="/edit" hx-target="main"><%= it.t('edit_existing') %></button>
+  <button hx-get="/create" hx-target="main" hx-swap="innerHTML"><%= it.t('create_new') %></button>
+  <button hx-get="/edit" hx-target="main" hx-swap="innerHTML"><%= it.t('edit_existing') %></button>
 </div>

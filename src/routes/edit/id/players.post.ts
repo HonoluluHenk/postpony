@@ -33,7 +33,7 @@ export const handleEditPlayersPost = async (app: App) => {
           <ul id="player-list">
             ${playerList}
           </ul>
-          <form hx-post="/edit/${session.id}/players" hx-target="#team-management" hx-swap="outerHTML">
+          <form hx-post="/edit/${session.id}/players" hx-target="#team-management">
             <div class="form-group">
               <label for="playerName">New Player Name</label>
               <input type="text" id="playerName" name="playerName" value="${playerName}"
@@ -65,7 +65,7 @@ export const handleEditPlayersPost = async (app: App) => {
         <ul id="player-list">
           ${playerList}
         </ul>
-        <form hx-post="/edit/${session.id}/players" hx-target="#team-management" hx-swap="outerHTML">
+        <form hx-post="/edit/${session.id}/players" hx-target="#team-management">
           <div class="form-group">
             <label for="playerName">New Player Name</label>
             <input type="text" id="playerName" name="playerName" required>

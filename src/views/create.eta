@@ -4,7 +4,7 @@
 
 <h2><%= it.t('create_reschedule_title') %></h2>
 
-<form hx-post="/create" hx-target="main">
+<form hx-post="/create" hx-target="body" hx-push-url="true">
   <div class="form-group">
     <label for="reschedule-name"><%= it.t('reschedule_name') %></label>
     <input type="text" id="reschedule-name" name="name" required aria-required="true"
