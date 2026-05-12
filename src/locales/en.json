@@ -22,6 +22,7 @@
   "save_password_warning": "Please save this password. You will need it to edit this ReSchedule later.",
   "scheduling_engine_info": "Scheduling Engine Info",
   "session_not_found": "Session not found",
+  "skip_to_main": "Skip to main content",
   "status_label": "Status: <%= it.status %>",
   "tagline": "Streamline your sports match rescheduling with ease.",
   "update_venue_settings": "Update Venue Settings",

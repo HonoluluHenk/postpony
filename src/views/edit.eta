@@ -5,8 +5,8 @@
 <h2><%~ it.t('edit_reschedule_title', {name: it.session.name}) %></h2>
 
 <% if (it.ownerPassword) { %>
-  <div class="alert" role="alert">
-    <p><%= it.t('reschedule_created_success') %></p>
+  <div class="alert alert-info" role="alert">
+    <p><strong><%= it.t('reschedule_created_success') %></strong></p>
     <p><%~ it.t('owner_password_label') %> <span class="password-display"><%= it.ownerPassword %></span></p>
     <p><%= it.t('save_password_warning') %></p>
   </div>

@@ -22,6 +22,7 @@
   "save_password_warning": "Bitte speichern Sie dieses Passwort. Sie benötigen es später, um diese Umplanung zu bearbeiten.",
   "scheduling_engine_info": "Informationen zur Planung",
   "session_not_found": "Sitzung nicht gefunden",
+  "skip_to_main": "Zum Hauptinhalt springen",
   "status_label": "Status: <%= it.status %>",
   "tagline": "Optimieren Sie Ihre Sportspiel-Umplanung mit Leichtigkeit.",
   "update_venue_settings": "Veranstaltungsort-Einstellungen aktualisieren",

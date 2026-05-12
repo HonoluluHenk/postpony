@@ -1,9 +1,9 @@
 <% layout('./layouts/main.eta') %>
 
-<section class="error-container">
+<section class="card">
   <h2><%= it.t('error_title') %></h2>
   <div class="alert alert-error" role="alert">
     <p><%= it.message %></p>
   </div>
-  <p><a href="/"><%= it.t('return_home') %></a></p>
+  <p><a href="/" class="btn"><%= it.t('return_home') %></a></p>
 </section>

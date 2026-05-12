@@ -1,9 +1,11 @@
 <% layout('./layouts/main.eta') %>
 
-<h2><%= it.t('welcome') %></h2>
-<p><%= it.t('tagline') %></p>
+<section class="card text-center">
+  <h2><%= it.t('welcome') %></h2>
+  <p><%= it.t('tagline') %></p>
 
-<div id="reschedule-options">
-  <button hx-get="/create" hx-target="main" hx-swap="innerHTML"><%= it.t('create_new') %></button>
-  <button hx-get="/edit" hx-target="main" hx-swap="innerHTML"><%= it.t('edit_existing') %></button>
-</div>
+  <div id="reschedule-options" class="flex gap-3 mt-4" style="justify-content: center;">
+    <button hx-get="/create" hx-target="#main-content" hx-swap="innerHTML"><%= it.t('create_new') %></button>
+    <button hx-get="/edit" hx-target="#main-content" hx-swap="innerHTML"><%= it.t('edit_existing') %></button>
+  </div>
+</section>
