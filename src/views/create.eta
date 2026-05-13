@@ -2,12 +2,12 @@
 <% layout('./layouts/main.eta') %>
 <% } %>
 
-<section class="padding small-round surface-variant">
+<section id="create-section" class="padding small-round surface-variant">
   <header>
     <h2><%= it.t('create_reschedule_title') %></h2>
   </header>
 
-  <form hx-post="/create" hx-target="body" hx-push-url="true">
+  <form hx-post="/create" hx-target="#create-section" hx-push-url="true">
     <fieldset>
       <legend class="none"><%= it.t('reschedule_name') %></legend>
       <div class="field label border fill">
