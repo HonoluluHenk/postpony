@@ -25,6 +25,18 @@
   <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"
     crossorigin="anonymous"
     integrity="sha512-2DZp00J3FFSn+EoOpZwiqLqB0gFjDW2P/3+eNtd/VIAFCy9QiHh1MiICFHK5Fk7b8btyCK0Q8O/dP24014/tBA=="></script>
+  <script>
+    window.addEventListener("load", () => {
+      if (typeof ui === "function") {
+        ui("theme", "#1a237e");
+      }
+    });
+  </script>
+  <style>
+    :root {
+      --primary: #1a237e;
+    }
+  </style>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="light">
