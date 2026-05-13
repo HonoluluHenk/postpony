@@ -19,8 +19,12 @@
     });
   </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beercss@3.9.4/dist/cdn/beer.min.css">
-  <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.9.4/dist/cdn/beer.min.js"></script>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.9.4/dist/cdn/beer.min.js"
+    crossorigin="anonymous"
+    integrity="sha512-IizuZQ8Egr+ivbtY9dhIE48B6umvPkXAYJFA+DEjxkXpXnBlTjkWoKpujezLFqEnIp6OuJIpni0QIwQnOOoUGg==" ></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"
+    crossorigin="anonymous"
+    integrity="sha512-2DZp00J3FFSn+EoOpZwiqLqB0gFjDW2P/3+eNtd/VIAFCy9QiHh1MiICFHK5Fk7b8btyCK0Q8O/dP24014/tBA=="></script>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="light">
