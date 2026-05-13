@@ -7,22 +7,22 @@ test.describe('Reschedule Creation', () => {
 
   test('should create a new Reschedule session', async ({page}) => {
     // 1. Click on "Create a new ReSchedule"
-    await page.getByRole('button', {name: /Create a new ReSchedule/i})
+    await page.getByRole('button', {name: 'Create a new ReSchedule'})
       .click();
 
     // 2. Check if we are on the create form (HTMX swap happened)
-    await expect(page.getByRole('heading', {name: /Create a New ReSchedule/i}))
+    await expect(page.getByRole('heading', {name: 'Create a New ReSchedule'}))
       .toBeVisible();
 
     // 3. Fill in the name and submit
     const sessionName = 'Test Tournament 2024';
-    await page.getByLabel(/ReSchedule Name/i)
+    await page.getByLabel('ReSchedule Name')
       .fill(sessionName);
-    await page.getByRole('button', {name: /Create ReSchedule/i})
+    await page.getByRole('button', {name: 'Create ReSchedule'})
       .click();
 
     // 4. Check if we moved to the edit screen
-    await expect(page.getByRole('heading', {name: /Editing ReSchedule/i, level: 2}))
+    await expect(page.getByRole('heading', {name: 'Editing ReSchedule', level: 2}))
       .toContainText(sessionName);
 
     // 5. Verify the owner password is displayed
@@ -30,9 +30,9 @@ test.describe('Reschedule Creation', () => {
     await expect(alert)
       .toBeVisible();
     await expect(alert)
-      .toContainText(/Your Owner Password is/i);
+      .toContainText('Your Owner Password is');
 
-    const password = await page.getByText(/Your Owner Password is/i)
+    const password = await page.getByText('Your Owner Password is')
       .locator('span')
       .textContent();
     expect(password)
@@ -52,16 +52,16 @@ test.describe('Reschedule Creation', () => {
     await checkA11y();
 
     // Create page
-    await page.getByRole('button', {name: /Create a new ReSchedule/i})
+    await page.getByRole('button', {name: 'Create a new ReSchedule'})
       .click();
     await checkA11y();
 
     // Submit and check Edit page
-    await page.getByLabel(/ReSchedule Name/i)
+    await page.getByLabel('ReSchedule Name')
       .fill('A11y Test');
     await Promise.all([
       page.waitForURL(/\/edit\/.+/),
-      page.getByRole('button', {name: /Create ReSchedule/i})
+      page.getByRole('button', {name: 'Create ReSchedule'})
         .click(),
     ]);
     await checkA11y();

@@ -8,7 +8,7 @@ test.describe('Reschedule Editing', () => {
       .fill('Edit Test Session');
     await page.getByRole('button', {name: 'Create ReSchedule'})
       .click();
-    await expect(page.getByRole('heading', {name: /Editing ReSchedule/i, level: 2}))
+    await expect(page.getByRole('heading', {name: 'Editing ReSchedule', level: 2}))
       .toContainText('Edit Test Session');
   });
 
