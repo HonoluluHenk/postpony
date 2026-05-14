@@ -1,6 +1,6 @@
 {
   "add_player": "Spieler hinzufügen",
-  "app_title": "Spiel-Verschieber",
+  "app_title": "PostPony",
   "create_button": "Verschiebung erstellen",
   "create_new": "Neue Verschiebung erstellen",
   "create_reschedule_title": "Neue Verschiebung erstellen",
@@ -27,8 +27,8 @@
   "session_not_found": "Sitzung nicht gefunden",
   "skip_to_main": "Zum Hauptinhalt springen",
   "status_label": "Status: <%= it.status %>",
-  "tagline": "Optimieren Sie Ihre Sportspiel-Verschiebung mit Leichtigkeit.",
+  "tagline": "Spiele verschieben – so schnell und einfach wie der Pony-Express.",
   "update_venue_settings": "Veranstaltungsort-Einstellungen aktualisieren",
   "venue_management": "Verwaltung des Veranstaltungsortes",
-  "welcome": "Willkommen beim Spiel-Verschieber"
+  "welcome": "Willkommen bei PostPony"
 }

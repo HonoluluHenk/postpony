@@ -1,11 +1,11 @@
 # AI Agents Guidelines
 
-This document provides context and guidelines for AI agents working on the Game Postponer project.
+This document provides context and guidelines for AI agents working on the PostPony project.
 
 ## Project Overview
 
-The Game Postponer is a web-based application designed to streamline postponement of sports matches by calculating
-optimal times based on venue availability, team/player availability, and holidays.
+PostPony is a web-based application for postponing sports matches as quick and easy as the Pony Express. It
+calculates optimal times based on venue availability, team/player availability, and holidays.
 It also helps users to vote and eventually decide on the best rescheduling options.
 
 ## Core Technical Stack

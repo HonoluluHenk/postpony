@@ -1,6 +1,6 @@
 {
   "add_player": "Add Player",
-  "app_title": "Game Postponer",
+  "app_title": "PostPony",
   "create_button": "Create Postponement",
   "create_new": "Create a new Postponement",
   "create_reschedule_title": "Create a New Postponement",
@@ -27,8 +27,8 @@
   "session_not_found": "Session not found",
   "skip_to_main": "Skip to main content",
   "status_label": "Status: <%= it.status %>",
-  "tagline": "Streamline your sports match postponement with ease.",
+  "tagline": "Postponing games as quick and easy as the Pony Express.",
   "update_venue_settings": "Update Venue Settings",
   "venue_management": "Venue Management",
-  "welcome": "Welcome to the Game Postponer"
+  "welcome": "Welcome to PostPony"
 }

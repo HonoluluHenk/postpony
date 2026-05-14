@@ -1,6 +1,6 @@
-# Game Postponer
+# PostPony
 
-A web-based application designed to streamline postponement of sports matches by calculating optimal times based on venue availability, team/player availability, and holidays.
+A web-based application for postponing sports matches as quick and easy as the Pony Express — it calculates optimal times based on venue availability, team/player availability, and holidays.
 
 ## Tech Stack
 

@@ -1,7 +1,7 @@
 {
   "name": "game-scheduler",
   "version": "1.0.0",
-  "description": "Game Postponer for sports clubs",
+  "description": "PostPony - postponing games as quick and easy as the Pony Express",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {

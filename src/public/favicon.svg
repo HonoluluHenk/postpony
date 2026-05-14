@@ -1,4 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="4" fill="#0056b3"/>
-  <path d="M8 6v4h16V6H8zm0 6v4h6v-4H8zm8 0v4h8v-4h-8zm-8 6v4h16v-4H8zm0 6v4h8v-4H8z" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="PostPony logo">
+  <title>PostPony</title>
+  <rect width="32" height="32" rx="4" fill="#1a237e"/>
+  <!-- Galloping pony silhouette: head, neck, body, legs, tail -->
+  <g fill="#ffffff">
+    <!-- Body -->
+    <path d="M6 18c1-3 4-5 8-5 3 0 5 1 6 3l3 1c1 0 2 1 2 2v1h-2l-1 2-2 1-1-2H10l-1 2H7l-1-3c-1 0-1-1 0-2z"/>
+    <!-- Neck and head -->
+    <path d="M20 12l3-4 2 1-1 2 2 1-1 2-2 0-1 1-2-1z"/>
+    <!-- Mane -->
+    <path d="M22 9l-1-2 2 0 0 2zM24 10l0-2 2 1-1 2z"/>
+    <!-- Ear -->
+    <path d="M24 8l1-2 1 2-1 1z"/>
+    <!-- Front legs -->
+    <path d="M19 21l1 5h-2l-1-4zM12 21l1 5h-2l-1-4z"/>
+    <!-- Tail (swooshing back) -->
+    <path d="M6 17c-2 0-3 1-4 3l2 1 2-2z"/>
+  </g>
+  <!-- Eye -->
+  <circle cx="24.5" cy="11" r="0.6" fill="#1a237e"/>
 </svg>

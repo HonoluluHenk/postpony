@@ -6,7 +6,7 @@ test.describe('Localization', () => {
 
     // Check default English
     await expect(page.getByRole('heading', {level: 2}))
-      .toContainText('Welcome to the Game Postponer');
+      .toContainText('Welcome to PostPony');
 
     // Switch to German
     await page.getByRole('navigation', {name: 'Language selection'})
@@ -15,7 +15,7 @@ test.describe('Localization', () => {
 
     // Verify German text
     await expect(page.getByRole('heading', {level: 2}))
-      .toContainText('Willkommen beim Spiel-Verschieber');
+      .toContainText('Willkommen bei PostPony');
 
     // Switch back to English
     await page.getByRole('navigation', {name: 'Sprachauswahl'})
@@ -24,7 +24,7 @@ test.describe('Localization', () => {
 
     // Verify English text
     await expect(page.getByRole('heading', {level: 2}))
-      .toContainText('Welcome to the Game Postponer');
+      .toContainText('Welcome to PostPony');
   });
 
   test('should persist language via query parameter and cookie', async ({page}) => {
@@ -32,7 +32,7 @@ test.describe('Localization', () => {
     await page.goto('/?lang=de');
 
     await expect(page.getByRole('heading', {level: 2}))
-      .toContainText('Willkommen beim Spiel-Verschieber');
+      .toContainText('Willkommen bei PostPony');
 
     // Navigate to another page, language should persist (via cookie)
     await page.goto('/create');
@@ -60,6 +60,6 @@ test.describe('Localization', () => {
     // Reload page - it should redirect to /lang?lang=de because of localStorage sync
     await page.goto('/');
     await expect(page.getByRole('heading', {level: 2}))
-      .toContainText('Willkommen beim Spiel-Verschieber');
+      .toContainText('Willkommen bei PostPony');
   });
 });

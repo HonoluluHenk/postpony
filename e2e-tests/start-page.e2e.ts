@@ -7,9 +7,9 @@ test.describe('Start Page', () => {
 
   test('should have the correct title and heading', async ({page}) => {
     await expect(page)
-      .toHaveTitle(/Game Postponer/);
+      .toHaveTitle(/PostPony/);
     await expect(page.getByRole('heading', {level: 2}))
-      .toContainText('Welcome to the Game Postponer');
+      .toContainText('Welcome to PostPony');
   });
 
   test('should display the main action buttons', async ({page}) => {
@@ -52,7 +52,7 @@ test.describe('Start Page', () => {
     await expect(page.getByRole('heading', {level: 1}))
       .toHaveCount(1);
     await expect(page.getByRole('heading', {level: 1}))
-      .toContainText('Game Postponer');
+      .toContainText('PostPony');
 
     // 3. Header and Footer landmarks
     await expect(page.getByRole('banner'))

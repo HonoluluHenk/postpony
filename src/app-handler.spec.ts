@@ -69,12 +69,12 @@ describe('App.requireParam', () => {
       mockContext.get.mockReturnValue('en');
       const appEn = createApp(mockContext);
       expect(appEn.t('welcome'))
-        .toBe('Welcome to the Game Postponer');
+        .toBe('Welcome to PostPony');
 
       mockContext.get.mockReturnValue('de');
       const appDe = createApp(mockContext);
       expect(appDe.t('welcome'))
-        .toBe('Willkommen beim Spiel-Verschieber');
+        .toBe('Willkommen bei PostPony');
     });
 
     it('should handle parameters in translations', () => {
