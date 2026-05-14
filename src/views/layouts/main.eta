@@ -6,16 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= it.title %></title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <script src="https://unpkg.com/htmx.org@1.9.12"
-  integrity="sha512-JvpjarJlOl4sW26MnEb3IdSAcGdeTeOaAlu2gUZtfFrRgnChdzELOZKl0mN6ZvI0X+xiX5UMvxjK2Rx2z/fliw=="
-  crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beercss@3.9.4/dist/cdn/beer.min.css">
-  <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.9.4/dist/cdn/beer.min.js"
-    crossorigin="anonymous"
-    integrity="sha512-IizuZQ8Egr+ivbtY9dhIE48B6umvPkXAYJFA+DEjxkXpXnBlTjkWoKpujezLFqEnIp6OuJIpni0QIwQnOOoUGg==" ></script>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"
-    crossorigin="anonymous"
-    integrity="sha512-2DZp00J3FFSn+EoOpZwiqLqB0gFjDW2P/3+eNtd/VIAFCy9QiHh1MiICFHK5Fk7b8btyCK0Q8O/dP24014/tBA=="></script>
+  <script src="/vendor/js/htmx.min.js"></script>
+  <link rel="stylesheet" href="/vendor/css/beer.min.css">
+  <script type="module" src="/vendor/js/beer.min.js"></script>
+  <script type="module" src="/vendor/js/material-dynamic-colors.min.js"></script>
   <script src="/js/main.js"></script>
   <style>
     :root {
@@ -33,9 +27,11 @@
         <div class="row no-wrap shrink">
           <a class="button circle transparent" href="/lang?lang=en" title="English">
             <i><img src="https://flagcdn.com/w40/gb.png" width="20" alt="EN"></i>
+            <i><img src="/vendor/img/gb.png" width="20" alt="EN"></i>
           </a>
           <a class="button circle transparent" href="/lang?lang=de" title="Deutsch">
             <i><img src="https://flagcdn.com/w40/de.png" width="20" alt="DE"></i>
+            <i><img src="/vendor/img/de.png" width="20" alt="DE"></i>
           </a>
         </div>
       </div>

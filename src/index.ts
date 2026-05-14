@@ -22,6 +22,7 @@ const app = new Hono();
 app.use('/favicon.svg', serveStatic({path: './src/public/favicon.svg'}));
 app.use('/css/*', serveStatic({root: './src/public'}));
 app.use('/js/*', serveStatic({root: './src/public'}));
+app.use('/vendor/*', serveStatic({root: './src/public'}));
 
 app.get('/', handleAppRequest(handleIndexGet));
 app.get('/create', handleAppRequest(handleCreateGet));
