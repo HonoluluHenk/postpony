@@ -23,7 +23,7 @@ test.describe('Start Page', () => {
   });
 
   test('should have a descriptive welcome message', async ({page}) => {
-    await expect(page.getByText('Streamline your sports match postponement with ease.'))
+    await expect(page.getByText('Postponing games as quick and easy as the Pony Express.'))
       .toBeVisible();
   });
 
