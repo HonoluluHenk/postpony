@@ -26,10 +26,10 @@
         <h1 class="max center-align"><%= it.title %></h1>
         <div class="row no-wrap shrink">
           <a class="button circle transparent" href="?lang=en" title="English">
-            <i><img src="/vendor/img/flags/gb.png" width="20" alt="EN"></i>
+            <i><img src="/vendor/img/flags/gb.svg" width="20" alt="EN"></i>
           </a>
           <a class="button circle transparent" href="?lang=de" title="Deutsch">
-            <i><img src="/vendor/img/flags/de.png" width="20" alt="DE"></i>
+            <i><img src="/vendor/img/flags/de.svg" width="20" alt="DE"></i>
           </a>
         </div>
       </div>
