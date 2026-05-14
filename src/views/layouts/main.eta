@@ -9,15 +9,6 @@
   <script src="https://unpkg.com/htmx.org@1.9.12"
   integrity="sha512-JvpjarJlOl4sW26MnEb3IdSAcGdeTeOaAlu2gUZtfFrRgnChdzELOZKl0mN6ZvI0X+xiX5UMvxjK2Rx2z/fliw=="
   crossorigin="anonymous"></script>
-  <script>
-    htmx.config.defaultSwapStyle = 'outerHTML';
-    document.addEventListener('htmx:beforeOnLoad', function (evt) {
-        if (evt.detail.xhr.status === 400) {
-            evt.detail.shouldSwap = true;
-            evt.detail.isError = false;
-        }
-    });
-  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beercss@3.9.4/dist/cdn/beer.min.css">
   <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.9.4/dist/cdn/beer.min.js"
     crossorigin="anonymous"
@@ -25,13 +16,7 @@
   <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"
     crossorigin="anonymous"
     integrity="sha512-2DZp00J3FFSn+EoOpZwiqLqB0gFjDW2P/3+eNtd/VIAFCy9QiHh1MiICFHK5Fk7b8btyCK0Q8O/dP24014/tBA=="></script>
-  <script>
-    window.addEventListener("load", () => {
-      if (typeof ui === "function") {
-        ui("theme", "#1a237e");
-      }
-    });
-  </script>
+  <script src="/js/main.js"></script>
   <style>
     :root {
       --primary: #1a237e;
@@ -43,7 +28,17 @@
   <a href="#main-content" class="skip-link"><%= it.t('skip_to_main') %></a>
   <div class="container">
     <header class="padding">
-      <h1 class="center-align"><%= it.title %></h1>
+      <div class="row no-wrap">
+        <h1 class="max center-align"><%= it.title %></h1>
+        <div class="row no-wrap shrink">
+          <a class="button circle transparent" href="/lang?lang=en" title="English">
+            <i><img src="https://flagcdn.com/w40/gb.png" width="20" alt="EN"></i>
+          </a>
+          <a class="button circle transparent" href="/lang?lang=de" title="Deutsch">
+            <i><img src="https://flagcdn.com/w40/de.png" width="20" alt="DE"></i>
+          </a>
+        </div>
+      </div>
     </header>
     <main id="main-content" class="responsive">
       <article>

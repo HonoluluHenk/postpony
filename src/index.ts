@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import * as fs from 'fs';
 import { type Context, Hono } from 'hono';
+import { setCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
 
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
@@ -28,6 +29,17 @@ app.post('/create', handleAppRequest(handleCreatePost));
 app.post('/edit/:id/venue', handleAppRequest(handleEditVenuePost));
 app.post('/edit/:id/players', handleAppRequest(handleEditPlayersPost));
 app.get('/edit/:id', handleAppRequest(handleEditGet));
+app.get('/lang', async (c) => {
+  const locale = c.req.query('lang');
+  if (locale === 'en' || locale === 'de') {
+    setCookie(c, 'lang', locale, {maxAge: 365 * 24 * 60 * 60, path: '/'});
+  }
+  const referer = c.req.header('Referer');
+  if (referer) {
+    return c.redirect(referer);
+  }
+  return c.redirect('/');
+});
 app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from foo')));
 
 app.onError(async (err, c) => {

@@ -1,5 +1,6 @@
 import { Eta } from 'eta';
 import type { Context } from 'hono';
+import { getCookie, setCookie } from 'hono/cookie';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import path from 'node:path';
 import { AppError, InternalError, StateError } from './lib/errors';
@@ -20,6 +21,18 @@ export class App {
   }
 
   private detectLocale(): Locale {
+    const queryLocale = this.c.req.query('lang') as Locale | undefined;
+    if (queryLocale && (queryLocale === 'en' || queryLocale === 'de')) {
+      // Persist the choice from URL parameter
+      setCookie(this.c, 'lang', queryLocale, {maxAge: 365 * 24 * 60 * 60, path: '/'});
+      return queryLocale;
+    }
+
+    const cookieLocale = getCookie(this.c, 'lang') as Locale | undefined;
+    if (cookieLocale && (cookieLocale === 'en' || cookieLocale === 'de')) {
+      return cookieLocale;
+    }
+
     const acceptLanguage = this.c.req.header('Accept-Language');
     if (!acceptLanguage) {
       return defaultLocale;
