@@ -10,6 +10,7 @@ import { createServer as createHttpsServer } from 'node:https';
 import * as path from 'path';
 import { App } from './app';
 import { AppError } from './lib/errors';
+import { languageMiddleware } from './lib/middleware/language';
 import { handleCreateGet } from './routes/create/get';
 import { handleCreatePost } from './routes/create/post';
 import { handleEditGet } from './routes/edit/id/get';
@@ -24,23 +25,14 @@ app.use('/css/*', serveStatic({root: './src/public'}));
 app.use('/js/*', serveStatic({root: './src/public'}));
 app.use('/vendor/*', serveStatic({root: './src/public'}));
 
+app.use('*', languageMiddleware);
+
 app.get('/', handleAppRequest(handleIndexGet));
 app.get('/create', handleAppRequest(handleCreateGet));
 app.post('/create', handleAppRequest(handleCreatePost));
 app.post('/edit/:id/venue', handleAppRequest(handleEditVenuePost));
 app.post('/edit/:id/players', handleAppRequest(handleEditPlayersPost));
 app.get('/edit/:id', handleAppRequest(handleEditGet));
-app.get('/lang', async (c) => {
-  const locale = c.req.query('lang');
-  if (locale === 'en' || locale === 'de') {
-    setCookie(c, 'lang', locale, {maxAge: 365 * 24 * 60 * 60, path: '/'});
-  }
-  const referer = c.req.header('Referer');
-  if (referer) {
-    return c.redirect(referer);
-  }
-  return c.redirect('/');
-});
 app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from foo')));
 
 app.onError(async (err, c) => {

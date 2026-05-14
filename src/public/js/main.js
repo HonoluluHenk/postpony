@@ -35,19 +35,22 @@ function initLanguage() {
     localStorage.setItem('lang', queryLang);
   }
 
-  const storedLang = localStorage.getItem('lang');
   const currentLang = document.documentElement.lang;
 
-  if (storedLang && storedLang !== currentLang) {
-    // If we have a stored language and it's different from the current one,
-    // redirect to set the cookie unless we are already on the language switch route
-    if (window.location.pathname !== '/lang') {
-      window.location.href = '/lang?lang=' + storedLang;
-    }
+  // We removed the redirection from JS as the backend handles query parameters
+  // and redirects to clean URLs. We still sync to localStorage for persistence
+  // if cookies are cleared.
+
+  const storedLang = localStorage.getItem('lang');
+  if (storedLang && storedLang !== currentLang && !urlParams.has('lang')) {
+    // Only redirect if there is no query param (to avoid infinite loops)
+    // and if the backend didn't already set the correct language.
+    // Actually, if the backend set it, currentLang would match storedLang.
+    window.location.href = window.location.pathname + '?lang=' + storedLang;
   }
 
   // Update localStorage whenever a language link is clicked
-  document.querySelectorAll('a[href^="/lang?lang="]').forEach(link => {
+  document.querySelectorAll('a[href*="lang="]').forEach(link => {
     link.addEventListener('click', () => {
       const url = new URL(link.href, window.location.origin);
       const lang = url.searchParams.get('lang');

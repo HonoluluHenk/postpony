@@ -1,9 +1,9 @@
 import { Eta } from 'eta';
 import type { Context } from 'hono';
-import { getCookie, setCookie } from 'hono/cookie';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import path from 'node:path';
 import { AppError, InternalError, StateError } from './lib/errors';
+import { LOCALE_KEY } from './lib/middleware/language';
 import type { RescheduleSession } from './lib/models';
 import { defaultLocale, getTranslation, type Locale, type TranslationKeys } from './locales';
 
@@ -17,31 +17,7 @@ export class App {
     readonly c: Context,
   )
   {
-    this.locale = this.detectLocale();
-  }
-
-  private detectLocale(): Locale {
-    const queryLocale = this.c.req.query('lang') as Locale | undefined;
-    if (queryLocale && (queryLocale === 'en' || queryLocale === 'de')) {
-      // Persist the choice from URL parameter
-      setCookie(this.c, 'lang', queryLocale, {maxAge: 365 * 24 * 60 * 60, path: '/'});
-      return queryLocale;
-    }
-
-    const cookieLocale = getCookie(this.c, 'lang') as Locale | undefined;
-    if (cookieLocale && (cookieLocale === 'en' || cookieLocale === 'de')) {
-      return cookieLocale;
-    }
-
-    const acceptLanguage = this.c.req.header('Accept-Language');
-    if (!acceptLanguage) {
-      return defaultLocale;
-    }
-
-    if (acceptLanguage.startsWith('de')) {
-      return 'de';
-    }
-    return defaultLocale;
+    this.locale = c.get(LOCALE_KEY) || defaultLocale;
   }
 
   t(key: TranslationKeys, params: Record<string, string> = {}): string {
