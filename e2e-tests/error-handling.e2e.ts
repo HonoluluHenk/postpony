@@ -33,9 +33,9 @@ test.describe('Error Handling', () => {
   test('should show HTMX error for invalid updates in edit page', async ({page}) => {
     // 1. Create a session first
     await page.goto('/create');
-    await page.getByLabel('ReSchedule Name')
+    await page.getByLabel('Postponement Name')
       .fill('Error Test Session');
-    await page.getByRole('button', {name: 'Create ReSchedule'})
+    await page.getByRole('button', {name: 'Create Postponement'})
       .click();
     await page.waitForURL(/\/edit\/.+/);
 

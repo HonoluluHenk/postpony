@@ -1,14 +1,14 @@
 import { expect, test } from './fixtures';
 
-test.describe('Reschedule Editing', () => {
+test.describe('Postponement Editing', () => {
   test.beforeEach(async ({page}) => {
     // Start by creating a session to edit
     await page.goto('/create');
-    await page.getByLabel('ReSchedule Name')
+    await page.getByLabel('Postponement Name')
       .fill('Edit Test Session');
-    await page.getByRole('button', {name: 'Create ReSchedule'})
+    await page.getByRole('button', {name: 'Create Postponement'})
       .click();
-    await expect(page.getByRole('heading', {name: 'Editing ReSchedule', level: 2}))
+    await expect(page.getByRole('heading', {name: 'Editing Postponement', level: 2}))
       .toContainText('Edit Test Session');
   });
 

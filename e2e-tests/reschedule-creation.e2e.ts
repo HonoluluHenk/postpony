@@ -1,28 +1,28 @@
 import { expect, test } from './fixtures';
 
-test.describe('Reschedule Creation', () => {
+test.describe('Postponement Creation', () => {
   test.beforeEach(async ({page}) => {
     await page.goto('/');
   });
 
-  test('should create a new Reschedule session', async ({page}) => {
-    // 1. Click on "Create a new ReSchedule"
-    await page.getByRole('button', {name: 'Create a new ReSchedule'})
+  test('should create a new Postponement session', async ({page}) => {
+    // 1. Click on "Create a new Postponement"
+    await page.getByRole('button', {name: 'Create a new Postponement'})
       .click();
 
     // 2. Check if we are on the create form (HTMX swap happened)
-    await expect(page.getByRole('heading', {name: 'Create a New ReSchedule'}))
+    await expect(page.getByRole('heading', {name: 'Create a New Postponement'}))
       .toBeVisible();
 
     // 3. Fill in the name and submit
     const sessionName = 'Test Tournament 2024';
-    await page.getByLabel('ReSchedule Name')
+    await page.getByLabel('Postponement Name')
       .fill(sessionName);
-    await page.getByRole('button', {name: 'Create ReSchedule'})
+    await page.getByRole('button', {name: 'Create Postponement'})
       .click();
 
     // 4. Check if we moved to the edit screen
-    await expect(page.getByRole('heading', {name: 'Editing ReSchedule', level: 2}))
+    await expect(page.getByRole('heading', {name: 'Editing Postponement', level: 2}))
       .toContainText(sessionName);
 
     // 5. Verify the owner password is displayed
@@ -52,16 +52,16 @@ test.describe('Reschedule Creation', () => {
     await checkA11y();
 
     // Create page
-    await page.getByRole('button', {name: 'Create a new ReSchedule'})
+    await page.getByRole('button', {name: 'Create a new Postponement'})
       .click();
     await checkA11y();
 
     // Submit and check Edit page
-    await page.getByLabel('ReSchedule Name')
+    await page.getByLabel('Postponement Name')
       .fill('A11y Test');
     await Promise.all([
       page.waitForURL(/\/edit\/.+/),
-      page.getByRole('button', {name: 'Create ReSchedule'})
+      page.getByRole('button', {name: 'Create Postponement'})
         .click(),
     ]);
     await checkA11y();

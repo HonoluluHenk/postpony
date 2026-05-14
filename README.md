@@ -1,6 +1,6 @@
-# Game Re-scheduler
+# Game Postponer
 
-A web-based application designed to streamline rescheduling sports matches by calculating optimal times based on venue availability, team/player availability, and holidays.
+A web-based application designed to streamline postponement of sports matches by calculating optimal times based on venue availability, team/player availability, and holidays.
 
 ## Tech Stack
 

@@ -64,12 +64,12 @@ describe('App.requireParam', () => {
       mockContext.req.header = (name: string) => 'en';
       const appEn = createApp(mockContext);
       expect(appEn.t('welcome'))
-        .toBe('Welcome to the Game Re-scheduler');
+        .toBe('Welcome to the Game Postponer');
 
       mockContext.req.header = (name: string) => 'de';
       const appDe = createApp(mockContext);
       expect(appDe.t('welcome'))
-        .toBe('Willkommen beim Spiel-Umplaner');
+        .toBe('Willkommen beim Spiel-Verschieber');
     });
 
     it('should handle parameters in translations', () => {

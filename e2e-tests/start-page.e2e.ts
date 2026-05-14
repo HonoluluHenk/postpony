@@ -7,14 +7,14 @@ test.describe('Start Page', () => {
 
   test('should have the correct title and heading', async ({page}) => {
     await expect(page)
-      .toHaveTitle(/Game Re-scheduler/);
+      .toHaveTitle(/Game Postponer/);
     await expect(page.getByRole('heading', {level: 2}))
-      .toContainText('Welcome to the Game Re-scheduler');
+      .toContainText('Welcome to the Game Postponer');
   });
 
   test('should display the main action buttons', async ({page}) => {
-    const createButton = page.getByRole('button', {name: 'Create a new ReSchedule'});
-    const editButton = page.getByRole('button', {name: 'Edit an existing ReSchedule'});
+    const createButton = page.getByRole('button', {name: 'Create a new Postponement'});
+    const editButton = page.getByRole('button', {name: 'Edit an existing Postponement'});
 
     await expect(createButton)
       .toBeVisible();
@@ -23,7 +23,7 @@ test.describe('Start Page', () => {
   });
 
   test('should have a descriptive welcome message', async ({page}) => {
-    await expect(page.getByText('Streamline your sports match rescheduling with ease.'))
+    await expect(page.getByText('Streamline your sports match postponement with ease.'))
       .toBeVisible();
   });
 
@@ -52,7 +52,7 @@ test.describe('Start Page', () => {
     await expect(page.getByRole('heading', {level: 1}))
       .toHaveCount(1);
     await expect(page.getByRole('heading', {level: 1}))
-      .toContainText('Game Re-scheduler');
+      .toContainText('Game Postponer');
 
     // 3. Header and Footer landmarks
     await expect(page.getByRole('banner'))

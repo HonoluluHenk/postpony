@@ -1,10 +1,10 @@
 # AI Agents Guidelines
 
-This document provides context and guidelines for AI agents working on the Game Re-scheduler project.
+This document provides context and guidelines for AI agents working on the Game Postponer project.
 
 ## Project Overview
 
-The Game Re-scheduler is a web-based application designed to streamline rescheduling sports matches by calculating
+The Game Postponer is a web-based application designed to streamline postponement of sports matches by calculating
 optimal times based on venue availability, team/player availability, and holidays.
 It also helps users to vote and eventually decide on the best rescheduling options.
 

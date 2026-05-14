@@ -1,7 +1,7 @@
 {
   "name": "game-scheduler",
   "version": "1.0.0",
-  "description": "Game Re-scheduler for sports clubs",
+  "description": "Game Postponer for sports clubs",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
