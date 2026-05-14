@@ -9,7 +9,8 @@ test.describe('Localization', () => {
       .toContainText('Welcome to the Game Postponer');
 
     // Switch to German
-    await page.getByTitle('Deutsch')
+    await page.getByRole('navigation', {name: 'Language selection'})
+      .getByRole('link', {name: 'German'})
       .click();
 
     // Verify German text
@@ -17,7 +18,8 @@ test.describe('Localization', () => {
       .toContainText('Willkommen beim Spiel-Verschieber');
 
     // Switch back to English
-    await page.getByTitle('English')
+    await page.getByRole('navigation', {name: 'Sprachauswahl'})
+      .getByRole('link', {name: 'Englisch'})
       .click();
 
     // Verify English text
@@ -42,7 +44,8 @@ test.describe('Localization', () => {
     await page.goto('/');
 
     // Switch to German
-    await page.getByTitle('Deutsch')
+    await page.getByRole('navigation', {name: 'Language selection'})
+      .getByRole('link', {name: 'German'})
       .click();
 
     // Check localStorage
