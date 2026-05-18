@@ -21,8 +21,8 @@ test.describe('Invitation Link', () => {
     const href = await inviteLink.getAttribute('href');
     const text = await inviteLink.innerText();
 
-    console.log(`[DEBUG_LOG] Invite Link href: ${href}`);
-    console.log(`[DEBUG_LOG] Invite Link text: ${text}`);
+    //console.log(`[DEBUG_LOG] Invite Link href: ${href}`);
+    //console.log(`[DEBUG_LOG] Invite Link text: ${text}`);
 
     // Verify it's an absolute URL
     // baseURL in playwright.config.ts is https://game-scheduler.localhost:3000
