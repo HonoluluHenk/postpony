@@ -19,7 +19,7 @@
 
 <section class="row items-center wrap">
   <p class="chip outline"><%= it.t('status_label', {status: it.session.status}) %></p>
-  <p class="max"><%= it.t('invite_link_label') %> <a href="/join/<%= it.session.id %>">/join/<%= it.session.id %></a></p>
+  <p class="max"><%= it.t('invite_link_label') %> <a href="<%= it.baseUrl %>/join/<%= it.session.id %>"><%= it.baseUrl %>/join/<%= it.session.id %></a></p>
 </section>
 
 <section>

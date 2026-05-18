@@ -2,13 +2,13 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import * as fs from 'fs';
 import { type Context, Hono } from 'hono';
-import { setCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
 
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { createServer as createHttpsServer } from 'node:https';
-import * as path from 'path';
+import path from 'path';
 import { App } from './app';
+import config from './config';
 import { AppError } from './lib/errors';
 import { languageMiddleware } from './lib/middleware/language';
 import { handleCreateGet } from './routes/create/get';
@@ -67,8 +67,8 @@ app.onError(async (err, c) => {
   return c.html(appInstance.render('error.eta', {title: 'Error', message}), {status});
 });
 
-const port = parseInt(process.env['APP_PORT'] ?? '3000', 10);
-const hostname = process.env['APP_HOSTNAME'] ?? 'game-scheduler.localhost';
+const port = config.get('port');
+const hostname = config.get('hostname');
 
 const certPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.pem`);
 const keyPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.key`);

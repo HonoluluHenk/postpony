@@ -2,6 +2,7 @@ import { Eta } from 'eta';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import path from 'node:path';
+import config from './config';
 import { AppError, InternalError, StateError } from './lib/errors';
 import { LOCALE_KEY } from './lib/middleware/language';
 import type { RescheduleSession } from './lib/models';
@@ -29,10 +30,14 @@ export class App {
   readonly sessions: Record<string, RescheduleSession> = App.sessions;
 
   render(template: string, data: object): string {
+    const url = new URL(this.c.req.url);
+    const baseUrl = config.get('baseUrl') || `${url.protocol}//${url.host}`;
+
     return eta.render(template, {
       ...data,
       t: (key: TranslationKeys, params: Record<string, string>) => this.t(key, params),
       locale: this.locale,
+      baseUrl,
     });
   }
 
