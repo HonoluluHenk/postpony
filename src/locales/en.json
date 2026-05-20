@@ -13,6 +13,7 @@
   "language_selection": "Language selection",
   "language_en": "English",
   "language_de": "German",
+  "loading": "Loading…",
   "max_overlaps": "Maximum Overlapping Matches (for this session)",
   "missing_param": "Missing required parameter: <%= it.name %>",
   "name_required": "Name is required",

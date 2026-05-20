@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/vendor/css/beer.min.css">
   <script type="module" src="/vendor/js/beer.min.js"></script>
   <script type="module" src="/vendor/js/material-dynamic-colors.min.js"></script>
+  <script src="/js/spinner.js"></script>
   <script src="/js/main.js"></script>
   <style>
     :root {

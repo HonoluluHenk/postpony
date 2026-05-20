@@ -1,13 +1,18 @@
 /**
- * Initializes HTMX configuration and event listeners.
+ * Initializes HTMX configuration and event listeners for the spinner.
+ * @param {Spinner} spinner - The spinner instance.
  */
-function initHtmx() {
+function initHtmx(spinner) {
   if (typeof htmx === 'undefined') {
     return;
   }
-
   htmx.config.defaultSwapStyle = 'outerHTML';
-  document.addEventListener('htmx:beforeOnLoad', function (evt) {
+  document.addEventListener('htmx:beforeRequest', () => spinner.show());
+  document.addEventListener('htmx:afterRequest', () => spinner.hide());
+  document.addEventListener('htmx:responseError', () => spinner.hide());
+  document.addEventListener('htmx:sendError', () => spinner.hide());
+  document.addEventListener('htmx:timeout', () => spinner.hide());
+  document.addEventListener('htmx:beforeOnLoad', (evt) => {
     if (evt.detail.xhr.status === 400) {
       evt.detail.shouldSwap = true;
       evt.detail.isError = false;
@@ -62,9 +67,9 @@ function initLanguage() {
 }
 
 // Initialize immediately
-initHtmx();
-
+const spinner = new Spinner();
 window.addEventListener('load', () => {
   initTheme();
   initLanguage();
+  initHtmx(spinner);
 });

@@ -13,6 +13,7 @@
   "language_selection": "Sprachauswahl",
   "language_en": "Englisch",
   "language_de": "Deutsch",
+  "loading": "Wird geladen…",
   "max_overlaps": "Maximale Überschneidungen (für diese Sitzung)",
   "missing_param": "Erforderlicher Parameter fehlt: <%= it.name %>",
   "name_required": "Name ist erforderlich",
