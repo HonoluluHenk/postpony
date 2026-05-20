@@ -9,7 +9,7 @@ export const handleEditGet = (app: App) => {
 
   const ownerPassword = app.c.req.query('ownerPassword') || null;
   const isPartial = app.isPartial;
-  const html = app.render('edit.eta', {
+  const html = app.render('edit/id/edit.eta', {
     title: app.t('edit_reschedule_title', {name: session.name}),
     session,
     ownerPassword,

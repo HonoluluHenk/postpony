@@ -8,7 +8,7 @@ import { LOCALE_KEY } from './lib/middleware/language';
 import type { RescheduleSession } from './lib/models';
 import { defaultLocale, getTranslation, type Locale, type TranslationKeys } from './locales';
 
-export const eta = new Eta({views: path.join(process.cwd(), 'src/views')});
+export const eta = new Eta({views: path.join(process.cwd(), 'src/routes')});
 
 export class App {
   readonly locale: Locale;

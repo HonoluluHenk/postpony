@@ -1,5 +1,5 @@
 <% if (!it.isPartial) { %>
-<% layout('./layouts/main.eta') %>
+<% layout('../../layouts/main.eta') %>
 <% } %>
 
 <header>

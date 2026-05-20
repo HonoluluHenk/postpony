@@ -15,7 +15,7 @@ export const handleCreatePost = async (app: App) => {
   if (!validation.success) {
     const errors = mapValidationToErrors(validation);
 
-    const html = app.render('create.eta', {
+    const html = app.render('create/create.eta', {
       title: app.t('create_reschedule_title'),
       isPartial: app.isPartial,
       errors,
