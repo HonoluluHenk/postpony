@@ -24,29 +24,32 @@ export const handleEditPlayersPost = async (app: App) => {
     if (app.isPartial) {
       const playerName = values['playerName'] as string;
       const error = errors['playerName'];
-      const playerList = session.players.map((p: Player) => `<li>${p.name}</li>`)
+      const playerList = session.players.map((p: Player) => `
+          <li>
+            <i>person</i>
+            <div class="max">${p.name}</div>
+          </li>`)
         .join('');
 
       return app.c.html(`
-        <section id="team-management">
+        <section id="team-management" class="padding small-round surface-variant s12 m6">
           <header>
-            <h4>Home Team Players</h4>
+            <h4>${app.t('home_team_players')}</h4>
           </header>
-          <ul id="player-list">
+          <ul id="player-list" class="list">
             ${playerList}
           </ul>
-          <form hx-post="/edit/${session.id}/players" hx-target="#team-management">
+          <form hx-post="/edit/${session.id}/players" hx-target="#team-management" class="mt-4">
             <fieldset>
-              <legend class="none">Home Team Players</legend>
-              <div class="form-group">
-                <label for="playerName">New Player Name</label>
-                <input type="text" id="playerName" name="playerName" value="${playerName}"
-                       ${error ? 'aria-invalid="true" aria-describedby="playerName-error"' : ''}>
-                ${error ? `<span id="playerName-error" class="error-message" role="alert">${error}</span>` : ''}
+              <legend class="none">${app.t('home_team_players')}</legend>
+              <div class="field label border fill ${error ? 'invalid' : ''}">
+                <input type="text" id="playerName" name="playerName" value="${playerName}">
+                <label for="playerName">${app.t('new_player_name')}</label>
+                ${error ? `<span class="error">${error}</span>` : ''}
               </div>
             </fieldset>
             <nav class="right-align">
-              <button type="submit">Add Player</button>
+              <button type="submit">${app.t('add_player')}</button>
             </nav>
           </form>
         </section>
@@ -64,26 +67,30 @@ export const handleEditPlayersPost = async (app: App) => {
   });
 
   if (app.isPartial) {
-    const playerList = session.players.map((p: Player) => `<li>${p.name}</li>`)
+    const playerList = session.players.map((p: Player) => `
+        <li>
+          <i>person</i>
+          <div class="max">${p.name}</div>
+        </li>`)
       .join('');
     return app.c.html(`
-      <section id="team-management">
+      <section id="team-management" class="padding small-round surface-variant s12 m6">
         <header>
-          <h4>Home Team Players</h4>
+          <h4>${app.t('home_team_players')}</h4>
         </header>
-        <ul id="player-list">
+        <ul id="player-list" class="list">
           ${playerList}
         </ul>
-        <form hx-post="/edit/${session.id}/players" hx-target="#team-management">
+        <form hx-post="/edit/${session.id}/players" hx-target="#team-management" class="mt-4">
           <fieldset>
-            <legend class="none">Home Team Players</legend>
-            <div class="form-group">
-              <label for="playerName">New Player Name</label>
+            <legend class="none">${app.t('home_team_players')}</legend>
+            <div class="field label border fill">
               <input type="text" id="playerName" name="playerName" required>
+              <label for="playerName">${app.t('new_player_name')}</label>
             </div>
           </fieldset>
           <nav class="right-align">
-            <button type="submit">Add Player</button>
+            <button type="submit">${app.t('add_player')}</button>
           </nav>
         </form>
       </section>

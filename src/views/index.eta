@@ -7,7 +7,7 @@
   </header>
 
   <nav class="center-align mt-4">
-    <button hx-get="/create" hx-target="#main-content" hx-swap="innerHTML"><%= it.t('create_new') %></button>
-    <button class="outline" hx-get="/edit" hx-target="#main-content" hx-swap="innerHTML"><%= it.t('edit_existing') %></button>
+    <button hx-get="/create" hx-target="#main-content"><%= it.t('create_new') %></button>
+    <button class="outline" hx-get="/edit" hx-target="#main-content"><%= it.t('edit_existing') %></button>
   </nav>
 </section>

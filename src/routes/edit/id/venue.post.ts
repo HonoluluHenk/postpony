@@ -31,22 +31,21 @@ export const handleEditVenuePost = async (app: App) => {
       const error = errors['maxOverlaps'];
 
       return app.c.html(`
-        <section id="venue-management">
+        <section id="venue-management" class="padding small-round surface-variant s12 m6">
           <header>
-            <h4>Venue Management</h4>
+            <h4>${app.t('venue_management')}</h4>
           </header>
           <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
             <fieldset>
-              <legend class="none">Venue Management</legend>
-              <div class="form-group">
-                <label for="maxOverlaps">Maximum Overlapping Matches (for this session)</label>
-                <input type="number" id="maxOverlaps" name="maxOverlaps" value="${maxOverlaps}" min="0"
-                       ${error ? 'aria-invalid="true" aria-describedby="maxOverlaps-error"' : ''}>
-                ${error ? `<span id="maxOverlaps-error" class="error-message" role="alert">${error}</span>` : ''}
+              <legend class="none">${app.t('venue_management')}</legend>
+              <div class="field label border fill ${error ? 'invalid' : ''}">
+                <input type="number" id="maxOverlaps" name="maxOverlaps" value="${maxOverlaps}" min="0">
+                <label for="maxOverlaps">${app.t('max_overlaps')}</label>
+                ${error ? `<span class="error">${error}</span>` : ''}
               </div>
             </fieldset>
             <nav class="right-align">
-              <button type="submit">Update Venue Settings</button>
+              <button type="submit">${app.t('update_venue_settings')}</button>
             </nav>
           </form>
         </section>
@@ -61,27 +60,27 @@ export const handleEditVenuePost = async (app: App) => {
   session.maxOverlaps = maxOverlaps;
 
   if (app.isPartial) {
-    const error = undefined; // No error if we reached here
     return app.c.html(`
-      <section id="venue-management">
+      <section id="venue-management" class="padding small-round surface-variant s12 m6">
         <header>
-          <h4>Venue Management</h4>
+          <h4>${app.t('venue_management')}</h4>
         </header>
         <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
           <fieldset>
-            <legend class="none">Venue Management</legend>
-            <div class="form-group">
-              <label for="maxOverlaps">Maximum Overlapping Matches (for this session)</label>
+            <legend class="none">${app.t('venue_management')}</legend>
+            <div class="field label border fill">
               <input type="number" id="maxOverlaps" name="maxOverlaps" value="${session.maxOverlaps || ''}" min="0">
+              <label for="maxOverlaps">${app.t('max_overlaps')}</label>
             </div>
           </fieldset>
           <nav class="right-align">
-            <button type="submit">Update Venue Settings</button>
+            <button type="submit">${app.t('update_venue_settings')}</button>
           </nav>
         </form>
         <aside class="toast success top" role="alert">
+          <i>check_circle</i>
           <div class="max">
-            <p class="success">Venue settings updated!</p>
+            <p>${app.t('venue_settings_updated')}</p>
           </div>
         </aside>
       </section>
