@@ -11,12 +11,12 @@ import { App } from './app';
 import config from './config';
 import { AppError } from './lib/errors';
 import { languageMiddleware } from './lib/middleware/language';
-import { handleCreateGet } from './routes/create/get';
-import { handleCreatePost } from './routes/create/post';
-import { handleEditGet } from './routes/edit/id/get';
-import { handleEditPlayersPost } from './routes/edit/id/players.post';
-import { handleEditVenuePost } from './routes/edit/id/venue.post';
-import { handleIndexGet } from './routes/index.get';
+import { handleCreateGet } from './routes/create/create-get';
+import { handleCreatePost } from './routes/create/create-post';
+import { handleEditGet } from './routes/edit/id/edit-id-get';
+import { handleEditPlayersPost } from './routes/edit/id/players-post';
+import { handleEditVenuePost } from './routes/edit/id/venue-post';
+import { handleIndexGet } from './routes/index-get';
 
 const app = new Hono();
 
