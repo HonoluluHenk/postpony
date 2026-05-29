@@ -43,7 +43,8 @@
                 <input type="hidden" name="teamName" value="<%= it.teamName %>">
                 <input type="hidden" name="leagueName" value="<%= it.leagueName %>">
                 <input type="hidden" name="clubName" value="<%= it.clubName %>">
-                <input type="hidden" name="leagueUrl" value="<%= it.leagueUrl %>">
+                <input type="hidden" name="championship" value="<%= it.championship %>">
+                <input type="hidden" name="group" value="<%= it.group %>">
                 <button type="submit" class="small">
                   <%= it.t('scrape_create_session') %>
                 </button>
@@ -56,8 +57,9 @@
   <% } %>
 
   <nav class="right-align">
-    <a href="/create/scrape/teams?clubUrl=<%= encodeURIComponent(it.clubUrl || '') %>"
-       hx-get="/create/scrape/teams?clubUrl=<%= encodeURIComponent(it.clubUrl || '') %>"
+    <% const teamsQuery = `club=${encodeURIComponent(it.club || '')}&clubName=${encodeURIComponent(it.clubName || '')}&searchPattern=${encodeURIComponent(it.searchPattern || '')}&regionName=${encodeURIComponent(it.regionName || '')}` %>
+    <a href="/create/scrape/teams?<%= teamsQuery %>"
+       hx-get="/create/scrape/teams?<%= teamsQuery %>"
        hx-target="#main-content"
        hx-push-url="true">
       <%= it.t('scrape_back') %>

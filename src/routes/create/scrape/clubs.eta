@@ -10,10 +10,12 @@
     <p><%= it.t('scrape_no_clubs') %></p>
   <% } else { %>
     <ul class="list border" role="list">
+      <% const regionQuery = `searchPattern=${encodeURIComponent(it.searchPattern)}&regionName=${encodeURIComponent(it.regionName)}` %>
       <% for (const club of it.clubs) { %>
         <li>
-          <a href="/create/scrape/teams?clubUrl=<%= encodeURIComponent(club.url) %>"
-             hx-get="/create/scrape/teams?clubUrl=<%= encodeURIComponent(club.url) %>"
+          <% const teamsQuery = `club=${encodeURIComponent(club.id)}&clubName=${encodeURIComponent(club.name)}&${regionQuery}` %>
+          <a href="/create/scrape/teams?<%= teamsQuery %>"
+             hx-get="/create/scrape/teams?<%= teamsQuery %>"
              hx-target="#main-content"
              hx-push-url="true">
             <%= club.name %>

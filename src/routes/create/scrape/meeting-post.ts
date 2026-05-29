@@ -12,7 +12,8 @@ const MeetingSchema = v.object({
   teamName: v.optional(v.string(), ''),
   leagueName: v.optional(v.string(), ''),
   clubName: v.optional(v.string(), ''),
-  leagueUrl: v.optional(v.string(), ''),
+  championship: v.optional(v.string(), ''),
+  group: v.optional(v.string(), ''),
 });
 
 export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
@@ -49,7 +50,8 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
       },
       team: m.teamName,
       league: m.leagueName,
-      leagueUrl: m.leagueUrl,
+      championship: m.championship,
+      group: m.group,
       club: m.clubName,
     },
   };

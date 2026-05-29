@@ -1,22 +1,30 @@
 import { type HTMLElement, parse } from 'node-html-parser';
 
 const BASE_URL = 'https://www.click-tt.ch';
-const REGIONS_URL = `${BASE_URL}/cgi-bin/WebObjects/nuLigaTTCH.woa/wa/clubSearch?federation=STT&preferredLanguage=German`;
+const WA_URL = `${BASE_URL}/cgi-bin/WebObjects/nuLigaTTCH.woa/wa`;
+
+const REGIONS_URL = `${WA_URL}/clubSearch?federation=STT&preferredLanguage=German`;
+const CLUBS_URL = `${WA_URL}/clubSearch?searchPattern={searchPattern}&federation=STT&regionName={regionName}&federations=STT`;
+const TEAMS_URL = `${WA_URL}/clubTeams?club={club}`;
+const MEETINGS_URL =
+  `${WA_URL}/groupPage?championship={championship}&group={group}&displayTyp=gesamt&displayDetail=meetings`;
 
 export interface Region {
   name: string;
-  url: string;
+  searchPattern: string;
+  regionName: string;
 }
 
 export interface Club {
   name: string;
-  url: string;
+  id: string;
 }
 
 export interface Team {
   name: string;
   leagueName: string;
-  leagueUrl: string;
+  championship: string;
+  group: string;
 }
 
 export interface Meeting {
@@ -27,11 +35,17 @@ export interface Meeting {
   guestTeam: string;
 }
 
-function absoluteUrl(href: string): string {
-  if (href.startsWith('http')) {
-    return href;
-  }
-  return `${BASE_URL}${href.startsWith('/') ? '' : '/'}${href}`;
+/**
+ * Fills `{placeholder}` tokens in a URL template with URL-encoded values.
+ */
+function buildUrl(template: string, params: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_match, key: string) => {
+    const value = params[key];
+    if (value === undefined) {
+      throw new Error(`Missing URL parameter: ${key}`);
+    }
+    return encodeURIComponent(value);
+  });
 }
 
 function decode(s: string): string {
@@ -42,6 +56,14 @@ function decode(s: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, '\'')
     .replace(/&nbsp;/g, ' ');
+}
+
+function queryParam(href: string, name: string): string | null {
+  try {
+    return new URL(decode(href), BASE_URL).searchParams.get(name);
+  } catch {
+    return null;
+  }
 }
 
 async function fetchHtml(url: string): Promise<HTMLElement> {
@@ -68,18 +90,22 @@ export async function fetchRegions(): Promise<Region[]> {
     if (!href || !name) {
       continue;
     }
-    const url = absoluteUrl(decode(href));
-    if (seen.has(url)) {
+    const searchPattern = queryParam(href, 'searchPattern');
+    const regionName = queryParam(href, 'regionName');
+    if (!searchPattern || !regionName) {
       continue;
     }
-    seen.add(url);
-    regions.push({name: decode(name), url});
+    if (seen.has(searchPattern)) {
+      continue;
+    }
+    seen.add(searchPattern);
+    regions.push({name: decode(name), searchPattern, regionName});
   }
   return regions;
 }
 
-export async function fetchClubs(regionUrl: string): Promise<Club[]> {
-  const root = await fetchHtml(regionUrl);
+export async function fetchClubs(searchPattern: string, regionName: string): Promise<Club[]> {
+  const root = await fetchHtml(buildUrl(CLUBS_URL, {searchPattern, regionName}));
   const links = root.querySelectorAll('a[href*="clubInfoDisplay?club="]');
   const seen = new Set<string>();
   const clubs: Club[] = [];
@@ -89,30 +115,21 @@ export async function fetchClubs(regionUrl: string): Promise<Club[]> {
     if (!href || !name) {
       continue;
     }
-    const url = absoluteUrl(decode(href));
-    if (seen.has(url)) {
+    const id = queryParam(href, 'club');
+    if (!id) {
       continue;
     }
-    seen.add(url);
-    clubs.push({name: decode(name), url});
+    if (seen.has(id)) {
+      continue;
+    }
+    seen.add(id);
+    clubs.push({name: decode(name), id});
   }
   return clubs;
 }
 
-/**
- * Derives the clubTeams URL from a clubInfoDisplay URL by extracting the club id.
- */
-export function clubTeamsUrlFromClubUrl(clubUrl: string): string {
-  const match = /club=(\d+)/.exec(clubUrl);
-  if (!match) {
-    throw new Error(`Could not extract club id from URL: ${clubUrl}`);
-  }
-  return `${BASE_URL}/cgi-bin/WebObjects/nuLigaTTCH.woa/wa/clubTeams?club=${match[1]}`;
-}
-
-export async function fetchTeams(clubUrl: string): Promise<Team[]> {
-  const teamsUrl = clubTeamsUrlFromClubUrl(clubUrl);
-  const root = await fetchHtml(teamsUrl);
+export async function fetchTeams(clubId: string): Promise<Team[]> {
+  const root = await fetchHtml(buildUrl(TEAMS_URL, {club: clubId}));
   const tables = root.querySelectorAll('table.result-set');
   const teams: Team[] = [];
   for (const table of tables) {
@@ -132,29 +149,24 @@ export async function fetchTeams(clubUrl: string): Promise<Team[]> {
       if (!teamName || !leagueName || !href) {
         continue;
       }
+      const championship = queryParam(href, 'championship');
+      const group = queryParam(href, 'group');
+      if (!championship || !group) {
+        continue;
+      }
       teams.push({
         name: decode(teamName),
         leagueName: decode(leagueName),
-        leagueUrl: absoluteUrl(decode(href)),
+        championship,
+        group,
       });
     }
   }
   return teams;
 }
 
-/**
- * Adds `displayTyp=gesamt&displayDetail=meetings` to a groupPage URL.
- */
-export function meetingsUrlFromLeagueUrl(leagueUrl: string): string {
-  const u = new URL(leagueUrl);
-  u.searchParams.set('displayTyp', 'gesamt');
-  u.searchParams.set('displayDetail', 'meetings');
-  return u.toString();
-}
-
-export async function fetchMeetings(leagueUrl: string): Promise<Meeting[]> {
-  const url = meetingsUrlFromLeagueUrl(leagueUrl);
-  const root = await fetchHtml(url);
+export async function fetchMeetings(championship: string, group: string): Promise<Meeting[]> {
+  const root = await fetchHtml(buildUrl(MEETINGS_URL, {championship, group}));
   const table = root.querySelector('table.result-set');
   if (!table) {
     return [];

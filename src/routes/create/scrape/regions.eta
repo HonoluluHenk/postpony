@@ -11,8 +11,9 @@
     <ul class="list border" role="list">
       <% for (const region of it.regions) { %>
         <li>
-          <a href="/create/scrape/clubs?regionUrl=<%= encodeURIComponent(region.url) %>"
-             hx-get="/create/scrape/clubs?regionUrl=<%= encodeURIComponent(region.url) %>"
+          <% const regionQuery = `searchPattern=${encodeURIComponent(region.searchPattern)}&regionName=${encodeURIComponent(region.regionName)}` %>
+          <a href="/create/scrape/clubs?<%= regionQuery %>"
+             hx-get="/create/scrape/clubs?<%= regionQuery %>"
              hx-target="#main-content"
              hx-push-url="true">
             <%= region.name %>

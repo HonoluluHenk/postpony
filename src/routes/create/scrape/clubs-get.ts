@@ -2,30 +2,23 @@ import type { App } from '../../../app';
 import { fetchClubs } from '../../../lib/click-tt-scraper';
 
 export const handleScrapeClubsGet = async (app: App): Promise<Response> => {
-  const regionUrl = app.c.req.query('regionUrl');
-  if (!regionUrl) {
-    app.failure(app.t('missing_param', {name: 'regionUrl'}));
+  const searchPattern = app.c.req.query('searchPattern');
+  const regionName = app.c.req.query('regionName');
+  if (!searchPattern) {
+    app.failure(app.t('missing_param', {name: 'searchPattern'}));
+  }
+  if (!regionName) {
+    app.failure(app.t('missing_param', {name: 'regionName'}));
   }
 
-  const regionName = extractRegionName(regionUrl);
-  const clubs = await fetchClubs(regionUrl);
+  const clubs = await fetchClubs(searchPattern, regionName);
 
   const html = app.render('create/scrape/clubs.eta', {
     title: app.t('scrape_choose_club'),
     isPartial: app.isPartial,
     clubs,
-    regionUrl,
+    searchPattern,
     regionName,
   });
   return app.c.html(html);
 };
-
-function extractRegionName(regionUrl: string): string {
-  try {
-    const u = new URL(regionUrl);
-    const raw = u.searchParams.get('regionName') ?? '';
-    return raw.replace(/\+/g, ' ');
-  } catch {
-    return '';
-  }
-}
