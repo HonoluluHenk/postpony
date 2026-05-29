@@ -15,6 +15,25 @@ It also helps users to vote and eventually decide on the best rescheduling optio
 - **Standards**: WCAG 2.2 AA for accessibility.
 - **Testing**: Playwright for E2E and accessibility testing.
 
+## Core Technologies
+
+- Hono (web framework)
+- TypeScript
+- Valibot (schema validation)
+- Eta (template engine)
+- Convict (configuration management)
+- Temporal polyfill (@js-temporal/polyfill)
+- HTML
+- Raw CSS without Frameworks
+- Beer.css for Material Design
+- HTMX with defaultSwapStyle = 'outerHTML'
+- NX Monorepo
+- Playwright with Axe plugin
+- Vite
+- Vitest
+- Node.js HTTPS server (@hono/node-server)
+- Mise tool manager
+
 For more details, see:
 
 - [Project Specification](docs/specification.md)
@@ -54,17 +73,18 @@ When working on this codebase, please ensure:
     * Use semantic HTML and ARIA attributes for accessibility.
     * Prefer a11y selectors (e.g. `getByRole`) in playwright tests.
 
-2. **Security**: Respect the dual-password security model. Do not introduce traditional login systems without
-   reviewing [ADR 0002](docs/ADR/0002-security-model-dual-password.md).
-3. **Consistency**: Follow the patterns established in existing ADRs and documentation.
-4. **Localization**: Use framework-level i18n support for all UI text.
+2. **Security**:
+    * Respect the dual-password security model. Do not introduce traditional login systems without reviewing [ADR 0002](docs/ADR/0002-security-model-dual-password.md).
+3. **Consistency**:
+    * Follow the patterns established in existing ADRs and documentation.
+4. **Localization**:
+    * Use framework-level i18n support for all UI text.
 5. **Testing**:
-
     * Add or update unit-tests for any new features.
     * Add or update Playwright tests for any new features or UI changes.
     * Place test files alongside the respective source files.
-
-6. **Tools**: Use mise-en-place to install tools. Update the lockfile for tools required by the app.
+5. **Quality**
+    * On UI changes: verify changes using available Browser MCPs (first available: Firefox, Chrome, Playwright)
+6. **Tools**:
+    * Use mise-en-place to install tools. Update the lockfile for tools required by the app.
 7. **Code-Style**:
-    * HTMX uses defaultSwapStyle = 'outerHTML'
-    *
