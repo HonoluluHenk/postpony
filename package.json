@@ -28,6 +28,7 @@
     "convict": "^6.2.5",
     "eta": "^3.4.0",
     "hono": "^4.3.7",
+    "node-html-parser": "^7.1.0",
     "valibot": "^1.4.0"
   },
   "devDependencies": {

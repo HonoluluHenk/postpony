@@ -1,6 +1,4 @@
-<% if (!it.isPartial) { %>
 <% layout('../../layouts/main.eta') %>
-<% } %>
 
 <header>
   <h2><%~ it.t('edit_reschedule_title', {name: it.session.name}) %></h2>
@@ -32,6 +30,15 @@
       <header>
         <h4><%= it.t('venue_management') %></h4>
       </header>
+      <nav>
+        <a class="button"
+           href="/create/scrape"
+           hx-get="/create/scrape"
+           hx-target="#main-content"
+           hx-push-url="true">
+          <%= it.t('scrape_start_wizard') %>
+        </a>
+      </nav>
       <form hx-post="/edit/<%= it.session.id %>/venue" hx-target="#venue-management">
         <fieldset>
           <legend class="none"><%= it.t('venue_management') %></legend>

@@ -47,5 +47,9 @@
 </body>
 </html>
 <% } else { %>
-  <%~ it.body %>
+<main id="main-content" class="responsive">
+  <article>
+    <%~ it.body %>
+  </article>
+</main>
 <% } %>

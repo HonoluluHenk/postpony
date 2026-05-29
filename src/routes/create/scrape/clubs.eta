@@ -1,0 +1,34 @@
+<% layout('../../layouts/main.eta') %>
+
+<section id="create-section" class="padding small-round surface-variant">
+  <header>
+    <h2><%= it.t('scrape_choose_club') %></h2>
+    <p><strong><%= it.regionName %></strong></p>
+  </header>
+
+  <% if (!it.clubs || it.clubs.length === 0) { %>
+    <p><%= it.t('scrape_no_clubs') %></p>
+  <% } else { %>
+    <ul class="list border" role="list">
+      <% for (const club of it.clubs) { %>
+        <li>
+          <a href="/create/scrape/teams?clubUrl=<%= encodeURIComponent(club.url) %>"
+             hx-get="/create/scrape/teams?clubUrl=<%= encodeURIComponent(club.url) %>"
+             hx-target="#main-content"
+             hx-push-url="true">
+            <%= club.name %>
+          </a>
+        </li>
+      <% } %>
+    </ul>
+  <% } %>
+
+  <nav class="right-align">
+    <a href="/create/scrape"
+       hx-get="/create/scrape"
+       hx-target="#main-content"
+       hx-push-url="true">
+      <%= it.t('scrape_back') %>
+    </a>
+  </nav>
+</section>

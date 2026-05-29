@@ -1,0 +1,66 @@
+<% layout('../../layouts/main.eta') %>
+
+<section id="create-section" class="padding small-round surface-variant">
+  <header>
+    <h2><%= it.t('scrape_choose_match') %></h2>
+    <p>
+      <strong><%= it.teamName %></strong>
+      — <%= it.leagueName %>
+    </p>
+  </header>
+
+  <% if (!it.meetings || it.meetings.length === 0) { %>
+    <p><%= it.t('scrape_no_meetings') %></p>
+  <% } else { %>
+    <table class="border" role="table">
+      <thead>
+        <tr>
+          <th scope="col"><%= it.t('scrape_match_date') %></th>
+          <th scope="col"><%= it.t('scrape_match_time') %></th>
+          <th scope="col"><%= it.t('scrape_match_home') %></th>
+          <th scope="col"><%= it.t('scrape_match_guest') %></th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let i = 0; i < it.meetings.length; i++) { %>
+          <% const m = it.meetings[i]; %>
+          <tr>
+            <td><%= m.day %> <%= m.date %></td>
+            <td><%= m.time %></td>
+            <td><%= m.homeTeam %></td>
+            <td><%= m.guestTeam %></td>
+            <td>
+              <form method="post" action="/create/scrape/meeting"
+                    hx-post="/create/scrape/meeting"
+                    hx-target="#main-content"
+                    hx-push-url="true">
+                <input type="hidden" name="day" value="<%= m.day %>">
+                <input type="hidden" name="date" value="<%= m.date %>">
+                <input type="hidden" name="time" value="<%= m.time %>">
+                <input type="hidden" name="homeTeam" value="<%= m.homeTeam %>">
+                <input type="hidden" name="guestTeam" value="<%= m.guestTeam %>">
+                <input type="hidden" name="teamName" value="<%= it.teamName %>">
+                <input type="hidden" name="leagueName" value="<%= it.leagueName %>">
+                <input type="hidden" name="clubName" value="<%= it.clubName %>">
+                <input type="hidden" name="leagueUrl" value="<%= it.leagueUrl %>">
+                <button type="submit" class="small">
+                  <%= it.t('scrape_create_session') %>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+
+  <nav class="right-align">
+    <a href="/create/scrape/teams?clubUrl=<%= encodeURIComponent(it.clubUrl || '') %>"
+       hx-get="/create/scrape/teams?clubUrl=<%= encodeURIComponent(it.clubUrl || '') %>"
+       hx-target="#main-content"
+       hx-push-url="true">
+      <%= it.t('scrape_back') %>
+    </a>
+  </nav>
+</section>

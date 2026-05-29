@@ -1,0 +1,49 @@
+<% layout('../../layouts/main.eta') %>
+
+<section id="create-section" class="padding small-round surface-variant">
+  <header>
+    <h2><%= it.t('scrape_choose_team') %></h2>
+    <p><strong><%= it.clubName %></strong></p>
+  </header>
+
+  <% if (!it.teams || it.teams.length === 0) { %>
+    <p><%= it.t('scrape_no_teams') %></p>
+  <% } else { %>
+    <table class="border" role="table">
+      <thead>
+        <tr>
+          <th scope="col"><%= it.t('scrape_team') %></th>
+          <th scope="col"><%= it.t('scrape_league') %></th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let i = 0; i < it.teams.length; i++) { %>
+          <% const team = it.teams[i]; %>
+          <tr>
+            <td><%= team.name %></td>
+            <td><%= team.leagueName %></td>
+            <td>
+              <a href="/create/scrape/meetings?leagueUrl=<%= encodeURIComponent(team.leagueUrl) %>&teamName=<%= encodeURIComponent(team.name) %>&leagueName=<%= encodeURIComponent(team.leagueName) %>&clubName=<%= encodeURIComponent(it.clubName) %>"
+                 hx-get="/create/scrape/meetings?leagueUrl=<%= encodeURIComponent(team.leagueUrl) %>&teamName=<%= encodeURIComponent(team.name) %>&leagueName=<%= encodeURIComponent(team.leagueName) %>&clubName=<%= encodeURIComponent(it.clubName) %>"
+                 hx-target="#main-content"
+                 hx-push-url="true"
+                 aria-label="<%= it.t('scrape_choose_team') %>: <%= team.name %> – <%= team.leagueName %>">
+                →
+              </a>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+
+  <nav class="right-align">
+    <a href="/create/scrape/clubs?regionUrl=<%= encodeURIComponent(it.regionUrl || '') %>"
+       hx-get="/create/scrape/clubs?regionUrl=<%= encodeURIComponent(it.regionUrl || '') %>"
+       hx-target="#main-content"
+       hx-push-url="true">
+      <%= it.t('scrape_back') %>
+    </a>
+  </nav>
+</section>

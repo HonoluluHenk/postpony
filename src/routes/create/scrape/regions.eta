@@ -1,0 +1,33 @@
+<% layout('../../layouts/main.eta') %>
+
+<section id="create-section" class="padding small-round surface-variant">
+  <header>
+    <h2><%= it.t('scrape_choose_region') %></h2>
+  </header>
+
+  <% if (!it.regions || it.regions.length === 0) { %>
+    <p><%= it.t('scrape_no_regions') %></p>
+  <% } else { %>
+    <ul class="list border" role="list">
+      <% for (const region of it.regions) { %>
+        <li>
+          <a href="/create/scrape/clubs?regionUrl=<%= encodeURIComponent(region.url) %>"
+             hx-get="/create/scrape/clubs?regionUrl=<%= encodeURIComponent(region.url) %>"
+             hx-target="#main-content"
+             hx-push-url="true">
+            <%= region.name %>
+          </a>
+        </li>
+      <% } %>
+    </ul>
+  <% } %>
+
+  <nav class="right-align">
+    <a href="/create"
+       hx-get="/create"
+       hx-target="#main-content"
+       hx-push-url="true">
+      <%= it.t('scrape_back') %>
+    </a>
+  </nav>
+</section>
