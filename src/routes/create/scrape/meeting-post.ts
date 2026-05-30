@@ -9,9 +9,8 @@ const MeetingSchema = v.object({
   time: v.optional(v.string(), ''),
   homeTeam: v.pipe(v.string(), v.minLength(1)),
   guestTeam: v.pipe(v.string(), v.minLength(1)),
-  teamName: v.optional(v.string(), ''),
+  groupName: v.optional(v.string(), ''),
   leagueName: v.optional(v.string(), ''),
-  clubName: v.optional(v.string(), ''),
   championship: v.optional(v.string(), ''),
   group: v.optional(v.string(), ''),
 });
@@ -48,11 +47,10 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
         homeTeam: m.homeTeam,
         guestTeam: m.guestTeam,
       },
-      team: m.teamName,
       league: m.leagueName,
+      group: m.groupName,
       championship: m.championship,
-      group: m.group,
-      club: m.clubName,
+      groupId: m.group,
     },
   };
 

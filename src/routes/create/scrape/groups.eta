@@ -2,23 +2,22 @@
 
 <section id="create-section" class="padding small-round surface-variant">
   <header>
-    <h2><%= it.t('scrape_choose_club') %></h2>
-    <p><strong><%= it.regionName %></strong></p>
+    <h2><%= it.t('scrape_choose_group') %></h2>
+    <p><strong><%= it.leagueName %></strong></p>
   </header>
 
-  <% if (!it.clubs || it.clubs.length === 0) { %>
-    <p><%= it.t('scrape_no_clubs') %></p>
+  <% if (!it.groups || it.groups.length === 0) { %>
+    <p><%= it.t('scrape_no_groups') %></p>
   <% } else { %>
     <ul class="list border" role="list">
-      <% const regionQuery = `searchPattern=${encodeURIComponent(it.searchPattern)}&regionName=${encodeURIComponent(it.regionName)}` %>
-      <% for (const club of it.clubs) { %>
+      <% for (const group of it.groups) { %>
         <li>
-          <% const teamsQuery = `club=${encodeURIComponent(club.id)}&clubName=${encodeURIComponent(club.name)}&${regionQuery}` %>
+          <% const teamsQuery = `championship=${encodeURIComponent(group.championship)}&group=${encodeURIComponent(group.group)}&groupName=${encodeURIComponent(group.name)}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
           <a href="/create/scrape/teams?<%= teamsQuery %>"
              hx-get="/create/scrape/teams?<%= teamsQuery %>"
              hx-target="#main-content"
              hx-push-url="true">
-            <%= club.name %>
+            <%= group.name %>
           </a>
         </li>
       <% } %>

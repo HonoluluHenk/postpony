@@ -5,7 +5,7 @@
     <h2><%= it.t('scrape_choose_match') %></h2>
     <p>
       <strong><%= it.teamName %></strong>
-      — <%= it.leagueName %>
+      — <%= it.groupName %> — <%= it.leagueName %>
     </p>
   </header>
 
@@ -40,9 +40,8 @@
                 <input type="hidden" name="time" value="<%= m.time %>">
                 <input type="hidden" name="homeTeam" value="<%= m.homeTeam %>">
                 <input type="hidden" name="guestTeam" value="<%= m.guestTeam %>">
-                <input type="hidden" name="teamName" value="<%= it.teamName %>">
+                <input type="hidden" name="groupName" value="<%= it.groupName %>">
                 <input type="hidden" name="leagueName" value="<%= it.leagueName %>">
-                <input type="hidden" name="clubName" value="<%= it.clubName %>">
                 <input type="hidden" name="championship" value="<%= it.championship %>">
                 <input type="hidden" name="group" value="<%= it.group %>">
                 <button type="submit" class="small">
@@ -57,7 +56,7 @@
   <% } %>
 
   <nav class="right-align">
-    <% const teamsQuery = `club=${encodeURIComponent(it.club || '')}&clubName=${encodeURIComponent(it.clubName || '')}&searchPattern=${encodeURIComponent(it.searchPattern || '')}&regionName=${encodeURIComponent(it.regionName || '')}` %>
+    <% const teamsQuery = `championship=${encodeURIComponent(it.championship || '')}&group=${encodeURIComponent(it.group || '')}&groupName=${encodeURIComponent(it.groupName || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
     <a href="/create/scrape/teams?<%= teamsQuery %>"
        hx-get="/create/scrape/teams?<%= teamsQuery %>"
        hx-target="#main-content"

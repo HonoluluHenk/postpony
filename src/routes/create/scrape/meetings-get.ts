@@ -4,33 +4,32 @@ import { fetchMeetings } from '../../../lib/click-tt-scraper';
 export const handleScrapeMeetingsGet = async (app: App): Promise<Response> => {
   const championship = app.c.req.query('championship');
   const group = app.c.req.query('group');
+  const teamtable = app.c.req.query('teamtable');
   if (!championship) {
     app.failure(app.t('missing_param', {name: 'championship'}));
   }
   if (!group) {
     app.failure(app.t('missing_param', {name: 'group'}));
   }
-  const teamName = app.c.req.query('teamName') ?? '';
+  if (!teamtable) {
+    app.failure(app.t('missing_param', {name: 'teamtable'}));
+  }
   const leagueName = app.c.req.query('leagueName') ?? '';
-  const clubName = app.c.req.query('clubName') ?? '';
-  const club = app.c.req.query('club') ?? '';
-  const searchPattern = app.c.req.query('searchPattern') ?? '';
-  const regionName = app.c.req.query('regionName') ?? '';
+  const groupName = app.c.req.query('groupName') ?? '';
+  const teamName = app.c.req.query('teamName') ?? '';
 
-  const meetings = await fetchMeetings(championship, group);
+  const meetings = await fetchMeetings(championship, group, teamtable);
 
   const html = app.render('create/scrape/meetings.eta', {
     title: app.t('scrape_choose_match'),
     isPartial: app.isPartial,
     meetings,
-    teamName,
     leagueName,
+    groupName,
+    teamName,
     championship,
     group,
-    clubName,
-    club,
-    searchPattern,
-    regionName,
+    teamtable,
   });
   return app.c.html(html);
 };

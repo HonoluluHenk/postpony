@@ -1,207 +1,191 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchClubs, fetchMeetings, fetchRegions, fetchTeams } from './click-tt-scraper';
+import { fetchGroups, fetchLeagues, fetchMeetings, fetchTeams } from './click-tt-scraper';
 
-const FIXTURES_DIR = join(__dirname, '__fixtures__');
-
-function fixture(name: string): string {
-  return readFileSync(join(FIXTURES_DIR, name), 'utf-8');
-}
-
-/**
- * Routes a requested URL to the matching downloaded HTML fixture so the
- * scrapers can be tested without hitting the live click-tt.ch site.
- */
-function fixtureForUrl(url: string): string {
-  if (url.includes('groupPage')) {
-    return fixture('meetings.html');
-  }
-  if (url.includes('clubTeams')) {
-    return fixture('teams.html');
-  }
-  if (url.includes('searchPattern=')) {
-    return fixture('clubs.html');
-  }
-  if (url.includes('clubSearch')) {
-    return fixture('regions.html');
-  }
-  throw new Error(`No fixture for URL: ${url}`);
-}
-
-beforeEach(() => {
-  vi.stubGlobal('fetch', vi.fn((input: string | URL) => {
-    const url = typeof input === 'string' ? input : input.toString();
-    return Promise.resolve({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      text: () => Promise.resolve(fixtureForUrl(url)),
-    } as Response);
-  }));
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
 
 describe('click-tt-scraper', () => {
-  describe('fetchRegions', () => {
-    test('parses all 8 Swiss regions', async () => {
-      const regions = await fetchRegions();
 
-      // Exact count per fixture
-      expect(regions.length)
-        .toBe(8);
+  const FIXTURES_DIR = join(__dirname, '__fixtures__');
+
+  function fixture(name: string): string {
+    return readFileSync(join(FIXTURES_DIR, name), 'utf-8');
+  }
+
+  /**
+   * Routes a requested URL to the matching downloaded HTML fixture so the
+   * scrapers can be tested without hitting the live click-tt.ch site.
+   */
+  function fixtureForUrl(url: string): string {
+    // Team page (lists the team's meetings).
+    if (url.includes('teamPortrait')) {
+      return fixture('team.html');
+    }
+    // Plain group page (lists the teams of a group).
+    if (url.includes('groupPage')) {
+      return fixture('group.html');
+    }
+    // League page (lists the groups of a championship).
+    if (url.includes('leaguePage')) {
+      return fixture('groups.html');
+    }
+    // Start page (lists the championships / leagues).
+    if (url.includes('index.htm')) {
+      return fixture('leagues.html');
+    }
+    throw new Error(`No fixture for URL: ${url}`);
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn((input: string | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: () => Promise.resolve(fixtureForUrl(url)),
+      } as Response);
+    }));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('fetchLeagues', () => {
+    test('parses all 12 leagues from the start page', async () => {
+      const leagues = await fetchLeagues();
+
+      // Exact count per start-page fixture
+      expect(leagues.length)
+        .toBe(12);
     });
 
-    test('parses known region with correct names and codes', async () => {
-      const regions = await fetchRegions();
+    test('parses known leagues with correct names and championships', async () => {
+      const leagues = await fetchLeagues();
 
-      // Verify known pair from the fixture
-      expect(regions)
+      // Verify known pairs from the fixture
+      expect(leagues)
         .toEqual(
           expect.arrayContaining([
-            ({
-              name: 'Mittelländischer Tischtennisverband',
-              searchPattern: 'CH.05',
-              regionName: 'Mittelländischer Tischtennisverband',
-            }),
+            {name: 'Nationalliga 2025/26', championship: 'STT 25/26'},
+            {name: 'MTTV 2025/26', championship: 'MTTV 25/26'},
           ]),
         );
     });
 
-    test('includes all expected region codes', async () => {
-      const regions = await fetchRegions();
+    test('has unique championship values', async () => {
+      const leagues = await fetchLeagues();
 
-      // Verify all region codes exist
-      const codes = regions
-        .map((r) => r.searchPattern)
-        .sort();
-      expect(codes)
-        .toEqual([
-          'CH.01', 'CH.02', 'CH.03', 'CH.04', 'CH.05', 'CH.06', 'CH.07', 'CH.08',
-        ]);
-    });
-
-    test('has unique searchPattern values', async () => {
-      const regions = await fetchRegions();
-
-      // searchPattern values must be unique (deduplicated)
-      const patterns = regions
-        .map((r) => r.searchPattern);
-      expect(new Set(patterns).size)
-        .toBe(patterns.length);
+      // championship values must be unique (deduplicated)
+      const championships = leagues
+        .map((l) => l.championship);
+      expect(new Set(championships).size)
+        .toBe(championships.length);
     });
   });
 
-  describe('fetchClubs', () => {
-    test('parses all 44 Mittelland clubs', async () => {
-      const clubs = await fetchClubs('CH.05', 'Mittelländischer Tischtennisverband');
+  describe('fetchGroups', () => {
+    test('parses all 42 groups of the league', async () => {
+      const groups = await fetchGroups('MTTV 25/26');
 
-      // Exact count per Mittelland clubs fixture
-      expect(clubs.length)
-        .toBe(44);
+      // Exact count per league-page fixture
+      expect(groups.length)
+        .toBe(42);
     });
 
-    test('parses known clubs with correct ids and names', async () => {
-      const clubs = await fetchClubs('CH.05', 'Mittelländischer Tischtennisverband');
+    test('parses known groups with correct names and ids', async () => {
+      const groups = await fetchGroups('MTTV 25/26');
 
-      // Spot-check a few known entries (ids and names from the fixture)
-      expect(clubs)
+      // Spot-check a few known entries from the fixture
+      expect(groups)
         .toEqual(
           expect.arrayContaining([
-            {id: '33089', name: 'Aarberg'},
-            {id: '33110', name: 'Langenthal'},
-            {id: '33282', name: 'Ostermundigen'},
-            {id: '33137', name: 'Worb'},
+            {name: 'HE 1. Liga', championship: 'MTTV 25/26', group: '216844'},
+            {name: 'O40 2. Liga', championship: 'MTTV 25/26', group: '216862'},
           ]),
         );
     });
 
-    test('has unique club IDs', async () => {
-      const clubs = await fetchClubs('CH.05', 'Mittelländischer Tischtennisverband');
+    test('has unique group ids', async () => {
+      const groups = await fetchGroups('MTTV 25/26');
 
-      // IDs are unique
-      const ids = clubs
-        .map((c) => c.id);
+      // group ids must be unique (deduplicated)
+      const ids = groups
+        .map((g) => g.group);
       expect(new Set(ids).size)
         .toBe(ids.length);
     });
   });
 
   describe('fetchTeams', () => {
-    test('parses all 27 Ostermundigen teams', async () => {
-      // Ostermundigen club id
-      const teams = await fetchTeams('33282');
+    test('parses all 8 teams of the group', async () => {
+      const teams = await fetchTeams('MTTV 25/26', '216848');
 
-      // Exact count per teams fixture
+      // Exact count per group-page fixture
       expect(teams.length)
-        .toBe(27);
+        .toBe(8);
     });
 
-    test('parses Senioren O40 teams with expected leagues and groups', async () => {
-      // Ostermundigen club id
-      const teams = await fetchTeams('33282');
+    test('parses known teams with correct names and teamtable ids', async () => {
+      const teams = await fetchTeams('MTTV 25/26', '216848');
 
-      // Senioren O40 teams with expected league, championship and groups
+      // Spot-check a few known entries from the fixture
       expect(teams)
         .toEqual(
           expect.arrayContaining([
-            {
-              name: 'Herren',
-              leagueName: 'Herren Nationalliga C Gruppe 3',
-              championship: 'STT 25/26',
-              group: '216991',
-            },
-            {
-              name: 'Senioren O40',
-              leagueName: '2. Liga O40',
-              championship: 'MTTV 25/26',
-              group: '216862',
-            },
-            {
-              'name': 'Senioren O40 II',
-              'leagueName': '3. Liga O40 Gruppe 1',
-              'championship': 'MTTV 25/26',
-              'group': '216863',
-            },
+            {name: 'Ostermundigen', championship: 'MTTV 25/26', group: '216848', teamtable: '1719422'},
+            {name: 'Langnau', championship: 'MTTV 25/26', group: '216848', teamtable: '1719418'},
           ]),
         );
+    });
+
+    test('has unique teamtable ids', async () => {
+      const teams = await fetchTeams('MTTV 25/26', '216848');
+
+      const ids = teams
+        .map((t) => t.teamtable);
+      expect(new Set(ids).size)
+        .toBe(ids.length);
     });
   });
 
   describe('fetchMeetings', () => {
-    test('parses meetings with concrete examples from fixture', async () => {
-      const meetings = await fetchMeetings('MTTV 25/26', '216862');
+    test('parses all meetings of the team across both schedule tables', async () => {
+      const meetings = await fetchMeetings('MTTV 25/26', '216848', '1722028');
 
-      // Verify 3 concrete meeting examples from the fixture
+      // 7 first-half + 7 second-half meetings on the team page fixture
+      expect(meetings.length)
+        .toBe(14);
+    });
+
+    test('parses meetings with concrete examples from fixture', async () => {
+      const meetings = await fetchMeetings('MTTV 25/26', '216848', '1722028');
+
+      // Verify concrete meeting examples from the team-page fixture
       expect(meetings)
         .toEqual(
           expect.arrayContaining([
             {
-              // FIXME: do not parse day
-              day: 'Sa.',
-              // FIXME: parse date into Temporal.PlainDate
-              date: '04.10.2025',
-              time: '16:00',
-              homeTeam: 'Thun',
-              guestTeam: 'Ostermundigen',
+              day: 'Wed.',
+              date: '03.09.2025',
+              time: '20:00',
+              homeTeam: 'Münchenbuchsee II',
+              guestTeam: 'Ostermundigen IV',
             },
             {
-              day: 'Di.',
-              date: '07.10.2025',
-              // FIXME: parse flags
-              time: '19:30 v',
-              homeTeam: 'Ostermundigen',
-              guestTeam: 'Langnau',
+              day: 'Thu.',
+              date: '11.12.2025',
+              time: '19:45 v',
+              homeTeam: 'Heimberg V',
+              guestTeam: 'Ostermundigen IV',
             },
             {
-              day: 'Mi.',
+              day: 'Wed.',
               date: '25.03.2026',
               time: '19:45',
-              homeTeam: 'Worb',
-              guestTeam: 'Ostermundigen',
+              homeTeam: 'Ostermundigen IV',
+              guestTeam: 'Heimberg V',
             },
           ]),
         );
@@ -217,7 +201,7 @@ describe('click-tt-scraper', () => {
         text: () => Promise.resolve(''),
       } as Response)));
 
-      await expect(fetchRegions())
+      await expect(fetchLeagues())
         .rejects
         .toThrow(/Failed to fetch/);
     });

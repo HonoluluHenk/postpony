@@ -5,28 +5,32 @@ export type ClickTTLanguage = 'English' | 'German' | 'French' | 'Italian';
 const BASE_URL = 'https://www.click-tt.ch';
 const WA_URL = `${BASE_URL}/cgi-bin/WebObjects/nuLigaTTCH.woa/wa`;
 
-const REGIONS_URL = `${WA_URL}/clubSearch?federation=STT&preferredLanguage={preferredLanguage}`;
-const CLUBS_URL = `${WA_URL}/clubSearch?searchPattern={searchPattern}&federation=STT&regionName={regionName}&federations=STT&preferredLanguage={preferredLanguage}`;
-const TEAMS_URL = `${WA_URL}/clubTeams?club={club}&preferredLanguage={preferredLanguage}`;
-const MEETINGS_URL =
-  `${WA_URL}/groupPage?championship={championship}&group={group}&displayTyp=gesamt&displayDetail=meetings&preferredLanguage={preferredLanguage}`;
+/** Start page that lists every available championship (league). */
+const START_URL = `${BASE_URL}/index.htm.de`;
+/** League page that lists every group of a championship. */
+const LEAGUE_URL = `${WA_URL}/leaguePage?championship={championship}&preferredLanguage={preferredLanguage}`;
+/** Plain group page; lists every team (with its `teamPortrait` link) of a group. */
+const GROUP_URL = `${WA_URL}/groupPage?championship={championship}&group={group}&preferredLanguage={preferredLanguage}`;
+/** Team page; lists the team's meetings (complete schedule). */
+const TEAM_URL =
+  `${WA_URL}/teamPortrait?teamtable={teamtable}&championship={championship}&group={group}&preferredLanguage={preferredLanguage}`;
 
-export interface Region {
+export interface League {
   name: string;
-  searchPattern: string;
-  regionName: string;
+  championship: string;
 }
 
-export interface Club {
+export interface Group {
   name: string;
-  id: string;
+  championship: string;
+  group: string;
 }
 
 export interface Team {
   name: string;
-  leagueName: string;
   championship: string;
   group: string;
+  teamtable: string;
 }
 
 export interface Meeting {
@@ -81,124 +85,149 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
   return parse(await res.text());
 }
 
-export async function fetchRegions(preferredLanguage: ClickTTLanguage = 'German'): Promise<Region[]> {
-  const root = await fetchHtml(buildUrl(REGIONS_URL, {preferredLanguage}));
-  const links = root.querySelectorAll('a[href*="regionName="]');
+/**
+ * Scrapes the click-tt.ch start page and returns every championship (league)
+ * the user can drill down into.
+ */
+export async function fetchLeagues(): Promise<League[]> {
+  const root = await fetchHtml(START_URL);
+  const links = root.querySelectorAll('a[href*="leaguePage"]');
   const seen = new Set<string>();
-  const regions: Region[] = [];
+  const leagues: League[] = [];
   for (const link of links) {
     const href = link.getAttribute('href');
     const name = link.text.trim();
     if (!href || !name) {
       continue;
     }
-    const searchPattern = queryParam(href, 'searchPattern');
-    const regionName = queryParam(href, 'regionName');
-    if (!searchPattern || !regionName) {
+    const championship = queryParam(href, 'championship');
+    if (!championship) {
       continue;
     }
-    if (seen.has(searchPattern)) {
+    if (seen.has(championship)) {
       continue;
     }
-    seen.add(searchPattern);
-    regions.push({name: decode(name), searchPattern, regionName});
+    seen.add(championship);
+    leagues.push({name: decode(name), championship});
   }
-  return regions;
+  return leagues;
 }
 
-export async function fetchClubs(
-  searchPattern: string,
-  regionName: string,
+/**
+ * Scrapes a league page and returns every group (e.g. "HE 2. Liga Gr. 1")
+ * of the given championship.
+ */
+export async function fetchGroups(
+  championship: string,
   preferredLanguage: ClickTTLanguage = 'German',
-): Promise<Club[]> {
-  const root = await fetchHtml(buildUrl(CLUBS_URL, {searchPattern, regionName, preferredLanguage}));
-  const links = root.querySelectorAll('a[href*="clubInfoDisplay?club="]');
+): Promise<Group[]> {
+  const root = await fetchHtml(buildUrl(LEAGUE_URL, {championship, preferredLanguage}));
+  const links = root.querySelectorAll('a[href*="groupPage"]');
   const seen = new Set<string>();
-  const clubs: Club[] = [];
+  const groups: Group[] = [];
   for (const link of links) {
     const href = link.getAttribute('href');
     const name = link.text.trim();
     if (!href || !name) {
       continue;
     }
-    const id = queryParam(href, 'club');
-    if (!id) {
+    const group = queryParam(href, 'group');
+    if (!group) {
       continue;
     }
-    if (seen.has(id)) {
+    // Ignore links that point at sub-views (table, statistics, ...) rather
+    // than a plain group; those carry a displayTyp/displayDetail/type param.
+    if (queryParam(href, 'displayTyp') || queryParam(href, 'displayDetail') || queryParam(href, 'type')) {
       continue;
     }
-    seen.add(id);
-    clubs.push({name: decode(name), id});
+    if (seen.has(group)) {
+      continue;
+    }
+    seen.add(group);
+    groups.push({name: decode(name), championship, group});
   }
-  return clubs;
+  return groups;
 }
 
-export async function fetchTeams(clubId: string, preferredLanguage: ClickTTLanguage = 'German'): Promise<Team[]> {
-  const root = await fetchHtml(buildUrl(TEAMS_URL, {club: clubId, preferredLanguage}));
-  const tables = root.querySelectorAll('table.result-set');
+/**
+ * Scrapes a plain group page and returns every team of the group together with
+ * the `teamtable` id needed to open its team page.
+ */
+export async function fetchTeams(
+  championship: string,
+  group: string,
+  preferredLanguage: ClickTTLanguage = 'German',
+): Promise<Team[]> {
+  const root = await fetchHtml(buildUrl(GROUP_URL, {championship, group, preferredLanguage}));
+  const links = root.querySelectorAll('a[href*="teamPortrait"]');
+  const seen = new Set<string>();
   const teams: Team[] = [];
-  for (const table of tables) {
-    const rows = table.querySelectorAll('tr');
-    for (const row of rows) {
-      const cells = row.querySelectorAll('td');
-      if (cells.length < 2) {
-        continue;
-      }
-      const leagueLink = cells[1]?.querySelector('a[href*="groupPage"]');
-      if (!leagueLink) {
-        continue;
-      }
-      const teamName = cells[0]?.text.trim() ?? '';
-      const leagueName = leagueLink.text.trim();
-      const href = leagueLink.getAttribute('href');
-      if (!teamName || !leagueName || !href) {
-        continue;
-      }
-      const championship = queryParam(href, 'championship');
-      const group = queryParam(href, 'group');
-      if (!championship || !group) {
-        continue;
-      }
-      teams.push({
-        name: decode(teamName),
-        leagueName: decode(leagueName),
-        championship,
-        group,
-      });
+  for (const link of links) {
+    const href = link.getAttribute('href');
+    const name = link.text.trim();
+    if (!href || !name) {
+      continue;
     }
+    const teamtable = queryParam(href, 'teamtable');
+    if (!teamtable) {
+      continue;
+    }
+    if (seen.has(teamtable)) {
+      continue;
+    }
+    seen.add(teamtable);
+    teams.push({name: decode(name), championship, group, teamtable});
   }
   return teams;
 }
 
+/**
+ * Scrapes the meetings of a single team from its team page (`teamPortrait`).
+ * The page lists the meetings across one or more schedule tables (e.g. first
+ * and second half of the season); all of them are parsed.
+ */
 export async function fetchMeetings(
   championship: string,
   group: string,
+  teamtable: string,
   preferredLanguage: ClickTTLanguage = 'German',
 ): Promise<Meeting[]> {
-  const root = await fetchHtml(buildUrl(MEETINGS_URL, {championship, group, preferredLanguage}));
-  const table = root.querySelector('table.result-set');
-  if (!table) {
-    return [];
-  }
-  const rows = table.querySelectorAll('tr');
+  const root = await fetchHtml(buildUrl(TEAM_URL, {teamtable, championship, group, preferredLanguage}));
+
+  const tables = root.querySelectorAll('table.result-set');
   const meetings: Meeting[] = [];
-  for (const row of rows) {
-    const cells = row.querySelectorAll('td');
-    if (cells.length < 8) {
-      continue;
+  const seen = new Set<string>();
+  for (const table of tables) {
+    const rows = table.querySelectorAll('tr');
+    for (const row of rows) {
+      const cells = row.querySelectorAll('td');
+      if (cells.length < 8) {
+        continue;
+      }
+      const day = (cells[0]?.text ?? '').trim();
+      const date = (cells[1]?.text ?? '').trim();
+      // Only rows whose second cell is an actual date are meeting rows; this
+      // skips the club-info and player-ranking tables on the team page.
+      if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) {
+        continue;
+      }
+      const time = (cells[2]?.text ?? '').trim()
+        .replace(/\s+/g, ' ');
+      // cells[3] = location, cells[4] = round
+      const homeTeam = (cells[5]?.text ?? '').replace(/\u00a0/g, ' ')
+        .trim();
+      const guestTeam = (cells[7]?.text ?? '').replace(/\u00a0/g, ' ')
+        .trim();
+      if (!homeTeam || !guestTeam) {
+        continue;
+      }
+      const key = `${date}|${time}|${homeTeam}|${guestTeam}`;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      meetings.push({day, date, time, homeTeam, guestTeam});
     }
-    const day = (cells[0]?.text ?? '').trim();
-    const date = (cells[1]?.text ?? '').trim();
-    const time = (cells[2]?.text ?? '').trim()
-      .replace(/\s+/g, ' ');
-    // cells[3] = location, cells[4] = round
-    const homeTeam = (cells[5]?.text ?? '').trim();
-    const guestTeam = (cells[7]?.text ?? '').trim();
-    if (!date || !homeTeam || !guestTeam) {
-      continue;
-    }
-    meetings.push({day, date, time, homeTeam, guestTeam});
   }
   return meetings;
 }

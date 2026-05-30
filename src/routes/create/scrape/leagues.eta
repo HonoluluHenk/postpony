@@ -2,21 +2,21 @@
 
 <section id="create-section" class="padding small-round surface-variant">
   <header>
-    <h2><%= it.t('scrape_choose_region') %></h2>
+    <h2><%= it.t('scrape_choose_league') %></h2>
   </header>
 
-  <% if (!it.regions || it.regions.length === 0) { %>
-    <p><%= it.t('scrape_no_regions') %></p>
+  <% if (!it.leagues || it.leagues.length === 0) { %>
+    <p><%= it.t('scrape_no_leagues') %></p>
   <% } else { %>
     <ul class="list border" role="list">
-      <% for (const region of it.regions) { %>
+      <% for (const league of it.leagues) { %>
         <li>
-          <% const regionQuery = `searchPattern=${encodeURIComponent(region.searchPattern)}&regionName=${encodeURIComponent(region.regionName)}` %>
-          <a href="/create/scrape/clubs?<%= regionQuery %>"
-             hx-get="/create/scrape/clubs?<%= regionQuery %>"
+          <% const groupsQuery = `championship=${encodeURIComponent(league.championship)}&leagueName=${encodeURIComponent(league.name)}` %>
+          <a href="/create/scrape/groups?<%= groupsQuery %>"
+             hx-get="/create/scrape/groups?<%= groupsQuery %>"
              hx-target="#main-content"
              hx-push-url="true">
-            <%= region.name %>
+            <%= league.name %>
           </a>
         </li>
       <% } %>
