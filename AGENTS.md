@@ -92,6 +92,10 @@ For more details, see:
 * Add or update Playwright tests for any new features or UI changes.
 * Place test files alongside the respective source files.
 * Prefer running Tests via IntelliJ MCP over cli.
+* Place everything possible inside a top-level `describe`
+* Coverage:
+    * is calculated by default on every test run in the [/coverage](/coverage) directory.
+    * must be _at least_ 80% (branch, statement, line and functions). More is better.
 
 ### Quality
 

@@ -29,6 +29,7 @@ node_modules/
 .env
 /playwright-report/
 /test-results/
+/coverage/
 # generated on typscript incremental builds
 *.tsbuildinfo
 
