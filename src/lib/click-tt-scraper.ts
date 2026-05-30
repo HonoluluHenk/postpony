@@ -1,4 +1,6 @@
 import { type HTMLElement, parse } from 'node-html-parser';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 export type ClickTTLanguage = 'English' | 'German' | 'French' | 'Italian';
 
@@ -72,7 +74,34 @@ function queryParam(href: string, name: string): string | null {
   }
 }
 
+/**
+ * Maps a requested click-tt.ch URL to the name of the local HTML fixture that
+ * mirrors that page. Mirrors the routing used by the unit-test fixtures so the
+ * full scraping flow can run end-to-end without hitting the live site.
+ */
+function fixtureNameForUrl(url: string): string {
+  if (url.includes('teamPortrait')) {
+    return 'team.html';
+  }
+  if (url.includes('groupPage')) {
+    return 'group.html';
+  }
+  if (url.includes('leaguePage')) {
+    return 'groups.html';
+  }
+  if (url.includes('index.htm')) {
+    return 'leagues.html';
+  }
+  throw new Error(`No fixture for URL: ${url}`);
+}
+
 async function fetchHtml(url: string): Promise<HTMLElement> {
+  // Offline/E2E mode: serve downloaded HTML fixtures instead of live requests.
+  const fixturesDir = process.env['CLICK_TT_FIXTURES_DIR'];
+  if (fixturesDir) {
+    const html = readFileSync(join(fixturesDir, fixtureNameForUrl(url)), 'utf-8');
+    return parse(html);
+  }
   const res = await fetch(url, {
     headers: {
       'User-Agent': 'PostPony/1.0 (game rescheduler)',
@@ -96,7 +125,7 @@ export async function fetchLeagues(): Promise<League[]> {
   const leagues: League[] = [];
   for (const link of links) {
     const href = link.getAttribute('href');
-    const name = link.text.trim();
+    const name = normalizeWhitespace(link.text);
     if (!href || !name) {
       continue;
     }
@@ -127,7 +156,7 @@ export async function fetchGroups(
   const groups: Group[] = [];
   for (const link of links) {
     const href = link.getAttribute('href');
-    const name = link.text.trim();
+    const name = normalizeWhitespace(link.text);
     if (!href || !name) {
       continue;
     }
@@ -149,6 +178,11 @@ export async function fetchGroups(
   return groups;
 }
 
+function normalizeWhitespace(text: string): string {
+  return text.replace(/\s+/g, ' ')
+    .trim();
+}
+
 /**
  * Scrapes a plain group page and returns every team of the group together with
  * the `teamtable` id needed to open its team page.
@@ -164,7 +198,7 @@ export async function fetchTeams(
   const teams: Team[] = [];
   for (const link of links) {
     const href = link.getAttribute('href');
-    const name = link.text.trim();
+    const name = normalizeWhitespace(link.text);
     if (!href || !name) {
       continue;
     }

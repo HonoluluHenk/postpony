@@ -67,6 +67,7 @@ For more details, see:
 ## AI Agent Instructions
 
 * Ask questions for clarification, do not guess!
+* Use the IntelliJ MCP if possible.
 
 ### Accessibility
 
@@ -91,7 +92,7 @@ For more details, see:
 * Add or update unit-tests for any new features.
 * Add or update Playwright tests for any new features or UI changes.
 * Place test files alongside the respective source files.
-* Prefer running Tests via IntelliJ MCP over cli.
+* Prefer running Tests via IntelliJ MCP.
 * Place everything possible inside a top-level `describe`
 * Coverage:
     * is calculated by default on every test run in the [/coverage](/coverage) directory.

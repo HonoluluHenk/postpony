@@ -26,6 +26,9 @@ export default defineConfig({
     env: {
       //APP_HOSTNAME: 'localhost',
       //APP_PORT: '3001',
+      // Serve downloaded HTML fixtures instead of hitting the live click-tt.ch
+      // site so the scraping flow can be tested offline and deterministically.
+      CLICK_TT_FIXTURES_DIR: './src/lib/__fixtures__',
     },
     ignoreHTTPSErrors: true,
     command: 'tsx src/index.ts',

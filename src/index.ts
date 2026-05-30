@@ -46,8 +46,6 @@ app.get('/edit/:id', handleAppRequest(handleEditGet));
 app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from foo')));
 
 app.onError(async (err, c) => {
-  console.error('Error occurred:', err);
-
   let status: ContentfulStatusCode;
   let message: string;
 
@@ -63,6 +61,15 @@ app.onError(async (err, c) => {
   } else {
     status = 500;
     message = 'Internal Server Error';
+  }
+
+  // Expected client errors (4xx, e.g. a request for a non-existent session) are
+  // part of normal operation; log them concisely without a stack trace so the
+  // (test) output stays readable. Only unexpected/server errors are logged in full.
+  if (status >= 500) {
+    console.error('Error occurred:', err);
+  } else {
+    console.warn(`Request failed (${status}): ${message}`);
   }
 
   if (c.req.header('HX-Request')) {
