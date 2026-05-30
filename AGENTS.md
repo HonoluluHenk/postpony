@@ -66,7 +66,7 @@ For more details, see:
 
 ## AI Agent Instructions
 
-When working on this codebase, please ensure:
+* Ask questions for clarification, do not guess!
 
 ### Accessibility
 
