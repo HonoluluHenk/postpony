@@ -104,9 +104,9 @@ npm run verify
 - **Security**: The application uses a **Dual-Password System** (Owner Password & Invitation Password). No traditional user accounts are required for players.
 - **Multi-Tenancy**: Architecture supports multiple clubs using logical separation (`club_id`).
 - **Code Style**:
-  - Use 2-space indentation (4 for Markdown).
-  - Entity names are singular (e.g., `Venue`, `Player`).
-  - Max line length: 120 characters.
+    - Use 2-space indentation (4 for Markdown).
+    - Entity names are singular (e.g., `Venue`, `Player`).
+    - Max line length: 120 characters.
 
 ## Documentation
 
