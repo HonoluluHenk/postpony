@@ -1,13 +1,15 @@
 import { type HTMLElement, parse } from 'node-html-parser';
 
+export type ClickTTLanguage = 'English' | 'German' | 'French' | 'Italian';
+
 const BASE_URL = 'https://www.click-tt.ch';
 const WA_URL = `${BASE_URL}/cgi-bin/WebObjects/nuLigaTTCH.woa/wa`;
 
-const REGIONS_URL = `${WA_URL}/clubSearch?federation=STT&preferredLanguage=German`;
-const CLUBS_URL = `${WA_URL}/clubSearch?searchPattern={searchPattern}&federation=STT&regionName={regionName}&federations=STT`;
-const TEAMS_URL = `${WA_URL}/clubTeams?club={club}`;
+const REGIONS_URL = `${WA_URL}/clubSearch?federation=STT&preferredLanguage={preferredLanguage}`;
+const CLUBS_URL = `${WA_URL}/clubSearch?searchPattern={searchPattern}&federation=STT&regionName={regionName}&federations=STT&preferredLanguage={preferredLanguage}`;
+const TEAMS_URL = `${WA_URL}/clubTeams?club={club}&preferredLanguage={preferredLanguage}`;
 const MEETINGS_URL =
-  `${WA_URL}/groupPage?championship={championship}&group={group}&displayTyp=gesamt&displayDetail=meetings`;
+  `${WA_URL}/groupPage?championship={championship}&group={group}&displayTyp=gesamt&displayDetail=meetings&preferredLanguage={preferredLanguage}`;
 
 export interface Region {
   name: string;
@@ -39,7 +41,7 @@ export interface Meeting {
  * Fills `{placeholder}` tokens in a URL template with URL-encoded values.
  */
 function buildUrl(template: string, params: Record<string, string>): string {
-  return template.replace(/\{(\w+)\}/g, (_match, key: string) => {
+  return template.replace(/\{(\w+)}/g, (_match, key: string) => {
     const value = params[key];
     if (value === undefined) {
       throw new Error(`Missing URL parameter: ${key}`);
@@ -79,8 +81,8 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
   return parse(await res.text());
 }
 
-export async function fetchRegions(): Promise<Region[]> {
-  const root = await fetchHtml(REGIONS_URL);
+export async function fetchRegions(preferredLanguage: ClickTTLanguage = 'German'): Promise<Region[]> {
+  const root = await fetchHtml(buildUrl(REGIONS_URL, {preferredLanguage}));
   const links = root.querySelectorAll('a[href*="regionName="]');
   const seen = new Set<string>();
   const regions: Region[] = [];
@@ -104,8 +106,12 @@ export async function fetchRegions(): Promise<Region[]> {
   return regions;
 }
 
-export async function fetchClubs(searchPattern: string, regionName: string): Promise<Club[]> {
-  const root = await fetchHtml(buildUrl(CLUBS_URL, {searchPattern, regionName}));
+export async function fetchClubs(
+  searchPattern: string,
+  regionName: string,
+  preferredLanguage: ClickTTLanguage = 'German',
+): Promise<Club[]> {
+  const root = await fetchHtml(buildUrl(CLUBS_URL, {searchPattern, regionName, preferredLanguage}));
   const links = root.querySelectorAll('a[href*="clubInfoDisplay?club="]');
   const seen = new Set<string>();
   const clubs: Club[] = [];
@@ -128,8 +134,8 @@ export async function fetchClubs(searchPattern: string, regionName: string): Pro
   return clubs;
 }
 
-export async function fetchTeams(clubId: string): Promise<Team[]> {
-  const root = await fetchHtml(buildUrl(TEAMS_URL, {club: clubId}));
+export async function fetchTeams(clubId: string, preferredLanguage: ClickTTLanguage = 'German'): Promise<Team[]> {
+  const root = await fetchHtml(buildUrl(TEAMS_URL, {club: clubId, preferredLanguage}));
   const tables = root.querySelectorAll('table.result-set');
   const teams: Team[] = [];
   for (const table of tables) {
@@ -165,8 +171,12 @@ export async function fetchTeams(clubId: string): Promise<Team[]> {
   return teams;
 }
 
-export async function fetchMeetings(championship: string, group: string): Promise<Meeting[]> {
-  const root = await fetchHtml(buildUrl(MEETINGS_URL, {championship, group}));
+export async function fetchMeetings(
+  championship: string,
+  group: string,
+  preferredLanguage: ClickTTLanguage = 'German',
+): Promise<Meeting[]> {
+  const root = await fetchHtml(buildUrl(MEETINGS_URL, {championship, group, preferredLanguage}));
   const table = root.querySelector('table.result-set');
   if (!table) {
     return [];
