@@ -56,7 +56,8 @@ For more details, see:
 
 1. Use 2 characters for indentation by default.
 2. Use 4 characters for Markdown files (required by nested lists).
-3. For chained method calls: insert newlines before each method call except the first.
+3. For chained method calls:
+    * insert newlines before each chained method call (before the '.')
 
 ### Line Length
 
@@ -67,24 +68,37 @@ For more details, see:
 
 When working on this codebase, please ensure:
 
-1. **Accessibility**:
+### Accessibility
 
-    * All UI changes must adhere to WCAG 2.2 AA. Use automated checks (e.g., Axe) during testing.
-    * Use semantic HTML and ARIA attributes for accessibility.
-    * Prefer a11y selectors (e.g. `getByRole`) in playwright tests.
+* All UI changes must adhere to WCAG 2.2 AA. Use automated checks (e.g., Axe) during testing.
+* Use semantic HTML and ARIA attributes for accessibility.
+* Prefer a11y selectors (e.g. `getByRole`) in playwright tests.
 
-2. **Security**:
-    * Respect the dual-password security model. Do not introduce traditional login systems without reviewing [ADR 0002](docs/ADR/0002-security-model-dual-password.md).
-3. **Consistency**:
-    * Follow the patterns established in existing ADRs and documentation.
-4. **Localization**:
-    * Use framework-level i18n support for all UI text.
-5. **Testing**:
-    * Add or update unit-tests for any new features.
-    * Add or update Playwright tests for any new features or UI changes.
-    * Place test files alongside the respective source files.
-5. **Quality**
-    * On UI changes: verify changes using available Browser MCPs (first available: Firefox, Chrome, Playwright)
-6. **Tools**:
-    * Use mise-en-place to install tools. Update the lockfile for tools required by the app.
-7. **Code-Style**:
+### Security
+
+* Respect the dual-password security model. Do not introduce traditional login systems without reviewing [ADR 0002](docs/ADR/0002-security-model-dual-password.md).
+
+### Consistency
+
+* Follow the patterns established in existing ADRs and documentation.
+
+### Localization
+
+* Use framework-level i18n support for all UI text.
+
+### Testing
+
+* Add or update unit-tests for any new features.
+* Add or update Playwright tests for any new features or UI changes.
+* Place test files alongside the respective source files.
+* Prefer running Tests via IntelliJ MCP over cli.
+
+### Quality
+
+* On UI changes: verify changes using available Browser MCPs (first available: Firefox, Chrome, Playwright)
+
+### Tools
+
+* Use mise-en-place to install tools. Update the lockfile for tools required by the app.
+
+### Code-Style
