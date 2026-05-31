@@ -13,7 +13,7 @@ const VenueSchema = v.object({
   ]),
 });
 
-export const handleEditVenuePost = async (app: App) => {
+export const handleEditVenuePost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
   const session = app.sessions[id];
   if (!session) {
@@ -52,10 +52,10 @@ export const handleEditVenuePost = async (app: App) => {
       `, {status: 400});
     }
 
-    return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') || ''}`);
+    return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
   }
 
-  const {maxOverlaps} = validation.output!;
+  const {maxOverlaps} = validation.output;
 
   session.maxOverlaps = maxOverlaps;
 
@@ -69,7 +69,7 @@ export const handleEditVenuePost = async (app: App) => {
           <fieldset>
             <legend class="none">${app.t('venue_management')}</legend>
             <div class="field label border fill">
-              <input type="number" id="maxOverlaps" name="maxOverlaps" value="${session.maxOverlaps || ''}" min="0">
+              <input type="number" id="maxOverlaps" name="maxOverlaps" value="${session.maxOverlaps ?? ''}" min="0">
               <label for="maxOverlaps">${app.t('max_overlaps')}</label>
             </div>
           </fieldset>

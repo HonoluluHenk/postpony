@@ -1,4 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill';
+import ComparisonResult = Temporal.ComparisonResult;
 
 /**
  * Utility functions for date and time operations using the ECMAScript Temporal API.
@@ -16,7 +17,7 @@ export interface DateTimeRange {
  * Checks if two DateTimeRanges overlap.
  */
 export function doRangesOverlap(range1: DateTimeRange, range2: DateTimeRange): boolean {
-  const compare = (a: Temporal.PlainDateTime, b: Temporal.PlainDateTime) => {
+  const compare = (a: Temporal.PlainDateTime, b: Temporal.PlainDateTime): ComparisonResult => {
     return Temporal.PlainDateTime.compare(a, b);
   };
 
@@ -47,7 +48,7 @@ export function parseIsoToPlainDateTime(isoString: string): Temporal.PlainDateTi
 /**
  * Gets the current date and time in a specific time zone.
  */
-export function getCurrentZonedDateTime(timeZone: string = 'Europe/Zurich'): Temporal.ZonedDateTime {
+export function getCurrentZonedDateTime(timeZone = 'Europe/Zurich'): Temporal.ZonedDateTime {
   return Temporal.Now.zonedDateTimeISO(timeZone);
 }
 
@@ -65,7 +66,7 @@ export function intersectRanges<T extends Temporal.PlainDateTime | Temporal.Zone
   end: T
 } | null
 {
-  const compare = (a: any, b: any) => {
+  const compare = (a: unknown, b: unknown): ComparisonResult => {
     if (a instanceof Temporal.PlainDateTime && b instanceof Temporal.PlainDateTime) {
       return Temporal.PlainDateTime.compare(a, b);
     }
@@ -75,8 +76,8 @@ export function intersectRanges<T extends Temporal.PlainDateTime | Temporal.Zone
     throw new Error('Cannot compare different Temporal types or non-Temporal types');
   };
 
-  const start = (compare(start1, start2) > 0 ? start1 : start2) as T;
-  const end = (compare(end1, end2) < 0 ? end1 : end2) as T;
+  const start = compare(start1, start2) > 0 ? start1 : start2;
+  const end = compare(end1, end2) < 0 ? end1 : end2;
 
   if (compare(start, end) < 0) {
     return {start, end};
@@ -92,6 +93,6 @@ export function intersectDateTimeRanges(
   range2: DateTimeRange,
 ): DateTimeRange | null {
   const intersection = intersectRanges(range1.start, range1.end, range2.start, range2.end);
-  return intersection as DateTimeRange | null;
+  return intersection;
 }
 

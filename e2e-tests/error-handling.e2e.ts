@@ -40,7 +40,7 @@ test.describe('Error Handling', () => {
     await page.waitForURL(/\/edit\/.+/);
 
     const url = page.url();
-    const sessionId = url.split('/edit/')[1]?.split('?')[0];
+    const _sessionId = url.split('/edit/')[1]?.split('?')[0];
 
     // 2. Manually trigger an HTMX request to a non-existent session's sub-route
     await page.evaluate(async () => {

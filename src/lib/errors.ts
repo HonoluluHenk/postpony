@@ -11,7 +11,7 @@ export class AppError extends Error {
  * programmer errors
  */
 export class InternalError extends AppError {
-  constructor(message: string = 'Internal Server Error') {
+  constructor(message = 'Internal Server Error') {
     super(message, 500);
     this.name = 'InternalError';
   }

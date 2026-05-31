@@ -6,27 +6,29 @@ import { AppError } from './lib/errors';
 const mockContext = {
   get: vi.fn(),
   req: {
-    param: (name: string) => undefined,
-    query: (name: string) => undefined,
-    header: (name: string) => undefined,
+    param: (_name: string): string | undefined => undefined,
+    query: (_name: string): string | undefined => undefined,
+    header: (_name: string): string | undefined => undefined,
   },
 } as any; // Mocked Context object
 
 describe('App.requireParam', () => {
   const isPartial = false;
 
-  const createApp = (mockedContext: any) => new App(isPartial, mockedContext);
+  function createApp(mockedContext: any): App {
+    return new App(isPartial, mockedContext);
+  }
 
   beforeEach(() => {
     vi.resetAllMocks();
-    mockContext.req.param = (name: string) => undefined;
-    mockContext.req.query = (name: string) => undefined;
-    mockContext.req.header = (name: string) => undefined;
+    mockContext.req.param = (_name: string): string | undefined => undefined;
+    mockContext.req.query = (_name: string): string | undefined => undefined;
+    mockContext.req.header = (_name: string): string | undefined => undefined;
     mockContext.get.mockReturnValue('en');
   });
 
   it('should return the parameter value when it exists', () => {
-    mockContext.req.param = (name: string) => 'value';
+    mockContext.req.param = (_name: string): string => 'value';
     const app = createApp(mockContext);
 
     const result = app.requireParam('testParam');
@@ -36,7 +38,7 @@ describe('App.requireParam', () => {
   });
 
   it('should transform the parameter value when a transform function is provided', () => {
-    mockContext.req.param = (name: string) => '123';
+    mockContext.req.param = (_name: string): string => '123';
     const app = createApp(mockContext);
 
     const result = app.requireParam('testParam', (value) => Number(value));
@@ -48,11 +50,11 @@ describe('App.requireParam', () => {
   });
 
   it('should throw a AppError if the parameter is missing', () => {
-    mockContext.req.param = (name: string) => undefined;
+    mockContext.req.param = (_name: string): string | undefined => undefined;
     const app = createApp(mockContext);
 
     expect(() => app.requireParam('missingParam'))
-      .toThrowError(new AppError('Missing required parameter: missingParam'));
+      .toThrow(new AppError('Missing required parameter: missingParam'));
   });
 
   describe('Localization', () => {

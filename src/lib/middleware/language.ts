@@ -23,11 +23,11 @@ export const languageMiddleware = createMiddleware<{
   const cookieLocale = getCookie(c, 'lang') as Locale | undefined;
   if (isLocale(cookieLocale)) {
     c.set(LOCALE_KEY, cookieLocale);
-    return await next();
+    return next();
   }
 
   const acceptLanguage = c.req.header('Accept-Language');
-  if (acceptLanguage && acceptLanguage.startsWith('de')) {
+  if (acceptLanguage?.startsWith('de')) {
     c.set(LOCALE_KEY, 'de');
   } else {
     c.set(LOCALE_KEY, defaultLocale);

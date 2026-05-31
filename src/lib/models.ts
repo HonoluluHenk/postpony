@@ -34,7 +34,7 @@ export interface RescheduleSession {
   venueId?: string;
   opponentVenueId?: string;
   players: Player[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
 }
 

@@ -18,7 +18,7 @@ export class App {
     readonly c: Context,
   )
   {
-    this.locale = c.get(LOCALE_KEY) || defaultLocale;
+    this.locale = (c.get(LOCALE_KEY) as Locale | undefined) ?? defaultLocale;
   }
 
   t(key: TranslationKeys, params: Record<string, string> = {}): string {

@@ -44,7 +44,7 @@ test.describe('Postponement Editing', () => {
       .toContainText('Jane Smith');
   });
 
-  test('should maintain accessibility on the editing interface', async ({page, checkA11y}) => {
+  test('should maintain accessibility on the editing interface', async ({checkA11y}) => {
     await checkA11y();
   });
 });

@@ -8,7 +8,7 @@ const PlayerSchema = v.object({
   playerName: v.pipe(v.string(), v.minLength(1, 'Player name is required')),
 });
 
-export const handleEditPlayersPost = async (app: App) => {
+export const handleEditPlayersPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
   const session = app.sessions[id];
   if (!session) {
@@ -56,10 +56,10 @@ export const handleEditPlayersPost = async (app: App) => {
       `, {status: 400});
     }
 
-    return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') || ''}`);
+    return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
   }
 
-  const {playerName} = validation.output!;
+  const {playerName} = validation.output;
   session.players.push({
     id: generateId(),
     name: playerName,

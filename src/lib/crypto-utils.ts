@@ -3,7 +3,7 @@ import { createHash, randomBytes } from 'node:crypto';
 /**
  * Generates a random secure password string.
  */
-export function generateRandomPassword(length: number = 12): string {
+export function generateRandomPassword(length = 12): string {
   return randomBytes(length)
     .toString('base64url')
     .slice(0, length);

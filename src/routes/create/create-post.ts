@@ -2,9 +2,8 @@ import * as v from 'valibot';
 import type { App } from '../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../lib/crypto-utils';
 import { mapValidationToErrors } from '../../lib/map-validation-to-errors';
-import { RescheduleSession } from '../../lib/models';
 
-export const handleCreatePost = async (app: App) => {
+export async function handleCreatePost(app: App): Promise<Response> {
   const CreateSchema = v.object({
     name: v.pipe(v.string(), v.minLength(2, app.t('name_required'))),
   });
@@ -24,13 +23,13 @@ export const handleCreatePost = async (app: App) => {
     return app.c.html(html, {status: 400});
   }
 
-  const {name} = validation.output!;
+  const {name} = validation.output;
 
   const id = generateId();
   const ownerPassword = generateRandomPassword();
   const invitationPassword = generateRandomPassword();
 
-  const session: RescheduleSession = {
+  app.sessions[id] = {
     id,
     clubId: 'default-club', // Placeholder for MVP
     name,
@@ -41,8 +40,6 @@ export const handleCreatePost = async (app: App) => {
     createdAt: new Date().toISOString(),
   };
 
-  app.sessions[id] = session;
-
   const redirectUrl = `/edit/${id}?ownerPassword=${ownerPassword}`;
   if (app.isPartial) {
     app.c.header('HX-Redirect', redirectUrl);
@@ -50,4 +47,4 @@ export const handleCreatePost = async (app: App) => {
   }
 
   return app.c.redirect(redirectUrl);
-};
+}

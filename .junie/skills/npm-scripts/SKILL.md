@@ -21,21 +21,23 @@ Use this skill whenever you need to:
 
 ## Quick Reference
 
-| Script                  | Command                                      | Purpose                                                                                    |
-|-------------------------|----------------------------------------------|--------------------------------------------------------------------------------------------|
-| `npm run dev`           | `tsx watch src/index.ts`                     | Start the Hono server in watch mode for local development.                                 |
-| `npm run dev:test`      | `vitest`                                     | Run Vitest in interactive watch mode for unit tests.                                       |
-| `npm run dev:lint`      | `tsc --noEmit --watch`                       | Continuously type-check `src/` (no JS emitted).                                            |
-| `npm run clean`         | `rimraf dist playwright-report test-results` | Remove build output and Playwright reports.                                                |
-| `npm start`             | `node dist/index.js`                         | Run the built server (requires `npm run build` first).                                     |
-| `npm run lint`          | `run-s -l lint:*`                            | Aggregator: runs every `lint:*` script in sequence (currently `lint:source` + `lint:e2e`). |
-| `npm run lint:source`   | `tsc --noEmit`                               | Type-check application code (`tsconfig.json`).                                             |
-| `npm run lint:e2e`      | `tsc -p tsconfig.e2e.json --noEmit`          | Type-check the Playwright e2e test code (`tsconfig.e2e.json`).                             |
-| `npm test`              | `vitest run`                                 | Run Vitest once (CI-style, non-watch). Covers `*.spec.ts` files.                           |
-| `npm run build`         | `vite build`                                 | Produce a production bundle in `dist/`.                                                    |
-| `npm run e2e`           | `playwright test e2e-tests`                  | Run Playwright tests in `e2e-tests/` (`*.e2e.ts`).                                         |
-| `npm run verify`        | `npm-run-all lint test build e2e`            | Full verification pipeline. Run this before submitting any change.                         |
-| `npm run playwright:ui` | `playwright test --ui`                       | Open Playwright's interactive UI runner (local debugging only).                            |
+| Script                    | Command                                      | Purpose                                                                                          |
+|---------------------------|----------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `npm run dev`             | `tsx watch src/index.ts`                     | Start the Hono server in watch mode for local development.                                       |
+| `npm run dev:test`        | `vitest`                                     | Run Vitest in interactive watch mode for unit tests.                                             |
+| `npm run dev:lint`        | `tsc --noEmit --watch`                       | Continuously type-check `src/` (no JS emitted).                                                  |
+| `npm run clean`           | `rimraf dist playwright-report test-results` | Remove build output and Playwright reports.                                                      |
+| `npm start`               | `node dist/index.js`                         | Run the built server (requires `npm run build` first).                                           |
+| `npm run lint`            | `run-s -l lint:*`                            | Aggregator: runs every `lint:*` script in sequence (`lint:source` + `lint:e2e` + `lint:eslint`). |
+| `npm run lint:source`     | `tsc --noEmit`                               | Type-check application code (`tsconfig.json`).                                                   |
+| `npm run lint:e2e`        | `tsc -p tsconfig.e2e.json --noEmit`          | Type-check the Playwright e2e test code (`tsconfig.e2e.json`).                                   |
+| `npm run lint:eslint`     | `eslint .`                                   | Run ESLint (flat config `eslint.config.js`); warnings-as-errors is enforced in the config.       |
+| `npm run lint:eslint:fix` | `eslint . --fix`                             | Auto-fix ESLint issues where possible (not run by the `lint` aggregator).                        |
+| `npm test`                | `vitest run`                                 | Run Vitest once (CI-style, non-watch). Covers `*.spec.ts` files.                                 |
+| `npm run build`           | `vite build`                                 | Produce a production bundle in `dist/`.                                                          |
+| `npm run e2e`             | `playwright test e2e-tests`                  | Run Playwright tests in `e2e-tests/` (`*.e2e.ts`).                                               |
+| `npm run verify`          | `npm-run-all lint test build e2e`            | Full verification pipeline. Run this before submitting any change.                               |
+| `npm run playwright:ui`   | `playwright test --ui`                       | Open Playwright's interactive UI runner (local debugging only).                                  |
 
 ## Detailed Guidance
 
@@ -62,12 +64,16 @@ Use this skill whenever you need to:
 
 - `npm run lint` is an aggregator (`run-s -l lint:*`) that runs every
   `lint:*` script in sequence. Add new `lint:*` entries to extend it
-  rather than editing `lint` itself.
+  rather than editing `lint` itself. Note that a single `*` does not match
+  `:`, so `lint:eslint:fix` is intentionally excluded from the aggregator.
 - `npm run lint:source` covers application code (`src/`).
 - `npm run lint:e2e` covers e2e tests (`e2e-tests/`) using
   `tsconfig.e2e.json`.
-- Running `npm run lint` alone covers both; `npm run verify` also relies on
-  it.
+- `npm run lint:eslint` runs ESLint via the flat config in
+  `eslint.config.js`. Warnings-as-errors is enforced using `--max-warnings 0`, so any violation fails the script.
+- Unused identifiers prefixed with `_` are ignored.
+- Running `npm run lint` alone covers all three; `npm run verify` also relies
+  on it.
 
 ### Build and run
 

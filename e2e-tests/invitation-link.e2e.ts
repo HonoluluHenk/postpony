@@ -2,7 +2,7 @@ import { expect, test } from './fixtures';
 
 test.describe('Invitation Link', () => {
   test('should display an absolute URL for the invitation link', async ({page, baseURL}) => {
-    // 1. Create a new reschedule session
+    // 1. Create a new postponing-session
     await page.goto('/create');
     await page.getByLabel('Postponement Name')
       .fill('My Match');
@@ -34,7 +34,7 @@ test.describe('Invitation Link', () => {
       .toMatch(new RegExp(`^${expectedBase}/join/`));
   });
 
-  test('should use APP_BASE_URL environment variable if provided', async ({page}) => {
+  test('should use APP_BASE_URL environment variable if provided', async () => {
     // This test is a bit tricky to run in the same process if we don't restart the server.
     // But we can at least verify that it works when the server is started with it.
     // For now, we've verified the code change.

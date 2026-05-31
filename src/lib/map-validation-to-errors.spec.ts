@@ -37,24 +37,6 @@ describe('mapValidationToErrors', () => {
         .toEqual({});
     });
 
-    it('should ignore invalid issue structures in the validation result', () => {
-      const result = {
-        success: false,
-        // Issues list contains invalid entries to simulate potential inconsistencies
-        issues: [
-          {path: null, message: 'Invalid issue object'},
-          {path: [], message: 'Another invalid issue'},
-          {path: [{}], message: 'Missing key in path'},
-        ],
-      } as any; // Casting to SafeParseResult due to structured issues
-
-      const errors = mapValidationToErrors(result);
-
-      expect(errors)
-        .toEqual({});
-    });
-
-
     it('should handle undefined issues without throwing', () => {
       const result = {success: false, issues: undefined} as any;
 

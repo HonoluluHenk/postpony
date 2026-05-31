@@ -1,21 +1,21 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test as base } from '@playwright/test';
 
-type AxeFixture = {
+interface AxeFixture {
   makeAxeBuilder: () => AxeBuilder;
   checkA11y: () => Promise<void>;
-};
+}
 
 //noinspection JSUnusedGlobalSymbols
 export const test = base.extend<AxeFixture>({
   makeAxeBuilder: async ({page}, use) => {
-    const makeAxeBuilder = () => new AxeBuilder({page})
+    const makeAxeBuilder = (): AxeBuilder => new AxeBuilder({page})
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa']);
     await use(makeAxeBuilder);
   },
 
-  checkA11y: async ({page, makeAxeBuilder}, use) => {
-    const checkA11y = async () => {
+  checkA11y: async ({makeAxeBuilder}, use) => {
+    const checkA11y = async (): Promise<void> => {
       const accessibilityScanResults = await makeAxeBuilder()
         .analyze();
 

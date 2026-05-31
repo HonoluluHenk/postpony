@@ -45,7 +45,7 @@ app.post('/edit/:id/players', handleAppRequest(handleEditPlayersPost));
 app.get('/edit/:id', handleAppRequest(handleEditGet));
 app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from foo')));
 
-app.onError(async (err, c) => {
+app.onError((err, c): Response => {
   let status: ContentfulStatusCode;
   let message: string;
 
@@ -123,7 +123,7 @@ process.on('SIGINT', () => {
 
 
 function handleAppRequest(handler: (app: App) => Response | Promise<Response>) {
-  return async (c: Context) => {
+  return async (c: Context): Promise<Response> => {
     return await handler(new App(
       !!c.req.header('HX-Request'),
       c,
