@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
+    "target": "es2024",
+    "module": "es2022",
     "moduleResolution": "bundler",
     "strict": true,
     "noImplicitReturns": true,
@@ -9,16 +9,30 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedSideEffectImports": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "outDir": "dist",
     "rootDir": "src",
-    "lib": ["ESNext"]
+    "lib": [
+      "ES2024"
+    ]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "e2e-tests"],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "e2e-tests"
+  ],
   "references": [
-    {"path": "./tsconfig.e2e.json"}
+    {
+      "path": "./tsconfig.e2e.json"
+    }
   ]
 }
 
