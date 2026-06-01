@@ -14,4 +14,5 @@ tab_width = 2
 max_line_length = off
 # required for nested lists/enums
 tab_width = 4
-indent_size = tab
+indent_size = 4
+trim_trailing_whitespace = false
