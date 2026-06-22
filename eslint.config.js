@@ -10,7 +10,7 @@ export default tseslint.config(
       'playwright-report/**',
       'test-results/**',
       'node_modules/**',
-      'src/public/vendor/**',
+      'src/public/assets/vendor/**',
     ],
   },
   eslint.configs.recommended,
@@ -83,7 +83,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/public/**/*.js'],
+    files: ['src/public/assets/**/*.js'],
     languageOptions: {
       globals: {
         ...globals.browser,

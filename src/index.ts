@@ -25,10 +25,10 @@ import { handleIndexGet } from './routes/index-get';
 
 const app = new Hono();
 
-app.use('/favicon.svg', serveStatic({path: './src/public/favicon.svg'}));
-app.use('/css/*', serveStatic({root: './src/public'}));
-app.use('/js/*', serveStatic({root: './src/public'}));
-app.use('/vendor/*', serveStatic({root: './src/public'}));
+// Resolve absolute paths to avoid CWD differences between dev and test runners
+const publicDir = path.resolve(process.cwd(), 'src/public');
+
+app.use('/assets/*', serveStatic({root: publicDir}));
 
 app.use('*', languageMiddleware);
 

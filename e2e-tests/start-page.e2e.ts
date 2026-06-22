@@ -30,9 +30,26 @@ test.describe('Start Page', () => {
   test('should have a favicon', async ({page}) => {
     const favicon = page.locator('link[rel="icon"]');
     await expect(favicon)
-      .toHaveAttribute('href', '/favicon.svg');
+      .toHaveAttribute('href', '/assets/favicon.svg');
 
-    const response = await page.request.get('/favicon.svg');
+    const response = await page.request.get('/assets/favicon.svg');
+    expect(response.status())
+      .toBe(200);
+    expect(response.headers()['content-type'])
+      .toContain('image/svg+xml');
+  });
+
+  test('should display the brand logo linking home', async ({page}) => {
+    const logoLink = page.getByRole('banner')
+      .getByRole('link', {name: 'PostPony home'});
+    await expect(logoLink)
+      .toHaveAttribute('href', '/');
+
+    const logo = logoLink.locator('img[src="/assets/logo.svg"]');
+    await expect(logo)
+      .toBeVisible();
+
+    const response = await page.request.get('/assets/logo.svg');
     expect(response.status())
       .toBe(200);
     expect(response.headers()['content-type'])
