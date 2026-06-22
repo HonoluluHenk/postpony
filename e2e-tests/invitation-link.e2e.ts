@@ -25,8 +25,11 @@ test.describe('Invitation Link', () => {
     //console.log(`[DEBUG_LOG] Invite Link text: ${text}`);
 
     // Verify it's an absolute URL
-    // baseURL in playwright.config.ts is https://game-scheduler.localhost:3000
-    const expectedBase = baseURL ?? 'https://game-scheduler.localhost:3000';
+    // baseURL in playwright.config.ts is https://game-scheduler.localhost:3001
+    if (!baseURL) {
+      throw new Error('baseURL is not defined in the test context');
+    }
+    const expectedBase = baseURL;
 
     expect(href)
       .toMatch(new RegExp(`^${expectedBase}/join/`));
