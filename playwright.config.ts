@@ -47,7 +47,9 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
     command: 'tsx src/index.ts',
     url: E2E_BASE_URL,
-    reuseExistingServer: !process.env['CI'],
+    reuseExistingServer: false,
     gracefulShutdown: {signal: 'SIGTERM', timeout: 5000},
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 });
