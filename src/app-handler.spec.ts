@@ -13,10 +13,9 @@ const mockContext = {
 } as any; // Mocked Context object
 
 describe('App.requireParam', () => {
-  const isPartial = false;
 
   function createApp(mockedContext: any): App {
-    return new App(isPartial, mockedContext);
+    return App.create(mockedContext);
   }
 
   beforeEach(() => {
@@ -84,6 +83,22 @@ describe('App.requireParam', () => {
       const app = createApp(mockContext);
       expect(app.t('missing_param', {name: 'foo'}))
         .toBe('Missing required parameter: foo');
+    });
+
+    it('should set isPartial based on HX-Request header', () => {
+      mockContext.req.header = (name: string): string | undefined =>
+        name === 'HX-Request'
+        ? 'true'
+        : undefined;
+
+      const app = createApp(mockContext);
+      expect(app.isPartial)
+        .toBe(true);
+
+      mockContext.req.header = (): string | undefined => undefined;
+      const appFull = createApp(mockContext);
+      expect(appFull.isPartial)
+        .toBe(false);
     });
   });
 

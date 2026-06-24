@@ -13,12 +13,17 @@ export const eta = new Eta({views: path.join(process.cwd(), 'src/routes')});
 export class App {
   readonly locale: Locale;
 
-  constructor(
+  private constructor(
     readonly isPartial: boolean,
     readonly c: Context,
   )
   {
     this.locale = (c.get(LOCALE_KEY) as Locale | undefined) ?? defaultLocale;
+  }
+
+  static create(c: Context): App {
+    const partial = !!c.req.header('HX-Request');
+    return new App(partial, c);
   }
 
   t(key: TranslationKeys, params: Record<string, string> = {}): string {

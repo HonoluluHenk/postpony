@@ -46,6 +46,7 @@ app.get('/edit/:id', handleAppRequest(handleEditGet));
 app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from foo')));
 
 app.onError((err, c): Response => {
+  const app = App.create(c);
   let status: ContentfulStatusCode;
   let message: string;
 
@@ -72,16 +73,17 @@ app.onError((err, c): Response => {
     console.warn(`Request failed (${status}): ${message}`);
   }
 
-  if (c.req.header('HX-Request')) {
+  if (app.isPartial) {
     return c.html(`
       <aside class="toast error white-text top" role="alert">
         <i>error</i>
-        <div class="max">${message}</div>
+        <div class="max">
+          <p>${message}</p>
+        </div>
       </aside>`, {status});
   }
 
-  const appInstance = new App(false, c);
-  return c.html(appInstance.render('error.eta', {title: 'Error', message}), {status});
+  return c.html(app.render('error.eta', {title: 'Error', message}), {status});
 });
 
 const port = config.get('port');
@@ -124,9 +126,6 @@ process.on('SIGINT', () => {
 
 function handleAppRequest(handler: (app: App) => Response | Promise<Response>) {
   return async (c: Context): Promise<Response> => {
-    return await handler(new App(
-      !!c.req.header('HX-Request'),
-      c,
-    ));
+    return handler(App.create(c));
   };
 }
