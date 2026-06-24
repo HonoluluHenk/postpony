@@ -42,6 +42,7 @@ export class App {
       ...data,
       t: (key: TranslationKeys, params: Record<string, string>) => this.t(key, params),
       locale: this.locale,
+      isPartial: this.isPartial,
       baseUrl,
     });
   }
