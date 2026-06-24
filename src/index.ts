@@ -9,7 +9,7 @@ import { createServer as createHttpsServer } from 'node:https';
 import path from 'path';
 import { App } from './app';
 import config from './config';
-import { AppError } from './lib/errors';
+import { AppError, ClickTTError } from './lib/errors';
 import { languageMiddleware } from './lib/middleware/language';
 import { handleCreateGet } from './routes/create/create-get';
 import { handleCreatePost } from './routes/create/create-post';
@@ -49,8 +49,13 @@ app.onError((err, c): Response => {
   const app = App.create(c);
   let status: ContentfulStatusCode;
   let message: string;
+  let logMessage: string | undefined;
 
-  if (err instanceof AppError) {
+  if (err instanceof ClickTTError) {
+    status = 200;
+    message = app.t('scrape_error_click_tt');
+    logMessage = err.message;
+  } else if (err instanceof AppError) {
     status = err.status;
     message = err.message;
   } else if (err instanceof HTTPException) {
@@ -70,7 +75,7 @@ app.onError((err, c): Response => {
   if (status >= 500) {
     console.error('Error occurred:', err);
   } else {
-    console.warn(`Request failed (${status}): ${message}`);
+    console.warn(`Request failed (${status}): ${logMessage ?? message}`);
   }
 
   if (app.isPartial) {

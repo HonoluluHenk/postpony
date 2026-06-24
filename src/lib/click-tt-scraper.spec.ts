@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchGroups, fetchLeagues, fetchMeetings, fetchTeams } from './click-tt-scraper';
+import { ClickTTError } from './errors';
 
 
 describe('click-tt-scraper', () => {
@@ -203,7 +204,20 @@ describe('click-tt-scraper', () => {
 
       await expect(fetchLeagues())
         .rejects
-        .toThrow(/Failed to fetch/);
+        .toThrow('click-tt.ch returned 404 Not Found on url https://www.click-tt.ch/index.htm.de');
+    });
+
+    test('throws specifically on 5xx responses', async () => {
+      vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+        ok: false,
+        status: 502,
+        statusText: 'Bad Gateway',
+        text: () => Promise.resolve(''),
+      } as Response)));
+
+      await expect(fetchLeagues())
+        .rejects
+        .toThrow(ClickTTError);
     });
   });
 });

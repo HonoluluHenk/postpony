@@ -30,6 +30,7 @@
   "scrape_choose_league": "Wählen Sie Ihre Liga",
   "scrape_choose_match": "Wählen Sie das zu verschiebende Spiel",
   "scrape_choose_team": "Wählen Sie Ihre Mannschaft",
+  "scrape_error_click_tt": "click-tt.ch meldet derzeit einen Fehler. Bitte versuchen Sie es später noch einmal.",
   "scrape_create_session": "Verschiebung für dieses Spiel erstellen",
   "scrape_match_date": "Datum",
   "scrape_match_guest": "Gast",

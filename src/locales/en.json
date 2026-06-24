@@ -30,6 +30,7 @@
   "scrape_choose_league": "Choose your league",
   "scrape_choose_match": "Choose the match to reschedule",
   "scrape_choose_team": "Choose your team",
+  "scrape_error_click_tt": "click-tt.ch is currently reporting an error. Please try again later.",
   "scrape_create_session": "Create Postponement for this match",
   "scrape_match_date": "Date",
   "scrape_match_guest": "Guest",

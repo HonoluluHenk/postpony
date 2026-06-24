@@ -13,7 +13,8 @@ function initHtmx(spinner) {
   document.addEventListener('htmx:sendError', () => spinner.hide());
   document.addEventListener('htmx:timeout', () => spinner.hide());
   document.addEventListener('htmx:beforeOnLoad', (evt) => {
-    if (evt.detail.xhr.status === 400) {
+    const status = evt.detail.xhr.status;
+    if (status >= 400 && status < 600) {
       evt.detail.shouldSwap = true;
       evt.detail.isError = false;
     }

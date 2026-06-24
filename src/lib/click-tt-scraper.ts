@@ -1,6 +1,7 @@
 import { type HTMLElement, parse } from 'node-html-parser';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { ClickTTError } from './errors';
 
 export type ClickTTLanguage = 'English' | 'German' | 'French' | 'Italian';
 
@@ -109,7 +110,7 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
     },
   });
   if (!res.ok) {
-    throw new Error(`Failed to fetch ${url}: ${res.status} ${res.statusText}`);
+    throw new ClickTTError(`click-tt.ch returned ${res.status} ${res.statusText} on url ${url}`);
   }
   return parse(await res.text());
 }
