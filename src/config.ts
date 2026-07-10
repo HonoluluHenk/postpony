@@ -25,9 +25,19 @@ const config = convict({
     default: '',
     env: 'APP_BASE_URL',
   },
+  clickTtFixturesDir: {
+    doc: 'The directory containing click-tt.ch HTML fixtures.',
+    format: String,
+    default: '',
+    env: 'CLICK_TT_FIXTURES_DIR',
+  },
 });
 
 // Perform validation
 config.validate({allowed: 'strict'});
+
+if (config.get('env') === 'development' && !config.get('clickTtFixturesDir')) {
+  config.set('clickTtFixturesDir', './src/lib/__fixtures__');
+}
 
 export default config;

@@ -1,6 +1,7 @@
 import { type HTMLElement, parse } from 'node-html-parser';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import config from '../config';
 import { ClickTTError } from './errors';
 
 export type ClickTTLanguage = 'English' | 'German' | 'French' | 'Italian';
@@ -98,7 +99,7 @@ function fixtureNameForUrl(url: string): string {
 
 async function fetchHtml(url: string): Promise<HTMLElement> {
   // Offline/E2E mode: serve downloaded HTML fixtures instead of live requests.
-  const fixturesDir = process.env['CLICK_TT_FIXTURES_DIR'];
+  const fixturesDir = config.get('clickTtFixturesDir');
   if (fixturesDir) {
     const html = readFileSync(join(fixturesDir, fixtureNameForUrl(url)), 'utf-8');
     return parse(html);
