@@ -31,6 +31,11 @@ Rules:
 * Pick the edge-case-correct option when two stdlib approaches are the same size, lazy means less code, not the flimsier algorithm.
 * Mark intentional simplifications with a ponytail: comment. If the shortcut has a known ceiling (global lock, O(n²) scan, naive heuristic), the comment names the ceiling and the upgrade path.
 
+Examples:
+
+- `// ponytail: using local Map for sessions; upgrade to Redis for horizontal scaling.`
+- `// ponytail: naive O(n) scan for venue availability; upgrade to interval tree if venue count > 50.`
+
 Not lazy about: input validation at trust boundaries, error handling that prevents data loss, security, accessibility, the calibration real hardware needs (the platform is never the spec ideal, a clock drifts, a sensor reads off), anything explicitly requested. Lazy code without its check is unfinished: non-trivial logic leaves ONE runnable check behind, the smallest thing that fails if the logic breaks (an assert-based demo/self-check or one small test file; no frameworks, no fixtures). Trivial one-liners need no test.
 
 ## Project Overview
@@ -39,15 +44,23 @@ PostPony is a web-based application for postponing sports matches as quick and e
 calculates optimal times based on venue availability, team/player availability, and holidays.
 It also helps users to vote and eventually decide on the best rescheduling options.
 
+## Project Structure
+
+- `src/routes/`: Route handlers (`*-get.ts`, `*-post.ts`) and Eta templates (`*.eta`).
+- `src/lib/`: Shared logic, models, middleware, and utilities.
+- `src/locales/`: Localization files (`en.json`, `de.json`) and type definitions.
+- `docs/ADR/`: Architectural Decision Records (refer to these for context on core decisions).
+- `e2e-tests/`: Playwright end-to-end and accessibility tests.
+
 ## Core Technical Stack
 
 ### Architecture
 
-Multi-tenancy support (future-proofed).
+Multi-tenancy support (future-proofed). See [ADR 0003](docs/ADR/0003-core-tech-stack.md).
 
 ### Security
 
-Dual-password system (Owner Password & Invitation Password).
+Dual-password system (Owner Password & Invitation Password). See [ADR 0002](docs/ADR/0002-security-model-dual-password.md).
 
 ### Standards
 
@@ -70,7 +83,7 @@ Playwright for E2E and accessibility testing.
 - HTML
 - Raw CSS without Frameworks
 - Beer.css for Material Design
-- HTMX with defaultSwapStyle = 'outerHTML'
+- HTMX with defaultSwapStyle = 'outerHTML', on errors: update the 'errors' element out-of-band
 - NX Monorepo
 - Playwright with Axe plugin
 - Vite
@@ -78,6 +91,13 @@ Playwright for E2E and accessibility testing.
 - ESLint (typescript-eslint, flat config, `strictTypeChecked` / type-aware)
 - Node.js HTTPS server (@hono/node-server)
 - Mise tool manager
+
+### Coding Patterns
+
+- **Hono & HTMX**: Use the `App` class (`src/app.ts`) to wrap the context. Use `app.isPartial` to determine if a full layout or a fragment should be rendered.
+- **Localization**: All user-facing strings must use `app.t('key')`. New keys should be added to `src/locales/en.json`, which automatically updates the `TranslationKeys` type.
+- **Validation**: Use `Valibot` for schemas. See [ADR 0012](docs/ADR/0012-validation-library-valibot.md). Use `mapValidationToErrors` to format issues for the UI.
+- **Error Handling**: Throw `AppError` or `StateError` from `src/lib/errors.ts`; the `handleAppRequest` wrapper in `src/index.ts` handles the UI toast response.
 
 For more details, see:
 
@@ -119,6 +139,7 @@ For more details, see:
 * All UI changes must adhere to WCAG 2.2 AA. Use automated checks (e.g., Axe) during testing.
 * Use semantic HTML and ARIA attributes for accessibility.
 * Prefer a11y selectors (e.g. `getByRole`) in playwright tests.
+* Ensure all interactive elements are reachable via keyboard and have proper focus indicators.
 
 ### Security
 
@@ -136,6 +157,7 @@ For more details, see:
 
 * Add or update unit-tests for any new features.
 * Add or update Playwright tests for any new features or UI changes.
+* Use `axe` plugin in Playwright tests to verify WCAG compliance.
 * Place test files alongside the respective source files.
 * Prefer running Tests via IntelliJ MCP.
 * Place everything possible inside a top-level `describe`
