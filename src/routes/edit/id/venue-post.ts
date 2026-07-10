@@ -28,9 +28,18 @@ export const handleEditVenuePost = async (app: App): Promise<Response> => {
 
     if (app.isPartial) {
       const maxOverlaps = values['maxOverlaps'] as string;
-      const error = errors['maxOverlaps'];
+      const error = errors.fields['maxOverlaps'];
 
       return app.c.html(`
+        <div id="error-container" hx-swap-oob="true">
+          ${errors.global ? `
+            <section class="error padding white-text" role="alert">
+              <i>error</i>
+              <div class="max">
+                <p>${errors.global}</p>
+              </div>
+            </section>` : ''}
+        </div>
         <section id="venue-management" class="padding small-round surface-variant s12 m6">
           <header>
             <h4>${app.t('venue_management')}</h4>
@@ -41,7 +50,7 @@ export const handleEditVenuePost = async (app: App): Promise<Response> => {
               <div class="field label border fill ${error ? 'invalid' : ''}">
                 <input type="number" id="maxOverlaps" name="maxOverlaps" value="${maxOverlaps}" min="0">
                 <label for="maxOverlaps">${app.t('max_overlaps')}</label>
-                ${error ? `<span class="error">${error}</span>` : ''}
+                <span class="error">${error ?? ''}</span>
               </div>
             </fieldset>
             <nav class="right-align">
@@ -61,6 +70,7 @@ export const handleEditVenuePost = async (app: App): Promise<Response> => {
 
   if (app.isPartial) {
     return app.c.html(`
+      <div id="error-container" hx-swap-oob="true"></div>
       <section id="venue-management" class="padding small-round surface-variant s12 m6">
         <header>
           <h4>${app.t('venue_management')}</h4>

@@ -19,6 +19,7 @@ export async function handleCreatePost(app: App): Promise<Response> {
       isPartial: app.isPartial,
       errors,
       values,
+      globalError: errors.global,
     });
     return app.c.html(html, {status: 400});
   }

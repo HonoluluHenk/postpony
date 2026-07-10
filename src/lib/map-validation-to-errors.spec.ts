@@ -20,8 +20,10 @@ describe('mapValidationToErrors', () => {
 
       expect(errors)
         .toEqual({
-          field1: 'Field1 must be at least 5 characters long',
-          field2: 'Field2 must be at least 10',
+          fields: {
+            field1: 'Field1 must be at least 5 characters long',
+            field2: 'Field2 must be at least 10',
+          },
         });
     });
 
@@ -34,7 +36,7 @@ describe('mapValidationToErrors', () => {
       const errors = mapValidationToErrors(result);
 
       expect(errors)
-        .toEqual({});
+        .toEqual({fields: {}});
     });
 
     it('should handle undefined issues without throwing', () => {
@@ -43,7 +45,7 @@ describe('mapValidationToErrors', () => {
       const errors = mapValidationToErrors(result);
 
       expect(errors)
-        .toEqual({});
+        .toEqual({fields: {}});
     });
   });
 
@@ -65,11 +67,30 @@ describe('mapValidationToErrors', () => {
 
       expect(errors)
         .toEqual({
-          // FIXME: not yet sure if this is the correct behavior
-          // might also be {nested: {subfield: 'the error message'}}
-          nested: 'SubField must be at least 3 characters long', // Simpler paths only map top-level keys
+          fields: {
+            nested: 'SubField must be at least 3 characters long', // Simpler paths only map top-level keys
+          },
         });
     });
+  });
 
+  describe('global errors', () => {
+    it('should map issues without a path to global errors', () => {
+      const schema = v.pipe(
+        v.object({
+          field1: v.string(),
+        }),
+        v.check(() => false, 'Global validation failed'),
+      );
+
+      const result = v.safeParse(schema, {field1: 'test'});
+      const errors = mapValidationToErrors(result);
+
+      expect(errors)
+        .toEqual({
+          fields: {},
+          global: 'Global validation failed',
+        });
+    });
   });
 });

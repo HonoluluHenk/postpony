@@ -38,6 +38,16 @@
         </nav>
       </div>
     </header>
+    <div id="error-container">
+      <% if (it.globalError) { %>
+        <section class="error padding white-text" role="alert">
+          <i>error</i>
+          <div class="max">
+            <p><%= it.globalError %></p>
+          </div>
+        </section>
+      <% } %>
+    </div>
     <main id="main-content" class="responsive">
       <article>
         <%~ it.body %>
@@ -50,6 +60,16 @@
 </body>
 </html>
 <% } else { %>
+<div id="error-container" hx-swap-oob="true">
+  <% if (it.globalError) { %>
+    <section class="error padding white-text" role="alert">
+      <i>error</i>
+      <div class="max">
+        <p><%= it.globalError %></p>
+      </div>
+    </section>
+  <% } %>
+</div>
 <main id="main-content" class="responsive">
   <article>
     <%~ it.body %>

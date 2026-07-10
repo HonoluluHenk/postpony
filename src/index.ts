@@ -80,15 +80,17 @@ app.onError((err, c): Response => {
 
   if (app.isPartial) {
     return c.html(`
-      <aside class="toast error white-text top" role="alert">
-        <i>error</i>
-        <div class="max">
-          <p>${message}</p>
-        </div>
-      </aside>`, {status});
+      <div id="error-container" hx-swap-oob="true">
+        <section class="error padding white-text" role="alert">
+          <i>error</i>
+          <div class="max">
+            <p>${message}</p>
+          </div>
+        </section>
+      </div>`, {status});
   }
 
-  return c.html(app.render('error.eta', {title: 'Error', message}), {status});
+  return c.html(app.render('error.eta', {title: 'Error', message, globalError: message}), {status});
 });
 
 const port = config.get('port');

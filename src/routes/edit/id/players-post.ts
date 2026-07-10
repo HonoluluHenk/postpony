@@ -23,7 +23,7 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
 
     if (app.isPartial) {
       const playerName = values['playerName'] as string;
-      const error = errors['playerName'];
+      const error = errors.fields['playerName'];
       const playerList = session.players.map((p: Player) => `
           <li>
             <i>person</i>
@@ -32,6 +32,15 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
         .join('');
 
       return app.c.html(`
+        <div id="error-container" hx-swap-oob="true">
+          ${errors.global ? `
+            <section class="error padding white-text" role="alert">
+              <i>error</i>
+              <div class="max">
+                <p>${errors.global}</p>
+              </div>
+            </section>` : ''}
+        </div>
         <section id="team-management" class="padding small-round surface-variant s12 m6">
           <header>
             <h4>${app.t('home_team_players')}</h4>
@@ -45,7 +54,7 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
               <div class="field label border fill ${error ? 'invalid' : ''}">
                 <input type="text" id="playerName" name="playerName" value="${playerName}">
                 <label for="playerName">${app.t('new_player_name')}</label>
-                ${error ? `<span class="error">${error}</span>` : ''}
+                <span class="error">${error ?? ''}</span>
               </div>
             </fieldset>
             <nav class="right-align">
@@ -74,6 +83,7 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
         </li>`)
       .join('');
     return app.c.html(`
+      <div id="error-container" hx-swap-oob="true"></div>
       <section id="team-management" class="padding small-round surface-variant s12 m6">
         <header>
           <h4>${app.t('home_team_players')}</h4>

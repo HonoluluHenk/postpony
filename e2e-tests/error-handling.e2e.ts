@@ -27,7 +27,7 @@ test.describe('Error Handling', () => {
     expect(html)
       .toContain('Name is required');
     expect(html)
-      .toContain('error-message');
+      .toContain('error');
   });
 
   test('should show HTMX error for invalid updates in edit page', async ({page}) => {

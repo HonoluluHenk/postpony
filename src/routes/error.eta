@@ -4,12 +4,6 @@
   <header>
     <h2><%= it.t('error_title') %></h2>
   </header>
-  <aside class="toast error white-text top" role="alert">
-    <i>error</i>
-    <div class="max">
-      <p><%= it.message %></p>
-    </div>
-  </aside>
   <nav class="mt-4">
     <a href="/" class="button"><%= it.t('return_home') %></a>
   </nav>
