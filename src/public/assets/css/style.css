@@ -36,6 +36,43 @@ main {
   flex: 1;
 }
 
+/* Headings: Beer.css defaults (h1 = 3.5625rem) are oversized for this app.
+   Pin h1 to a fixed size and derive the rest from a modular scale via calc(),
+   exposing each computed size as its own var for easy per-heading overrides. */
+:root {
+  --heading-scale: 0.875;
+  --h1-size: 2rem;
+  --h2-size: calc(var(--h1-size) * var(--heading-scale));
+  --h3-size: calc(var(--h2-size) * var(--heading-scale));
+  --h4-size: calc(var(--h3-size) * var(--heading-scale));
+  --h5-size: calc(var(--h4-size) * var(--heading-scale));
+  --h6-size: calc(var(--h5-size) * var(--heading-scale));
+}
+
+h1 {
+  font-size: var(--h1-size);
+}
+
+h2 {
+  font-size: var(--h2-size);
+}
+
+h3 {
+  font-size: var(--h3-size);
+}
+
+h4 {
+  font-size: var(--h4-size);
+}
+
+h5 {
+  font-size: var(--h5-size);
+}
+
+h6 {
+  font-size: var(--h6-size);
+}
+
 /* Specific UI Elements */
 .password-display {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
