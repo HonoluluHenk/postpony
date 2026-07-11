@@ -1,7 +1,6 @@
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import * as fs from 'fs';
-import { type Context, Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
@@ -10,20 +9,13 @@ import path from 'path';
 import { App } from './app';
 import config from './config';
 import { AppError, ClickTTError } from './lib/errors';
+import { factory, handleAppRequest } from './lib/hono-factory';
 import { languageMiddleware } from './lib/middleware/language';
-import { handleCreateGet } from './routes/create/create-get';
-import { handleCreatePost } from './routes/create/create-post';
-import { handleScrapeGroupsGet } from './routes/create/scrape/groups-get';
-import { handleScrapeLeaguesGet } from './routes/create/scrape/leagues-get';
-import { handleScrapeMeetingPost } from './routes/create/scrape/meeting-post';
-import { handleScrapeMeetingsGet } from './routes/create/scrape/meetings-get';
-import { handleScrapeTeamsGet } from './routes/create/scrape/teams-get';
-import { handleEditGet } from './routes/edit/id/edit-id-get';
-import { handleEditPlayersPost } from './routes/edit/id/players-post';
-import { handleEditVenuePost } from './routes/edit/id/venue-post';
+import createRouter from './routes/create/router';
+import editRouter from './routes/edit/router';
 import { handleIndexGet } from './routes/index-get';
 
-const app = new Hono();
+const app = factory.createApp();
 
 // Resolve absolute paths to avoid CWD differences between dev and test runners
 const publicDir = path.resolve(process.cwd(), 'src/public');
@@ -33,16 +25,10 @@ app.use('/assets/*', serveStatic({root: publicDir}));
 app.use('*', languageMiddleware);
 
 app.get('/', handleAppRequest(handleIndexGet));
-app.get('/create', handleAppRequest(handleCreateGet));
-app.post('/create', handleAppRequest(handleCreatePost));
-app.get('/create/scrape', handleAppRequest(handleScrapeLeaguesGet));
-app.get('/create/scrape/groups', handleAppRequest(handleScrapeGroupsGet));
-app.get('/create/scrape/teams', handleAppRequest(handleScrapeTeamsGet));
-app.get('/create/scrape/meetings', handleAppRequest(handleScrapeMeetingsGet));
-app.post('/create/scrape/meeting', handleAppRequest(handleScrapeMeetingPost));
-app.post('/edit/:id/venue', handleAppRequest(handleEditVenuePost));
-app.post('/edit/:id/players', handleAppRequest(handleEditPlayersPost));
-app.get('/edit/:id', handleAppRequest(handleEditGet));
+app.route('/create', createRouter);
+app.route('/edit', editRouter);
+
+// ponytail: test endpoint; remove before production if not needed.
 app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from foo')));
 
 app.onError((err, c): Response => {
@@ -131,8 +117,3 @@ process.on('SIGINT', () => {
 });
 
 
-function handleAppRequest(handler: (app: App) => Response | Promise<Response>) {
-  return async (c: Context): Promise<Response> => {
-    return handler(App.create(c));
-  };
-}

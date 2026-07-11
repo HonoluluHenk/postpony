@@ -1,15 +1,9 @@
 import type { Context, Next } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
-import { createMiddleware } from 'hono/factory';
-import { defaultLocale, isLocale, type Locale } from '../../locales';
+import { defaultLocale, isLocale, type Locale, LOCALE_KEY } from '../../locales';
+import { factory } from '../hono-factory';
 
-export const LOCALE_KEY = 'locale';
-
-export const languageMiddleware = createMiddleware<{
-  Variables: {
-    [LOCALE_KEY]: Locale;
-  };
-}>(async (c: Context, next: Next) => {
+export const languageMiddleware = factory.createMiddleware(async (c: Context, next: Next) => {
   const queryLocale = c.req.query('lang');
 
   if (isLocale(queryLocale)) {
@@ -28,7 +22,7 @@ export const languageMiddleware = createMiddleware<{
 
   const acceptLanguage = c.req.header('Accept-Language');
   if (acceptLanguage?.startsWith('de')) {
-    c.set(LOCALE_KEY, 'de');
+    c.set('locale', 'de');
   } else {
     c.set(LOCALE_KEY, defaultLocale);
   }

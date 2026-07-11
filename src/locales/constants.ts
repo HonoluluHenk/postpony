@@ -12,3 +12,5 @@ export const translations: Record<Locale, Record<TranslationKeys, string>> = {
 };
 
 export const defaultLocale: Locale = 'en';
+
+export const LOCALE_KEY = 'locale';

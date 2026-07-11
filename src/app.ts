@@ -4,9 +4,8 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import path from 'node:path';
 import config from './config';
 import { AppError, InternalError, StateError } from './lib/errors';
-import { LOCALE_KEY } from './lib/middleware/language';
 import type { RescheduleSession } from './lib/models';
-import { defaultLocale, getTranslation, type Locale, type TranslationKeys } from './locales';
+import { defaultLocale, getTranslation, LOCALE_KEY, type Locale, type TranslationKeys } from './locales';
 
 export const eta = new Eta({views: path.join(process.cwd(), 'src/routes')});
 
