@@ -5,7 +5,7 @@
     <h2><%= it.t('create_reschedule_title') %></h2>
   </header>
 
-  <form hx-post="/create" hx-target="#main-content" hx-push-url="true">
+  <form action="/create" method="post">
     <fieldset>
       <legend class="none"><%= it.t('reschedule_name') %></legend>
       <div class="field label border fill <%= it.errors?.fields?.name ? 'invalid' : '' %>">

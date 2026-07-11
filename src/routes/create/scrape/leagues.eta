@@ -12,10 +12,7 @@
       <% for (const league of it.leagues) { %>
         <li>
           <% const groupsQuery = `championship=${encodeURIComponent(league.championship)}&leagueName=${encodeURIComponent(league.name)}` %>
-          <a href="/create/scrape/groups?<%= groupsQuery %>"
-             hx-get="/create/scrape/groups?<%= groupsQuery %>"
-             hx-target="#main-content"
-             hx-push-url="true">
+          <a href="/create/scrape/groups?<%= groupsQuery %>">
             <%= league.name %>
           </a>
         </li>
@@ -24,10 +21,7 @@
   <% } %>
 
   <nav class="right-align">
-    <a href="/create"
-       hx-get="/create"
-       hx-target="#main-content"
-       hx-push-url="true">
+    <a href="/create">
       <%= it.t('scrape_back') %>
     </a>
   </nav>

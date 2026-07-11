@@ -21,7 +21,7 @@
 </head>
 <body class="light">
   <a href="#main-content" class="skip-link"><%= it.t('skip_to_main') %></a>
-  <div class="container">
+  <div class="container" hx-boost="true" hx-target="#main-content">
     <header class="padding">
       <div class="row no-wrap">
         <a href="/" class="shrink" aria-label="PostPony home">
@@ -29,10 +29,10 @@
         </a>
         <h1 class="max center-align"><%= it.title %></h1>
         <nav class="row no-wrap shrink" aria-label="<%= it.t('language_selection') %>">
-          <a class="button circle transparent" href="?lang=en" title="<%= it.t('language_en') %>">
+          <a class="button circle transparent" href="?lang=en" title="<%= it.t('language_en') %>" hx-boost="false">
             <i><img src="/assets/vendor/img/flags/gb.svg" width="20" alt="<%= it.t('language_en') %>"></i>
           </a>
-          <a class="button circle transparent" href="?lang=de" title="<%= it.t('language_de') %>">
+          <a class="button circle transparent" href="?lang=de" title="<%= it.t('language_de') %>" hx-boost="false">
             <i><img src="/assets/vendor/img/flags/de.svg" width="20" alt="<%= it.t('language_de') %>"></i>
           </a>
         </nav>

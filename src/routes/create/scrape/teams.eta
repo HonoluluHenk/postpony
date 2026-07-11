@@ -16,10 +16,7 @@
       <% for (const team of it.teams) { %>
         <li>
           <% const meetingsQuery = `championship=${encodeURIComponent(team.championship)}&group=${encodeURIComponent(team.group)}&teamtable=${encodeURIComponent(team.teamtable)}&teamName=${encodeURIComponent(team.name)}&groupName=${encodeURIComponent(it.groupName || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
-          <a href="/create/scrape/meetings?<%= meetingsQuery %>"
-             hx-get="/create/scrape/meetings?<%= meetingsQuery %>"
-             hx-target="#main-content"
-             hx-push-url="true">
+          <a href="/create/scrape/meetings?<%= meetingsQuery %>">
             <%= team.name %>
           </a>
         </li>
@@ -29,10 +26,7 @@
 
   <nav class="right-align">
     <% const groupsQuery = `championship=${encodeURIComponent(it.championship || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
-    <a href="/create/scrape/groups?<%= groupsQuery %>"
-       hx-get="/create/scrape/groups?<%= groupsQuery %>"
-       hx-target="#main-content"
-       hx-push-url="true">
+    <a href="/create/scrape/groups?<%= groupsQuery %>">
       <%= it.t('scrape_back') %>
     </a>
   </nav>

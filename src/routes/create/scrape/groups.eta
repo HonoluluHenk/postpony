@@ -13,10 +13,7 @@
       <% for (const group of it.groups) { %>
         <li>
           <% const teamsQuery = `championship=${encodeURIComponent(group.championship)}&group=${encodeURIComponent(group.group)}&groupName=${encodeURIComponent(group.name)}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
-          <a href="/create/scrape/teams?<%= teamsQuery %>"
-             hx-get="/create/scrape/teams?<%= teamsQuery %>"
-             hx-target="#main-content"
-             hx-push-url="true">
+          <a href="/create/scrape/teams?<%= teamsQuery %>">
             <%= group.name %>
           </a>
         </li>
@@ -25,10 +22,7 @@
   <% } %>
 
   <nav class="right-align">
-    <a href="/create/scrape"
-       hx-get="/create/scrape"
-       hx-target="#main-content"
-       hx-push-url="true">
+    <a href="/create/scrape">
       <%= it.t('scrape_back') %>
     </a>
   </nav>

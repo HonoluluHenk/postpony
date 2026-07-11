@@ -1,13 +1,13 @@
 <% layout('./layouts/main.eta') %>
 
 <section class="padding small-round surface-variant">
-  <header>
-    <h2 class="center-align"><%= it.t('welcome') %></h2>
-    <p class="center-align"><%= it.t('tagline') %></p>
+  <header class="center-align">
+    <h2><%= it.t('welcome') %></h2>
+    <p><%= it.t('tagline') %></p>
   </header>
 
-  <nav class="center-align mt-4">
-    <button hx-get="/create" hx-target="#main-content"><%= it.t('create_new') %></button>
-    <button class="outline" hx-get="/edit" hx-target="#main-content"><%= it.t('edit_existing') %></button>
+  <nav class="center-align mt-4" aria-label="<%= it.t('main_actions') %>">
+    <a class="button" href="/create" role="button"><%= it.t('create_new') %></a>
+    <a class="button outline" href="/edit" role="button"><%= it.t('edit_existing') %></a>
   </nav>
 </section>

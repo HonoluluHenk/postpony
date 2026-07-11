@@ -32,10 +32,7 @@
       </header>
       <nav>
         <a class="button"
-           href="/create/scrape"
-           hx-get="/create/scrape"
-           hx-target="#main-content"
-           hx-push-url="true">
+           href="/create/scrape">
           <%= it.t('scrape_start_wizard') %>
         </a>
       </nav>

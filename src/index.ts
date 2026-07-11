@@ -38,7 +38,7 @@ app.onError((err, c): Response => {
   let logMessage: string | undefined;
 
   if (err instanceof ClickTTError) {
-    status = 200;
+    status = 400;
     message = app.t('scrape_error_click_tt');
     logMessage = err.message;
   } else if (err instanceof AppError) {
@@ -115,5 +115,4 @@ process.on('SIGINT', () => {
     process.exit(0);
   });
 });
-
 

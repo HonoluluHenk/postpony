@@ -31,10 +31,7 @@
             <td><%= m.homeTeam %></td>
             <td><%= m.guestTeam %></td>
             <td>
-              <form method="post" action="/create/scrape/meeting"
-                    hx-post="/create/scrape/meeting"
-                    hx-target="#main-content"
-                    hx-push-url="true">
+              <form method="post" action="/create/scrape/meeting">
                 <input type="hidden" name="day" value="<%= m.day %>">
                 <input type="hidden" name="date" value="<%= m.date %>">
                 <input type="hidden" name="time" value="<%= m.time %>">
@@ -57,10 +54,7 @@
 
   <nav class="right-align">
     <% const teamsQuery = `championship=${encodeURIComponent(it.championship || '')}&group=${encodeURIComponent(it.group || '')}&groupName=${encodeURIComponent(it.groupName || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
-    <a href="/create/scrape/teams?<%= teamsQuery %>"
-       hx-get="/create/scrape/teams?<%= teamsQuery %>"
-       hx-target="#main-content"
-       hx-push-url="true">
+    <a href="/create/scrape/teams?<%= teamsQuery %>">
       <%= it.t('scrape_back') %>
     </a>
   </nav>
