@@ -2,8 +2,12 @@
  * Spinner class to handle global loading overlay.
  */
 class Spinner {
+  /** @returns {HTMLElement | null} */
+  get spinner() {
+    return document.getElementById('global-spinner');
+  }
+
   constructor() {
-    this.spinner = document.getElementById('global-spinner');
     this.init();
   }
 
@@ -14,13 +18,11 @@ class Spinner {
    * Shows the global loading spinner overlay.
    */
   show() {
-    if (!this.spinner) {
-      return;
-    }
+    const spinner = this.spinner;
 
-    this.spinner.classList.add(this.#activeClass);
-    this.spinner.setAttribute('aria-hidden', 'false');
-    this.spinner.setAttribute('aria-busy', 'true');
+    spinner?.classList.add(this.#activeClass);
+    spinner?.setAttribute('aria-hidden', 'false');
+    spinner?.setAttribute('aria-busy', 'true');
     document.body.classList.add(this.#loadingClass);
   }
 
@@ -28,14 +30,12 @@ class Spinner {
    * Hides the global loading spinner overlay.
    */
   hide() {
-    if (!this.spinner) {
-      return;
-    }
+    const spinner = this.spinner;
 
-    this.spinner.classList.remove('is-active');
-    this.spinner.setAttribute('aria-hidden', 'true');
-    this.spinner.removeAttribute('aria-busy');
-    document.body.classList.remove('is-loading');
+    spinner?.classList.remove(this.#activeClass);
+    spinner?.setAttribute('aria-hidden', 'true');
+    spinner?.removeAttribute('aria-busy');
+    document.body.classList.remove(this.#loadingClass);
   }
 
   /**
@@ -78,13 +78,6 @@ class Spinner {
         }
         this.show();
         return;
-      }
-      if (target.tagName === 'BUTTON') {
-        const type = (target.getAttribute('type') || 'submit').toLowerCase();
-        if (type === 'submit') {
-          // Submit handler above will show the spinner.
-
-        }
       }
     });
 

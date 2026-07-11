@@ -12,16 +12,20 @@ function initHtmx(spinner) {
   document.addEventListener('htmx:responseError', () => spinner.hide());
   document.addEventListener('htmx:sendError', () => spinner.hide());
   document.addEventListener('htmx:timeout', () => spinner.hide());
+  document.addEventListener('htmx:historyCacheMiss', () => spinner.show());
+  document.addEventListener('htmx:historyRestore', () => spinner.hide());
   document.addEventListener('htmx:beforeOnLoad', (evt) => {
     const status = evt.detail.xhr.status;
     if (status >= 400 && status < 600) {
       // ponytail: only swap if the response contains content outside of OOB elements to avoid clearing the target on global errors.
       const response = evt.detail.xhr.responseText;
-      const hasOob = response.includes('hx-swap-oob');
-      // Simple heuristic: if there's any non-OOB content, swap it.
-      const nonOobContent = response.replace(/<div[^>]*hx-swap-oob="true"[^>]*>[\s\S]*?<\/div>/g, '').trim();
+      const doc = new DOMParser().parseFromString(response, 'text/html');
+      const hasOob = doc.body.querySelector('[hx-swap-oob]') !== null;
+      const nonOobContent = [...doc.body.children]
+        .filter(el => !el.hasAttribute('hx-swap-oob'))
+        .some(el => el.textContent.trim().length > 0);
 
-      evt.detail.shouldSwap = nonOobContent.length > 0 || !hasOob;
+      evt.detail.shouldSwap = nonOobContent || !hasOob;
       evt.detail.isError = false;
     }
   });
