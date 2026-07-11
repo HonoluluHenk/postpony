@@ -2,7 +2,7 @@
 
 This document provides context and guidelines for AI agents working on the PostPony project.
 
-# General instructions
+## General instructions
 
 * Ask questions, do not guess
 * Ask questions one by one
@@ -164,6 +164,10 @@ For more details, see:
 * Coverage:
     * is calculated by default on every test run in the [/coverage](/coverage) directory.
     * must be _at least_ 80% (branch, statement, line and functions). More is better.
+
+### Browser-Access
+
+* The app start page is at `https://game-scheduler.localhost:3000`
 
 ### Quality
 
