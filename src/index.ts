@@ -67,12 +67,12 @@ app.onError((err, c): Response => {
   if (app.isPartial) {
     return c.html(`
       <div id="error-container" hx-swap-oob="true">
-        <section class="error padding white-text" role="alert">
-          <i>error</i>
+/q  '        <div class="error padding white-text" role="alert">
+          <i aria-hidden="true">error</i>
           <div class="max">
             <p>${message}</p>
           </div>
-        </section>
+        </div>
       </div>`, {status});
   }
 

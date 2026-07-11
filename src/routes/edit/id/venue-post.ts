@@ -33,29 +33,26 @@ export const handleEditVenuePost = async (app: App): Promise<Response> => {
       return app.c.html(`
         <div id="error-container" hx-swap-oob="true">
           ${errors.global ? `
-            <section class="error padding white-text" role="alert">
-              <i>error</i>
+            <div class="error padding white-text" role="alert">
+              <i aria-hidden="true">error</i>
               <div class="max">
                 <p>${errors.global}</p>
               </div>
-            </section>` : ''}
+            </div>` : ''}
         </div>
         <section id="venue-management" class="padding small-round surface-variant s12 m6">
           <header>
             <h4>${app.t('venue_management')}</h4>
           </header>
           <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
-            <fieldset>
-              <legend class="none">${app.t('venue_management')}</legend>
-              <div class="field label border fill ${error ? 'invalid' : ''}">
-                <input type="number" id="maxOverlaps" name="maxOverlaps" value="${maxOverlaps}" min="0">
-                <label for="maxOverlaps">${app.t('max_overlaps')}</label>
-                <span class="error">${error ?? ''}</span>
-              </div>
-            </fieldset>
-            <nav class="right-align">
+            <div class="field label border fill ${error ? 'invalid' : ''}">
+              <input type="number" id="maxOverlaps" name="maxOverlaps" value="${maxOverlaps}" min="0">
+              <label for="maxOverlaps">${app.t('max_overlaps')}</label>
+              <span class="error" role="alert">${error ?? ''}</span>
+            </div>
+            <div class="right-align">
               <button type="submit">${app.t('update_venue_settings')}</button>
-            </nav>
+            </div>
           </form>
         </section>
       `, {status: 400});
@@ -76,23 +73,20 @@ export const handleEditVenuePost = async (app: App): Promise<Response> => {
           <h4>${app.t('venue_management')}</h4>
         </header>
         <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
-          <fieldset>
-            <legend class="none">${app.t('venue_management')}</legend>
-            <div class="field label border fill">
-              <input type="number" id="maxOverlaps" name="maxOverlaps" value="${session.maxOverlaps ?? ''}" min="0">
-              <label for="maxOverlaps">${app.t('max_overlaps')}</label>
-            </div>
-          </fieldset>
-          <nav class="right-align">
+          <div class="field label border fill">
+            <input type="number" id="maxOverlaps" name="maxOverlaps" value="${session.maxOverlaps ?? ''}" min="0">
+            <label for="maxOverlaps">${app.t('max_overlaps')}</label>
+          </div>
+          <div class="right-align">
             <button type="submit">${app.t('update_venue_settings')}</button>
-          </nav>
+          </div>
         </form>
-        <aside class="toast success top" role="alert">
-          <i>check_circle</i>
+        <div class="toast success top" role="alert">
+          <i aria-hidden="true">check_circle</i>
           <div class="max">
             <p>${app.t('venue_settings_updated')}</p>
           </div>
-        </aside>
+        </div>
       </section>
     `);
   }

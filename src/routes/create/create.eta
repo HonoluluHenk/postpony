@@ -11,7 +11,7 @@
              value="<%= it.values?.name || '' %>"
              <% if (it.errors?.fields?.name) { %> aria-invalid="true" aria-describedby="name-error" <% } %>>
       <label for="reschedule-name"><%= it.t('reschedule_name') %></label>
-      <span id="name-error" class="error"><%= it.errors?.fields?.name || '' %></span>
+      <span id="name-error" class="error" role="alert"><%= it.errors?.fields?.name || '' %></span>
     </div>
     <div class="right-align">
       <button type="submit"><%= it.t('create_button') %></button>

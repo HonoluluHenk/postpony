@@ -34,12 +34,12 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
       return app.c.html(`
         <div id="error-container" hx-swap-oob="true">
           ${errors.global ? `
-            <section class="error padding white-text" role="alert">
-              <i>error</i>
+            <div class="error padding white-text" role="alert">
+              <i aria-hidden="true">error</i>
               <div class="max">
                 <p>${errors.global}</p>
               </div>
-            </section>` : ''}
+            </div>` : ''}
         </div>
         <section id="team-management" class="padding small-round surface-variant s12 m6">
           <header>
@@ -49,17 +49,14 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
             ${playerList}
           </ul>
           <form hx-post="/edit/${session.id}/players" hx-target="#team-management" class="mt-4">
-            <fieldset>
-              <legend class="none">${app.t('home_team_players')}</legend>
-              <div class="field label border fill ${error ? 'invalid' : ''}">
-                <input type="text" id="playerName" name="playerName" value="${playerName}">
-                <label for="playerName">${app.t('new_player_name')}</label>
-                <span class="error">${error ?? ''}</span>
-              </div>
-            </fieldset>
-            <nav class="right-align">
+            <div class="field label border fill ${error ? 'invalid' : ''}">
+              <input type="text" id="playerName" name="playerName" value="${playerName}">
+              <label for="playerName">${app.t('new_player_name')}</label>
+              <span class="error" role="alert">${error ?? ''}</span>
+            </div>
+            <div class="right-align">
               <button type="submit">${app.t('add_player')}</button>
-            </nav>
+            </div>
           </form>
         </section>
       `, {status: 400});
@@ -92,16 +89,13 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
           ${playerList}
         </ul>
         <form hx-post="/edit/${session.id}/players" hx-target="#team-management" class="mt-4">
-          <fieldset>
-            <legend class="none">${app.t('home_team_players')}</legend>
-            <div class="field label border fill">
-              <input type="text" id="playerName" name="playerName" required>
-              <label for="playerName">${app.t('new_player_name')}</label>
-            </div>
-          </fieldset>
-          <nav class="right-align">
+          <div class="field label border fill">
+            <input type="text" id="playerName" name="playerName" required>
+            <label for="playerName">${app.t('new_player_name')}</label>
+          </div>
+          <div class="right-align">
             <button type="submit">${app.t('add_player')}</button>
-          </nav>
+          </div>
         </form>
       </section>
     `);

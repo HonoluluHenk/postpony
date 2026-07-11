@@ -40,12 +40,12 @@
     </header>
     <div id="error-container">
       <% if (it.globalError) { %>
-        <section class="error padding white-text" role="alert">
-          <i>error</i>
+        <div class="error padding white-text" role="alert">
+          <i aria-hidden="true">error</i>
           <div class="max">
             <p><%= it.globalError %></p>
           </div>
-        </section>
+        </div>
       <% } %>
     </div>
     <main id="main-content" class="responsive">
@@ -66,12 +66,12 @@
 <% } else { %>
 <div id="error-container" hx-swap-oob="true">
   <% if (it.globalError) { %>
-    <section class="error padding white-text" role="alert">
-      <i>error</i>
+    <div class="error padding white-text" role="alert">
+      <i aria-hidden="true">error</i>
       <div class="max">
         <p><%= it.globalError %></p>
       </div>
-    </section>
+    </div>
   <% } %>
 </div>
 <main id="main-content" class="responsive">
