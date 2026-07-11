@@ -7,7 +7,7 @@
   </header>
 
   <nav class="center-align mt-4" aria-label="<%= it.t('main_actions') %>">
-    <a class="button" href="/create" role="button"><%= it.t('create_new') %></a>
-    <a class="button outline" href="/edit" role="button"><%= it.t('edit_existing') %></a>
+    <a class="button" href="/create"><%= it.t('create_new') %></a>
+    <a class="button outline" href="/edit"><%= it.t('edit_existing') %></a>
   </nav>
 </section>

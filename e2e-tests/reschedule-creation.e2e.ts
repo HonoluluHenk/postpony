@@ -7,7 +7,7 @@ test.describe('Postponement Creation', () => {
 
   test('should create a new Postponement session', async ({page}) => {
     // 1. Click on "Create a new Postponement"
-    await page.getByRole('button', {name: 'Create a new Postponement'})
+    await page.getByRole('link', {name: 'Create a new Postponement'})
       .click();
 
     // 2. Check if we are on the create form (HTMX swap happened)
@@ -52,7 +52,7 @@ test.describe('Postponement Creation', () => {
     await checkA11y();
 
     // Create page
-    await page.getByRole('button', {name: 'Create a new Postponement'})
+    await page.getByRole('link', {name: 'Create a new Postponement'})
       .click();
     await checkA11y();
 

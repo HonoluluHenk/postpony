@@ -4,7 +4,7 @@
   <header>
     <h2><%= it.t('error_title') %></h2>
   </header>
-  <nav class="mt-4">
+  <div class="mt-4">
     <a href="/" class="button"><%= it.t('return_home') %></a>
-  </nav>
+  </div>
 </section>

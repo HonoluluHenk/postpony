@@ -12,14 +12,25 @@ test.describe('Start Page', () => {
       .toContainText('Welcome to PostPony');
   });
 
-  test('should display the main action buttons', async ({page}) => {
-    const createButton = page.getByRole('button', {name: 'Create a new Postponement'});
-    const editButton = page.getByRole('button', {name: 'Edit an existing Postponement'});
+  test('should display the main action links', async ({page}) => {
+    // These navigate, so they must be links (not buttons) for correct semantics.
+    const createLink = page.getByRole('link', {name: 'Create a new Postponement'});
+    const editLink = page.getByRole('link', {name: 'Edit an existing Postponement'});
 
-    await expect(createButton)
-      .toBeVisible();
-    await expect(editButton)
-      .toBeVisible();
+    await expect(createLink)
+      .toHaveAttribute('href', '/create');
+    await expect(editLink)
+      .toHaveAttribute('href', '/edit');
+  });
+
+  test('should render an accessible, initially-hidden loading overlay', async ({page}) => {
+    const spinner = page.locator('#global-spinner');
+    await expect(spinner)
+      .toHaveAttribute('role', 'status');
+    await expect(spinner)
+      .toHaveAttribute('aria-hidden', 'true');
+    await expect(spinner)
+      .toBeHidden();
   });
 
   test('should have a descriptive welcome message', async ({page}) => {

@@ -21,9 +21,9 @@
     </ul>
   <% } %>
 
-  <nav class="right-align">
+  <div class="right-align">
     <a href="/create/scrape">
       <%= it.t('scrape_back') %>
     </a>
-  </nav>
+  </div>
 </section>

@@ -19,7 +19,7 @@
           <th scope="col"><%= it.t('scrape_match_time') %></th>
           <th scope="col"><%= it.t('scrape_match_home') %></th>
           <th scope="col"><%= it.t('scrape_match_guest') %></th>
-          <th scope="col"></th>
+          <th scope="col"><span class="visually-hidden"><%= it.t('scrape_match_actions') %></span></th>
         </tr>
       </thead>
       <tbody>
@@ -52,10 +52,10 @@
     </table>
   <% } %>
 
-  <nav class="right-align">
+  <div class="right-align">
     <% const teamsQuery = `championship=${encodeURIComponent(it.championship || '')}&group=${encodeURIComponent(it.group || '')}&groupName=${encodeURIComponent(it.groupName || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
     <a href="/create/scrape/teams?<%= teamsQuery %>">
       <%= it.t('scrape_back') %>
     </a>
-  </nav>
+  </div>
 </section>

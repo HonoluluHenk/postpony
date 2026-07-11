@@ -5,14 +5,14 @@
 </header>
 
 <% if (it.ownerPassword) { %>
-  <aside class="toast error white-text top" role="alert">
-    <i>info</i>
+  <div class="toast primary white-text top" role="alert">
+    <i aria-hidden="true">info</i>
     <div class="max">
       <p><strong><%= it.t('reschedule_created_success') %></strong></p>
       <p><%~ it.t('owner_password_label') %> <span class="password-display"><%= it.ownerPassword %></span></p>
       <p><%= it.t('save_password_warning') %></p>
     </div>
-  </aside>
+  </div>
 <% } %>
 
 <section class="row items-center wrap">
@@ -30,23 +30,20 @@
       <header>
         <h4><%= it.t('venue_management') %></h4>
       </header>
-      <nav>
+      <div>
         <a class="button"
            href="/create/scrape">
           <%= it.t('scrape_start_wizard') %>
         </a>
-      </nav>
+      </div>
       <form hx-post="/edit/<%= it.session.id %>/venue" hx-target="#venue-management">
-        <fieldset>
-          <legend class="none"><%= it.t('venue_management') %></legend>
-          <div class="field label border fill">
-            <input type="number" id="maxOverlaps" name="maxOverlaps" value="<%= it.session.maxOverlaps || '' %>" min="0">
-            <label for="maxOverlaps"><%= it.t('max_overlaps') %></label>
-          </div>
-        </fieldset>
-        <nav class="right-align">
+        <div class="field label border fill">
+          <input type="number" id="maxOverlaps" name="maxOverlaps" value="<%= it.session.maxOverlaps || '' %>" min="0">
+          <label for="maxOverlaps"><%= it.t('max_overlaps') %></label>
+        </div>
+        <div class="right-align">
           <button type="submit"><%= it.t('update_venue_settings') %></button>
-        </nav>
+        </div>
       </form>
     </section>
 
@@ -63,16 +60,13 @@
         <% }) %>
       </ul>
       <form hx-post="/edit/<%= it.session.id %>/players" hx-target="#team-management" class="mt-4">
-        <fieldset>
-          <legend class="none"><%= it.t('home_team_players') %></legend>
-          <div class="field label border fill">
-            <input type="text" id="playerName" name="playerName" required>
-            <label for="playerName"><%= it.t('new_player_name') %></label>
-          </div>
-        </fieldset>
-        <nav class="right-align">
+        <div class="field label border fill">
+          <input type="text" id="playerName" name="playerName" required>
+          <label for="playerName"><%= it.t('new_player_name') %></label>
+        </div>
+        <div class="right-align">
           <button type="submit"><%= it.t('add_player') %></button>
-        </nav>
+        </div>
       </form>
     </section>
   </div>

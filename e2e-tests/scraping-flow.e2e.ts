@@ -67,6 +67,9 @@ test.describe('Scraping Flow', () => {
     // 4. Meetings → concrete rows from team.html
     await expect(page.getByRole('heading', {name: 'Choose the match to reschedule', level: 2}))
       .toBeVisible();
+    // The action column has an accessible (visually-hidden) header.
+    await expect(page.getByRole('columnheader', {name: 'Actions'}))
+      .toBeAttached();
     // header row + 14 meeting rows (7 first-half + 7 second-half).
     await expect(page.getByRole('row'))
       .toHaveCount(15);

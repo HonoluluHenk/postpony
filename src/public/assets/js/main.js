@@ -73,9 +73,10 @@ function initLanguage() {
   });
 }
 
-// Initialize immediately
-const spinner = new Spinner();
+// main.js is loaded in <head> without defer, so the DOM (including #global-spinner)
+// is not ready yet; construct the spinner once the page has loaded.
 window.addEventListener('load', () => {
+  const spinner = new Spinner();
   initTheme();
   initLanguage();
   initHtmx(spinner);

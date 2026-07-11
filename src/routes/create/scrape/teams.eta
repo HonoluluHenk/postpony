@@ -24,10 +24,10 @@
     </ul>
   <% } %>
 
-  <nav class="right-align">
+  <div class="right-align">
     <% const groupsQuery = `championship=${encodeURIComponent(it.championship || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
     <a href="/create/scrape/groups?<%= groupsQuery %>">
       <%= it.t('scrape_back') %>
     </a>
-  </nav>
+  </div>
 </section>

@@ -57,6 +57,10 @@
       <p>&copy; 2024 PostPony</p>
     </footer>
   </div>
+  <div id="global-spinner" class="global-spinner" role="status" aria-live="polite" aria-hidden="true">
+    <div class="global-spinner__circle" aria-hidden="true"></div>
+    <span class="global-spinner__label"><%= it.t('loading') %></span>
+  </div>
 </body>
 </html>
 <% } else { %>
