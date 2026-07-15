@@ -32,7 +32,7 @@ test.describe('Postponement Editing', () => {
       .click();
 
     // Verify player is in the list
-    const playerList = page.getByRole('list');
+    const playerList = page.locator('#player-list');
     await expect(playerList)
       .toContainText('John Doe');
 
@@ -42,6 +42,25 @@ test.describe('Postponement Editing', () => {
       .click();
     await expect(playerList)
       .toContainText('Jane Smith');
+  });
+
+  test('should add proposed postponement dates', async ({page}) => {
+    const proposedDateTimeInput = page.getByLabel('Proposed Date & Time');
+    await proposedDateTimeInput.fill('2026-03-05T20:00');
+    await page.getByRole('button', {name: 'Add Proposed Date'})
+      .click();
+
+    // Verify the proposed date is in the list
+    const proposedDateList = page.locator('#proposed-date-list');
+    await expect(proposedDateList)
+      .toContainText('2026');
+
+    // Add another proposed date
+    await proposedDateTimeInput.fill('2026-03-12T18:30');
+    await page.getByRole('button', {name: 'Add Proposed Date'})
+      .click();
+    await expect(proposedDateList.getByRole('listitem'))
+      .toHaveCount(2);
   });
 
   test('should maintain accessibility on the editing interface', async ({checkA11y}) => {

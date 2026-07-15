@@ -34,6 +34,8 @@ export interface RescheduleSession {
   venueId?: string;
   opponentVenueId?: string;
   players: Player[];
+  proposedDates: ProposedDate[];
+  originalMatchDateTime?: string; // format YYYY-MM-DDTHH:mm, matches <input type="datetime-local">
   metadata?: Record<string, unknown>;
   createdAt: string;
 }

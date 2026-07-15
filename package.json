@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development tsx watch src/index.ts",
+    "dev": "APP_USE_FIXTURES=true tsx watch src/index.ts",
+    "dev:live": "tsx watch src/index.ts",
     "dev:test": "vitest",
     "dev:lint": "tsc --noEmit --watch",
     "clean": "rimraf dist playwright-report test-results coverage",

@@ -26,7 +26,7 @@
   </header>
 
   <div id="scheduling-info" class="grid">
-    <section id="venue-management" class="padding small-round surface-variant s12 m6">
+    <section id="venue-management" class="padding small-round surface-variant s12 m4">
       <header>
         <h4><%= it.t('venue_management') %></h4>
       </header>
@@ -47,7 +47,7 @@
       </form>
     </section>
 
-    <section id="team-management" class="padding small-round surface-variant s12 m6">
+    <section id="team-management" class="padding small-round surface-variant s12 m4">
       <header>
         <h4><%= it.t('home_team_players') %></h4>
       </header>
@@ -66,6 +66,30 @@
         </div>
         <div class="right-align">
           <button type="submit"><%= it.t('add_player') %></button>
+        </div>
+      </form>
+    </section>
+
+    <section id="proposed-dates-management" class="padding small-round surface-variant s12 m4">
+      <header>
+        <h4><%= it.t('proposed_dates_management') %></h4>
+      </header>
+      <ul id="proposed-date-list" class="list">
+        <% it.proposedDates.forEach(proposedDate => { %>
+          <li>
+            <i>event</i>
+            <div class="max"><%= proposedDate.display %></div>
+          </li>
+        <% }) %>
+      </ul>
+      <form hx-post="/edit/<%= it.session.id %>/proposed-dates" hx-target="#proposed-dates-management" class="mt-4">
+        <div class="field label border fill">
+          <input type="datetime-local" id="proposedDateTime" name="proposedDateTime"
+                 value="<%= it.session.originalMatchDateTime || '' %>" required>
+          <label for="proposedDateTime"><%= it.t('proposed_date_time_label') %></label>
+        </div>
+        <div class="right-align">
+          <button type="submit"><%= it.t('add_proposed_date') %></button>
         </div>
       </form>
     </section>

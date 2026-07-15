@@ -2,6 +2,7 @@ import * as v from 'valibot';
 import type { App } from '../../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../../lib/crypto-utils';
 import type { RescheduleSession } from '../../../lib/models';
+import { parseClickTtDateTime } from '../../../lib/temporal-utils';
 
 const MeetingSchema = v.object({
   day: v.optional(v.string(), ''),
@@ -37,6 +38,8 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
     invitationPasswordHash: hashPassword(invitationPassword),
     status: 'Draft',
     players: [],
+    proposedDates: [],
+    originalMatchDateTime: parseClickTtDateTime(m.date, m.time),
     createdAt: new Date().toISOString(),
     metadata: {
       source: 'click-tt.ch',

@@ -1,5 +1,6 @@
 {
   "add_player": "Spieler hinzufügen",
+  "add_proposed_date": "Termin vorschlagen",
   "app_title": "PostPony",
   "create_button": "Verschiebung erstellen",
   "create_new": "Neue Verschiebung erstellen",
@@ -21,6 +22,10 @@
   "new_player_name": "Name des neuen Spielers",
   "not_found": "Nicht gefunden",
   "owner_password_label": "Ihr <strong>Besitzer-Passwort</strong> ist:",
+  "proposed_date_added": "Vorgeschlagener Termin hinzugefügt!",
+  "proposed_date_time_invalid": "Bitte geben Sie ein gültiges Datum und eine gültige Uhrzeit an",
+  "proposed_date_time_label": "Vorgeschlagenes Datum & Uhrzeit",
+  "proposed_dates_management": "Vorgeschlagene Termine",
   "reschedule_created_success": "Verschiebung erfolgreich erstellt!",
   "reschedule_name": "Name der Verschiebung",
   "return_home": "Zurück zur Startseite",

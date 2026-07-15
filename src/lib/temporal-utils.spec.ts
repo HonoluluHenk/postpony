@@ -6,6 +6,7 @@ import {
   formatLocalizedDateTime,
   intersectDateTimeRanges,
   intersectRanges,
+  parseClickTtDateTime,
 } from './temporal-utils';
 
 describe('Temporal Utils', () => {
@@ -85,5 +86,25 @@ describe('Temporal Utils', () => {
       .toContain('10.05.2026');
     expect(formatted)
       .toContain('10:30');
+  });
+
+  test('parseClickTtDateTime should convert a well-formed date and time', () => {
+    expect(parseClickTtDateTime('03.09.2025', '20:00'))
+      .toBe('2025-09-03T20:00');
+  });
+
+  test('parseClickTtDateTime should tolerate trailing junk in the time', () => {
+    expect(parseClickTtDateTime('11.12.2025', '19:45 v'))
+      .toBe('2025-12-11T19:45');
+  });
+
+  test('parseClickTtDateTime should return undefined for a malformed date', () => {
+    expect(parseClickTtDateTime('2025-09-03', '20:00'))
+      .toBeUndefined();
+  });
+
+  test('parseClickTtDateTime should return undefined for a malformed time', () => {
+    expect(parseClickTtDateTime('03.09.2025', 'tba'))
+      .toBeUndefined();
   });
 });

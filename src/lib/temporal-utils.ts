@@ -46,6 +46,28 @@ export function parseIsoToPlainDateTime(isoString: string): Temporal.PlainDateTi
 }
 
 /**
+ * Matches the value format produced by an `<input type="datetime-local">`.
+ */
+export const DATETIME_LOCAL_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+
+/**
+ * Converts a click-tt.ch meeting's `date` (`dd.mm.yyyy`) and `time` (`HH:mm`,
+ * possibly with trailing junk such as `"19:45 v"`) into a datetime-local value.
+ * Returns undefined if either input doesn't match the expected shape.
+ */
+export function parseClickTtDateTime(date: string, time: string): string | undefined {
+  const dateMatch = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(date);
+  const timeMatch = /^(\d{2}):(\d{2})/.exec(time.trim());
+  if (!dateMatch || !timeMatch) {
+    return undefined;
+  }
+
+  const [, day, month, year] = dateMatch;
+  const [, hours, minutes] = timeMatch;
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+/**
  * Gets the current date and time in a specific time zone.
  */
 export function getCurrentZonedDateTime(timeZone = 'Europe/Zurich'): Temporal.ZonedDateTime {

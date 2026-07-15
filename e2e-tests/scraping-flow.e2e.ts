@@ -105,6 +105,10 @@ test.describe('Scraping Flow', () => {
       .toBeVisible();
     await expect(page.getByText('Status:'))
       .toContainText('Draft');
+
+    // 7. The proposed-date field defaults to the original match's date/time.
+    await expect(page.getByLabel('Proposed Date & Time'))
+      .toHaveValue('2025-09-03T20:00');
   });
 
   test('should navigate back from groups to leagues', async ({page}) => {

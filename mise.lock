@@ -6,24 +6,31 @@ backend = "aqua:FiloSottile/mkcert"
 
 [tools.mkcert."platforms.linux-arm64"]
 url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-arm64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709957"
 
 [tools.mkcert."platforms.linux-arm64-musl"]
 url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-arm64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709957"
 
 [tools.mkcert."platforms.linux-x64"]
 url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709955"
 
 [tools.mkcert."platforms.linux-x64-musl"]
 url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709955"
 
 [tools.mkcert."platforms.macos-arm64"]
 url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-darwin-arm64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709954"
 
 [tools.mkcert."platforms.macos-x64"]
 url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-darwin-amd64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709952"
 
 [tools.mkcert."platforms.windows-x64"]
 url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-windows-amd64.exe"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709958"
 
 [[tools.node]]
 version = "26.2.0"

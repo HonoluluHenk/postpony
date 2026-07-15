@@ -1,5 +1,6 @@
 {
   "add_player": "Add Player",
+  "add_proposed_date": "Add Proposed Date",
   "app_title": "PostPony",
   "create_button": "Create Postponement",
   "create_new": "Create a new Postponement",
@@ -21,6 +22,10 @@
   "new_player_name": "New Player Name",
   "not_found": "Not Found",
   "owner_password_label": "Your <strong>Owner Password</strong> is:",
+  "proposed_date_added": "Proposed date added!",
+  "proposed_date_time_invalid": "Please provide a valid date and time",
+  "proposed_date_time_label": "Proposed Date & Time",
+  "proposed_dates_management": "Proposed Dates",
   "reschedule_created_success": "Postponement created successfully!",
   "reschedule_name": "Postponement Name",
   "return_home": "Return to Home",

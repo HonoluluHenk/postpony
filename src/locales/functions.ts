@@ -12,3 +12,7 @@ export function getTranslation(locale: Locale, key: TranslationKeys, params: Rec
   }
   return template;
 }
+
+export function toIntlLocale(locale: Locale): 'en-GB' | 'de-DE' {
+  return locale === 'de' ? 'de-DE' : 'en-GB';
+}
