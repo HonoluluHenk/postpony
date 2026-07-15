@@ -45,7 +45,7 @@ export default defineConfig({
       APP_CLICK_TT_FIXTURES_DIR: './src/lib/__fixtures__',
     },
     ignoreHTTPSErrors: true,
-    command: 'tsx src/index.ts',
+    command: 'npm run start',
     url: E2E_BASE_URL,
     reuseExistingServer: false,
     gracefulShutdown: {signal: 'SIGTERM', timeout: 5000},
