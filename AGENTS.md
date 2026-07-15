@@ -99,6 +99,9 @@ Playwright for E2E and accessibility testing.
 - **Localization**: All user-facing strings must use `app.t('key')`. New keys should be added to `src/locales/en.json`, which automatically updates the `TranslationKeys` type.
 - **Validation**: Use `Valibot` for schemas. See [ADR 0012](docs/ADR/0012-validation-library-valibot.md). Use `mapValidationToErrors` to format issues for the UI.
 - **Error Handling**: Throw `AppError` or `StateError` from `src/lib/errors.ts`; the `handleAppRequest` wrapper in `src/index.ts` handles the UI toast response.
+- **In-memory session store**: Sessions live in `App.sessions` (a static in-memory record). This is the current persistence reality — a natural spot for a `ponytail:` upgrade note.
+- **Invited-participant routes**: Team role lives in the URL path (`/join/:id/:team?token=<invitationPassword>`), reusing the single invitation token; `team` is validated to the literal `'home' | 'away'`. Shared guards live in `src/routes/join/join-utils.ts` (`requireTeam`, `requireSessionAndToken`). See [ADR 0013](docs/ADR/0013-join-participant-identity.md).
+- **Client identity via `localStorage`**: Player identity is stored as `postpony-player-<sessionId>` → `playerId`, deliberately per-postponement (no cookies/auth). It complements, not replaces, the dual-password model. See [ADR 0013](docs/ADR/0013-join-participant-identity.md).
 
 For more details, see:
 
@@ -165,6 +168,24 @@ For more details, see:
 * Coverage:
     * is calculated by default on every test run in the [/coverage](/coverage) directory.
     * must be _at least_ 80% (branch, statement, line and functions). More is better.
+
+#### Fixture builders (single source of truth)
+
+* `src/lib/__test-utils__/builders.ts` provides deep-merge partial builders (`aSession`, `aPlayer`,
+  `aProposedDate`, `aVote`, `aVenue`).
+* New route-handler unit tests should reuse them with partial overrides (e.g. `aPlayer({ teamId: 'away' })`)
+  and inject sessions via `app.sessions[session.id] = session` (the pattern used in `edit-handlers.spec.ts`).
+* Any model change **must** update the builders in lockstep: `builders.spec.ts` asserts every required field
+  is present, so drift breaks compilation across all consumers.
+
+#### Playwright gotchas
+
+* **beer.css visually hides native radios/checkboxes**, so `.check()` on the `radio` role fails. Toggle the
+  control via its **label text** instead (scope to the form to avoid matching summary-table headers).
+* **Disambiguate headings by level.** The layout renders an `<h1>` brand/logo alongside page `<h2>`s, so
+  `getByRole('heading', { name })` hits strict-mode "2 elements" errors. Pass `{ level: 2 }` for page headings.
+* **e2e files are type-checked separately.** `npm run lint` runs `tsc --noEmit`,
+  `tsc -p tsconfig.e2e.json --noEmit`, then `eslint . --max-warnings 0`, so a lint pass also validates e2e types.
 
 ### Browser-Access
 
