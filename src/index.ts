@@ -13,6 +13,7 @@ import { factory, handleAppRequest } from './lib/hono-factory';
 import { languageMiddleware } from './lib/middleware/language';
 import createRouter from './routes/create/router';
 import editRouter from './routes/edit/router';
+import joinRouter from './routes/join/router';
 import { handleIndexGet } from './routes/index-get';
 
 const app = factory.createApp();
@@ -27,6 +28,7 @@ app.use('*', languageMiddleware);
 app.get('/', handleAppRequest(handleIndexGet));
 app.route('/create', createRouter);
 app.route('/edit', editRouter);
+app.route('/join', joinRouter);
 
 // ponytail: test endpoint; remove before production if not needed.
 app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from foo')));

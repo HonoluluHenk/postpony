@@ -36,9 +36,11 @@ export async function handleCreatePost(app: App): Promise<Response> {
     name,
     ownerPasswordHash: hashPassword(ownerPassword),
     invitationPasswordHash: hashPassword(invitationPassword),
+    invitationPassword,
     status: 'Draft',
     players: [],
     proposedDates: [],
+    votes: [],
     createdAt: new Date().toISOString(),
   };
 

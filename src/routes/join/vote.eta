@@ -1,0 +1,75 @@
+<% layout('../layouts/main.eta') %>
+
+<header>
+  <h2><%= it.t('vote_title') %></h2>
+</header>
+
+<% if (it.updated) { %>
+  <div class="toast success top" role="alert">
+    <i aria-hidden="true">check_circle</i>
+    <div class="max"><p><%= it.t('vote_updated') %></p></div>
+  </div>
+<% } %>
+
+<% if (it.proposedDates.length === 0) { %>
+  <p><%= it.t('vote_no_dates') %></p>
+<% } else { %>
+  <form method="post"
+        action="/join/<%= it.sessionId %>/<%= it.team %>/vote?playerId=<%= it.playerId %>&token=<%= it.token %>"
+        hx-boost="false">
+    <% it.proposedDates.forEach(function (pd) { %>
+      <fieldset class="field border">
+        <legend><%= pd.display %></legend>
+        <label class="radio">
+          <input type="radio" name="vote-<%= pd.id %>" value="Yes"
+                 <%= pd.currentVote === 'Yes' ? 'checked' : '' %> <%= it.readOnly ? 'disabled' : '' %>>
+          <span><%= it.t('vote_yes') %></span>
+        </label>
+        <label class="radio">
+          <input type="radio" name="vote-<%= pd.id %>" value="Maybe"
+                 <%= pd.currentVote === 'Maybe' ? 'checked' : '' %> <%= it.readOnly ? 'disabled' : '' %>>
+          <span><%= it.t('vote_maybe') %></span>
+        </label>
+        <label class="radio">
+          <input type="radio" name="vote-<%= pd.id %>" value="No"
+                 <%= pd.currentVote === 'No' ? 'checked' : '' %> <%= it.readOnly ? 'disabled' : '' %>>
+          <span><%= it.t('vote_no') %></span>
+        </label>
+      </fieldset>
+    <% }) %>
+
+    <% if (!it.readOnly) { %>
+      <div class="right-align">
+        <button type="submit"><%= it.t('vote_submit') %></button>
+      </div>
+    <% } %>
+  </form>
+
+  <section>
+    <h3><%= it.t('vote_summary') %></h3>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col"><%= it.t('proposed_date_time_label') %></th>
+          <th scope="col"><%= it.t('vote_yes') %></th>
+          <th scope="col"><%= it.t('vote_maybe') %></th>
+          <th scope="col"><%= it.t('vote_no') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.proposedDates.forEach(function (pd) { %>
+          <tr>
+            <td><%= pd.display %></td>
+            <td><%= pd.yes %></td>
+            <td><%= pd.maybe %></td>
+            <td><%= pd.no %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+<% } %>
+
+<script>
+  window.localStorage.setItem('postpony-player-<%= it.sessionId %>', '<%= it.playerId %>');
+</script>

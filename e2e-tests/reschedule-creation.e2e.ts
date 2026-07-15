@@ -43,7 +43,7 @@ test.describe('Postponement Creation', () => {
     // 6. Verify status and invite link
     await expect(page.getByText('Status:'))
       .toContainText('Draft');
-    await expect(page.getByText('Invite participants using this link'))
+    await expect(page.getByText('Invite participants using these links'))
       .toBeVisible();
   });
 

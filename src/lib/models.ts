@@ -15,7 +15,7 @@ export interface Venue {
 export interface Player {
   id: string;
   name: string;
-  teamId: string;
+  teamId: 'home' | 'away';
 }
 
 export interface AvailabilityRecord {
@@ -29,12 +29,14 @@ export interface RescheduleSession {
   name: string;
   ownerPasswordHash: string;
   invitationPasswordHash: string;
+  invitationPassword: string;
   status: RescheduleStatus;
   maxOverlaps?: number;
   venueId?: string;
   opponentVenueId?: string;
   players: Player[];
   proposedDates: ProposedDate[];
+  votes: Vote[];
   originalMatchDateTime?: string; // format YYYY-MM-DDTHH:mm, matches <input type="datetime-local">
   metadata?: Record<string, unknown>;
   createdAt: string;

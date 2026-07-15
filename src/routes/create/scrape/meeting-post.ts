@@ -36,9 +36,11 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
     name,
     ownerPasswordHash: hashPassword(ownerPassword),
     invitationPasswordHash: hashPassword(invitationPassword),
+    invitationPassword,
     status: 'Draft',
     players: [],
     proposedDates: [],
+    votes: [],
     originalMatchDateTime: parseClickTtDateTime(m.date, m.time),
     createdAt: new Date().toISOString(),
     metadata: {

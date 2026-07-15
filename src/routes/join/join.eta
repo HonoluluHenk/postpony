@@ -1,0 +1,43 @@
+<% layout('../layouts/main.eta') %>
+
+<header>
+  <h2><%= it.t('join_title') %></h2>
+</header>
+
+<form method="post" action="/join/<%= it.sessionId %>/<%= it.team %>/register?token=<%= it.token %>" hx-boost="false">
+  <% if (it.players.length > 0) { %>
+    <fieldset class="field border">
+      <legend><%= it.t('join_select_player') %></legend>
+      <% it.players.forEach(function (player) { %>
+        <label class="radio">
+          <input type="radio" name="playerId" value="<%= player.id %>">
+          <span><%= player.name %></span>
+        </label>
+      <% }) %>
+    </fieldset>
+
+    <p><%= it.t('join_or_new') %></p>
+  <% } %>
+
+  <div class="field label border">
+    <input type="text" id="newPlayerName" name="newPlayerName" autocomplete="name">
+    <label for="newPlayerName"><%= it.t('join_new_player') %></label>
+  </div>
+
+  <div class="right-align">
+    <button type="submit"><%= it.t('join_continue') %></button>
+  </div>
+</form>
+
+<script>
+  (function () {
+    var stored = window.localStorage.getItem('postpony-player-<%= it.sessionId %>');
+    if (stored) {
+      var token = new URLSearchParams(window.location.search).get('token') || '';
+      window.location.replace(
+        '/join/<%= it.sessionId %>/<%= it.team %>/vote?playerId=' + encodeURIComponent(stored) +
+        '&token=' + encodeURIComponent(token)
+      );
+    }
+  })();
+</script>

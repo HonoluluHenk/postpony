@@ -14,7 +14,7 @@ export function aPlayer(overrides: DeepPartial<Player> = {}): Player {
   return merge({
     id: 'player-1',
     name: 'Test Player',
-    teamId: 'home-team',
+    teamId: 'home',
   }, overrides);
 }
 
@@ -56,9 +56,11 @@ export function aSession(overrides: DeepPartial<RescheduleSession> = {}): Resche
     name: 'Test Reschedule',
     ownerPasswordHash: 'hashed-owner-pw',
     invitationPasswordHash: 'hashed-invitation-pw',
+    invitationPassword: 'invitation-pw',
     status: 'Draft',
     players: [],
     proposedDates: [],
+    votes: [],
     createdAt: '2025-01-01T00:00:00.000Z',
   }, overrides);
 }

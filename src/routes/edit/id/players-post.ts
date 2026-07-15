@@ -69,7 +69,7 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
   session.players.push({
     id: generateId(),
     name: playerName,
-    teamId: 'home-team',
+    teamId: 'home',
   });
 
   if (app.isPartial) {

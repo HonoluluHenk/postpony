@@ -20,6 +20,7 @@ export const handleEditGet = (app: App): Response => {
     session,
     proposedDates,
     ownerPassword,
+    invitationPassword: session.invitationPassword,
     isPartial,
   });
 

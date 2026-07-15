@@ -54,7 +54,7 @@ describe('edit handlers', () => {
       expect(session.players[0]?.name)
         .toBe('Alice');
       expect(session.players[0]?.teamId)
-        .toBe('home-team');
+        .toBe('home');
     });
 
     test('appends to the existing players', async () => {
