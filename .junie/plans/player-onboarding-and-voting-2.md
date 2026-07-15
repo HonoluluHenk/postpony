@@ -1,3 +1,7 @@
+---
+sessionId: session-260716-005252-1bro
+---
+
 # Requirements
 
 ### Overview & Goals
@@ -47,10 +51,11 @@ Implement the player onboarding and voting flow for proposed reschedule dates. I
 
 ### Current Implementation
 
-- **Model** (`src/lib/models.ts`): `RescheduleSession` has `invitationPasswordHash`, `players: Player[]`, `proposedDates: ProposedDate[]`. `Vote` interface exists but is unused. `Player.teamId` is hardcoded to `'home-team'`.
+- **Model** (`src/lib/models.ts`): `RescheduleSession` has `invitationPasswordHash`, `players: Player[]`, `proposedDates: ProposedDate[]`. `Vote` interface exists but is unused. `Player.teamId` is currently a plain `string` (hardcoded to `'home-team'` in `players-post.ts`).
 - **Edit page** (`src/routes/edit/id/edit.eta`): Shows single invite link `/join/<id>` (no token in URL, no `/join/` route exists).
 - **Session creation** (`src/routes/create/create-post.ts`, `src/routes/create/scrape/meeting-post.ts`): Generates `invitationPassword` and stores hash. Scrape flow captures `homeTeam`/`guestTeam` in `metadata.meeting`.
 - **In-memory storage**: Sessions stored in `App.sessions` (static `Record<string, RescheduleSession>`).
+- **Test fixtures** (`src/lib/__test-utils__/builders.ts`): Deep-merge partial builders `aPlayer`, `aProposedDate`, `aVote`, `aVenue`, `aSession` already exist. The existing `edit-handlers.spec.ts` uses them to construct sessions and inject them via `app.sessions[session.id] = session`. This is the established unit-test convention for route-handler tests.
 
 ### Key Decisions
 
@@ -58,6 +63,7 @@ Implement the player onboarding and voting flow for proposed reschedule dates. I
 2. **Player identification via localStorage**: Store `{ playerId }` in `localStorage` keyed by session ID (e.g. `postpony-player-<sessionId>`). On return visits, the join page reads the stored playerId client-side and auto-skips to the voting step. Different postponements get independent player identities. No cookies needed.
 3. **Votes stored on session**: Add `votes: Vote[]` to `RescheduleSession` for MVP simplicity (in-memory store). No sub-collections needed yet.
 4. **Team role as literal type**: Use `'home' | 'away'` for `teamId` on `Player` and derive from URL path.
+5. **Reuse fixture builders for all new tests**: The join-handler unit tests reuse `aSession`, `aPlayer`, `aProposedDate`, and `aVote` from `src/lib/__test-utils__/builders.ts` instead of hand-building model objects. Because this task changes the model, the builders themselves must be updated in lockstep so they remain the single source of truth for valid fixtures.
 
 ### Proposed Changes
 
@@ -65,12 +71,22 @@ Implement the player onboarding and voting flow for proposed reschedule dates. I
 
 - Add `votes: Vote[]` to `RescheduleSession`
 - Change `Player.teamId` type to `'home' | 'away'`
+- Add `invitationPassword: string` (unhashed) to `RescheduleSession` so the edit page can embed it in links
+
+#### Fixture builder changes (`src/lib/__test-utils__/builders.ts`, `builders.spec.ts`)
+
+The builders currently encode the **old** model and will no longer compile/represent a fully-populated entity after the model changes. They must be updated:
+
+- `aPlayer`: change default `teamId` from `'home-team'` to `'home'` (now a `'home' | 'away'` literal).
+- `aSession`: add `votes: []` and `invitationPassword: 'invitation-pw'` to the default so it still returns a session with **every required field** (the invariant asserted by `builders.spec.ts`).
+- `builders.spec.ts`: update the equality assertions for `aPlayer()` (teamId) and `aSession()` (new `votes`/`invitationPassword` fields).
+
+Keeping the builders correct means every new join test — and the existing `edit-handlers.spec.ts` — gets the new fields for free without hand-editing model literals.
 
 #### Edit page changes (`src/routes/edit/id/edit.eta`, `edit-id-get.ts`)
 
 - Replace single invite link with two links (home/away), each including `?token=<invitationPassword>`
-- Pass `invitationPassword` to the template (currently not passed — need to look up or pass from creation flow)
-- Since we can't reverse the hash, store the raw `invitationPassword` on the session (or pass it via query param on edit access). Simplest: add `invitationPassword` (unhashed) to `RescheduleSession` for MVP.
+- Pass `invitationPassword` to the template from the session (now stored unhashed on `RescheduleSession`)
 
 #### New join routes (`src/routes/join/`)
 
@@ -102,6 +118,8 @@ src/routes/join/           (new directory)
 src/routes/edit/id/edit.eta       (modified — two invite links)
 src/routes/edit/id/edit-id-get.ts (modified — pass invitation password)
 src/lib/models.ts                 (modified — votes array, teamId type, invitationPassword field)
+src/lib/__test-utils__/builders.ts      (modified — teamId 'home', votes, invitationPassword)
+src/lib/__test-utils__/builders.spec.ts (modified — updated default-shape assertions)
 src/locales/en.json               (modified — new keys)
 src/locales/de.json               (modified — new keys)
 src/index.ts                      (modified — mount join router)
@@ -121,20 +139,25 @@ graph LR
     F -->|POST /join/:id/:team/vote| G[Vote saved, show updated summary]
 ```
 
+### Risks
+
+- **Fixture drift**: If `builders.ts` is not updated alongside the model, `builders.spec.ts` and `edit-handlers.spec.ts` will fail to compile or assert. Updating the builders is part of Step 1, before any consumer changes.
+
 # Testing
 
 ### Validation Approach
 
-- Unit tests for new route handlers (join-get, register, vote)
-- Vitest specs placed alongside source files
+- Unit tests for new route handlers (join-get, register, vote), placed alongside source files as `*.spec.ts`
+- **Reuse the fixture builders** from `src/lib/__test-utils__/builders.ts` (`aSession`, `aPlayer`, `aProposedDate`, `aVote`) to construct test data, following the existing `edit-handlers.spec.ts` pattern (inject via `app.sessions[session.id] = session`). Prefer partial overrides (e.g. `aPlayer({ teamId: 'away' })`, `aSession({ proposedDates: [aProposedDate()], votes: [aVote()] })`) over hand-built literals.
+- Update `builders.spec.ts` to reflect the new default shapes (`teamId: 'home'`, `votes`, `invitationPassword`).
 - Lint check via `npm run lint`
 - Browser verification of the join flow via Chrome DevTools MCP
 
 ### Key Scenarios
 
 1. **Token validation**: GET `/join/:id/home` without token → error; with wrong token → error; with correct token → success
-2. **Player registration**: POST new name → player added to session with correct team; POST existing name → selects existing player
-3. **Voting**: POST votes for all proposed dates → votes stored; revisit → votes pre-selected; change and resubmit → votes updated
+2. **Player registration**: POST new name → player added to session with correct team (`aSession()` as the seed); POST existing name (seed with `aSession({ players: [aPlayer()] })`) → selects existing player
+3. **Voting**: POST votes for all proposed dates (seed with `aSession({ proposedDates: [aProposedDate()] })`) → votes stored; revisit → votes pre-selected (seed existing `aVote()`); change and resubmit → votes updated
 4. **Edit page**: Two invitation links displayed with correct URLs including token
 5. **localStorage flow**: After registration, `playerId` is stored in `localStorage` under a session-specific key; revisiting the same postponement skips to vote step; a different postponement starts fresh
 
@@ -143,43 +166,50 @@ graph LR
 - Session not found → 404
 - Invalid team parameter (not 'home' or 'away') → 400
 - No proposed dates yet → show message, no vote form
-- Session status is 'Confirmed' → votes are read-only
+- Session status is 'Confirmed' → votes are read-only (seed with `aSession({ status: 'Confirmed' })`)
 - Player name already exists on team → select existing instead of duplicate
+
+### Test Changes
+
+- Update `src/lib/__test-utils__/builders.ts` defaults and `builders.spec.ts` assertions for the new model.
+- Add join-handler specs that consume the updated builders.
 
 # Delivery Steps
 
-### Step 1: Model changes and edit page invitation links
-The edit page shows two team-specific invitation links and the model supports votes.
+### Step 1: Step 1: Model changes, fixture builders, and edit page invitation links
+The model supports votes and typed teams, the shared fixture builders match the new model, and the edit page shows two team-specific invitation links.
 
 - Add `votes: Vote[]` to `RescheduleSession` in `src/lib/models.ts`
 - Add `invitationPassword: string` (unhashed) to `RescheduleSession` so the edit page can embed it in links
 - Change `Player.teamId` type to `'home' | 'away'`
+- Update `src/lib/__test-utils__/builders.ts`: change `aPlayer` default `teamId` to `'home'`, and add `votes: []` and `invitationPassword: 'invitation-pw'` to the `aSession` default so it stays fully populated
+- Update `src/lib/__test-utils__/builders.spec.ts` equality assertions to match the new `aPlayer`/`aSession` default shapes
 - Update `src/routes/create/create-post.ts` and `src/routes/create/scrape/meeting-post.ts` to store `invitationPassword` and initialize `votes: []`
 - Update `src/routes/edit/id/edit-id-get.ts` to pass `invitationPassword` to the template
-- Update `src/routes/edit/id/edit.eta` to show two links: home team link and away team link, with `?token=<invitationPassword>`
+- Update `src/routes/edit/id/edit.eta` to show two links (home/away) with `?token=<invitationPassword>`
 - Add localization keys `invite_link_home_label` and `invite_link_away_label` to `en.json` and `de.json`
 - Update `players-post.ts` to use `'home'` instead of `'home-team'` for `teamId`
-- Fix any existing tests affected by model changes
+- Fix `edit-handlers.spec.ts` and any other existing tests affected by the model change (assertions now expect `teamId: 'home'`)
 
-### Step 2: Join page step 1 — player identification and registration
+### Step 2: Step 2: Join page step 1 — player identification and registration
 Invited players can visit a team-specific link, identify themselves by picking an existing name or entering a new one.
 
 - Create `src/routes/join/router.ts` mounting GET `/:id/:team` and POST `/:id/:team/register`
-- Create `src/routes/join/join-get.ts`: validate token query param against session's `invitationPasswordHash`, validate team param is `'home'|'away'`, always render step 1 page (client-side JS will check `localStorage` for existing `playerId` and auto-redirect to vote step if found)
-- Create `src/routes/join/join.eta`: step 1 template with radio buttons listing existing players for the team, plus a text input for new player name, and a continue button
-- Create `src/routes/join/join-register-post.ts`: validate input, create new `Player` (if new name) or select existing, return `playerId` in response (client-side JS stores it in `localStorage` as `postpony-player-<sessionId>`), then render step 2 (voting page)
+- Create `src/routes/join/join-get.ts`: validate token query param against session's `invitationPasswordHash`, validate team param is `'home'|'away'`, always render step 1 (client-side JS checks `localStorage` and auto-redirects to vote step if a `playerId` exists)
+- Create `src/routes/join/join.eta`: step 1 template with radio buttons listing existing players for the team, a text input for a new player name, and a continue button
+- Create `src/routes/join/join-register-post.ts`: validate input, create new `Player` (if new name) or select existing, return `playerId` (client-side JS stores it in `localStorage` as `postpony-player-<sessionId>`), then render step 2
 - Wire up `joinRouter` in `src/index.ts` at `/join`
 - Add localization keys: `join_title`, `join_select_player`, `join_new_player`, `join_continue`, `join_or_new`
-- Add unit tests for token validation and player registration
+- Add `join-get`/`join-register-post` unit specs that build sessions with `aSession`, `aPlayer` (e.g. `aPlayer({ teamId: 'away' })`) and inject them via `app.sessions[...]`, covering token validation and both new/existing player paths
 
-### Step 3: Join page step 2 — voting on proposed dates
+### Step 3: Step 3: Join page step 2 — voting on proposed dates
 Identified players can vote Yes/No/Maybe on each proposed date and change their votes.
 
-- Create `src/routes/join/vote.eta`: template showing each proposed date with Yes/No/Maybe radio buttons, pre-selected if player has existing votes, submit button, and vote summary table
-- Create `src/routes/join/join-vote-post.ts`: parse votes from form, upsert in `session.votes` for the player, re-render vote step with updated summary
-- Add GET `/:id/:team/vote?playerId=X` route in `join-get.ts` (or a separate handler) to render the vote template when `playerId` is provided as a query param (sent by client-side JS after reading `localStorage`)
-- Show read-only view when session status is `Confirmed`
+- Create `src/routes/join/vote.eta`: template showing each proposed date with Yes/No/Maybe radio buttons, pre-selected from existing votes, a submit button, and a vote summary table
+- Create `src/routes/join/join-vote-post.ts`: parse votes from the form, upsert into `session.votes` for the player, re-render the vote step with the updated summary
+- Add a GET `/:id/:team/vote?playerId=X` route (in `join-get.ts` or a dedicated handler) to render the vote template when `playerId` is supplied (sent by client-side JS after reading `localStorage`)
+- Show a read-only view when session status is `Confirmed`
 - Show a message when no proposed dates exist yet
 - Add localization keys: `vote_title`, `vote_yes`, `vote_no`, `vote_maybe`, `vote_submit`, `vote_updated`, `vote_no_dates`, `vote_summary`
-- Add unit tests for vote submission, vote updating, and read-only state
+- Add `join-vote-post` unit specs using `aSession({ proposedDates: [aProposedDate()] })`, `aVote()`, and `aSession({ status: 'Confirmed' })` to cover vote submission, vote updating, and the read-only state
 - Verify the full flow in the browser using Chrome DevTools MCP
