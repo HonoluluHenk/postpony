@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 // The e2e suite runs against its own dedicated server instance on a separate
 // port so it never reuses (and is never polluted by) a developer's
 // `npm run dev` server on the default port 3000. Playwright always starts this
-// server itself with the CLICK_TT_FIXTURES_DIR env set, which guarantees the
+// server itself with the APP_CLICK_TT_FIXTURES_DIR env set, which guarantees the
 // server-side click-tt.ch scraping is served from the deterministic local HTML
 // fixtures. This keeps every test independent and reproducible even when run
 // one-by-one (e.g. via the IDE) while a dev server is running.
@@ -42,7 +42,7 @@ export default defineConfig({
       APP_PORT: E2E_PORT,
       // Serve downloaded HTML fixtures instead of hitting the live click-tt.ch
       // site so the scraping flow can be tested offline and deterministically.
-      CLICK_TT_FIXTURES_DIR: './src/lib/__fixtures__',
+      APP_CLICK_TT_FIXTURES_DIR: './src/lib/__fixtures__',
     },
     ignoreHTTPSErrors: true,
     command: 'tsx src/index.ts',

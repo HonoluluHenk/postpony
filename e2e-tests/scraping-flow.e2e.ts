@@ -3,7 +3,7 @@ import { expect, test } from './fixtures';
 /**
  * Drives the full click-tt.ch scraping drilldown (leagues → groups → teams →
  * meetings → create) end-to-end. The server is started with
- * `CLICK_TT_FIXTURES_DIR` (see playwright.config.ts), so every scrape step is
+ * `APP_CLICK_TT_FIXTURES_DIR` (see playwright.config.ts), so every scrape step is
  * served from the downloaded HTML fixtures in `src/lib/__fixtures__` instead of
  * the live site, keeping the test deterministic and offline.
  *
