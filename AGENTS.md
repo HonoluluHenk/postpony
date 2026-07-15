@@ -7,6 +7,7 @@ This document provides context and guidelines for AI agents working on the PostP
 * Ask questions, do not guess
 * Ask questions one by one
 * Keep answers short and concise, do not babble.
+* Keep everything strongly typed (not "stringly").
 
 ## Ponytail, lazy senior dev mode
 
