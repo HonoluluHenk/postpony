@@ -114,5 +114,5 @@ Detailed documentation can be found in the `docs/` folder:
 
 - [Project Specification](docs/specification.md)
 - [Implementation Plan](docs/implementation_plan.md)
-- [Architecture Decision Records (ADRs)](docs/ADR)
+- [Architecture Decision Records (ADRs)](docs/adr)
 - [Use Cases](docs/use_cases.md)
