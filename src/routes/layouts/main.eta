@@ -64,16 +64,7 @@
 </body>
 </html>
 <% } else { %>
-<div id="error-container" hx-swap-oob="true">
-  <% if (it.globalError) { %>
-    <div class="error padding white-text" role="alert">
-      <i aria-hidden="true">error</i>
-      <div class="max">
-        <p><%= it.globalError %></p>
-      </div>
-    </div>
-  <% } %>
-</div>
+<%~ include('../partials/error-container.eta', {globalError: it.globalError}) %>
 <main id="main-content" class="responsive">
   <article>
     <%~ it.body %>

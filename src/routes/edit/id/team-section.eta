@@ -1,0 +1,30 @@
+<%~ include('../../partials/error-container.eta', {globalError: it.globalError}) %>
+<section id="team-management" class="padding small-round surface-variant s12 m6">
+  <header>
+    <h4><%= it.t('home_team_players') %></h4>
+  </header>
+  <ul id="player-list" class="list">
+    <% it.players.forEach(function (player) { %>
+      <li>
+        <i>person</i>
+        <div class="max"><%= player.name %></div>
+      </li>
+    <% }) %>
+  </ul>
+  <form hx-post="/edit/<%= it.sessionId %>/players" hx-target="#team-management" class="mt-4">
+    <div class="field label border fill <%= it.error ? 'invalid' : '' %>">
+      <% if (it.error) { %>
+        <input type="text" id="playerName" name="playerName" value="<%= it.playerName %>">
+      <% } else { %>
+        <input type="text" id="playerName" name="playerName" required>
+      <% } %>
+      <label for="playerName"><%= it.t('new_player_name') %></label>
+      <% if (it.error) { %>
+        <span class="error" role="alert"><%= it.error %></span>
+      <% } %>
+    </div>
+    <div class="right-align">
+      <button type="submit"><%= it.t('add_player') %></button>
+    </div>
+  </form>
+</section>

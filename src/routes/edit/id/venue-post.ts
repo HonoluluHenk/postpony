@@ -28,35 +28,12 @@ export const handleEditVenuePost = async (app: App): Promise<Response> => {
     const errors = mapValidationToErrors(validation);
 
     if (app.isPartial) {
-      const maxOverlaps = values['maxOverlaps'] as string;
-      const error = errors.fields['maxOverlaps'];
-
-      return app.c.html(`
-        <div id="error-container" hx-swap-oob="true">
-          ${errors.global ? `
-            <div class="error padding white-text" role="alert">
-              <i aria-hidden="true">error</i>
-              <div class="max">
-                <p>${errors.global}</p>
-              </div>
-            </div>` : ''}
-        </div>
-        <section id="venue-management" class="padding small-round surface-variant s12 m6">
-          <header>
-            <h4>${app.t('venue_management')}</h4>
-          </header>
-          <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
-            <div class="field label border fill ${error ? 'invalid' : ''}">
-              <input type="number" id="maxOverlaps" name="maxOverlaps" value="${maxOverlaps}" min="0">
-              <label for="maxOverlaps">${app.t('max_overlaps')}</label>
-              <span class="error" role="alert">${error ?? ''}</span>
-            </div>
-            <div class="right-align">
-              <button type="submit">${app.t('update_venue_settings')}</button>
-            </div>
-          </form>
-        </section>
-      `, {status: 400});
+      return app.c.html(app.render('edit/id/venue-section.eta', {
+        sessionId: session.id,
+        maxOverlaps: (values['maxOverlaps'] as string | undefined) ?? '',
+        error: errors.fields['maxOverlaps'],
+        globalError: errors.global,
+      }), {status: 400});
     }
 
     return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
@@ -68,29 +45,11 @@ export const handleEditVenuePost = async (app: App): Promise<Response> => {
   app.sessions[id] = updated;
 
   if (app.isPartial) {
-    return app.c.html(`
-      <div id="error-container" hx-swap-oob="true"></div>
-      <section id="venue-management" class="padding small-round surface-variant s12 m6">
-        <header>
-          <h4>${app.t('venue_management')}</h4>
-        </header>
-        <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
-          <div class="field label border fill">
-            <input type="number" id="maxOverlaps" name="maxOverlaps" value="${updated.maxOverlaps ?? ''}" min="0">
-            <label for="maxOverlaps">${app.t('max_overlaps')}</label>
-          </div>
-          <div class="right-align">
-            <button type="submit">${app.t('update_venue_settings')}</button>
-          </div>
-        </form>
-        <div class="toast success top" role="alert">
-          <i aria-hidden="true">check_circle</i>
-          <div class="max">
-            <p>${app.t('venue_settings_updated')}</p>
-          </div>
-        </div>
-      </section>
-    `);
+    return app.c.html(app.render('edit/id/venue-section.eta', {
+      sessionId: updated.id,
+      maxOverlaps: updated.maxOverlaps ?? '',
+      success: true,
+    }));
   }
   return app.c.redirect(`/edit/${id}`);
 };

@@ -67,15 +67,7 @@ app.onError((err, c): Response => {
   }
 
   if (app.isPartial) {
-    return c.html(`
-      <div id="error-container" hx-swap-oob="true">
-/q  '        <div class="error padding white-text" role="alert">
-          <i aria-hidden="true">error</i>
-          <div class="max">
-            <p>${message}</p>
-          </div>
-        </div>
-      </div>`, {status});
+    return c.html(app.render('partials/error-container.eta', {globalError: message}), {status});
   }
 
   return c.html(app.render('error.eta', {title: 'Error', message, globalError: message}), {status});

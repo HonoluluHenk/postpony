@@ -24,7 +24,7 @@ function createApp(options: MockOptions = {}): App {
       parseBody: (): Promise<Record<string, unknown>> => Promise.resolve(body),
       url: 'https://game-scheduler.localhost:3000/',
     },
-    html: vi.fn((content: string) => new Response(content)),
+    html: vi.fn((content: string, init?: ResponseInit) => new Response(content, init)),
     redirect: vi.fn((url: string) => new Response(null, {status: 302, headers: {Location: url}})),
   } as any;
 
@@ -168,6 +168,128 @@ describe('edit handlers', () => {
 
       expect(app.sessions[session.id]?.maxOverlaps)
         .toBeUndefined();
+    });
+  });
+
+  describe('partial (HX-Request) fragment rendering', () => {
+    const partialHeaders = {'HX-Request': 'true'};
+
+    test('players: renders the team section with an empty error-container on success', async () => {
+      const session = aSession();
+      const app = createApp({
+        params: {id: session.id},
+        headers: partialHeaders,
+        body: {playerName: 'Alice'},
+      });
+      app.sessions[session.id] = session;
+
+      const html = await (await handleEditPlayersPost(app)).text();
+
+      expect(html)
+        .toContain('<section id="team-management"');
+      expect(html)
+        .toContain('Alice');
+      expect(html)
+        .toContain('id="error-container" hx-swap-oob="true"');
+      expect(html)
+        .not
+        .toContain('error padding white-text');
+    });
+
+    test('players: renders the error-container and keeps the invalid input on failure', async () => {
+      const session = aSession();
+      const app = createApp({params: {id: session.id}, headers: partialHeaders, body: {playerName: ''}});
+      app.sessions[session.id] = session;
+
+      const response = await handleEditPlayersPost(app);
+      const html = await response.text();
+
+      expect(response.status)
+        .toBe(400);
+      expect(html)
+        .toContain('id="error-container" hx-swap-oob="true"');
+      expect(html)
+        .toContain('Player name is required');
+      expect(html)
+        .toContain('invalid');
+    });
+
+    test('proposed dates: renders the section and a success toast on success', async () => {
+      const session = aSession();
+      const app = createApp({
+        params: {id: session.id},
+        headers: partialHeaders,
+        body: {proposedDateTime: '2025-09-01T20:00'},
+      });
+      app.sessions[session.id] = session;
+
+      const html = await (await handleEditProposedDatesPost(app)).text();
+
+      expect(html)
+        .toContain('<section id="proposed-dates-management"');
+      expect(html)
+        .toContain('toast success');
+    });
+
+    test('proposed dates: renders the error-container on an invalid datetime', async () => {
+      const session = aSession();
+      const app = createApp({
+        params: {id: session.id},
+        headers: partialHeaders,
+        body: {proposedDateTime: 'not-a-date'},
+      });
+      app.sessions[session.id] = session;
+
+      const response = await handleEditProposedDatesPost(app);
+      const html = await response.text();
+
+      expect(response.status)
+        .toBe(400);
+      expect(html)
+        .toContain('id="error-container" hx-swap-oob="true"');
+      expect(html)
+        .toContain('invalid');
+    });
+
+    test('venue: renders the section with the stored value and a success toast', async () => {
+      const session = aSession();
+      const app = createApp({
+        params: {id: session.id},
+        headers: partialHeaders,
+        body: {maxOverlaps: '3'},
+      });
+      app.sessions[session.id] = session;
+
+      const html = await (await handleEditVenuePost(app)).text();
+
+      expect(html)
+        .toContain('<section id="venue-management"');
+      expect(html)
+        .toContain('value="3"');
+      expect(html)
+        .toContain('toast success');
+    });
+
+    test('venue: renders the error-container and keeps the value on failure', async () => {
+      const session = aSession();
+      const app = createApp({
+        params: {id: session.id},
+        headers: partialHeaders,
+        body: {maxOverlaps: '-1'},
+      });
+      app.sessions[session.id] = session;
+
+      const response = await handleEditVenuePost(app);
+      const html = await response.text();
+
+      expect(response.status)
+        .toBe(400);
+      expect(html)
+        .toContain('id="error-container" hx-swap-oob="true"');
+      expect(html)
+        .toContain('value="-1"');
+      expect(html)
+        .toContain('invalid');
     });
   });
 

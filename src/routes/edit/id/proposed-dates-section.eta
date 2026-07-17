@@ -1,0 +1,38 @@
+<%~ include('../../partials/error-container.eta', {globalError: it.globalError}) %>
+<section id="proposed-dates-management" class="padding small-round surface-variant s12 m4">
+  <header>
+    <h4><%= it.t('proposed_dates_management') %></h4>
+  </header>
+  <ul id="proposed-date-list" class="list">
+    <% it.proposedDates.forEach(function (proposedDate) { %>
+      <li>
+        <i>event</i>
+        <div class="max"><%= proposedDate.display %></div>
+      </li>
+    <% }) %>
+  </ul>
+  <form hx-post="/edit/<%= it.sessionId %>/proposed-dates" hx-target="#proposed-dates-management" class="mt-4">
+    <div class="field label border fill <%= it.error ? 'invalid' : '' %>">
+      <% if (it.error) { %>
+        <input type="datetime-local" id="proposedDateTime" name="proposedDateTime" value="<%= it.proposedDateTime %>">
+      <% } else { %>
+        <input type="datetime-local" id="proposedDateTime" name="proposedDateTime" required>
+      <% } %>
+      <label for="proposedDateTime"><%= it.t('proposed_date_time_label') %></label>
+      <% if (it.error) { %>
+        <span class="error" role="alert"><%= it.error %></span>
+      <% } %>
+    </div>
+    <div class="right-align">
+      <button type="submit"><%= it.t('add_proposed_date') %></button>
+    </div>
+  </form>
+  <% if (it.success) { %>
+    <div class="toast success top" role="alert">
+      <i aria-hidden="true">check_circle</i>
+      <div class="max">
+        <p><%= it.t('proposed_date_added') %></p>
+      </div>
+    </div>
+  <% } %>
+</section>
