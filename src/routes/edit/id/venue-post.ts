@@ -1,6 +1,7 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
+import { Reschedule } from '../../../lib/reschedule';
 
 const VenueSchema = v.object({
   maxOverlaps: v.union([
@@ -63,7 +64,8 @@ export const handleEditVenuePost = async (app: App): Promise<Response> => {
 
   const {maxOverlaps} = validation.output;
 
-  session.maxOverlaps = maxOverlaps;
+  const updated = new Reschedule().setVenueLimit(session, maxOverlaps);
+  app.sessions[id] = updated;
 
   if (app.isPartial) {
     return app.c.html(`
@@ -74,7 +76,7 @@ export const handleEditVenuePost = async (app: App): Promise<Response> => {
         </header>
         <form hx-post="/edit/${session.id}/venue" hx-target="#venue-management">
           <div class="field label border fill">
-            <input type="number" id="maxOverlaps" name="maxOverlaps" value="${session.maxOverlaps ?? ''}" min="0">
+            <input type="number" id="maxOverlaps" name="maxOverlaps" value="${updated.maxOverlaps ?? ''}" min="0">
             <label for="maxOverlaps">${app.t('max_overlaps')}</label>
           </div>
           <div class="right-align">

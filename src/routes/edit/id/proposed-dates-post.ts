@@ -1,9 +1,9 @@
 import { Temporal } from '@js-temporal/polyfill';
 import * as v from 'valibot';
 import type { App } from '../../../app';
-import { generateId } from '../../../lib/crypto-utils';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import { ProposedDate } from '../../../lib/models';
+import { Reschedule } from '../../../lib/reschedule';
 import { DATETIME_LOCAL_PATTERN, formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 import { toIntlLocale } from '../../../locales';
 
@@ -85,16 +85,10 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
   }
 
   const {proposedDateTime} = validation.output;
-  // Placeholder: the UI only collects a single instant, not a duration, so
-  // start and end are the same value pending a real duration/voting model.
   const dt = Temporal.PlainDateTime.from(proposedDateTime)
     .toString();
-  session.proposedDates.push({
-    id: generateId(),
-    sessionId: session.id,
-    dateTimeRange: {start: dt, end: dt},
-    proposerId: 'owner',
-  } satisfies ProposedDate);
+  const updated = new Reschedule().proposeDate(session, dt, 'owner').session;
+  app.sessions[id] = updated;
 
   if (app.isPartial) {
     return app.c.html(`
@@ -104,7 +98,7 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
           <h4>${app.t('proposed_dates_management')}</h4>
         </header>
         <ul id="proposed-date-list" class="list">
-          ${renderProposedDateList(session.proposedDates)}
+          ${renderProposedDateList(updated.proposedDates)}
         </ul>
         <form hx-post="/edit/${session.id}/proposed-dates" hx-target="#proposed-dates-management" class="mt-4">
           <div class="field label border fill">

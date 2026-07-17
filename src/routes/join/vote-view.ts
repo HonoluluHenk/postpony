@@ -1,5 +1,6 @@
 import type { App } from '../../app';
 import type { Player, RescheduleSession } from '../../lib/models';
+import { Reschedule } from '../../lib/reschedule';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
 import { toIntlLocale } from '../../locales';
 import type { Team } from './join-utils';
@@ -17,16 +18,17 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const readOnly = session.status === 'Confirmed';
   const locale = toIntlLocale(app.locale);
 
+  const tallies = new Reschedule().tally(session);
   const proposedDates = session.proposedDates.map((pd) => {
-    const dateVotes = session.votes.filter((vt) => vt.proposedDateId === pd.id);
-    const current = dateVotes.find((vt) => vt.participantId === player.id);
+    const current = session.votes.find((vt) => vt.proposedDateId === pd.id && vt.participantId === player.id);
+    const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {
       id: pd.id,
       display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
       currentVote: current?.type ?? '',
-      yes: dateVotes.filter((vt) => vt.type === 'Yes').length,
-      maybe: dateVotes.filter((vt) => vt.type === 'Maybe').length,
-      no: dateVotes.filter((vt) => vt.type === 'No').length,
+      yes: counts.yes,
+      maybe: counts.maybe,
+      no: counts.no,
     };
   });
 

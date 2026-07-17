@@ -1,8 +1,8 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
-import { generateId } from '../../../lib/crypto-utils';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import { Player } from '../../../lib/models';
+import { Reschedule } from '../../../lib/reschedule';
 
 const PlayerSchema = v.object({
   playerName: v.pipe(v.string(), v.minLength(1, 'Player name is required')),
@@ -66,14 +66,11 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
   }
 
   const {playerName} = validation.output;
-  session.players.push({
-    id: generateId(),
-    name: playerName,
-    teamId: 'home',
-  });
+  const updated = new Reschedule().addPlayer(session, playerName).session;
+  app.sessions[id] = updated;
 
   if (app.isPartial) {
-    const playerList = session.players.map((p: Player) => `
+    const playerList = updated.players.map((p: Player) => `
         <li>
           <i>person</i>
           <div class="max">${p.name}</div>

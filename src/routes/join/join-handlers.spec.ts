@@ -100,17 +100,18 @@ describe('join handlers', () => {
 
       const response = await handleJoinRegisterPost(app);
 
-      expect(session.players)
+      const stored = app.sessions[session.id];
+      expect(stored?.players)
         .toHaveLength(1);
-      expect(session.players[0]?.name)
+      expect(stored?.players[0]?.name)
         .toBe('Alice');
-      expect(session.players[0]?.teamId)
+      expect(stored?.players[0]?.teamId)
         .toBe('away');
       expect(response.status)
         .toBe(302);
       const location = response.headers.get('Location') ?? '';
       expect(location)
-        .toContain(`playerId=${session.players[0]?.id ?? ''}`);
+        .toContain(`playerId=${stored?.players[0]?.id ?? ''}`);
       expect(location)
         .toContain(`token=${TOKEN}`);
     });
@@ -127,7 +128,7 @@ describe('join handlers', () => {
 
       const response = await handleJoinRegisterPost(app);
 
-      expect(session.players)
+      expect(app.sessions[session.id]?.players)
         .toHaveLength(1);
       expect(response.headers.get('Location') ?? '')
         .toContain('playerId=away-1');
@@ -145,7 +146,7 @@ describe('join handlers', () => {
 
       const response = await handleJoinRegisterPost(app);
 
-      expect(session.players)
+      expect(app.sessions[session.id]?.players)
         .toHaveLength(1);
       expect(response.headers.get('Location') ?? '')
         .toContain('playerId=home-1');
@@ -230,13 +231,14 @@ describe('join handlers', () => {
 
       const response = await handleJoinVotePost(app);
 
-      expect(session.votes)
+      const stored = app.sessions[session.id];
+      expect(stored?.votes)
         .toHaveLength(1);
-      expect(session.votes[0]?.type)
+      expect(stored?.votes[0]?.type)
         .toBe('Yes');
-      expect(session.votes[0]?.proposedDateId)
+      expect(stored?.votes[0]?.proposedDateId)
         .toBe('proposed-date-1');
-      expect(session.votes[0]?.participantId)
+      expect(stored?.votes[0]?.participantId)
         .toBe('player-1');
       expect(response.status)
         .toBe(200);
@@ -257,9 +259,10 @@ describe('join handlers', () => {
 
       await handleJoinVotePost(app);
 
-      expect(session.votes)
+      const stored = app.sessions[session.id];
+      expect(stored?.votes)
         .toHaveLength(1);
-      expect(session.votes[0]?.type)
+      expect(stored?.votes[0]?.type)
         .toBe('No');
     });
 
@@ -279,9 +282,10 @@ describe('join handlers', () => {
 
       const response = await handleJoinVotePost(app);
 
-      expect(session.votes)
+      const stored = app.sessions[session.id];
+      expect(stored?.votes)
         .toHaveLength(1);
-      expect(session.votes[0]?.type)
+      expect(stored?.votes[0]?.type)
         .toBe('Yes');
       expect(response.status)
         .toBe(200);

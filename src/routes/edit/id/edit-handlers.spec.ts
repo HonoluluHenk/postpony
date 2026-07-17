@@ -49,11 +49,12 @@ describe('edit handlers', () => {
 
       await handleEditPlayersPost(app);
 
-      expect(session.players)
+      const stored = app.sessions[session.id];
+      expect(stored?.players)
         .toHaveLength(1);
-      expect(session.players[0]?.name)
+      expect(stored?.players[0]?.name)
         .toBe('Alice');
-      expect(session.players[0]?.teamId)
+      expect(stored?.players[0]?.teamId)
         .toBe('home');
     });
 
@@ -64,9 +65,10 @@ describe('edit handlers', () => {
 
       await handleEditPlayersPost(app);
 
-      expect(session.players)
+      const stored = app.sessions[session.id];
+      expect(stored?.players)
         .toHaveLength(2);
-      expect(session.players[1]?.name)
+      expect(stored?.players[1]?.name)
         .toBe('Bob');
     });
 
@@ -77,7 +79,7 @@ describe('edit handlers', () => {
 
       const response = await handleEditPlayersPost(app);
 
-      expect(session.players)
+      expect(app.sessions[session.id]?.players)
         .toHaveLength(0);
       expect(response.status)
         .toBe(302);
@@ -100,9 +102,10 @@ describe('edit handlers', () => {
 
       await handleEditProposedDatesPost(app);
 
-      expect(session.proposedDates)
+      const stored = app.sessions[session.id];
+      expect(stored?.proposedDates)
         .toHaveLength(1);
-      const proposedDate = session.proposedDates[0];
+      const proposedDate = stored?.proposedDates[0];
       expect(proposedDate?.sessionId)
         .toBe(session.id);
       expect(proposedDate?.proposerId)
@@ -118,7 +121,7 @@ describe('edit handlers', () => {
 
       await handleEditProposedDatesPost(app);
 
-      expect(session.proposedDates)
+      expect(app.sessions[session.id]?.proposedDates)
         .toHaveLength(2);
     });
 
@@ -129,7 +132,7 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
 
-      expect(session.proposedDates)
+      expect(app.sessions[session.id]?.proposedDates)
         .toHaveLength(0);
       expect(response.status)
         .toBe(302);
@@ -152,7 +155,7 @@ describe('edit handlers', () => {
 
       await handleEditVenuePost(app);
 
-      expect(session.maxOverlaps)
+      expect(app.sessions[session.id]?.maxOverlaps)
         .toBe(3);
     });
 
@@ -163,7 +166,7 @@ describe('edit handlers', () => {
 
       await handleEditVenuePost(app);
 
-      expect(session.maxOverlaps)
+      expect(app.sessions[session.id]?.maxOverlaps)
         .toBeUndefined();
     });
   });
