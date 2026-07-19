@@ -21,9 +21,9 @@ test.describe('Scraping Flow', () => {
       .toBeVisible();
 
     // Concrete leagues from leagues.html.
-    await expect(page.getByRole('link', {name: 'MTTV 2025/26'}))
+    await expect(page.getByRole('link', {name: 'MTTV 2026/27'}))
       .toBeVisible();
-    await expect(page.getByRole('link', {name: 'Nationalliga 2025/26'}))
+    await expect(page.getByRole('link', {name: 'Nationalliga 2026/27'}))
       .toBeVisible();
 
     // The fixture lists exactly 12 leagues.
@@ -33,7 +33,7 @@ test.describe('Scraping Flow', () => {
 
   test('should drill down through league, group, team and create a postponement', async ({page}) => {
     // 1. Leagues → pick a league
-    await page.getByRole('link', {name: 'MTTV 2025/26'})
+    await page.getByRole('link', {name: 'MTTV 2026/27'})
       .click();
 
     // 2. Groups → concrete groups from groups.html, then pick one
@@ -41,19 +41,22 @@ test.describe('Scraping Flow', () => {
       .toBeVisible();
     await expect(page.getByRole('link', {name: 'HE 1. Liga', exact: true}))
       .toBeVisible();
-    await expect(page.getByRole('link', {name: 'O40 2. Liga', exact: true}))
+    await expect(page.getByRole('link', {name: 'HE 2. Liga Gr. 1', exact: true}))
       .toBeVisible();
-    // The league-page fixture lists exactly 42 groups.
+    // The league-page fixture lists exactly 23 groups.
     await expect(page.getByRole('listitem'))
-      .toHaveCount(42);
-    await page.getByRole('link', {name: 'HE 1. Liga', exact: true})
+      .toHaveCount(23);
+    await page.getByRole('link', {name: 'O40 1. Liga', exact: true})
       .click();
 
     // 3. Teams → concrete teams from group.html, then pick one
     await expect(page.getByRole('heading', {name: 'Choose your team', level: 2}))
       .toBeVisible();
     for (const team of
-      ['Ostermundigen', 'Thun', 'Langnau', 'Worb', 'Royal Bern', 'Port II', 'Burgdorf III', 'Bern II'])
+      [
+        'Thun', 'Port', 'Burgdorf', 'Heimberg', 'Aarberg',
+        'Solothurn', 'Bern', 'Ostermundigen',
+      ])
     {
       await expect(page.getByRole('link', {name: team, exact: true}))
         .toBeVisible();
@@ -77,20 +80,20 @@ test.describe('Scraping Flow', () => {
     // Concrete meetings from the team-page fixture (matched by their date,
     // which uniquely identifies each leg of the schedule).
     const firstMeeting = page.getByRole('row')
-      .filter({hasText: '03.09.2025'});
+      .filter({hasText: '29.08.2026'});
     await expect(firstMeeting)
-      .toContainText('20:00');
+      .toContainText('16:00');
     await expect(firstMeeting)
-      .toContainText('Münchenbuchsee II');
+      .toContainText('Thun');
     await expect(firstMeeting)
-      .toContainText('Ostermundigen IV');
+      .toContainText('Ostermundigen');
 
     const returnMeeting = page.getByRole('row')
-      .filter({hasText: '11.12.2025'});
+      .filter({hasText: '14.01.2027'});
     await expect(returnMeeting)
-      .toContainText('Heimberg V');
+      .toContainText('Ostermundigen');
     await expect(returnMeeting)
-      .toContainText('Ostermundigen IV');
+      .toContainText('Thun');
 
     // 5. Create a postponement from the first meeting
     await Promise.all([
@@ -108,11 +111,11 @@ test.describe('Scraping Flow', () => {
 
     // 7. The proposed-date field defaults to the original match's date/time.
     await expect(page.getByLabel('Proposed Date & Time'))
-      .toHaveValue('2025-09-03T20:00');
+      .toHaveValue('2026-08-29T16:00');
   });
 
   test('should navigate back from groups to leagues', async ({page}) => {
-    await page.getByRole('link', {name: 'MTTV 2025/26'})
+    await page.getByRole('link', {name: 'MTTV 2026/27'})
       .click();
     await expect(page.getByRole('heading', {name: 'Choose your group', level: 2}))
       .toBeVisible();

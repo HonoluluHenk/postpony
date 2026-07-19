@@ -69,8 +69,8 @@ describe('click-tt-scraper', () => {
       expect(leagues)
         .toEqual(
           expect.arrayContaining([
-            {name: 'Nationalliga 2025/26', championship: 'STT 25/26'},
-            {name: 'MTTV 2025/26', championship: 'MTTV 25/26'},
+            {name: 'Nationalliga 2026/27', championship: 'STT 26/27'},
+            {name: 'MTTV 2026/27', championship: 'MTTV 26/27'},
           ]),
         );
     });
@@ -87,29 +87,29 @@ describe('click-tt-scraper', () => {
   });
 
   describe('fetchGroups', () => {
-    test('parses all 42 groups of the league', async () => {
-      const groups = await fetchGroups('MTTV 25/26');
+    test('parses all 23 groups of the league', async () => {
+      const groups = await fetchGroups('MTTV 26/27');
 
       // Exact count per league-page fixture
       expect(groups.length)
-        .toBe(42);
+        .toBe(23);
     });
 
     test('parses known groups with correct names and ids', async () => {
-      const groups = await fetchGroups('MTTV 25/26');
+      const groups = await fetchGroups('MTTV 26/27');
 
       // Spot-check a few known entries from the fixture
       expect(groups)
         .toEqual(
           expect.arrayContaining([
-            {name: 'HE 1. Liga', championship: 'MTTV 25/26', group: '216844'},
-            {name: 'O40 2. Liga', championship: 'MTTV 25/26', group: '216862'},
+            {name: 'HE 1. Liga', championship: 'MTTV 26/27', group: '219384'},
+            {name: 'HE 2. Liga Gr. 1', championship: 'MTTV 26/27', group: '219386'},
           ]),
         );
     });
 
     test('has unique group ids', async () => {
-      const groups = await fetchGroups('MTTV 25/26');
+      const groups = await fetchGroups('MTTV 26/27');
 
       // group ids must be unique (deduplicated)
       const ids = groups
@@ -121,7 +121,7 @@ describe('click-tt-scraper', () => {
 
   describe('fetchTeams', () => {
     test('parses all 8 teams of the group', async () => {
-      const teams = await fetchTeams('MTTV 25/26', '216848');
+      const teams = await fetchTeams('MTTV 26/27', '219397');
 
       // Exact count per group-page fixture
       expect(teams.length)
@@ -129,20 +129,20 @@ describe('click-tt-scraper', () => {
     });
 
     test('parses known teams with correct names and teamtable ids', async () => {
-      const teams = await fetchTeams('MTTV 25/26', '216848');
+      const teams = await fetchTeams('MTTV 26/27', '219397');
 
       // Spot-check a few known entries from the fixture
       expect(teams)
         .toEqual(
           expect.arrayContaining([
-            {name: 'Ostermundigen', championship: 'MTTV 25/26', group: '216848', teamtable: '1719422'},
-            {name: 'Langnau', championship: 'MTTV 25/26', group: '216848', teamtable: '1719418'},
+            {name: 'Ostermundigen', championship: 'MTTV 26/27', group: '219397', teamtable: '1732193'},
+            {name: 'Heimberg', championship: 'MTTV 26/27', group: '219397', teamtable: '1732182'},
           ]),
         );
     });
 
     test('has unique teamtable ids', async () => {
-      const teams = await fetchTeams('MTTV 25/26', '216848');
+      const teams = await fetchTeams('MTTV 26/27', '219397');
 
       const ids = teams
         .map((t) => t.teamtable);
@@ -153,7 +153,7 @@ describe('click-tt-scraper', () => {
 
   describe('fetchMeetings', () => {
     test('parses all meetings of the team across both schedule tables', async () => {
-      const meetings = await fetchMeetings('MTTV 25/26', '216848', '1722028');
+      const meetings = await fetchMeetings('MTTV 26/27', '219397', '1732193');
 
       // 7 first-half + 7 second-half meetings on the team page fixture
       expect(meetings.length)
@@ -161,32 +161,32 @@ describe('click-tt-scraper', () => {
     });
 
     test('parses meetings with concrete examples from fixture', async () => {
-      const meetings = await fetchMeetings('MTTV 25/26', '216848', '1722028');
+      const meetings = await fetchMeetings('MTTV 26/27', '219397', '1732193');
 
       // Verify concrete meeting examples from the team-page fixture
       expect(meetings)
         .toEqual(
           expect.arrayContaining([
             {
-              day: 'Wed.',
-              date: '03.09.2025',
-              time: '20:00',
-              homeTeam: 'Münchenbuchsee II',
-              guestTeam: 'Ostermundigen IV',
+              day: 'Sat.',
+              date: '29.08.2026',
+              time: '16:00',
+              homeTeam: 'Thun',
+              guestTeam: 'Ostermundigen',
             },
             {
-              day: 'Thu.',
-              date: '11.12.2025',
-              time: '19:45 v',
-              homeTeam: 'Heimberg V',
-              guestTeam: 'Ostermundigen IV',
+              day: 'Mon.',
+              date: '07.09.2026',
+              time: '00:00',
+              homeTeam: 'Ostermundigen',
+              guestTeam: 'Port',
             },
             {
-              day: 'Wed.',
-              date: '25.03.2026',
-              time: '19:45',
-              homeTeam: 'Ostermundigen IV',
-              guestTeam: 'Heimberg V',
+              day: 'Tue.',
+              date: '30.03.2027',
+              time: '00:00',
+              homeTeam: 'Ostermundigen',
+              guestTeam: 'Bern',
             },
           ]),
         );
