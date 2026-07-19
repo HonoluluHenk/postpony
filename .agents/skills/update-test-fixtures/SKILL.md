@@ -27,11 +27,11 @@ Each fixture mirrors one live page. The scraper picks the file by URL in
 | `group.html`   | Plain group page | `wa/groupPage?championship=…&group=…` | `fetchTeams`     |
 | `team.html`    | Team page        | `wa/teamPortrait?teamtable=…&group=…` | `fetchMeetings`  |
 
+Also look for new fixtures in `src/lib/__fixtures__`. Ask the user if they should also be updated. If so, document them in this skill.
+
 Keep the chain internally consistent: the `championship` from `leagues.html`
 must exist in `groups.html`, the `group` from `groups.html` must exist in
 `group.html`, and the `teamtable` from `group.html` must exist in `team.html`.
-
-`src/lib/__fixtures__/meetings.html` is **unreferenced dead code** — do not touch it unless explicitly asked.
 
 ## Step 0 — Ask which league and team (required)
 
@@ -146,5 +146,4 @@ All three must pass. The e2e server is started by Playwright with
 
 - Confirm `team.html` is English (`lang="en"`, day names `Sat.`/`Mon.`); otherwise the day-name assertions break.
 - The proposed-date default comes only from meetings whose `date`/`time` parse (`dd.mm.yyyy` + `HH:mm`); a time of `00:00` becomes `…T00:00`.
-- Leave `meetings.html` alone — it is dead code.
 - For running/tests commands see the `npm-scripts` skill; for the beer.css / heading selector traps in the e2e file see the `testing` skill.
