@@ -1,5 +1,9 @@
 import { DateTimeRange } from './temporal-utils';
 
+// ponytail: placeholder until multi-tenancy (ADR-0001) is implemented;
+// replace with real club resolution (from URL domain, user session, etc.).
+export const DEFAULT_CLUB_ID = 'default-club';
+
 export type RescheduleStatus = 'Draft' | 'Proposed' | 'Voting' | 'Confirmed by Opponent' | 'Confirmed';
 
 export interface Venue {

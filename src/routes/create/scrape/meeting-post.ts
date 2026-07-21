@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../../lib/crypto-utils';
-import type { RescheduleSession } from '../../../lib/models';
+import { DEFAULT_CLUB_ID, type RescheduleSession } from '../../../lib/models';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
 
 const MeetingSchema = v.object({
@@ -32,7 +32,7 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
 
   const session: RescheduleSession = {
     id,
-    clubId: 'default-club',
+    clubId: DEFAULT_CLUB_ID,
     name,
     ownerPasswordHash: hashPassword(ownerPassword),
     invitationPasswordHash: hashPassword(invitationPassword),
@@ -42,7 +42,7 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
     proposedDates: [],
     votes: [],
     originalMatchDateTime: parseClickTtDateTime(m.date, m.time),
-    createdAt: new Date().toISOString(),
+    createdAt: app.timestamp.now(),
     metadata: {
       source: 'click-tt.ch',
       meeting: {

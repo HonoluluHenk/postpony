@@ -1,5 +1,5 @@
 import type { App } from '../../app';
-import { hashPassword } from '../../lib/crypto-utils';
+import { comparePassword } from '../../lib/crypto-utils';
 import type { RescheduleSession } from '../../lib/models';
 
 export type Team = 'home' | 'away';
@@ -26,7 +26,7 @@ export function requireSessionAndToken(app: App): JoinContext {
   }
 
   const token = app.c.req.query('token') ?? '';
-  if (!token || hashPassword(token) !== session.invitationPasswordHash) {
+  if (!token || !comparePassword(token, session.invitationPasswordHash)) {
     app.failure(app.t('join_invalid_token'), 403);
   }
 

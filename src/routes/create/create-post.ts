@@ -1,6 +1,7 @@
 import * as v from 'valibot';
 import type { App } from '../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../lib/crypto-utils';
+import { DEFAULT_CLUB_ID } from '../../lib/models';
 import { mapValidationToErrors } from '../../lib/map-validation-to-errors';
 
 export async function handleCreatePost(app: App): Promise<Response> {
@@ -32,7 +33,7 @@ export async function handleCreatePost(app: App): Promise<Response> {
 
   app.sessions[id] = {
     id,
-    clubId: 'default-club', // Placeholder for MVP
+    clubId: DEFAULT_CLUB_ID,
     name,
     ownerPasswordHash: hashPassword(ownerPassword),
     invitationPasswordHash: hashPassword(invitationPassword),
@@ -41,7 +42,7 @@ export async function handleCreatePost(app: App): Promise<Response> {
     players: [],
     proposedDates: [],
     votes: [],
-    createdAt: new Date().toISOString(),
+    createdAt: app.timestamp.now(),
   };
 
   const redirectUrl = `/edit/${id}?ownerPassword=${ownerPassword}`;

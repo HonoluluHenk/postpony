@@ -6,10 +6,13 @@ import config from './config';
 import { AppError, InternalError, StateError } from './lib/errors';
 import type { RescheduleSession } from './lib/models';
 import { defaultLocale, getTranslation, LOCALE_KEY, type Locale, type TranslationKeys } from './locales';
+import { Timestamp } from './lib/timestamp';
 
 export const eta = new Eta({views: path.join(process.cwd(), 'src/routes')});
 
 export class App {
+  readonly timestamp = new Timestamp();
+
   readonly locale: Locale;
 
   private constructor(

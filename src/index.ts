@@ -10,11 +10,12 @@ import { App } from './app';
 import config from './config';
 import { AppError, ClickTTError } from './lib/errors';
 import { factory, handleAppRequest } from './lib/hono-factory';
+import { logger } from './lib/logger';
 import { languageMiddleware } from './lib/middleware/language';
 import createRouter from './routes/create/router';
 import editRouter from './routes/edit/router';
-import joinRouter from './routes/join/router';
 import { handleIndexGet } from './routes/index-get';
+import joinRouter from './routes/join/router';
 
 const app = factory.createApp();
 
@@ -29,9 +30,6 @@ app.get('/', handleAppRequest(handleIndexGet));
 app.route('/create', createRouter);
 app.route('/edit', editRouter);
 app.route('/join', joinRouter);
-
-// ponytail: test endpoint; remove before production if not needed.
-app.get('/foo', handleAppRequest((app: App): Response => app.c.text('Hello from foo')));
 
 app.onError((err, c): Response => {
   const app = App.create(c);
@@ -57,13 +55,10 @@ app.onError((err, c): Response => {
     message = 'Internal Server Error';
   }
 
-  // Expected client errors (4xx, e.g. a request for a non-existent session) are
-  // part of normal operation; log them concisely without a stack trace so the
-  // (test) output stays readable. Only unexpected/server errors are logged in full.
   if (status >= 500) {
-    console.error('Error occurred:', err);
+    logger.error({err, status, path: c.req.path}, 'Server error');
   } else {
-    console.warn(`Request failed (${status}): ${logMessage ?? message}`);
+    logger.warn({status, path: c.req.path, message: logMessage ?? message}, 'Request failed');
   }
 
   if (app.isPartial) {
@@ -94,7 +89,7 @@ const serverOptions = {
     cert: fs.readFileSync(certPath),
   },
 };
-console.log(`Server is running on https://${hostname}:${port}`);
+logger.info({hostname, port}, 'Server started');
 
 const server = serve(serverOptions);
 
