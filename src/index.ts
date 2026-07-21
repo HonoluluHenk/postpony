@@ -89,6 +89,9 @@ const serverOptions = {
     cert: fs.readFileSync(certPath),
   },
 };
+
+// keep this console.log because the URL can be clicked int the IDE :)
+console.log(`Server is running on https://${hostname}:${port}`);
 logger.info({hostname, port}, 'Server started');
 
 const server = serve(serverOptions);
