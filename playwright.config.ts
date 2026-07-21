@@ -16,9 +16,9 @@ export default defineConfig({
   testDir: './e2e-tests',
   testMatch: '**/*.e2e.ts',
   fullyParallel: true,
-  forbidOnly: !!process.env['CI'],
-  retries: process.env['CI'] ? 2 : 0,
-  workers: process.env['CI'] ? 1 : undefined,
+  //@ts-expect-error playwright automatically includes node types
+  //eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  forbidOnly: !!process.env.CI,
   reporter: [['html', {open: 'never'}]],
   timeout: 10 * 1000,
   // No global timeout: the former 15s budget for the *entire* run was far too
