@@ -41,9 +41,9 @@ test.describe('Start Page', () => {
   test('should have a favicon', async ({page}) => {
     const favicon = page.locator('link[rel="icon"]');
     await expect(favicon)
-      .toHaveAttribute('href', '/assets/favicon.svg');
+      .toHaveAttribute('href', '/assets/logos/favicon.svg');
 
-    const response = await page.request.get('/assets/favicon.svg');
+    const response = await page.request.get('/assets/logos/favicon.svg');
     expect(response.status())
       .toBe(200);
     expect(response.headers()['content-type'])
@@ -56,11 +56,11 @@ test.describe('Start Page', () => {
     await expect(logoLink)
       .toHaveAttribute('href', '/');
 
-    const logo = logoLink.locator('img[src="/assets/logo.svg"]');
+    const logo = logoLink.locator('img[src="/assets/logos/wordmark.svg"]');
     await expect(logo)
       .toBeVisible();
 
-    const response = await page.request.get('/assets/logo.svg');
+    const response = await page.request.get('/assets/logos/wordmark.svg');
     expect(response.status())
       .toBe(200);
     expect(response.headers()['content-type'])
