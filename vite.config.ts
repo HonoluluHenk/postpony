@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
@@ -15,11 +15,11 @@ export default defineConfig({
         'hono',
         '@hono/node-server',
         'eta',
-        'zod',
+        'valibot',
         'node:http',
         'node:path',
         'node:fs',
-        'node:url'
+        'node:url',
       ],
     },
     ssr: true,
