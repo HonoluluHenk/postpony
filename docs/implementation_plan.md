@@ -60,7 +60,7 @@ We need to define the collection structure for Firestore to support multiple clu
 
 ## 6. Design & UX
 
-* **Wireframes/Mockups**: To ensure **WCAG 2.2 AA** requirements are met from the start (e.g., color contrast, focus indicators, keyboard navigation). We will use modern CSS (Grid, Flexbox, Variables) to implement a responsive and accessible design without heavy frameworks.
+* **Wireframes/Mockups**: To ensure **WCAG 2.2 AA** requirements are met from the start (e.g., color contrast, focus indicators, keyboard navigation). We use **Beer.css** (Material Design 3) for layout, components, and color system, plus a custom design system via CSS custom properties (`design-tokens.css`) for application-specific tokens. The cascade uses `@layer` to keep vendor and app styles separate.
 * **Accessibility Testing**: Plan for automated and manual accessibility audits (e.g., using Axe, Lighthouse, and screen readers).
 * **E2E Testing**: Use **Playwright** for cross-browser functional testing and automated accessibility checks (see [ADR 0005](adr/0005-e2e-testing-playwright.md)).
 * **Localization Strategy**: Initial support for **German** and **English**.

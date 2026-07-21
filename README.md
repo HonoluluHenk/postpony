@@ -5,7 +5,7 @@ A web-based application for postponing sports matches as quick and easy as the P
 ## Tech Stack
 
 - **Backend**: [Hono](https://hono.dev/) (TypeScript SSR)
-- **Frontend**: [HTMX](https://htmx.org/), [Eta](https://eta.js.org/) (Templating), Modern CSS
+- **Frontend**: [HTMX](https://htmx.org/), [Eta](https://eta.js.org/) (Templating), Beer.css (Material Design 3), design system via CSS custom properties
 - **Data Store**: Google Firestore (Planed for persistence, currently in-memory MVP)
 - **Testing**: [Vitest](https://vitest.dev/) (Unit), [Playwright](https://playwright.dev/) (E2E & A11y)
 - **Tooling**: [Vite](https://vitejs.dev/), [mise-en-place](https://mise.jdx.dev/)

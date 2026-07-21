@@ -80,8 +80,8 @@ Playwright for E2E and accessibility testing.
 - Convict (configuration management)
 - Temporal polyfill (@js-temporal/polyfill)
 - HTML
-- Raw CSS without Frameworks
-- Beer.css for Material Design
+- Beer.css (Material Design 3) for layout, components, and color system
+- Design system via CSS custom properties (`design-tokens.css`)
 - HTMX with defaultSwapStyle = 'outerHTML', on errors: update the 'errors' element out-of-band
 - NX Monorepo
 - Playwright with Axe plugin
@@ -100,6 +100,7 @@ Playwright for E2E and accessibility testing.
 - **In-memory session store**: Sessions live in `App.sessions` (a static in-memory record). This is the current persistence reality — a natural spot for a `ponytail:` upgrade note.
 - **Invited-participant routes**: Team role lives in the URL path (`/join/:id/:team?token=<invitationPassword>`), reusing the single invitation token; `team` is validated to the literal `'home' | 'away'`. Shared guards live in `src/routes/join/join-utils.ts` (`requireTeam`, `requireSessionAndToken`). See [ADR 0013](docs/adr/0013-join-participant-identity.md).
 - **Client identity via `localStorage`**: Player identity is stored as `postpony-player-<sessionId>` → `playerId`, deliberately per-postponement (no cookies/auth). It complements, not replaces, the dual-password model. See [ADR 0013](docs/adr/0013-join-participant-identity.md).
+- **CSS & Design System**: All design tokens live in `src/public/assets/css/design-tokens.css` wrapped in `@layer design`. These include brand (`--primary`), layout (`--container-max-width`), typography (`--h1-size`–`--h6-size` via modular scale, `--monospace-font`), spacing (`--space-1` through `--space-6`), borders (`--border-radius`), and spinner-specific tokens. Use BeerCSS classes for components and layout (`padding`, `small-round`, `button`, `field`, etc.); reach for design tokens only for values not covered by BeerCSS. Hardcode nothing: if a value repeats, add a token. The cascade uses `@layer vendor | design`, declared in `main.eta` — vendor layer holds beer.css, design layer holds `design-tokens.css` + `style.css`. See the `css-styling` skill for the full token catalog and conventions.
 
 For more details, see:
 
@@ -217,6 +218,10 @@ Issues live as markdown files under `.scratch/<feature>/` in this repo. See `doc
 ### Triage labels
 
 The five canonical triage roles, each label equal to its name. See `docs/agents/triage-labels.md`.
+
+### CSS & Design system
+
+Single-file, self-documenting: `design-tokens.css` at `src/public/assets/css/`. See the `css-styling` skill for the full token catalog and conventions.
 
 ### Domain docs
 

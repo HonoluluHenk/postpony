@@ -1,167 +1,138 @@
-:root {
-  /* Layout */
-  --container-max-width: 800px;
-}
-
-/* Base Styles */
-body {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.skip-link {
-  position: absolute;
-  top: -100px;
-  left: 0;
-  background: var(--primary);
-  color: var(--on-primary);
-  padding: 0.5rem 1rem;
-  z-index: 100;
-  transition: top 0.2s;
-}
-
-.skip-link:focus {
-  top: 0;
-}
-
-.container {
-  width: 100%;
-  max-width: var(--container-max-width);
-  margin-inline: auto;
-}
-
-main {
-  flex: 1;
-}
-
-/* Headings: Beer.css defaults (h1 = 3.5625rem) are oversized for this app.
-   Pin h1 to a fixed size and derive the rest from a modular scale via calc(),
-   exposing each computed size as its own var for easy per-heading overrides. */
-:root {
-  --heading-scale: 0.875;
-  --h1-size: 2rem;
-  --h2-size: calc(var(--h1-size) * var(--heading-scale));
-  --h3-size: calc(var(--h2-size) * var(--heading-scale));
-  --h4-size: calc(var(--h3-size) * var(--heading-scale));
-  --h5-size: calc(var(--h4-size) * var(--heading-scale));
-  --h6-size: calc(var(--h5-size) * var(--heading-scale));
-}
-
-h1 {
-  font-size: var(--h1-size);
-}
-
-h2 {
-  font-size: var(--h2-size);
-}
-
-h3 {
-  font-size: var(--h3-size);
-}
-
-h4 {
-  font-size: var(--h4-size);
-}
-
-h5 {
-  font-size: var(--h5-size);
-}
-
-h6 {
-  font-size: var(--h6-size);
-}
-
-/* Specific UI Elements */
-.password-display {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  background: var(--surface-variant);
-  color: var(--on-surface-variant);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-/* Utility Classes */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.mt-1 {
-  margin-top: 0.25rem;
-}
-
-.mt-2 {
-  margin-top: 0.5rem;
-}
-
-.mt-3 {
-  margin-top: 1rem;
-}
-
-.mt-4 {
-  margin-top: 1.5rem;
-}
-
-.shrink {
-  flex-shrink: 1;
-}
-
-/* Global loading spinner */
-.global-spinner {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  background: rgba(0, 0, 0, 0.25);
-  z-index: 1000;
-  pointer-events: none;
-}
-
-.global-spinner.is-active {
-  display: flex;
-}
-
-body.is-loading {
-  cursor: progress;
-}
-
-.global-spinner__circle {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  border: 4px solid rgba(255, 255, 255, 0.4);
-  border-top-color: var(--primary, #1a237e);
-  animation: global-spinner-rotate 0.8s linear infinite;
-}
-
-.global-spinner__label {
-  background: rgba(0, 0, 0, 0.65);
-  padding: 0.2em 0.6em;
-  border-radius: 4px;
-  color: #fff;
-  font-weight: 600;
-}
-
-@keyframes global-spinner-rotate {
-  to {
-    transform: rotate(360deg);
+@layer design {
+  /* Base Styles */
+  body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 0;
+    background: var(--primary);
+    color: var(--on-primary);
+    padding: var(--space-2) var(--space-4);
+    z-index: 100;
+    transition: top 0.2s;
+  }
+
+  .skip-link:focus {
+    top: 0;
+  }
+
+  .container {
+    width: 100%;
+    max-width: var(--container-max-width);
+    margin-inline: auto;
+  }
+
+  main {
+    flex: 1;
+  }
+
+  /* Headings: Beer.css defaults (h1 = 3.5625rem) are oversized for this app.
+     Pin h1 to a fixed size and derive the rest from a modular scale via calc(),
+     exposing each computed size as its own var for easy per-heading overrides. */
+  h1 {
+    font-size: var(--h1-size);
+  }
+
+  h2 {
+    font-size: var(--h2-size);
+  }
+
+  h3 {
+    font-size: var(--h3-size);
+  }
+
+  h4 {
+    font-size: var(--h4-size);
+  }
+
+  h5 {
+    font-size: var(--h5-size);
+  }
+
+  h6 {
+    font-size: var(--h6-size);
+  }
+
+  /* Specific UI Elements */
+  .password-display {
+    font-family: var(--monospace-font);
+    background: var(--surface-variant);
+    color: var(--on-surface-variant);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--border-radius);
+    font-weight: bold;
+  }
+
+  /* Utility Classes */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .mt-4 {
+    margin-top: var(--space-5);
+  }
+
+  /* Global loading spinner */
+  .global-spinner {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    background: var(--spinner-overlay);
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  .global-spinner.is-active {
+    display: flex;
+  }
+
+  body.is-loading {
+    cursor: progress;
+  }
+
   .global-spinner__circle {
-    animation: none;
+    width: var(--spinner-size);
+    height: var(--spinner-size);
+    border-radius: 50%;
+    border: var(--spinner-border-width) solid rgba(255, 255, 255, 0.4);
+    border-top-color: var(--primary);
+    animation: global-spinner-rotate var(--spinner-speed) linear infinite;
+  }
+
+  .global-spinner__label {
+    background: var(--spinner-label-bg);
+    padding: 0.2em 0.6em;
+    border-radius: var(--border-radius);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  @keyframes global-spinner-rotate {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .global-spinner__circle {
+      animation: none;
+    }
   }
 }

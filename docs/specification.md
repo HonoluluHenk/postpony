@@ -71,7 +71,7 @@ The system suggests possible dates and times based on the following restrictions
 ## 4. Technical Requirements (Draft)
 
 * **Architecture**: Server-side rendered (SSR) backend in **TypeScript** using **Hono** and **HTMX** for dynamic UI updates.
-* **Frontend**: Plain HTML with the **Eta** templating engine and plain CSS.
+* **Frontend**: Plain HTML with the **Eta** templating engine, **Beer.css** (Material Design 3) for components and layout, and a custom design system via CSS custom properties (`design-tokens.css`).
 * **Data Store**: **Google Firestore** (Document store with streaming support).
 * **Localized UI**: Framework-level support for i18n.
 * **Security**: Password-protected access to specific rescheduling events. No permanent accounts for players. No password recovery mechanism for session owners in the initial version.
