@@ -1,13 +1,37 @@
-# AI Agents Guidelines
+# PostPony — Agent Guidelines
 
-This document provides context and guidelines for AI agents working on the PostPony project.
+A web app for postponing sports matches. SSR (Hono + Eta + HTMX), no SPA framework.
+
+### Clarifying Questions Policy
+
+* Before beginning any coding task, review the provided acceptance criteria.
+* If requirements are ambiguous, or if two paths offer different product consequences, do not make assumptions.
+* Instead, state your confidence level and ask targeted clarifying questions about missing features or parameters.
+* Wait for my answers before making any irreversible changes to the codebase.
 
 ## General instructions
 
-* Ask questions, do not guess
-* Ask questions one by one
 * Keep answers short and concise, do not babble.
 * Keep everything strongly typed (not "stringly").
+* Keep coverage >= 80% for all metrics
+* Implement E2E tests for the happy path and some likely error-paths
+
+## Quick reference
+
+| Command                   | What it does                                                                       |
+|---------------------------|------------------------------------------------------------------------------------|
+| `npm run dev`             | Dev server with fixtures on port 3000                                              |
+| `npm run dev:live`        | Dev server against live click-tt.ch                                                |
+| `npm run test`            | Vitest (coverage on, `@/` → `src/`)                                                |
+| `npm run lint`            | `tsc --noEmit` → `tsc -p tsconfig.e2e.json --noEmit` → `eslint . --max-warnings 0` |
+| `npm run lint:eslint:fix` | Auto-fix ESLint                                                                    |
+| `npm run e2e`             | Playwright (starts its own server on port 3001, never reuses dev server)           |
+| `npm run verify`          | lint → test → build → e2e (full CI gate)                                           |
+| `npm run build`           | Vite build (SSR) → `dist/`                                                         |
+
+## HTTPS & certificates
+
+The app only runs on HTTPS. Certs live at `developer-local-settings/conf/certs/<hostname>.pem` / `.key`. Generate them: `scripts/create-certs.sh` (requires `mkcert` from mise). URL: `https://game-scheduler.localhost:3000`
 
 ## Ponytail, lazy senior dev mode
 
@@ -39,175 +63,65 @@ Examples:
 
 Not lazy about: input validation at trust boundaries, error handling that prevents data loss, security, accessibility, the calibration real hardware needs (the platform is never the spec ideal, a clock drifts, a sensor reads off), anything explicitly requested. Lazy code without its check is unfinished: non-trivial logic leaves ONE runnable check behind, the smallest thing that fails if the logic breaks (an assert-based demo/self-check or one small test file; no frameworks, no fixtures). Trivial one-liners need no test.
 
-## Project Overview
+## Project structure
 
-PostPony is a web-based application for postponing sports matches as quick and easy as the Pony Express. It calculates optimal times based on venue availability, team/player availability, and holidays. It also helps users to vote and eventually decide on the best rescheduling options.
+```
+src/
+  index.ts            — server entry, Hono app wiring, HTTPS server
+  app.ts              — App class wrapping Hono Context (render, t, sessions, isPartial, requireParam, failure, notFound)
+  config.ts           — convict config: APP_PORT, APP_HOSTNAME, APP_BASE_URL, APP_USE_FIXTURES, APP_CLICK_TT_FIXTURES_DIR
+  routes/             — per-feature routers (create/, edit/, join/) with *-get.ts / *-post.ts handlers and *.eta templates
+  lib/
+    reschedule.ts     — domain module: pure operations on RescheduleSession, overridable newId()/now() seam
+    models.ts         — RescheduleSession, Player, ProposedDate, Vote, Venue interfaces
+    errors.ts         — AppError (400), StateError (404), InternalError (500), ClickTTError
+    __test-utils__/builders.ts — deep-partial fixture builders (aSession, aPlayer, aProposedDate, aVote, aVenue)
+  locales/            — en.json, de.json; TranslationKeys type derived from en.json keys
+  public/assets/
+    css/design-tokens.css — design tokens in @layer design
+    vendor/           — BeerCSS (Material 3) in @layer vendor
+e2e-tests/            — Playwright + axe a11y tests
+docs/adr/             — 13 ADRs
+```
 
-## Project Structure
+## Framework patterns
 
-- `src/routes/`: Route handlers (`*-get.ts`, `*-post.ts`) and Eta templates (`*.eta`).
-- `src/lib/`: Shared logic, models, middleware, and utilities.
-- `src/locales/`: Localization files (`en.json`, `de.json`) and type definitions.
-- `docs/adr/`: Architectural Decision Records (refer to these for context on core decisions).
-- `e2e-tests/`: Playwright end-to-end and accessibility tests.
+- **Handlers**: `factory.createApp()` per router; wrap each handler with `handleAppRequest(fn)`.
+- **App class**: all handlers receive `App` (not raw Hono `Context`). Use `app.t()`, `app.render()`, `app.requireParam()`, `app.failure()`, `app.notFound()`, `app.isPartial`.
+- **HTMX**: default swap is `outerHTML`. Errors rendered via `hx-swap-oob="true"` into `#error-container` element.
+- **Locale**: set via `?lang=en|de` → cookie → `Accept-Language` fallback. LanguageMiddleware sets `c.set('locale', ...)`.
+- **Validation**: Valibot schemas → `mapValidationToErrors()` for UI.
+- **Error handling**: throw `AppError | StateError` in handlers; caught by `onError` in `src/index.ts`.
+- **Sessions**: in-memory `App.sessions` (static `Record<string, RescheduleSession>`). Upgrade path: Firestore (ADR-0007).
+- **Join routes**: `/join/:id/:team?token=<invitationPassword>`. Guards in `src/routes/join/join-utils.ts`: `requireTeam`, `requireSessionAndToken`.
+- **Player identity**: per-postponement in `localStorage` key `postpony-player-<sessionId>`, no cookies/auth. ADR-0013.
 
-## Core Technical Stack
+## Linting
 
-### Architecture
+- ESLint flat config (`eslint.config.js`) — type-aware via `projectService`. All rules at `error` severity (no `warn` level).
+- `strictTypeChecked` + `stylisticTypeChecked` on `.ts` files. JS files use `disableTypeChecked`.
+- Root `*.config.ts` files in `allowDefaultProject`.
+- `**/*.spec.ts` relaxes `no-unsafe-*` and `no-explicit-any`.
+- Unused identifiers prefixed `_`.
+- `explicit-function-return-type` enforced (except IIFEs and const arrow assertions).
+- `function` declarations preferred; lambdas only as parameters.
 
-Multi-tenancy support (future-proofed). See [ADR 0003](docs/adr/0003-core-tech-stack.md).
+## Testing gotchas
 
-### Security
+- **beer.css hides native radios/checkboxes** — toggle via label text, not `.check()` on the role.
+- **Heading ambiguity**: layout has `<h1>` brand + page `<h2>`s. Use `getByRole('heading', { name, level: 2 })`.
+- **e2e type-checking**: `tsconfig.e2e.json` adds DOM lib; `npm run lint` validates e2e separately.
+- **Fixture builders**: `aSession()`, `aPlayer()`, etc. from `src/lib/__test-utils__/builders.ts`. Use deep-partial overrides. Inject via `app.sessions[session.id] = session`.
+- **Builder drift**: `builders.spec.ts` asserts every required field — a model change must update builders in lockstep.
+- **Unit test mock Hono**: test files create a minimal context object and pass it to `App.create()`. See `edit-handlers.spec.ts` and `app-handler.spec.ts` for the pattern.
 
-Dual-password system (Owner Password & Invitation Password). See [ADR 0002](docs/adr/0002-security-model-dual-password.md).
+## Skills (`.agents/skills/`)
 
-### Standards
+Loadable via the `skill` tool: `route-handlers`, `testing`, `localization`, `css-styling`, `hono`, `htmx`, `npm-scripts`, `accessibility-a11y`, `tool-installation`, `update-test-fixtures`.
 
-WCAG 2.2 AA for accessibility.
+## Security model
 
-### Testing
-
-Playwright for E2E and accessibility testing.
-
-## Core Technologies
-
-### Technology Stack
-
-- Hono (web framework)
-- TypeScript
-- Valibot (schema validation)
-- Eta (template engine)
-- Convict (configuration management)
-- Temporal polyfill (@js-temporal/polyfill)
-- HTML
-- Beer.css (Material Design 3) for layout, components, and color system
-- Design system via CSS custom properties (`design-tokens.css`)
-- HTMX with defaultSwapStyle = 'outerHTML', on errors: update the 'errors' element out-of-band
-- NX Monorepo
-- Playwright with Axe plugin
-- Vite
-- Vitest
-- ESLint (typescript-eslint, flat config, `strictTypeChecked` / type-aware)
-- Node.js HTTPS server (@hono/node-server)
-- Mise tool manager
-
-### Coding Patterns
-
-- **Hono & HTMX**: Use the `App` class (`src/app.ts`) to wrap the context. Use `app.isPartial` to determine if a full layout or a fragment should be rendered.
-- **Localization**: All user-facing strings must use `app.t('key')`. New keys should be added to `src/locales/en.json`, which automatically updates the `TranslationKeys` type.
-- **Validation**: Use `Valibot` for schemas. See [ADR 0012](docs/adr/0012-validation-library-valibot.md). Use `mapValidationToErrors` to format issues for the UI.
-- **Error Handling**: Throw `AppError` or `StateError` from `src/lib/errors.ts`; the `handleAppRequest` wrapper in `src/index.ts` handles the UI toast response.
-- **In-memory session store**: Sessions live in `App.sessions` (a static in-memory record). This is the current persistence reality — a natural spot for a `ponytail:` upgrade note.
-- **Invited-participant routes**: Team role lives in the URL path (`/join/:id/:team?token=<invitationPassword>`), reusing the single invitation token; `team` is validated to the literal `'home' | 'away'`. Shared guards live in `src/routes/join/join-utils.ts` (`requireTeam`, `requireSessionAndToken`). See [ADR 0013](docs/adr/0013-join-participant-identity.md).
-- **Client identity via `localStorage`**: Player identity is stored as `postpony-player-<sessionId>` → `playerId`, deliberately per-postponement (no cookies/auth). It complements, not replaces, the dual-password model. See [ADR 0013](docs/adr/0013-join-participant-identity.md).
-- **CSS & Design System**: All design tokens live in `src/public/assets/css/design-tokens.css` wrapped in `@layer design`. These include brand (`--primary`), layout (`--container-max-width`), typography (`--h1-size`–`--h6-size` via modular scale, `--monospace-font`), spacing (`--space-1` through `--space-6`), borders (`--border-radius`), and spinner-specific tokens. Use BeerCSS classes for components and layout (`padding`, `small-round`, `button`, `field`, etc.); reach for design tokens only for values not covered by BeerCSS. Hardcode nothing: if a value repeats, add a token. The cascade uses `@layer vendor | design`, declared in `main.eta` — vendor layer holds beer.css, design layer holds `design-tokens.css` + `style.css`. See the `css-styling` skill for the full token catalog and conventions.
-
-For more details, see:
-
-- [Project Specification](docs/specification.md)
-- [Implementation Plan](docs/implementation_plan.md)
-- [Architecture Decision Records (ADRs)](docs/adr)
-
-## Key Entities
-
-- **Reschedule**: The primary entity representing a rescheduling process.
-- **Venue**: Management of operating hours and bookings.
-- **Team/Player**: Management of availability.
-
-## Code Style
-
-### Naming
-
-1. Entity-Names are singular
-
-### Indentation / Line-Breaks
-
-1. Use 2 characters for indentation by default.
-2. Use 4 characters for Markdown files (required by nested lists).
-3. For chained method calls:
-    * insert newlines before each chained method call (before the '.')
-
-### Line Length
-
-1. Use a maximum of 120 characters per line.
-2. In Markdown files, prefer soft-breaks at sentence or word boundaries.
-
-## AI Agent Instructions
-
-* Ask questions for clarification, do not guess!
-* Use the IntelliJ MCP if possible.
-
-### Accessibility
-
-* All UI changes must adhere to WCAG 2.2 AA. Use automated checks (e.g., Axe) during testing.
-* Use semantic HTML and ARIA attributes for accessibility.
-* Prefer a11y selectors (e.g. `getByRole`) in playwright tests.
-* Ensure all interactive elements are reachable via keyboard and have proper focus indicators.
-
-### Security
-
-* Respect the dual-password security model. Do not introduce traditional login systems without reviewing [ADR 0002](docs/adr/0002-security-model-dual-password.md).
-
-### Consistency
-
-* Follow the patterns established in existing ADRs and documentation.
-
-### Localization
-
-* Use framework-level i18n support for all UI text.
-
-### Testing
-
-* Add or update unit-tests for any new features.
-* Add or update Playwright tests for any new features or UI changes.
-* Use `axe` plugin in Playwright tests to verify WCAG compliance.
-* Place test files alongside the respective source files.
-* Prefer running Tests via IntelliJ MCP.
-* Place everything possible inside a top-level `describe`
-* Coverage:
-    * is calculated by default on every test run in the [/coverage](/coverage) directory.
-    * must be _at least_ 80% (branch, statement, line and functions). More is better.
-
-#### Fixture builders (single source of truth)
-
-* `src/lib/__test-utils__/builders.ts` provides deep-merge partial builders (`aSession`, `aPlayer`,
-  `aProposedDate`, `aVote`, `aVenue`).
-* New route-handler unit tests should reuse them with partial overrides (e.g. `aPlayer({ teamId: 'away' })`)
-  and inject sessions via `app.sessions[session.id] = session` (the pattern used in `edit-handlers.spec.ts`).
-* Any model change **must** update the builders in lockstep: `builders.spec.ts` asserts every required field is present, so drift breaks compilation across all consumers.
-
-#### Playwright gotchas
-
-* **beer.css visually hides native radios/checkboxes**, so `.check()` on the `radio` role fails. Toggle the control via its **label text** instead (scope to the form to avoid matching summary-table headers).
-* **Disambiguate headings by level.** The layout renders an `<h1>` brand/logo alongside page `<h2>`s, so
-  `getByRole('heading', { name })` hits strict-mode "2 elements" errors. Pass `{ level: 2 }` for page headings.
-* **e2e files are type-checked separately.** `npm run lint` runs `tsc --noEmit`,
-  `tsc -p tsconfig.e2e.json --noEmit`, then `eslint . --max-warnings 0`, so a lint pass also validates e2e types.
-
-### Browser-Access
-
-* The app start page is at `https://game-scheduler.localhost:3000`
-
-### Quality
-
-* On UI changes: verify changes using available Browser MCPs (first available: Playwright, Firefox, Chrome)
-* Run `npm run lint` (which includes `lint:eslint`) before submitting changes.
-* ESLint uses the flat config in `eslint.config.js`. Prefix intentionally unused identifiers with `_`.
-* The config enables `tseslint.configs.strictTypeChecked` (type-aware linting via `projectService`). JS files use
-  `disableTypeChecked`; root `*.config.ts` files are linted via `allowDefaultProject`.
-* `**/*.spec.ts` relax the `no-unsafe-*` and `no-explicit-any` rules because they rely on deliberately loosely-typed (`any`) mocks.
-* Warnings-as-errors is enforced in `eslint.config.js` itself rather than via the CLI `--max-warnings 0` flag (ESLint flat config has no `maxWarnings` option): every rule is kept at `error` severity, so there are no
-  `warn`-level rules and any violation fails `npm run lint`.
-* Use `npm run lint:eslint:fix` to auto-fix where possible.
-
-### Tools
-
-* Use mise-en-place to install tools. Update the lockfile for tools required by the app.
-
-### Code-Style
-
-* Write functions declarations as `function`, use lambdas only as parameter.
-* Add newlines between logically related blocks of code.
+Dual-password: owner password (edit access) + invitation password (join access, passed as `?token=`). No traditional login. See ADR-0002.
 
 ## Agent skills
 
