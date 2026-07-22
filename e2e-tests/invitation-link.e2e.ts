@@ -1,7 +1,7 @@
 import { expect, test } from './fixtures';
 
 test.describe('Invitation Link', () => {
-  test('should display absolute URLs for both team invitation links', async ({page, baseURL}) => {
+  test('should display absolute URLs for both team invitation links', async ({page, baseURL, checkA11y}) => {
     // 1. Create a new postponing-session
     await page.goto('/create');
     await page.getByLabel('Postponement Name')
@@ -35,6 +35,8 @@ test.describe('Invitation Link', () => {
       .toMatch(new RegExp(`^${expectedBase}/join/.+/home\\?token=.+`));
     expect(awayHref)
       .toMatch(new RegExp(`^${expectedBase}/join/.+/away\\?token=.+`));
+
+    await checkA11y();
   });
 
   test('should use APP_BASE_URL environment variable if provided', async () => {

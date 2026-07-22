@@ -44,11 +44,11 @@
   <% } %>
 </section>
 
-<section id="vote-tally-section" hx-swap-oob="true" class="grid" aria-label="<%= it.t('vote_summary') %>">
+<div id="vote-tally-section" hx-swap-oob="true" class="grid">
   <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_home') %>">
     <%~ include('../../partials/vote-tally.eta', {headingLevel: 4, title: it.t('vote_summary_home'), proposedDates: it.homeProposedDates, t: it.t}) %>
   </section>
   <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_away') %>">
     <%~ include('../../partials/vote-tally.eta', {headingLevel: 4, title: it.t('vote_summary_away'), proposedDates: it.awayProposedDates, t: it.t}) %>
   </section>
-</section>
+</div>

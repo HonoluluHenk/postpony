@@ -1,7 +1,7 @@
 import { expect, test } from './fixtures';
 
 test.describe('Localization', () => {
-  test('should switch language via header links', async ({page}) => {
+  test('should switch language via header links', async ({page, checkA11y}) => {
     await page.goto('/');
 
     // Check default English
@@ -25,9 +25,11 @@ test.describe('Localization', () => {
     // Verify English text
     await expect(page.getByRole('heading', {level: 2}))
       .toContainText('Welcome to PostPony');
+
+    await checkA11y();
   });
 
-  test('should persist language via query parameter and cookie', async ({page}) => {
+  test('should persist language via query parameter and cookie', async ({page, checkA11y}) => {
     // Navigate with query parameter
     await page.goto('/?lang=de');
 
@@ -38,9 +40,11 @@ test.describe('Localization', () => {
     await page.goto('/create');
     await expect(page.getByRole('heading', {level: 2}))
       .toContainText('Neue Verschiebung erstellen');
+
+    await checkA11y();
   });
 
-  test('should persist language in localStorage', async ({page}) => {
+  test('should persist language in localStorage', async ({page, checkA11y}) => {
     await page.goto('/');
 
     // Switch to German
@@ -61,5 +65,7 @@ test.describe('Localization', () => {
     await page.goto('/');
     await expect(page.getByRole('heading', {level: 2}))
       .toContainText('Willkommen bei PostPony');
+
+    await checkA11y();
   });
 });

@@ -12,7 +12,7 @@ test.describe('Postponement Editing', () => {
       .toContainText('Edit Test Session');
   });
 
-  test('should update venue settings', async ({page}) => {
+  test('should update venue settings', async ({page, checkA11y}) => {
     const maxOverlapsInput = page.getByLabel('Maximum Overlapping Matches');
     await maxOverlapsInput.fill('3');
     await page.getByRole('button', {name: 'Update Venue Settings'})
@@ -23,9 +23,11 @@ test.describe('Postponement Editing', () => {
       .toBeVisible();
     await expect(maxOverlapsInput)
       .toHaveValue('3');
+
+    await checkA11y();
   });
 
-  test('should add players to the home team', async ({page}) => {
+  test('should add players to the home team', async ({page, checkA11y}) => {
     const playerNameInput = page.getByLabel('New Player Name');
     await playerNameInput.fill('John Doe');
     await page.getByRole('button', {name: 'Add Player'})
@@ -42,9 +44,11 @@ test.describe('Postponement Editing', () => {
       .click();
     await expect(playerList)
       .toContainText('Jane Smith');
+
+    await checkA11y();
   });
 
-  test('should add proposed postponement dates', async ({page}) => {
+  test('should add proposed postponement dates', async ({page, checkA11y}) => {
     const proposedDateTimeInput = page.getByLabel('Proposed Date & Time');
     await proposedDateTimeInput.fill('2026-03-05T20:00');
     await page.getByRole('button', {name: 'Add Proposed Date'})
@@ -61,9 +65,11 @@ test.describe('Postponement Editing', () => {
       .click();
     await expect(proposedDateList.getByRole('listitem'))
       .toHaveCount(2);
+
+    await checkA11y();
   });
 
-  test('should show vote tallies on the edit page', async ({page}) => {
+  test('should show vote tallies on the edit page', async ({page, checkA11y}) => {
     // Add proposed dates
     await page.getByLabel('Proposed Date & Time')
       .fill('2026-06-01T20:00');
@@ -153,9 +159,11 @@ test.describe('Postponement Editing', () => {
       .getByRole('cell')
       .nth(3))
       .toHaveText('0');
+
+    await checkA11y();
   });
 
-  test('should toggle away team voting visibility on proposed dates', async ({page}) => {
+  test('should toggle away team voting visibility on proposed dates', async ({page, checkA11y}) => {
     // Add a proposed date
     await page.getByLabel('Proposed Date & Time')
       .fill('2026-03-05T20:00');
@@ -177,9 +185,11 @@ test.describe('Postponement Editing', () => {
     await awayVoteLabel.click();
     await expect(awayVoteLabel)
       .toBeVisible();
+
+    await checkA11y();
   });
 
-  test('should show split team tallies on the edit page', async ({page}) => {
+  test('should show split team tallies on the edit page', async ({page, checkA11y}) => {
     // Add proposed dates
     await page.getByLabel('Proposed Date & Time')
       .fill('2026-06-01T20:00');
@@ -277,6 +287,8 @@ test.describe('Postponement Editing', () => {
       .getByRole('cell')
       .nth(3))
       .toHaveText('1'); // No = 1
+
+    await checkA11y();
   });
 
   test('should maintain accessibility on the editing interface', async ({checkA11y}) => {

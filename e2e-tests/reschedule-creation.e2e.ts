@@ -5,7 +5,7 @@ test.describe('Postponement Creation', () => {
     await page.goto('/');
   });
 
-  test('should create a new Postponement session', async ({page}) => {
+  test('should create a new Postponement session', async ({page, checkA11y}) => {
     // 1. Click on "Create a new Postponement"
     await page.getByRole('link', {name: 'Create a new Postponement'})
       .click();
@@ -45,6 +45,8 @@ test.describe('Postponement Creation', () => {
       .toContainText('Draft');
     await expect(page.getByText('Invite participants using these links'))
       .toBeVisible();
+
+    await checkA11y();
   });
 
   test('should pass accessibility on create and edit pages', async ({page, checkA11y}) => {

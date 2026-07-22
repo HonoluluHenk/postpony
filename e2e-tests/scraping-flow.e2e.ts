@@ -16,7 +16,7 @@ test.describe('Scraping Flow', () => {
     await page.goto('/create/scrape');
   });
 
-  test('should list the concrete leagues from the start-page fixture', async ({page}) => {
+  test('should list the concrete leagues from the start-page fixture', async ({page, checkA11y}) => {
     await expect(page.getByRole('heading', {name: 'Choose your league', level: 2}))
       .toBeVisible();
 
@@ -29,9 +29,11 @@ test.describe('Scraping Flow', () => {
     // The fixture lists exactly 12 leagues.
     await expect(page.getByRole('listitem'))
       .toHaveCount(12);
+
+    await checkA11y();
   });
 
-  test('should drill down through league, group, team and create a postponement', async ({page}) => {
+  test('should drill down through league, group, team and create a postponement', async ({page, checkA11y}) => {
     // 1. Leagues → pick a league
     await page.getByRole('link', {name: 'MTTV 2026/27'})
       .click();
@@ -112,9 +114,11 @@ test.describe('Scraping Flow', () => {
     // 7. The proposed-date field defaults to the original match's date/time.
     await expect(page.getByLabel('Proposed Date & Time'))
       .toHaveValue('2026-08-29T16:00');
+
+    await checkA11y();
   });
 
-  test('should navigate back from groups to leagues', async ({page}) => {
+  test('should navigate back from groups to leagues', async ({page, checkA11y}) => {
     await page.getByRole('link', {name: 'MTTV 2026/27'})
       .click();
     await expect(page.getByRole('heading', {name: 'Choose your group', level: 2}))
@@ -124,6 +128,8 @@ test.describe('Scraping Flow', () => {
       .click();
     await expect(page.getByRole('heading', {name: 'Choose your league', level: 2}))
       .toBeVisible();
+
+    await checkA11y();
   });
 
   test('should not have any automatically detectable accessibility violations', async ({checkA11y}) => {

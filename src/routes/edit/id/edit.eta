@@ -11,11 +11,11 @@
   </div>
 <% } %>
 
-<section class="row items-center wrap">
+<div class="row items-center wrap">
   <p class="chip outline"><%= it.t('status_label', {status: it.session.status}) %></p>
-</section>
+</div>
 
-<section>
+<div>
   <p><%= it.t('invite_link_label') %></p>
   <div class="list">
     <div class="row no-wrap items-center gap">
@@ -27,9 +27,9 @@
       <i class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" role="button" tabindex="0">content_copy</i>
     </div>
   </div>
-</section>
+</div>
 
-<section>
+<div>
   <header>
     <h3><%= it.t('scheduling_engine_info') %></h3>
   </header>
@@ -111,7 +111,7 @@
     </section>
   </div>
 
-  <section id="vote-tally-section" class="grid" aria-label="<%= it.t('vote_summary') %>">
+  <div id="vote-tally-section" class="grid">
     <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_home') %>">
       <%~ include('../../partials/vote-tally.eta', {headingLevel: 4, title: it.t('vote_summary_home'), proposedDates: it.homeProposedDates, t: it.t}) %>
     </section>
@@ -119,5 +119,5 @@
     <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_away') %>">
       <%~ include('../../partials/vote-tally.eta', {headingLevel: 4, title: it.t('vote_summary_away'), proposedDates: it.awayProposedDates, t: it.t}) %>
     </section>
-  </section>
-</section>
+  </div>
+</div>

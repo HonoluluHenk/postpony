@@ -1,7 +1,7 @@
 import { expect, test } from './fixtures';
 
 test.describe('Error Handling', () => {
-  test('should show 404 error page for non-existent session', async ({page}) => {
+  test('should show 404 error page for non-existent session', async ({page, checkA11y}) => {
     const response = await page.goto('/edit/non-existent-id');
     expect(response?.status())
       .toBe(404);
@@ -12,6 +12,8 @@ test.describe('Error Handling', () => {
       .toContainText('Session not found');
     await expect(page.getByRole('link', {name: 'Return to Home'}))
       .toBeVisible();
+
+    await checkA11y();
   });
 
   test('should show validation error for missing name in creation', async ({page}) => {
@@ -30,7 +32,7 @@ test.describe('Error Handling', () => {
       .toContain('error');
   });
 
-  test('should show HTMX error for invalid updates in edit page', async ({page}) => {
+  test('should show HTMX error for invalid updates in edit page', async ({page, checkA11y}) => {
     // 1. Create a session first
     await page.goto('/create');
     await page.getByLabel('Postponement Name')
@@ -58,6 +60,8 @@ test.describe('Error Handling', () => {
     await expect(page.getByRole('alert')
       .last())
       .toContainText('Session not found');
+
+    await checkA11y();
   });
 
   test('error page should be accessible', async ({page, makeAxeBuilder}) => {

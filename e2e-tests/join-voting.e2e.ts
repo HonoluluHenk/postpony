@@ -39,7 +39,7 @@ async function createSession(page: Page, name: string, withProposedDate: boolean
 }
 
 test.describe('Join and Voting', () => {
-  test('lets a new player join, cast and change a vote', async ({page}) => {
+  test('lets a new player join, cast and change a vote', async ({page, checkA11y}) => {
     const {homeHref} = await createSession(page, 'Join Happy Path', true);
 
     // Step 1: identify with a brand-new name.
@@ -77,9 +77,11 @@ test.describe('Join and Voting', () => {
     await expect(page.getByRole('radio', {name: 'Yes'}))
       .not
       .toBeChecked();
+
+    await checkA11y();
   });
 
-  test('remembers the player on return visits via localStorage', async ({page}) => {
+  test('remembers the player on return visits via localStorage', async ({page, checkA11y}) => {
     const {homeHref} = await createSession(page, 'Join Return Visit', true);
 
     await page.goto(homeHref);
@@ -95,9 +97,11 @@ test.describe('Join and Voting', () => {
     await page.waitForURL(/\/vote\?playerId=.+/);
     await expect(page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2}))
       .toBeVisible();
+
+    await checkA11y();
   });
 
-  test('shows a message when no dates are proposed yet', async ({page}) => {
+  test('shows a message when no dates are proposed yet', async ({page, checkA11y}) => {
     const {homeHref} = await createSession(page, 'Join No Dates', false);
 
     await page.goto(homeHref);
@@ -112,9 +116,11 @@ test.describe('Join and Voting', () => {
       .toBeVisible();
     await expect(page.getByRole('button', {name: 'Submit Votes'}))
       .toHaveCount(0);
+
+    await checkA11y();
   });
 
-  test('rejects an invalid invitation token', async ({page}) => {
+  test('rejects an invalid invitation token', async ({page, checkA11y}) => {
     const {id} = await createSession(page, 'Join Bad Token', true);
 
     const response = await page.goto(`/join/${id}/home?token=WRONG`);
@@ -124,9 +130,11 @@ test.describe('Join and Voting', () => {
       .toBeVisible();
     await expect(page.getByRole('alert'))
       .toContainText('Invalid or missing invitation token');
+
+    await checkA11y();
   });
 
-  test('rejects an invalid team parameter', async ({page}) => {
+  test('rejects an invalid team parameter', async ({page, checkA11y}) => {
     const {id, token} = await createSession(page, 'Join Bad Team', true);
 
     const response = await page.goto(`/join/${id}/spectator?token=${token}`);
@@ -134,9 +142,11 @@ test.describe('Join and Voting', () => {
       .toBe(400);
     await expect(page.getByRole('alert'))
       .toContainText('Invalid team');
+
+    await checkA11y();
   });
 
-  test('home team sees all proposed dates; away team only sees votable ones', async ({page}) => {
+  test('home team sees all proposed dates; away team only sees votable ones', async ({page, checkA11y}) => {
     const {id, token} = await createSession(page, 'Team Visibility', true);
 
     const editUrl = `/edit/${id}`;
@@ -185,9 +195,11 @@ test.describe('Join and Voting', () => {
     const homeVoteForm = page.getByRole('form', {name: 'Vote on Proposed Dates'});
     await expect(homeVoteForm.getByRole('group'))
       .toHaveCount(2);
+
+    await checkA11y();
   });
 
-  test('vote tally shows only own-team votes', async ({page}) => {
+  test('vote tally shows only own-team votes', async ({page, checkA11y}) => {
     const {id, token} = await createSession(page, 'Team Tally', true);
 
     const editUrl = `/edit/${id}`;
@@ -262,6 +274,8 @@ test.describe('Join and Voting', () => {
       .getByRole('cell')
       .nth(3))
       .toHaveText('1'); // no
+
+    await checkA11y();
   });
 
   test('join and vote steps are accessible', async ({page, checkA11y}) => {
