@@ -54,8 +54,11 @@ expect(session.players[0]?.name)
 ## Playwright / a11y tests
 
 - Import `test`/`expect` from `./fixtures` (not `@playwright/test`) to get the
-  `checkA11y` fixture. Call `await checkA11y()` after reaching each significant UI state; it runs axe with the full WCAG 2.0/2.1/2.2 A+AA tag set and fails on any violation.
-- **Prefer a11y selectors everywhere.** Use `getByRole`, `getByLabel`, `getByAltText` and `getByTitle` over CSS/id locators.
+  `checkA11y` fixture. Every test in the suite calls `await checkA11y()` at a stable UI state; it runs axe with the full WCAG 2.0/2.1/2.2 A+AA tag set and fails on any violation.
+- Add `{checkA11y}` or `{page, checkA11y}` to the test's destructured parameters.
+- Call `checkA11y()` after all assertions have settled (modals closed, HTMX swaps complete, scroll done) — it captures whatever is on screen.
+- **Prefer a11y selectors everywhere.** Use `getByRole`, `getByLabel`,
+  `getByAltText` and `getByTitle` over CSS/id locators.
 
 ### beer.css radio/checkbox gotcha
 
@@ -71,7 +74,15 @@ await voteForm.getByText('Yes', {exact: true})
 ### Disambiguating headings
 
 The layout renders an `<h1>` brand/logo alongside page `<h2>`s, so
-`getByRole('heading', {name})` hits strict-mode "2 elements" errors. Always pass `{level: 2}` for page headings.
+`getByRole('heading', {name})` hits strict-mode "2 elements" errors. Always pass `{level: 2}` for page headings. Note: the edit page uses the layout `<h1>` only (no duplicate `<h2>`), so its tests use `level: 1`.
+
+### HTMX partial vs initial render
+
+The initial `/edit/:id` page renders `edit.eta` directly. Any UI element added via HTMX partial (e.g. the "Allow away team to vote" toggle switch in `proposed-dates-section.eta`) must also be rendered in the initial template — tests that load the page fresh hit the initial render, not the partial. Keep both in sync.
+
+### Semantic HTML
+
+Prefer writing semantic HTML instead of sprinkling `aria-*` attributes everywhere.'
 
 ### TypeScript validation
 

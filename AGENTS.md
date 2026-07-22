@@ -88,13 +88,13 @@ docs/adr/             — 13 ADRs
 
 - **Handlers**: `factory.createApp()` per router; wrap each handler with `handleAppRequest(fn)`.
 - **App class**: all handlers receive `App` (not raw Hono `Context`). Use `app.t()`, `app.render()`, `app.requireParam()`, `app.failure()`, `app.notFound()`, `app.isPartial`.
-- **HTMX**: default swap is `outerHTML`. Errors rendered via `hx-swap-oob="true"` into `#error-container` element.
+- **HTMX**: default swap is `outerHTML`. Errors rendered via `hx-swap-oob="true"` into `#error-container` element. **Partial vs initial render gotcha**: any UI element rendered by an HTMX partial must also be present in the initial template — tests loading the page fresh (e.g. `/edit/:id`) hit the initial render, not the partial. Keep both in sync.
 - **Locale**: set via `?lang=en|de` → cookie → `Accept-Language` fallback. LanguageMiddleware sets `c.set('locale', ...)`.
 - **Validation**: Valibot schemas → `mapValidationToErrors()` for UI.
 - **Error handling**: throw `AppError | StateError` in handlers; caught by `onError` in `src/index.ts`.
 - **Sessions**: in-memory `App.sessions` (static `Record<string, RescheduleSession>`). Upgrade path: Firestore (ADR-0007).
 - **Join routes**: `/join/:id/:team?token=<invitationPassword>`. Guards in `src/routes/join/join-utils.ts`: `requireTeam`, `requireSessionAndToken`.
-- **Player identity**: per-postponement in `localStorage` key `postpony-player-<sessionId>`, no cookies/auth. ADR-0013.
+- **Player identity**: per-postponement per-team in `localStorage` key `postpony-player-<sessionId>-<team>`, no cookies/auth. ADR-0013.
 
 ## Linting
 
@@ -109,7 +109,8 @@ docs/adr/             — 13 ADRs
 ## Testing gotchas
 
 - **beer.css hides native radios/checkboxes** — toggle via label text, not `.check()` on the role.
-- **Heading ambiguity**: layout has `<h1>` brand + page `<h2>`s. Use `getByRole('heading', { name, level: 2 })`.
+- **Heading ambiguity**: layout has `<h1>` brand + page `<h2>`s. Use `getByRole('heading', { name, level: 2 })`. Note: edit page uses the layout `<h1>` only (no duplicate `<h2>`), so its tests use `level: 1`.
+- **`<section>` must have a heading**: each `<section>` needs a heading (`<h1>`–`<h6>`) as first child. Layout wrappers use `<div>`. Don't nest `<section>` inside `<section>` unless the inner one is a true subsection.
 - **e2e type-checking**: `tsconfig.e2e.json` adds DOM lib; `npm run lint` validates e2e separately.
 - **Fixture builders**: `aSession()`, `aPlayer()`, etc. from `src/lib/__test-utils__/builders.ts`. Use deep-partial overrides. Inject via `app.sessions[session.id] = session`.
 - **Builder drift**: `builders.spec.ts` asserts every required field — a model change must update builders in lockstep.

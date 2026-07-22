@@ -70,6 +70,9 @@ export default joinRouter;
 - Mount the router in `src/index.ts` with `app.route('/join', joinRouter)`.
 - File naming: one handler per file, `*-get.ts` / `*-post.ts`, with the `.eta`
   view alongside it.
+- **Partial vs initial render**: the edit page's initial template (`edit.eta`)
+  must render every UI element that the HTMX partials (`proposed-dates-section.eta`,
+  `team-section.eta`, etc.) render. Tests load the page fresh — they never run an HTMX request first. If a toggle or control only exists in the partial, it is invisible on page load.
 
 ## Invited-participant guard pattern
 

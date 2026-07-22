@@ -25,6 +25,11 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 - Use landmarks (e.g., `<nav>`, `<main>`, `<aside>`) for screen reader navigation
 - Avoid deprecated markup
 
+#### `<section>` requirements (MDN)
+
+- Each `<section>` must have a heading (`<h1>`-`<h6>`) as its first child. If there's no heading, use `<div>` instead — it's a layout wrapper, not a document section.
+- Do not nest `<section>` inside `<section>` unless the inner section is a true subsection (e.g., chapters in a book). Grid/card layouts wrapping independent sections should use `<div>`.
+
 ### Form Accessibility
 
 - Associate labels with form inputs using `for` and `id` attributes
@@ -127,6 +132,12 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 - Integrate axe-core for automated accessibility testing
 - Run accessibility checks in CI/CD pipelines
 - Address all critical and serious accessibility issues
+
+### PostPony e2e a11y fixture
+
+- Every e2e test calls `await checkA11y()` at a stable UI state. The `checkA11y` fixture is provided by `e2e-tests/fixtures.ts` and wraps `@axe-core/playwright`.
+- Add `{checkA11y}` or `{page, checkA11y}` to the test's destructured parameters to use it.
+- Call `checkA11y()` after all assertions have settled and the page is in a stable state (modals closed, HTMX swaps complete, scroll done).
 
 ### Manual Testing
 
