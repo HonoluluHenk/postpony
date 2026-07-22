@@ -1,5 +1,5 @@
 <%~ include('../../partials/error-container.eta', {globalError: it.globalError}) %>
-<section id="team-management" class="padding small-round surface-variant s12 m6">
+<section id="team-management" class="padding small-round surface-variant s12 m4">
   <header>
     <h4><%= it.t('home_team_players') %></h4>
   </header>

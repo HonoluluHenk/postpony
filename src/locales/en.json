@@ -2,6 +2,7 @@
   "add_player": "Add Player",
   "add_proposed_date": "Add Proposed Date",
   "app_title": "PostPony",
+  "copy_to_clipboard": "Copy to clipboard",
   "create_button": "Create Postponement",
   "create_new": "Create a new Postponement",
   "create_reschedule_title": "Create a New Postponement",
@@ -10,8 +11,8 @@
   "error_title": "Error",
   "home_team_players": "Home Team Players",
   "internal_server_error": "Internal Server Error",
-  "invite_link_away_label": "Away team invitation link:",
-  "invite_link_home_label": "Home team invitation link:",
+  "invite_link_away_label": "Away team invitation link",
+  "invite_link_home_label": "Home team invitation link",
   "invite_link_label": "Invite participants using these links:",
   "join_continue": "Continue",
   "join_invalid_team": "Invalid team. Expected 'home' or 'away'.",
@@ -73,5 +74,8 @@
   "vote_title": "Vote on Proposed Dates",
   "vote_updated": "Your votes have been saved!",
   "vote_yes": "Yes",
+  "away_team_votable": "Allow away team to vote",
+  "vote_summary_home": "Home Team Votes",
+  "vote_summary_away": "Away Team Votes",
   "welcome": "Welcome to PostPony"
 }

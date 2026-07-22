@@ -1,5 +1,5 @@
 <% if (it.proposedDates.length > 0) { %>
-  <h<%= it.headingLevel || 3 %>><%= it.t('vote_summary') %></h<%= it.headingLevel || 3 %>>
+  <h<%= it.headingLevel || 3 %>><%= it.title || it.t('vote_summary') %></h<%= it.headingLevel || 3 %>>
   <table>
     <thead>
       <tr>

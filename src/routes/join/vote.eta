@@ -45,11 +45,11 @@
     <% } %>
   </form>
 
-  <section>
+  <section role="region" aria-label="<%= it.t('vote_summary') %>">
     <%~ include('../partials/vote-tally.eta', {...it, headingLevel: 3}) %>
   </section>
 <% } %>
 
 <script>
-  window.localStorage.setItem('postpony-player-<%= it.sessionId %>', '<%= it.playerId %>');
+  window.localStorage.setItem('postpony-player-<%= it.sessionId %>-<%= it.team %>', '<%= it.playerId %>');
 </script>

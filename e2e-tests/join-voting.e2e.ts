@@ -136,6 +136,134 @@ test.describe('Join and Voting', () => {
       .toContainText('Invalid team');
   });
 
+  test('home team sees all proposed dates; away team only sees votable ones', async ({page}) => {
+    const {id, token} = await createSession(page, 'Team Visibility', true);
+
+    const editUrl = `/edit/${id}`;
+
+    // Add a second proposed date
+    await page.goto(editUrl);
+    await page.getByLabel('Proposed Date & Time')
+      .fill('2026-03-12T18:30');
+    await page.getByRole('button', {name: 'Add Proposed Date'})
+      .click();
+    await expect(page.locator('#proposed-date-list')
+      .getByRole('listitem'))
+      .toHaveCount(2);
+
+    // ponytail: beer.css hides native checkboxes; toggle via label text
+    await page.getByText('Allow away team to vote')
+      .nth(1)
+      .click();
+
+    // Join as away team
+    const awayHref = `/join/${id}/away?token=${token}`;
+    await page.goto(awayHref);
+    await page.getByLabel('Or enter your name')
+      .fill('AwayPlayer');
+    await page.getByRole('button', {name: 'Continue'})
+      .click();
+    await expect(page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2}))
+      .toBeVisible();
+
+    // Away team should see only 1 date (the votable one)
+    const voteForm = page.getByRole('form', {name: 'Vote on Proposed Dates'});
+    await expect(voteForm.getByRole('group'))
+      .toHaveCount(1);
+
+    // Join as home team
+    const homeHref = `/join/${id}/home?token=${token}`;
+    await page.goto(homeHref);
+    await page.getByLabel('Or enter your name')
+      .fill('HomePlayer');
+    await page.getByRole('button', {name: 'Continue'})
+      .click();
+    await expect(page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2}))
+      .toBeVisible();
+
+    // Home team should see both dates
+    const homeVoteForm = page.getByRole('form', {name: 'Vote on Proposed Dates'});
+    await expect(homeVoteForm.getByRole('group'))
+      .toHaveCount(2);
+  });
+
+  test('vote tally shows only own-team votes', async ({page}) => {
+    const {id, token} = await createSession(page, 'Team Tally', true);
+
+    const editUrl = `/edit/${id}`;
+
+    // ponytail: beer.css hides native checkboxes; toggle via label text
+    await page.goto(editUrl);
+    await page.getByText('Allow away team to vote')
+      .click();
+
+    // Join as home player and vote Yes
+    const homeHref = `/join/${id}/home?token=${token}`;
+    await page.goto(homeHref);
+    await page.getByLabel('Or enter your name')
+      .fill('HomeVoter');
+    await page.getByRole('button', {name: 'Continue'})
+      .click();
+    await expect(page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2}))
+      .toBeVisible();
+    const homeForm = page.getByRole('form', {name: 'Vote on Proposed Dates'});
+    await homeForm.getByText('Yes', {exact: true})
+      .click();
+    await page.getByRole('button', {name: 'Submit Votes'})
+      .click();
+
+    // Join as away player and vote No
+    const awayHref = `/join/${id}/away?token=${token}`;
+    await page.goto(awayHref);
+    await page.getByLabel('Or enter your name')
+      .fill('AwayVoter');
+    await page.getByRole('button', {name: 'Continue'})
+      .click();
+    await expect(page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2}))
+      .toBeVisible();
+
+    // Check tally: away team should see 0 home votes (only away votes = 0 so far)
+    let tallySection = page.getByRole('region', {name: 'Vote Summary'});
+    await expect(tallySection.getByRole('rowgroup')
+      .last()
+      .getByRole('row')
+      .first()
+      .getByRole('cell')
+      .nth(1))
+      .toHaveText('0'); // yes = 0 (no away-team votes yet)
+
+    // Cast away team vote
+    const awayForm = page.getByRole('form', {name: 'Vote on Proposed Dates'});
+    await awayForm.getByText('No', {exact: true})
+      .click();
+    await page.getByRole('button', {name: 'Submit Votes'})
+      .click();
+
+    // Now away team tally should show 1 No (0 Yes, 0 Maybe)
+    tallySection = page.getByRole('region', {name: 'Vote Summary'});
+    await expect(tallySection.getByRole('rowgroup')
+      .last()
+      .getByRole('row')
+      .first()
+      .getByRole('cell')
+      .nth(1))
+      .toHaveText('0'); // yes
+    await expect(tallySection.getByRole('rowgroup')
+      .last()
+      .getByRole('row')
+      .first()
+      .getByRole('cell')
+      .nth(2))
+      .toHaveText('0'); // maybe
+    await expect(tallySection.getByRole('rowgroup')
+      .last()
+      .getByRole('row')
+      .first()
+      .getByRole('cell')
+      .nth(3))
+      .toHaveText('1'); // no
+  });
+
   test('join and vote steps are accessible', async ({page, checkA11y}) => {
     const {homeHref} = await createSession(page, 'Join A11y', true);
 

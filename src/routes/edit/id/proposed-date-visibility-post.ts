@@ -1,27 +1,28 @@
 import type { App } from '../../../app';
-import type { VoteTallyItem } from '../../../lib/models';
 import { Reschedule } from '../../../lib/reschedule';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 import { toIntlLocale } from '../../../locales';
 
-export const handleEditGet = (app: App): Response => {
+export const handleProposedDateVisibilityPost = (app: App): Response => {
   const id = app.requireParam('id');
   const session = app.sessions[id];
   if (!session) {
     app.notFound(app.t('session_not_found'));
   }
 
-  const ownerPassword = app.c.req.query('ownerPassword') ?? null;
-  const isPartial = app.isPartial;
-  const locale = toIntlLocale(app.locale);
-  const reschedule = new Reschedule();
-  const tallies = reschedule.tally(session);
-  const homeTallies = reschedule.tally(session, 'home');
-  const awayTallies = reschedule.tally(session, 'away');
+  const proposedDateId = app.c.req.query('proposedDateId') ?? '';
+  const votable = app.c.req.query('votable') === 'true';
 
-  const proposedDates: (VoteTallyItem & {
-    awayTeamVotable: boolean
-  })[] = session.proposedDates.map((pd) => {
+  const reschedule = new Reschedule();
+  const updated = reschedule.setAwayTeamVotable(session, proposedDateId, votable);
+  app.sessions[id] = updated;
+
+  const locale = toIntlLocale(app.locale);
+  const tallies = reschedule.tally(updated);
+  const homeTallies = reschedule.tally(updated, 'home');
+  const awayTallies = reschedule.tally(updated, 'away');
+
+  const proposedDates = updated.proposedDates.map((pd) => {
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {
       id: pd.id,
@@ -33,7 +34,7 @@ export const handleEditGet = (app: App): Response => {
     };
   });
 
-  const homeProposedDates: VoteTallyItem[] = session.proposedDates.map((pd) => {
+  const homeProposedDates = updated.proposedDates.map((pd) => {
     const counts = homeTallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {
       id: pd.id,
@@ -44,7 +45,7 @@ export const handleEditGet = (app: App): Response => {
     };
   });
 
-  const awayProposedDates: VoteTallyItem[] = session.proposedDates.map((pd) => {
+  const awayProposedDates = updated.proposedDates.map((pd) => {
     const counts = awayTallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {
       id: pd.id,
@@ -55,15 +56,11 @@ export const handleEditGet = (app: App): Response => {
     };
   });
 
-  const html = app.render('edit/id/edit.eta', {
-    title: app.t('edit_reschedule_title', {name: session.name}),
-    session,
+  const html = app.render('edit/id/proposed-dates-section.eta', {
+    sessionId: updated.id,
     proposedDates,
     homeProposedDates,
     awayProposedDates,
-    ownerPassword,
-    invitationPassword: session.invitationPassword,
-    isPartial,
   });
 
   return app.c.html(html);

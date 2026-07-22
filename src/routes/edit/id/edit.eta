@@ -1,9 +1,5 @@
 <% layout('../../layouts/main.eta') %>
 
-<header>
-  <h2><%~ it.t('edit_reschedule_title', {name: it.session.name}) %></h2>
-</header>
-
 <% if (it.ownerPassword) { %>
   <div class="toast primary white-text top" role="alert">
     <i aria-hidden="true">info</i>
@@ -21,20 +17,16 @@
 
 <section>
   <p><%= it.t('invite_link_label') %></p>
-  <ul class="list">
-    <li>
-      <div class="max">
-        <span><%= it.t('invite_link_home_label') %></span>
-        <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>" aria-label="<%= it.t('invite_link_home_label') %>"><%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %></a>
-      </div>
-    </li>
-    <li>
-      <div class="max">
-        <span><%= it.t('invite_link_away_label') %></span>
-        <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>" aria-label="<%= it.t('invite_link_away_label') %>"><%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %></a>
-      </div>
-    </li>
-  </ul>
+  <div class="list">
+    <div class="row no-wrap items-center gap">
+      <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>"><%= it.t('invite_link_home_label') %></a>
+      <i class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" role="button" tabindex="0">content_copy</i>
+    </div>
+    <div class="row no-wrap items-center gap">
+      <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>"><%= it.t('invite_link_away_label') %></a>
+      <i class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" role="button" tabindex="0">content_copy</i>
+    </div>
+  </div>
 </section>
 
 <section>
@@ -96,13 +88,20 @@
           <li>
             <i>event</i>
             <div class="max"><%= proposedDate.display %></div>
+            <label class="switch">
+              <input type="checkbox"
+                     hx-post="/edit/<%= it.session.id %>/proposed-date-visibility?proposedDateId=<%= proposedDate.id %>&votable=<%= !proposedDate.awayTeamVotable %>"
+                     hx-target="#proposed-dates-management"
+                     <%= proposedDate.awayTeamVotable ? 'checked' : '' %>>
+              <span><%= it.t('away_team_votable') %></span>
+            </label>
           </li>
         <% }) %>
       </ul>
       <form hx-post="/edit/<%= it.session.id %>/proposed-dates" hx-target="#proposed-dates-management" class="mt-4">
         <div class="field label border fill">
           <input type="datetime-local" id="proposedDateTime" name="proposedDateTime"
-                 value="<%= it.session.originalMatchDateTime || '' %>" required>
+                 value="<%= it.session.originalMatchDateTime || '' %>" required lang="de">
           <label for="proposedDateTime"><%= it.t('proposed_date_time_label') %></label>
         </div>
         <div class="right-align">
@@ -110,9 +109,15 @@
         </div>
       </form>
     </section>
-
-    <section id="vote-tally-section" class="padding small-round surface-variant s12" aria-label="<%= it.t('vote_summary') %>">
-      <%~ include('../../partials/vote-tally.eta', {...it, headingLevel: 4}) %>
-    </section>
   </div>
+
+  <section id="vote-tally-section" class="grid" aria-label="<%= it.t('vote_summary') %>">
+    <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_home') %>">
+      <%~ include('../../partials/vote-tally.eta', {headingLevel: 4, title: it.t('vote_summary_home'), proposedDates: it.homeProposedDates, t: it.t}) %>
+    </section>
+
+    <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_away') %>">
+      <%~ include('../../partials/vote-tally.eta', {headingLevel: 4, title: it.t('vote_summary_away'), proposedDates: it.awayProposedDates, t: it.t}) %>
+    </section>
+  </section>
 </section>

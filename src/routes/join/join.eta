@@ -31,7 +31,7 @@
 
 <script>
   (function () {
-    var stored = window.localStorage.getItem('postpony-player-<%= it.sessionId %>');
+    var stored = window.localStorage.getItem('postpony-player-<%= it.sessionId %>-<%= it.team %>');
     if (stored) {
       var token = new URLSearchParams(window.location.search).get('token') || '';
       window.location.replace(

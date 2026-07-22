@@ -104,7 +104,7 @@ test.describe('Scraping Flow', () => {
     ]);
 
     // 6. We land on the edit screen for the scraped match
-    await expect(page.getByRole('heading', {name: 'Editing Postponement', level: 2}))
+    await expect(page.getByRole('heading', {name: 'Editing Postponement', level: 1}))
       .toBeVisible();
     await expect(page.getByText('Status:'))
       .toContainText('Draft');

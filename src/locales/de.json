@@ -2,6 +2,7 @@
   "add_player": "Spieler hinzufügen",
   "add_proposed_date": "Termin vorschlagen",
   "app_title": "PostPony",
+  "copy_to_clipboard": "In Zwischenablage kopieren",
   "create_button": "Verschiebung erstellen",
   "create_new": "Neue Verschiebung erstellen",
   "create_reschedule_title": "Neue Verschiebung erstellen",
@@ -10,8 +11,8 @@
   "error_title": "Fehler",
   "home_team_players": "Spieler der Heimmannschaft",
   "internal_server_error": "Interner Serverfehler",
-  "invite_link_away_label": "Einladungslink für die Gastmannschaft:",
-  "invite_link_home_label": "Einladungslink für die Heimmannschaft:",
+  "invite_link_away_label": "Einladungslink für die Gastmannschaft",
+  "invite_link_home_label": "Einladungslink für die Heimmannschaft",
   "invite_link_label": "Laden Sie Teilnehmer über diese Links ein:",
   "join_continue": "Weiter",
   "join_invalid_team": "Ungültige Mannschaft. Erwartet wird 'home' oder 'away'.",
@@ -73,5 +74,8 @@
   "vote_title": "Über vorgeschlagene Termine abstimmen",
   "vote_updated": "Ihre Stimmen wurden gespeichert!",
   "vote_yes": "Ja",
+  "away_team_votable": "Gastmannschaft abstimmen lassen",
+  "vote_summary_home": "Stimmen der Heimmannschaft",
+  "vote_summary_away": "Stimmen der Gastmannschaft",
   "welcome": "Willkommen bei PostPony"
 }

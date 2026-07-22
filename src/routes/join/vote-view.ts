@@ -22,8 +22,14 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const readOnly = session.status === 'Confirmed';
   const locale = toIntlLocale(app.locale);
 
-  const tallies = new Reschedule().tally(session);
-  const proposedDates: VotePageDate[] = session.proposedDates.map((pd) => {
+  const reschedule = new Reschedule();
+  const tallies = reschedule.tally(session, team);
+
+  const visibleDates = session.proposedDates.filter((pd) =>
+    team === 'away' ? pd.awayTeamVotable : true,
+  );
+
+  const proposedDates: VotePageDate[] = visibleDates.map((pd) => {
     const current = session.votes.find((vt) => vt.proposedDateId === pd.id && vt.participantId === player.id);
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {

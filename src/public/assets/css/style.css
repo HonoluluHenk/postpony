@@ -82,6 +82,21 @@
     border: 0;
   }
 
+  a:not(.button) {
+    text-decoration: underline;
+  }
+
+  .clipboard-btn {
+    cursor: pointer;
+    font-size: 1.1em;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+
+  .clipboard-btn:hover {
+    opacity: 1;
+  }
+
   .mt-4 {
     margin-top: var(--space-5);
   }

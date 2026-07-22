@@ -77,6 +77,25 @@ function initLanguage() {
   });
 }
 
+/**
+ * Handles click-to-copy for [data-copy] buttons.
+ */
+function initClipboard() {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-copy]');
+    if (!btn) return;
+    navigator.clipboard.writeText(btn.dataset.copy);
+    const icon = btn.querySelector('i');
+    if (icon) {
+      const original = icon.textContent;
+      icon.textContent = 'check';
+      setTimeout(() => {
+        icon.textContent = original;
+      }, 2000);
+    }
+  });
+}
+
 // main.js is loaded in <head> without defer, so the DOM (including #global-spinner)
 // is not ready yet; construct the spinner once the page has loaded.
 window.addEventListener('load', () => {
@@ -84,4 +103,5 @@ window.addEventListener('load', () => {
   initTheme();
   initLanguage();
   initHtmx(spinner);
+  initClipboard();
 });

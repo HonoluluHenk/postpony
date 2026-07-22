@@ -7,6 +7,32 @@ import { Reschedule } from '../../../lib/reschedule';
 import { DATETIME_LOCAL_PATTERN, formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 import { toIntlLocale } from '../../../locales';
 
+interface ProposedDateTallyItem extends VoteTallyItem {
+  awayTeamVotable: boolean;
+}
+
+function toProposedDateItems(
+  proposedDates: ProposedDate[],
+  tallies: Record<string, {
+    yes: number;
+    no: number;
+    maybe: number
+  }>,
+  locale: 'de-DE' | 'en-GB' | 'en-US',
+): ProposedDateTallyItem[] {
+  return proposedDates.map((pd) => {
+    const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
+    return {
+      id: pd.id,
+      display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
+      awayTeamVotable: pd.awayTeamVotable,
+      yes: counts.yes,
+      no: counts.no,
+      maybe: counts.maybe,
+    };
+  });
+}
+
 function toVoteTallyItems(
   proposedDates: ProposedDate[],
   tallies: Record<string, {
@@ -55,14 +81,20 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
   const values = await app.c.req.parseBody();
   const validation = v.safeParse(ProposedDateSchema, values);
 
+  const reschedule = new Reschedule();
+
   if (!validation.success) {
     const errors = mapValidationToErrors(validation);
 
     if (app.isPartial) {
-      const tallies = new Reschedule().tally(session);
+      const tallies = reschedule.tally(session);
+      const homeTallies = reschedule.tally(session, 'home');
+      const awayTallies = reschedule.tally(session, 'away');
       return app.c.html(app.render('edit/id/proposed-dates-section.eta', {
         sessionId: session.id,
-        proposedDates: toVoteTallyItems(session.proposedDates, tallies, locale),
+        proposedDates: toProposedDateItems(session.proposedDates, tallies, locale),
+        homeProposedDates: toVoteTallyItems(session.proposedDates, homeTallies, locale),
+        awayProposedDates: toVoteTallyItems(session.proposedDates, awayTallies, locale),
         proposedDateTime: (values['proposedDateTime'] as string | undefined) ?? '',
         error: errors.fields['proposedDateTime'],
         globalError: errors.global,
@@ -75,14 +107,18 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
   const {proposedDateTime} = validation.output;
   const dt = Temporal.PlainDateTime.from(proposedDateTime)
     .toString();
-  const updated = new Reschedule().proposeDate(session, dt, 'owner').session;
+  const updated = reschedule.proposeDate(session, dt, 'owner').session;
   app.sessions[id] = updated;
 
   if (app.isPartial) {
-    const tallies = new Reschedule().tally(updated);
+    const tallies = reschedule.tally(updated);
+    const homeTallies = reschedule.tally(updated, 'home');
+    const awayTallies = reschedule.tally(updated, 'away');
     return app.c.html(app.render('edit/id/proposed-dates-section.eta', {
       sessionId: updated.id,
-      proposedDates: toVoteTallyItems(updated.proposedDates, tallies, locale),
+      proposedDates: toProposedDateItems(updated.proposedDates, tallies, locale),
+      homeProposedDates: toVoteTallyItems(updated.proposedDates, homeTallies, locale),
+      awayProposedDates: toVoteTallyItems(updated.proposedDates, awayTallies, locale),
       success: true,
     }));
   }

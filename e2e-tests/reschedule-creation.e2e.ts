@@ -22,7 +22,7 @@ test.describe('Postponement Creation', () => {
       .click();
 
     // 4. Check if we moved to the edit screen
-    await expect(page.getByRole('heading', {name: 'Editing Postponement', level: 2}))
+    await expect(page.getByRole('heading', {name: 'Editing Postponement', level: 1}))
       .toContainText(sessionName);
 
     // 5. Verify the owner password is displayed

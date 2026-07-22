@@ -8,15 +8,22 @@
       <li>
         <i>event</i>
         <div class="max"><%= proposedDate.display %></div>
+        <label class="switch">
+          <input type="checkbox"
+                 hx-post="/edit/<%= it.sessionId %>/proposed-date-visibility?proposedDateId=<%= proposedDate.id %>&votable=<%= !proposedDate.awayTeamVotable %>"
+                 hx-target="#proposed-dates-management"
+                 <%= proposedDate.awayTeamVotable ? 'checked' : '' %>>
+          <span><%= it.t('away_team_votable') %></span>
+        </label>
       </li>
     <% }) %>
   </ul>
   <form hx-post="/edit/<%= it.sessionId %>/proposed-dates" hx-target="#proposed-dates-management" class="mt-4">
     <div class="field label border fill <%= it.error ? 'invalid' : '' %>">
       <% if (it.error) { %>
-        <input type="datetime-local" id="proposedDateTime" name="proposedDateTime" value="<%= it.proposedDateTime %>">
+        <input type="datetime-local" id="proposedDateTime" name="proposedDateTime" value="<%= it.proposedDateTime %>" lang="de">
       <% } else { %>
-        <input type="datetime-local" id="proposedDateTime" name="proposedDateTime" required>
+        <input type="datetime-local" id="proposedDateTime" name="proposedDateTime" required lang="de">
       <% } %>
       <label for="proposedDateTime"><%= it.t('proposed_date_time_label') %></label>
       <% if (it.error) { %>
@@ -37,6 +44,11 @@
   <% } %>
 </section>
 
-<section id="vote-tally-section" hx-swap-oob="true" class="padding small-round surface-variant s12" aria-label="<%= it.t('vote_summary') %>">
-  <%~ include('../../partials/vote-tally.eta', {...it, headingLevel: 4}) %>
+<section id="vote-tally-section" hx-swap-oob="true" class="grid" aria-label="<%= it.t('vote_summary') %>">
+  <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_home') %>">
+    <%~ include('../../partials/vote-tally.eta', {headingLevel: 4, title: it.t('vote_summary_home'), proposedDates: it.homeProposedDates, t: it.t}) %>
+  </section>
+  <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_away') %>">
+    <%~ include('../../partials/vote-tally.eta', {headingLevel: 4, title: it.t('vote_summary_away'), proposedDates: it.awayProposedDates, t: it.t}) %>
+  </section>
 </section>

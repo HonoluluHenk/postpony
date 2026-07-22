@@ -54,6 +54,7 @@ export interface ProposedDate {
     end: string;   // ISO string
   };
   proposerId: string;
+  awayTeamVotable: boolean;
 }
 
 export interface Vote {

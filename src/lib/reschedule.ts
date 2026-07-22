@@ -100,6 +100,7 @@ export class Reschedule {
       sessionId: session.id,
       dateTimeRange: {start, end: start},
       proposerId,
+      awayTeamVotable: false,
     };
     return {session: {...session, proposedDates: [...session.proposedDates, proposedDate]}, proposedDate};
   }
@@ -129,11 +130,19 @@ export class Reschedule {
 
   /**
    * Aggregates Votes per Proposed Date, keyed by Proposed Date id.
+   * When `team` is provided, only counts votes from participants on that team.
    */
-  tally(session: RescheduleSession): Record<string, VoteTally> {
+  tally(session: RescheduleSession, team?: Team): Record<string, VoteTally> {
+    const teamPlayerIds = team
+                          ? new Set(session.players.filter((p) => p.teamId === team)
+        .map((p) => p.id))
+                          : null;
+
     const result: Record<string, VoteTally> = {};
     for (const pd of session.proposedDates) {
-      const dateVotes = session.votes.filter((v) => v.proposedDateId === pd.id);
+      const dateVotes = session.votes.filter(
+        (v) => v.proposedDateId === pd.id && (!teamPlayerIds || teamPlayerIds.has(v.participantId)),
+      );
       result[pd.id] = {
         yes: dateVotes.filter((v) => v.type === 'Yes').length,
         no: dateVotes.filter((v) => v.type === 'No').length,
@@ -141,6 +150,34 @@ export class Reschedule {
       };
     }
     return result;
+  }
+
+  /**
+   * Computes per-team tallies for the organizer view.
+   */
+  splitTallies(session: RescheduleSession): {
+    home: Record<string, VoteTally>;
+    away: Record<string, VoteTally>
+  }
+  {
+    return {
+      home: this.tally(session, 'home'),
+      away: this.tally(session, 'away'),
+    };
+  }
+
+  /**
+   * Sets whether a Proposed Date is votable by the away team.
+   */
+  setAwayTeamVotable(
+    session: RescheduleSession,
+    proposedDateId: string,
+    votable: boolean,
+  ): RescheduleSession {
+    const proposedDates = session.proposedDates.map((pd) =>
+      pd.id === proposedDateId ? {...pd, awayTeamVotable: votable} : pd,
+    );
+    return {...session, proposedDates};
   }
 
   /**

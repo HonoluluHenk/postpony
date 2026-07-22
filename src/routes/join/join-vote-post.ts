@@ -25,6 +25,9 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
     const reschedule = new Reschedule();
     const body = await app.c.req.parseBody();
     for (const pd of session.proposedDates) {
+      if (team === 'away' && !pd.awayTeamVotable) {
+        continue;
+      }
       const value = body[`vote-${pd.id}`];
       if (!isVoteType(value)) {
         continue;

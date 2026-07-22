@@ -170,6 +170,115 @@ describe('reschedule', () => {
       expect(new FakeReschedule().tally(session)['pd-1'])
         .toEqual({yes: 2, no: 1, maybe: 1});
     });
+
+    test('filters votes by home team', () => {
+      const session = aSession({
+        players: [
+          aPlayer({id: 'home-1', teamId: 'home'}),
+          aPlayer({id: 'away-1', teamId: 'away'}),
+        ],
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+        votes: [
+          aVote({proposedDateId: 'pd-1', participantId: 'home-1', type: 'Yes'}),
+          aVote({proposedDateId: 'pd-1', participantId: 'away-1', type: 'No'}),
+        ],
+      });
+
+      expect(new FakeReschedule().tally(session, 'home')['pd-1'])
+        .toEqual({yes: 1, no: 0, maybe: 0});
+    });
+
+    test('filters votes by away team', () => {
+      const session = aSession({
+        players: [
+          aPlayer({id: 'home-1', teamId: 'home'}),
+          aPlayer({id: 'away-1', teamId: 'away'}),
+        ],
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+        votes: [
+          aVote({proposedDateId: 'pd-1', participantId: 'home-1', type: 'Yes'}),
+          aVote({proposedDateId: 'pd-1', participantId: 'away-1', type: 'No'}),
+        ],
+      });
+
+      expect(new FakeReschedule().tally(session, 'away')['pd-1'])
+        .toEqual({yes: 0, no: 1, maybe: 0});
+    });
+
+    test('returns all votes when no team filter is passed', () => {
+      const session = aSession({
+        players: [
+          aPlayer({id: 'home-1', teamId: 'home'}),
+          aPlayer({id: 'away-1', teamId: 'away'}),
+        ],
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+        votes: [
+          aVote({proposedDateId: 'pd-1', participantId: 'home-1', type: 'Yes'}),
+          aVote({proposedDateId: 'pd-1', participantId: 'away-1', type: 'No'}),
+        ],
+      });
+
+      expect(new FakeReschedule().tally(session)['pd-1'])
+        .toEqual({yes: 1, no: 1, maybe: 0});
+    });
+  });
+
+  describe('splitTallies', () => {
+    test('returns per-team tallies', () => {
+      const session = aSession({
+        players: [
+          aPlayer({id: 'home-1', teamId: 'home'}),
+          aPlayer({id: 'away-1', teamId: 'away'}),
+        ],
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+        votes: [
+          aVote({proposedDateId: 'pd-1', participantId: 'home-1', type: 'Yes'}),
+          aVote({proposedDateId: 'pd-1', participantId: 'away-1', type: 'No'}),
+        ],
+      });
+
+      const {home, away} = new FakeReschedule().splitTallies(session);
+
+      expect(home['pd-1'])
+        .toEqual({yes: 1, no: 0, maybe: 0});
+      expect(away['pd-1'])
+        .toEqual({yes: 0, no: 1, maybe: 0});
+    });
+  });
+
+  describe('setAwayTeamVotable', () => {
+    test('sets awayTeamVotable on a proposed date', () => {
+      const session = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1', awayTeamVotable: false})],
+      });
+
+      const updated = new FakeReschedule().setAwayTeamVotable(session, 'pd-1', true);
+
+      expect(updated.proposedDates[0]?.awayTeamVotable)
+        .toBe(true);
+    });
+
+    test('clears awayTeamVotable on a proposed date', () => {
+      const session = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1', awayTeamVotable: true})],
+      });
+
+      const updated = new FakeReschedule().setAwayTeamVotable(session, 'pd-1', false);
+
+      expect(updated.proposedDates[0]?.awayTeamVotable)
+        .toBe(false);
+    });
+
+    test('does not mutate the input session', () => {
+      const session = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1', awayTeamVotable: false})],
+      });
+
+      new FakeReschedule().setAwayTeamVotable(session, 'pd-1', true);
+
+      expect(session.proposedDates[0]?.awayTeamVotable)
+        .toBe(false);
+    });
   });
 
   describe('setVenueLimit', () => {
