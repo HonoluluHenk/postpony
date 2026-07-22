@@ -63,7 +63,139 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(2);
   });
 
+  test('should show vote tallies on the edit page', async ({page}) => {
+    // Add proposed dates
+    await page.locator('#proposedDateTime')
+      .fill('2026-06-01T20:00');
+    await page.getByRole('button', {name: 'Add Proposed Date'})
+      .click();
+    await expect(page.getByRole('alert')
+      .filter({hasText: 'Proposed date added!'}))
+      .toBeVisible();
+
+    await page.locator('#proposedDateTime')
+      .fill('2026-06-15T18:30');
+    await page.getByRole('button', {name: 'Add Proposed Date'})
+      .click();
+    await expect(page.getByRole('alert')
+      .filter({hasText: 'Proposed date added!'}))
+      .toBeVisible();
+    await expect(page.locator('#proposed-date-list')
+      .getByRole('listitem'))
+      .toHaveCount(2);
+
+    const editUrl = page.url();
+
+    // Join as Alice and vote
+    const homeHref = await page.locator('a[href*="/home?token="]')
+      .getAttribute('href');
+    if (!homeHref) {
+      throw new Error('home invitation link not found');
+    }
+    await page.goto(homeHref);
+
+    await page.getByLabel('Or enter your name')
+      .fill('Alice');
+    await page.getByRole('button', {name: 'Continue'})
+      .click();
+    await expect(page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2}))
+      .toBeVisible();
+
+    const voteForm = page.locator('form');
+    await voteForm.locator('fieldset')
+      .first()
+      .getByText('Yes', {exact: true})
+      .click();
+    await voteForm.locator('fieldset')
+      .nth(1)
+      .getByText('Maybe', {exact: true})
+      .click();
+    await page.getByRole('button', {name: 'Submit Votes'})
+      .click();
+
+    // Return to edit page and check tally
+    await page.goto(editUrl);
+
+    const tallySection = page.locator('#vote-tally-section');
+    await expect(tallySection.getByRole('heading', {level: 4}))
+      .toContainText('Vote Summary');
+
+    const tallyRows = tallySection.locator('tbody tr');
+    await expect(tallyRows)
+      .toHaveCount(2);
+
+    // First date: Yes=1, Maybe=0, No=0
+    await expect(tallyRows.first()
+      .locator('td')
+      .nth(1))
+      .toHaveText('1');
+    await expect(tallyRows.first()
+      .locator('td')
+      .nth(2))
+      .toHaveText('0');
+    await expect(tallyRows.first()
+      .locator('td')
+      .nth(3))
+      .toHaveText('0');
+
+    // Second date: Yes=0, Maybe=1, No=0
+    await expect(tallyRows.nth(1)
+      .locator('td')
+      .nth(1))
+      .toHaveText('0');
+    await expect(tallyRows.nth(1)
+      .locator('td')
+      .nth(2))
+      .toHaveText('1');
+    await expect(tallyRows.nth(1)
+      .locator('td')
+      .nth(3))
+      .toHaveText('0');
+  });
+
   test('should maintain accessibility on the editing interface', async ({checkA11y}) => {
+    await checkA11y();
+  });
+
+  test('maintains accessibility on the edit page with the vote tally visible', async ({page, checkA11y}) => {
+    await page.locator('#proposedDateTime')
+      .fill('2026-06-01T20:00');
+    await page.getByRole('button', {name: 'Add Proposed Date'})
+      .click();
+    await expect(page.getByRole('alert')
+      .filter({hasText: 'Proposed date added!'}))
+      .toBeVisible();
+    await page.locator('#proposedDateTime')
+      .fill('2026-06-15T18:30');
+    await page.getByRole('button', {name: 'Add Proposed Date'})
+      .click();
+
+    const homeHref = await page.locator('a[href*="/home?token="]')
+      .getAttribute('href');
+    if (!homeHref) {
+      throw new Error('home invitation link not found');
+    }
+    const editUrl = page.url();
+    await page.goto(homeHref);
+
+    await page.getByLabel('Or enter your name')
+      .fill('Alice');
+    await page.getByRole('button', {name: 'Continue'})
+      .click();
+
+    const voteForm = page.locator('form');
+    await voteForm.locator('fieldset')
+      .first()
+      .getByText('Yes', {exact: true})
+      .click();
+    await voteForm.locator('fieldset')
+      .nth(1)
+      .getByText('No', {exact: true})
+      .click();
+    await page.getByRole('button', {name: 'Submit Votes'})
+      .click();
+
+    await page.goto(editUrl);
     await checkA11y();
   });
 });

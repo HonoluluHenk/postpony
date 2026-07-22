@@ -110,5 +110,9 @@
         </div>
       </form>
     </section>
+
+    <section id="vote-tally-section" class="padding small-round surface-variant s12">
+      <%~ include('../../partials/vote-tally.eta', {...it, headingLevel: 4}) %>
+    </section>
   </div>
 </section>

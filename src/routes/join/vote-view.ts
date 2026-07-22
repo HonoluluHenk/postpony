@@ -1,9 +1,13 @@
 import type { App } from '../../app';
-import type { Player, RescheduleSession } from '../../lib/models';
+import type { Player, RescheduleSession, VoteTallyItem } from '../../lib/models';
 import { Reschedule } from '../../lib/reschedule';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
 import { toIntlLocale } from '../../locales';
 import type { Team } from './join-utils';
+
+interface VotePageDate extends VoteTallyItem {
+  currentVote: string;
+}
 
 export interface VoteViewOptions {
   session: RescheduleSession;
@@ -19,7 +23,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const locale = toIntlLocale(app.locale);
 
   const tallies = new Reschedule().tally(session);
-  const proposedDates = session.proposedDates.map((pd) => {
+  const proposedDates: VotePageDate[] = session.proposedDates.map((pd) => {
     const current = session.votes.find((vt) => vt.proposedDateId === pd.id && vt.participantId === player.id);
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {

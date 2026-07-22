@@ -36,3 +36,7 @@
     </div>
   <% } %>
 </section>
+
+<section id="vote-tally-section" hx-swap-oob="true" class="padding small-round surface-variant s12">
+  <%~ include('../../partials/vote-tally.eta', {...it, headingLevel: 4}) %>
+</section>

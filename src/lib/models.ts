@@ -62,3 +62,11 @@ export interface Vote {
   participantId: string;
   type: 'Yes' | 'No' | 'Maybe';
 }
+
+export interface VoteTallyItem {
+  id: string;
+  display: string;
+  yes: number;
+  no: number;
+  maybe: number;
+}

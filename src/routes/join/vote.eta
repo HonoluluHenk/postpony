@@ -46,27 +46,7 @@
   </form>
 
   <section>
-    <h3><%= it.t('vote_summary') %></h3>
-    <table>
-      <thead>
-        <tr>
-          <th scope="col"><%= it.t('proposed_date_time_label') %></th>
-          <th scope="col"><%= it.t('vote_yes') %></th>
-          <th scope="col"><%= it.t('vote_maybe') %></th>
-          <th scope="col"><%= it.t('vote_no') %></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% it.proposedDates.forEach(function (pd) { %>
-          <tr>
-            <td><%= pd.display %></td>
-            <td><%= pd.yes %></td>
-            <td><%= pd.maybe %></td>
-            <td><%= pd.no %></td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
+    <%~ include('../partials/vote-tally.eta', {...it, headingLevel: 3}) %>
   </section>
 <% } %>
 

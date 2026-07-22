@@ -2,10 +2,31 @@ import { Temporal } from '@js-temporal/polyfill';
 import * as v from 'valibot';
 import type { App } from '../../../app';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
-import { ProposedDate } from '../../../lib/models';
+import type { ProposedDate, VoteTallyItem } from '../../../lib/models';
 import { Reschedule } from '../../../lib/reschedule';
 import { DATETIME_LOCAL_PATTERN, formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 import { toIntlLocale } from '../../../locales';
+
+function toVoteTallyItems(
+  proposedDates: ProposedDate[],
+  tallies: Record<string, {
+    yes: number;
+    no: number;
+    maybe: number
+  }>,
+  locale: 'de-DE' | 'en-GB' | 'en-US',
+): VoteTallyItem[] {
+  return proposedDates.map((pd) => {
+    const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
+    return {
+      id: pd.id,
+      display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
+      yes: counts.yes,
+      no: counts.no,
+      maybe: counts.maybe,
+    };
+  });
+}
 
 export const handleEditProposedDatesPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
@@ -29,14 +50,7 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
     ),
   });
 
-  function toDisplayList(proposedDates: ProposedDate[]): {
-    display: string
-  }[]
-  {
-    return proposedDates.map((pd: ProposedDate) => ({
-      display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), toIntlLocale(app.locale)),
-    }));
-  }
+  const locale = toIntlLocale(app.locale);
 
   const values = await app.c.req.parseBody();
   const validation = v.safeParse(ProposedDateSchema, values);
@@ -45,9 +59,10 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
     const errors = mapValidationToErrors(validation);
 
     if (app.isPartial) {
+      const tallies = new Reschedule().tally(session);
       return app.c.html(app.render('edit/id/proposed-dates-section.eta', {
         sessionId: session.id,
-        proposedDates: toDisplayList(session.proposedDates),
+        proposedDates: toVoteTallyItems(session.proposedDates, tallies, locale),
         proposedDateTime: (values['proposedDateTime'] as string | undefined) ?? '',
         error: errors.fields['proposedDateTime'],
         globalError: errors.global,
@@ -64,9 +79,10 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
   app.sessions[id] = updated;
 
   if (app.isPartial) {
+    const tallies = new Reschedule().tally(updated);
     return app.c.html(app.render('edit/id/proposed-dates-section.eta', {
       sessionId: updated.id,
-      proposedDates: toDisplayList(updated.proposedDates),
+      proposedDates: toVoteTallyItems(updated.proposedDates, tallies, locale),
       success: true,
     }));
   }
