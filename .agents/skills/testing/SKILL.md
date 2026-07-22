@@ -51,11 +51,32 @@ expect(session.players[0]?.name)
 - Assert error paths with `.rejects.toThrow(...)` — handlers signal failures by throwing `AppError`/`StateError` via `app.failure`/`app.notFound`.
 - `app.sessions` is a **static** record shared across `App` instances, so seed it per test; don't rely on isolation between the store and a fresh `App`.
 
+## Page Object Model
+
+All Playwright tests use Page Object classes from `e2e-tests/pages/`:
+
+| Class        | Page                     | Key methods / locators                                                                                                                                                  |
+|--------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `StartPage`  | `/`                      | `goto()`, `createLink`, `editLink`, `switchLanguage(lang)`, `spinner`, `main`, `banner`, `contentinfo`                                                                  |
+| `CreatePage` | `/create`                | `goto()`, `nameInput`, `submitButton`, `create(name)` → `EditPage`                                                                                                      |
+| `EditPage`   | `/edit/:id`              | `addPlayer(name)`, `addProposedDate(dt)`, `updateVenueSettings(max)`, `toggleAwayVotable(index)`, `homeTallySection()`, `awayTallySection()`, `status`, `ownerPassword` |
+| `JoinPage`   | `/join/:id/:team?token=` | `goto(href)`, `join(name)`, `castVote(index, vote)`, `submitVotes()`, `voteForm`, `tallySection()`, `voteRadio(vote)`                                                   |
+| `ScrapePage` | `/create/scrape`         | `goto()`, `pickLeague(name)`, `pickGroup(name)`, `pickTeam(name)`, `clickBack()`, `meetingRow(filter)`                                                                  |
+
+**Cross-page workflows** use `EditPage.createSession(page, name?, dates?)` — a static factory that navigates `/ → /create → /edit/:id`, returns `{session, editPage}`.
+
+**Manual instantiation** per test — no Playwright fixtures for page objects:
+
+```ts
+const editPage = new EditPage(page);
+await editPage.addProposedDate('2026-03-05T20:00');
+```
+
 ## Playwright / a11y tests
 
 - Import `test`/`expect` from `./fixtures` (not `@playwright/test`) to get the
   `checkA11y` fixture. Every test in the suite calls `await checkA11y()` at a stable UI state; it runs axe with the full WCAG 2.0/2.1/2.2 A+AA tag set and fails on any violation.
-- Add `{checkA11y}` or `{page, checkA11y}` to the test's destructured parameters.
+- Add `{page, checkA11y}` to the test's destructured parameters when you need `page` for a page object or a direct assertion. Use `{checkA11y}` only if the test uses no `page` at all.
 - Call `checkA11y()` after all assertions have settled (modals closed, HTMX swaps complete, scroll done) — it captures whatever is on screen.
 - **Prefer a11y selectors everywhere.** Use `getByRole`, `getByLabel`,
   `getByAltText` and `getByTitle` over CSS/id locators.

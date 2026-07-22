@@ -80,7 +80,9 @@ src/
   public/assets/
     css/design-tokens.css — design tokens in @layer design
     vendor/           — BeerCSS (Material 3) in @layer vendor
-e2e-tests/            — Playwright + axe a11y tests
+e2e-tests/
+  pages/              — Page Object Model classes (StartPage, CreatePage, EditPage, JoinPage, ScrapePage)
+  fixtures.ts         — Custom Playwright fixtures (checkA11y, makeAxeBuilder)
 docs/adr/             — 13 ADRs
 ```
 
@@ -108,6 +110,7 @@ docs/adr/             — 13 ADRs
 
 ## Testing gotchas
 
+- **Page Objects**: e2e tests use Page Object classes from `e2e-tests/pages/`. Instantiate manually in each test: `const editPage = new EditPage(page);`. All selectors live inside page objects — tests call methods like `editPage.addProposedDate('2026-03-05T20:00')` or access locators like `editPage.status`. Cross-page workflows use `EditPage.createSession(page, name, dates?)` (replaces the old `createSession` helper).
 - **beer.css hides native radios/checkboxes** — toggle via label text, not `.check()` on the role.
 - **Heading ambiguity**: layout has `<h1>` brand + page `<h2>`s. Use `getByRole('heading', { name, level: 2 })`. Note: edit page uses the layout `<h1>` only (no duplicate `<h2>`), so its tests use `level: 1`.
 - **`<section>` must have a heading**: each `<section>` needs a heading (`<h1>`–`<h6>`) as first child. Layout wrappers use `<div>`. Don't nest `<section>` inside `<section>` unless the inner one is a true subsection.
