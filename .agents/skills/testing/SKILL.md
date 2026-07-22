@@ -5,9 +5,7 @@ description: How to write and run tests for this project (PostPony). Use when ad
 
 # PostPony Testing
 
-This skill captures the project's testing conventions and the non-obvious
-gotchas that cost time and are not discoverable from the code alone. For the
-commands that run the tests, see the `npm-scripts` skill.
+This skill captures the project's testing conventions and the non-obvious gotchas that cost time and are not discoverable from the code alone. For the commands that run the tests, see the `npm-scripts` skill.
 
 ## When to Use This Skill
 
@@ -22,8 +20,7 @@ Use this skill whenever you need to:
 
 Model test data comes from the deep-merge partial builders in
 `src/lib/__test-utils__/builders.ts`: `aSession`, `aPlayer`, `aProposedDate`,
-`aVote`, `aVenue`. Each returns a fully-populated, valid entity and accepts a
-deep-partial override.
+`aVote`, `aVenue`. Each returns a fully-populated, valid entity and accepts a deep-partial override.
 
 - Prefer partial overrides over hand-built literals:
 
@@ -32,15 +29,12 @@ deep-partial override.
   ```
 
 - **Any model change must update the builders in lockstep.**
-  `builders.spec.ts` asserts every required field is present, so builder drift
-  breaks compilation across every consumer. Update `builders.ts` (and its spec)
+  `builders.spec.ts` asserts every required field is present, so builder drift breaks compilation across every consumer. Update `builders.ts` (and its spec)
   in the same change as the model.
 
 ## Route-handler unit tests
 
-Handlers take an `App` (see the `route-handlers` skill), so unit tests build a
-minimal mock `Context`, wrap it with `App.create`, and inject sessions directly
-into the in-memory store. This is the established pattern in
+Handlers take an `App` (see the `route-handlers` skill), so unit tests build a minimal mock `Context`, wrap it with `App.create`, and inject sessions directly into the in-memory store. This is the established pattern in
 `src/routes/edit/id/edit-handlers.spec.ts`:
 
 ```ts
@@ -53,34 +47,36 @@ expect(session.players[0]?.name)
     .toBe('Alice');
 ```
 
-- Copy the `createApp` / `MockOptions` helper from `edit-handlers.spec.ts`; it
-  mocks `param`, `query`, `header`, `parseBody`, `html`, and `redirect`, and
-  returns `'en'` for `LOCALE_KEY` so `app.t(...)` resolves real strings.
-- Assert error paths with `.rejects.toThrow(...)` — handlers signal failures by
-  throwing `AppError`/`StateError` via `app.failure`/`app.notFound`.
-- `app.sessions` is a **static** record shared across `App` instances, so seed
-  it per test; don't rely on isolation between the store and a fresh `App`.
+- Copy the `createApp` / `MockOptions` helper from `edit-handlers.spec.ts`; it mocks `param`, `query`, `header`, `parseBody`, `html`, and `redirect`, and returns `'en'` for `LOCALE_KEY` so `app.t(...)` resolves real strings.
+- Assert error paths with `.rejects.toThrow(...)` — handlers signal failures by throwing `AppError`/`StateError` via `app.failure`/`app.notFound`.
+- `app.sessions` is a **static** record shared across `App` instances, so seed it per test; don't rely on isolation between the store and a fresh `App`.
 
 ## Playwright / a11y tests
 
 - Import `test`/`expect` from `./fixtures` (not `@playwright/test`) to get the
-  `checkA11y` fixture. Call `await checkA11y()` after reaching each significant
-  UI state; it runs axe with the full WCAG 2.0/2.1/2.2 A+AA tag set and fails on
-  any violation. Prefer role/label selectors (`getByRole`, `getByLabel`).
-- **beer.css visually hides native radios/checkboxes**, so `.check()` on the
-  `radio` role fails. Toggle the control via its **label text** instead, scoped
-  to the form so it doesn't match a summary-table header:
+  `checkA11y` fixture. Call `await checkA11y()` after reaching each significant UI state; it runs axe with the full WCAG 2.0/2.1/2.2 A+AA tag set and fails on any violation.
+- **Prefer a11y selectors everywhere.** Use `getByRole`, `getByLabel`, `getByAltText` and `getByTitle` over CSS/id locators.
 
-  ```ts
-  const voteForm = page.locator('form');
-  await voteForm.getByText('Yes', {exact: true}).click();
-  ```
+### beer.css radio/checkbox gotcha
 
-- **Disambiguate headings by level.** The layout renders an `<h1>` brand/logo
-  alongside page `<h2>`s, so `getByRole('heading', {name})` hits strict-mode
-  "2 elements" errors. Always pass `{level: 2}` for page headings.
-- e2e files are type-checked separately under `tsconfig.e2e.json`; a full
-  `npm run lint` validates them (see the `npm-scripts` skill).
+beer.css visually hides native radios/checkboxes, so `.check()` on the `radio`
+role fails. Toggle the control via its **label text** instead, scoped to the form so it doesn't match a summary-table header:
+
+```ts
+const voteForm = page.getByRole('form', {name: 'Vote on Proposed Dates'});
+await voteForm.getByText('Yes', {exact: true})
+    .click();
+```
+
+### Disambiguating headings
+
+The layout renders an `<h1>` brand/logo alongside page `<h2>`s, so
+`getByRole('heading', {name})` hits strict-mode "2 elements" errors. Always pass `{level: 2}` for page headings.
+
+### TypeScript validation
+
+e2e files are type-checked separately under `tsconfig.e2e.json`; a full
+`npm run lint` validates them (see the `npm-scripts` skill).
 
 ## Conventions
 
