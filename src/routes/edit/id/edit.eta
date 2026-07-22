@@ -25,13 +25,13 @@
     <li>
       <div class="max">
         <span><%= it.t('invite_link_home_label') %></span>
-        <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>"><%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %></a>
+        <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>" aria-label="<%= it.t('invite_link_home_label') %>"><%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %></a>
       </div>
     </li>
     <li>
       <div class="max">
         <span><%= it.t('invite_link_away_label') %></span>
-        <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>"><%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %></a>
+        <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>" aria-label="<%= it.t('invite_link_away_label') %>"><%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %></a>
       </div>
     </li>
   </ul>
@@ -68,7 +68,7 @@
       <header>
         <h4><%= it.t('home_team_players') %></h4>
       </header>
-      <ul id="player-list" class="list">
+      <ul id="player-list" class="list" aria-label="<%= it.t('home_team_players') %>">
         <% it.session.players.forEach(player => { %>
           <li>
             <i>person</i>
@@ -91,7 +91,7 @@
       <header>
         <h4><%= it.t('proposed_dates_management') %></h4>
       </header>
-      <ul id="proposed-date-list" class="list">
+      <ul id="proposed-date-list" class="list" aria-label="<%= it.t('proposed_dates_management') %>">
         <% it.proposedDates.forEach(proposedDate => { %>
           <li>
             <i>event</i>
@@ -111,7 +111,7 @@
       </form>
     </section>
 
-    <section id="vote-tally-section" class="padding small-round surface-variant s12">
+    <section id="vote-tally-section" class="padding small-round surface-variant s12" aria-label="<%= it.t('vote_summary') %>">
       <%~ include('../../partials/vote-tally.eta', {...it, headingLevel: 4}) %>
     </section>
   </div>

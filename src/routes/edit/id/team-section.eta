@@ -3,7 +3,7 @@
   <header>
     <h4><%= it.t('home_team_players') %></h4>
   </header>
-  <ul id="player-list" class="list">
+  <ul id="player-list" class="list" aria-label="<%= it.t('home_team_players') %>">
     <% it.players.forEach(function (player) { %>
       <li>
         <i>person</i>

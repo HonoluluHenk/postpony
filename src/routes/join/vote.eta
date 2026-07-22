@@ -16,7 +16,7 @@
 <% } else { %>
   <form method="post"
         action="/join/<%= it.sessionId %>/<%= it.team %>/vote?playerId=<%= it.playerId %>&token=<%= it.token %>"
-        hx-boost="false">
+        hx-boost="false" aria-label="<%= it.t('vote_title') %>">
     <% it.proposedDates.forEach(function (pd) { %>
       <fieldset class="field border">
         <legend><%= pd.display %></legend>

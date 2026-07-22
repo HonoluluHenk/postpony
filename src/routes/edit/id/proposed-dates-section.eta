@@ -3,7 +3,7 @@
   <header>
     <h4><%= it.t('proposed_dates_management') %></h4>
   </header>
-  <ul id="proposed-date-list" class="list">
+  <ul id="proposed-date-list" class="list" aria-label="<%= it.t('proposed_dates_management') %>">
     <% it.proposedDates.forEach(function (proposedDate) { %>
       <li>
         <i>event</i>
@@ -37,6 +37,6 @@
   <% } %>
 </section>
 
-<section id="vote-tally-section" hx-swap-oob="true" class="padding small-round surface-variant s12">
+<section id="vote-tally-section" hx-swap-oob="true" class="padding small-round surface-variant s12" aria-label="<%= it.t('vote_summary') %>">
   <%~ include('../../partials/vote-tally.eta', {...it, headingLevel: 4}) %>
 </section>
