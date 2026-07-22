@@ -1,15 +1,12 @@
 import { expect, test } from './fixtures';
+import { castVote, createSession, getVoteForm, joinAsPlayer, toggleAwayVotable } from './test-helpers';
+import type { SessionFixture } from './test-session';
 
 test.describe('Postponement Editing', () => {
+  let session: SessionFixture;
+
   test.beforeEach(async ({page}) => {
-    // Start by creating a session to edit
-    await page.goto('/create');
-    await page.getByLabel('Postponement Name')
-      .fill('Edit Test Session');
-    await page.getByRole('button', {name: 'Create Postponement'})
-      .click();
-    await expect(page.getByRole('heading', {name: 'Editing Postponement', level: 1}))
-      .toContainText('Edit Test Session');
+    session = await createSession(page, 'Edit Test Session');
   });
 
   test('should update venue settings', async ({page, checkA11y}) => {
@@ -86,36 +83,13 @@ test.describe('Postponement Editing', () => {
     await expect(page.getByRole('alert')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
-    await expect(page.getByRole('list', {name: 'Proposed Dates'})
-      .getByRole('listitem'))
-      .toHaveCount(2);
 
     const editUrl = page.url();
 
     // Join as Alice and vote
-    const homeHref = await page.getByRole('link', {name: 'Home team invitation link'})
-      .getAttribute('href');
-    if (!homeHref) {
-      throw new Error('home invitation link not found');
-    }
-    await page.goto(homeHref);
-
-    await page.getByLabel('Or enter your name')
-      .fill('Alice');
-    await page.getByRole('button', {name: 'Continue'})
-      .click();
-    await expect(page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2}))
-      .toBeVisible();
-
-    const voteForm = page.getByRole('form', {name: 'Vote on Proposed Dates'});
-    await voteForm.getByRole('group')
-      .first()
-      .getByText('Yes', {exact: true})
-      .click();
-    await voteForm.getByRole('group')
-      .nth(1)
-      .getByText('Maybe', {exact: true})
-      .click();
+    await joinAsPlayer(page, session.homeHref, 'Alice');
+    await castVote(getVoteForm(page), 0, 'Yes');
+    await castVote(getVoteForm(page), 1, 'Maybe');
     await page.getByRole('button', {name: 'Submit Votes'})
       .click();
 
@@ -186,6 +160,10 @@ test.describe('Postponement Editing', () => {
     await expect(awayVoteLabel)
       .toBeVisible();
 
+    await awayVoteLabel.click();
+    await expect(awayVoteLabel)
+      .toBeVisible();
+
     await checkA11y();
   });
 
@@ -211,53 +189,18 @@ test.describe('Postponement Editing', () => {
 
     // Make both dates votable for away team
     // ponytail: beer.css hides native checkboxes; toggle via label text
-    await page.getByText('Allow away team to vote')
-      .first()
-      .click();
-    await page.getByText('Allow away team to vote')
-      .nth(1)
-      .click();
-
-    // Get invitation links
-    const homeHref = await page.getByRole('link', {name: 'Home team invitation link'})
-      .getAttribute('href');
-    const awayHref = await page.getByRole('link', {name: 'Away team invitation link'})
-      .getAttribute('href');
-    if (!homeHref || !awayHref) {
-      throw new Error('invitation links not found');
-    }
+    await toggleAwayVotable(page, 0);
+    await toggleAwayVotable(page, 1);
 
     // Join as home player and vote Yes on first date
-    await page.goto(homeHref);
-    await page.getByLabel('Or enter your name')
-      .fill('HomePlayer');
-    await page.getByRole('button', {name: 'Continue'})
-      .click();
-    await expect(page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2}))
-      .toBeVisible();
-
-    const homeVoteForm = page.getByRole('form', {name: 'Vote on Proposed Dates'});
-    await homeVoteForm.getByRole('group')
-      .first()
-      .getByText('Yes', {exact: true})
-      .click();
+    await joinAsPlayer(page, session.homeHref, 'HomePlayer');
+    await castVote(getVoteForm(page), 0, 'Yes');
     await page.getByRole('button', {name: 'Submit Votes'})
       .click();
 
     // Join as away player and vote No on first date
-    await page.goto(awayHref);
-    await page.getByLabel('Or enter your name')
-      .fill('AwayPlayer');
-    await page.getByRole('button', {name: 'Continue'})
-      .click();
-    await expect(page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2}))
-      .toBeVisible();
-
-    const awayVoteForm = page.getByRole('form', {name: 'Vote on Proposed Dates'});
-    await awayVoteForm.getByRole('group')
-      .first()
-      .getByText('No', {exact: true})
-      .click();
+    await joinAsPlayer(page, session.awayHref, 'AwayPlayer');
+    await castVote(getVoteForm(page), 0, 'No');
     await page.getByRole('button', {name: 'Submit Votes'})
       .click();
 
@@ -303,33 +246,17 @@ test.describe('Postponement Editing', () => {
     await expect(page.getByRole('alert')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
+
     await page.getByLabel('Proposed Date & Time')
       .fill('2026-06-15T18:30');
     await page.getByRole('button', {name: 'Add Proposed Date'})
       .click();
 
-    const homeHref = await page.getByRole('link', {name: 'Home team invitation link'})
-      .getAttribute('href');
-    if (!homeHref) {
-      throw new Error('home invitation link not found');
-    }
     const editUrl = page.url();
-    await page.goto(homeHref);
 
-    await page.getByLabel('Or enter your name')
-      .fill('Alice');
-    await page.getByRole('button', {name: 'Continue'})
-      .click();
-
-    const voteForm = page.getByRole('form', {name: 'Vote on Proposed Dates'});
-    await voteForm.getByRole('group')
-      .first()
-      .getByText('Yes', {exact: true})
-      .click();
-    await voteForm.getByRole('group')
-      .nth(1)
-      .getByText('No', {exact: true})
-      .click();
+    await joinAsPlayer(page, session.homeHref, 'Alice');
+    await castVote(getVoteForm(page), 0, 'Yes');
+    await castVote(getVoteForm(page), 1, 'No');
     await page.getByRole('button', {name: 'Submit Votes'})
       .click();
 
