@@ -1,29 +1,27 @@
 import { expect, test } from './fixtures';
+import { StartPage } from './pages';
 
 test.describe('Localization', () => {
   test('should switch language via header links', async ({page, checkA11y}) => {
-    await page.goto('/');
+    const startPage = await new StartPage(page)
+      .goto();
 
     // Check default English
-    await expect(page.getByRole('heading', {level: 2}))
+    await expect(startPage.welcomeHeading)
       .toContainText('Welcome to PostPony');
 
     // Switch to German
-    await page.getByRole('navigation', {name: 'Language selection'})
-      .getByRole('link', {name: 'German'})
-      .click();
+    await startPage.switchLanguage('de');
 
     // Verify German text
-    await expect(page.getByRole('heading', {level: 2}))
+    await expect(startPage.welcomeHeading)
       .toContainText('Willkommen bei PostPony');
 
     // Switch back to English
-    await page.getByRole('navigation', {name: 'Sprachauswahl'})
-      .getByRole('link', {name: 'Englisch'})
-      .click();
+    await startPage.switchLanguage('en');
 
     // Verify English text
-    await expect(page.getByRole('heading', {level: 2}))
+    await expect(startPage.welcomeHeading)
       .toContainText('Welcome to PostPony');
 
     await checkA11y();
@@ -31,9 +29,10 @@ test.describe('Localization', () => {
 
   test('should persist language via query parameter and cookie', async ({page, checkA11y}) => {
     // Navigate with query parameter
+    const startPage = new StartPage(page);
     await page.goto('/?lang=de');
 
-    await expect(page.getByRole('heading', {level: 2}))
+    await expect(startPage.welcomeHeading)
       .toContainText('Willkommen bei PostPony');
 
     // Navigate to another page, language should persist (via cookie)
@@ -45,12 +44,11 @@ test.describe('Localization', () => {
   });
 
   test('should persist language in localStorage', async ({page, checkA11y}) => {
-    await page.goto('/');
+    const startPage = await new StartPage(page)
+      .goto();
 
     // Switch to German
-    await page.getByRole('navigation', {name: 'Language selection'})
-      .getByRole('link', {name: 'German'})
-      .click();
+    await startPage.switchLanguage('de');
 
     // Check localStorage
     const storedLang = await page.evaluate(() => localStorage.getItem('lang'));
@@ -62,8 +60,8 @@ test.describe('Localization', () => {
       .clearCookies();
 
     // Reload page - it should redirect to /lang?lang=de because of localStorage sync
-    await page.goto('/');
-    await expect(page.getByRole('heading', {level: 2}))
+    await startPage.goto();
+    await expect(startPage.welcomeHeading)
       .toContainText('Willkommen bei PostPony');
 
     await checkA11y();

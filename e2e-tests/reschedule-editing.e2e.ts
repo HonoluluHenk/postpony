@@ -1,19 +1,19 @@
 import { expect, test } from './fixtures';
-import { castVote, createSession, getVoteForm, joinAsPlayer, toggleAwayVotable } from './test-helpers';
+import { EditPage, JoinPage } from './pages';
 import type { SessionFixture } from './test-session';
 
 test.describe('Postponement Editing', () => {
   let session: SessionFixture;
 
   test.beforeEach(async ({page}) => {
-    session = await createSession(page, 'Edit Test Session');
+    ({session} = await EditPage.createSession(page, 'Edit Test Session'));
   });
 
   test('should update venue settings', async ({page, checkA11y}) => {
-    const maxOverlapsInput = page.getByLabel('Maximum Overlapping Matches');
+    const editPage = new EditPage(page);
+    const maxOverlapsInput = editPage.maxOverlapsInput;
     await maxOverlapsInput.fill('3');
-    await page.getByRole('button', {name: 'Update Venue Settings'})
-      .click();
+    await editPage.updateVenueButton.click();
 
     // Verify success message
     await expect(page.getByText('Venue settings updated!'))
@@ -25,61 +25,46 @@ test.describe('Postponement Editing', () => {
   });
 
   test('should add players to the home team', async ({page, checkA11y}) => {
-    const playerNameInput = page.getByLabel('New Player Name');
-    await playerNameInput.fill('John Doe');
-    await page.getByRole('button', {name: 'Add Player'})
-      .click();
+    const editPage = new EditPage(page);
+    await editPage.addPlayer('John Doe');
 
     // Verify player is in the list
-    const playerList = page.getByRole('list', {name: 'Home Team Players'});
-    await expect(playerList)
+    await expect(editPage.playerList)
       .toContainText('John Doe');
 
     // Add another player
-    await playerNameInput.fill('Jane Smith');
-    await page.getByRole('button', {name: 'Add Player'})
-      .click();
-    await expect(playerList)
+    await editPage.addPlayer('Jane Smith');
+    await expect(editPage.playerList)
       .toContainText('Jane Smith');
 
     await checkA11y();
   });
 
   test('should add proposed postponement dates', async ({page, checkA11y}) => {
-    const proposedDateTimeInput = page.getByLabel('Proposed Date & Time');
-    await proposedDateTimeInput.fill('2026-03-05T20:00');
-    await page.getByRole('button', {name: 'Add Proposed Date'})
-      .click();
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-03-05T20:00');
 
     // Verify the proposed date is in the list
-    const proposedDateList = page.getByRole('list', {name: 'Proposed Dates'});
-    await expect(proposedDateList)
+    await expect(editPage.proposedDateList)
       .toContainText('2026');
 
     // Add another proposed date
-    await proposedDateTimeInput.fill('2026-03-12T18:30');
-    await page.getByRole('button', {name: 'Add Proposed Date'})
-      .click();
-    await expect(proposedDateList.getByRole('listitem'))
+    await editPage.addProposedDate('2026-03-12T18:30');
+    await expect(editPage.proposedDateList.getByRole('listitem'))
       .toHaveCount(2);
 
     await checkA11y();
   });
 
   test('should show vote tallies on the edit page', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
     // Add proposed dates
-    await page.getByLabel('Proposed Date & Time')
-      .fill('2026-06-01T20:00');
-    await page.getByRole('button', {name: 'Add Proposed Date'})
-      .click();
+    await editPage.addProposedDate('2026-06-01T20:00');
     await expect(page.getByRole('alert')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 
-    await page.getByLabel('Proposed Date & Time')
-      .fill('2026-06-15T18:30');
-    await page.getByRole('button', {name: 'Add Proposed Date'})
-      .click();
+    await editPage.addProposedDate('2026-06-15T18:30');
     await expect(page.getByRole('alert')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
@@ -87,16 +72,17 @@ test.describe('Postponement Editing', () => {
     const editUrl = page.url();
 
     // Join as Alice and vote
-    await joinAsPlayer(page, session.homeHref, 'Alice');
-    await castVote(getVoteForm(page), 0, 'Yes');
-    await castVote(getVoteForm(page), 1, 'Maybe');
-    await page.getByRole('button', {name: 'Submit Votes'})
-      .click();
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+    await joinPage.castVote(0, 'Yes');
+    await joinPage.castVote(1, 'Maybe');
+    await joinPage.submitVotes();
 
     // Return to edit page and check home team tally
     await page.goto(editUrl);
 
-    const homeTally = page.getByRole('region', {name: 'Home Team Votes'});
+    const homeTally = editPage.homeTallySection();
     await expect(homeTally.getByRole('heading', {level: 4}))
       .toContainText('Home Team Votes');
 
@@ -138,49 +124,39 @@ test.describe('Postponement Editing', () => {
   });
 
   test('should toggle away team voting visibility on proposed dates', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
     // Add a proposed date
-    await page.getByLabel('Proposed Date & Time')
-      .fill('2026-03-05T20:00');
-    await page.getByRole('button', {name: 'Add Proposed Date'})
-      .click();
+    await editPage.addProposedDate('2026-03-05T20:00');
     await expect(page.locator('#proposed-date-list')
       .getByRole('listitem'))
       .toHaveCount(1);
 
-    // ponytail: beer.css hides native checkboxes; toggle via label text
-    const awayVoteLabel = page.getByText('Allow away team to vote');
-
     // Toggle it on
-    await awayVoteLabel.click();
-    await expect(awayVoteLabel)
+    await editPage.toggleAwayVotable(0);
+    await expect(editPage.awayVoteToggle(0))
       .toBeVisible();
 
     // Toggle it off
-    await awayVoteLabel.click();
-    await expect(awayVoteLabel)
+    await editPage.toggleAwayVotable(0);
+    await expect(editPage.awayVoteToggle(0))
       .toBeVisible();
 
-    await awayVoteLabel.click();
-    await expect(awayVoteLabel)
+    await editPage.toggleAwayVotable(0);
+    await expect(editPage.awayVoteToggle(0))
       .toBeVisible();
 
     await checkA11y();
   });
 
   test('should show split team tallies on the edit page', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
     // Add proposed dates
-    await page.getByLabel('Proposed Date & Time')
-      .fill('2026-06-01T20:00');
-    await page.getByRole('button', {name: 'Add Proposed Date'})
-      .click();
+    await editPage.addProposedDate('2026-06-01T20:00');
     await expect(page.getByRole('alert')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 
-    await page.getByLabel('Proposed Date & Time')
-      .fill('2026-06-15T18:30');
-    await page.getByRole('button', {name: 'Add Proposed Date'})
-      .click();
+    await editPage.addProposedDate('2026-06-15T18:30');
     await expect(page.getByRole('alert')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
@@ -188,27 +164,27 @@ test.describe('Postponement Editing', () => {
     const editUrl = page.url();
 
     // Make both dates votable for away team
-    // ponytail: beer.css hides native checkboxes; toggle via label text
-    await toggleAwayVotable(page, 0);
-    await toggleAwayVotable(page, 1);
+    await editPage.toggleAwayVotable(0);
+    await editPage.toggleAwayVotable(1);
 
     // Join as home player and vote Yes on first date
-    await joinAsPlayer(page, session.homeHref, 'HomePlayer');
-    await castVote(getVoteForm(page), 0, 'Yes');
-    await page.getByRole('button', {name: 'Submit Votes'})
-      .click();
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('HomePlayer');
+    await joinPage.castVote(0, 'Yes');
+    await joinPage.submitVotes();
 
     // Join as away player and vote No on first date
-    await joinAsPlayer(page, session.awayHref, 'AwayPlayer');
-    await castVote(getVoteForm(page), 0, 'No');
-    await page.getByRole('button', {name: 'Submit Votes'})
-      .click();
+    await joinPage.goto(session.awayHref);
+    await joinPage.join('AwayPlayer');
+    await joinPage.castVote(0, 'No');
+    await joinPage.submitVotes();
 
     // Return to edit page and check split tallies
     await page.goto(editUrl);
 
     // Home Team Votes tally
-    const homeTallySection = page.getByRole('region', {name: 'Home Team Votes'});
+    const homeTallySection = editPage.homeTallySection();
     await expect(homeTallySection.getByRole('heading', {level: 4}))
       .toContainText('Home Team Votes');
     const homeTallyRows = homeTallySection.getByRole('rowgroup')
@@ -220,7 +196,7 @@ test.describe('Postponement Editing', () => {
       .toHaveText('1'); // Yes = 1
 
     // Away Team Votes tally
-    const awayTallySection = page.getByRole('region', {name: 'Away Team Votes'});
+    const awayTallySection = editPage.awayTallySection();
     await expect(awayTallySection.getByRole('heading', {level: 4}))
       .toContainText('Away Team Votes');
     const awayTallyRows = awayTallySection.getByRole('rowgroup')
@@ -239,26 +215,25 @@ test.describe('Postponement Editing', () => {
   });
 
   test('maintains accessibility on the edit page with split tallies visible', async ({page, checkA11y}) => {
-    await page.getByLabel('Proposed Date & Time')
-      .fill('2026-06-01T20:00');
-    await page.getByRole('button', {name: 'Add Proposed Date'})
-      .click();
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
     await expect(page.getByRole('alert')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 
-    await page.getByLabel('Proposed Date & Time')
-      .fill('2026-06-15T18:30');
-    await page.getByRole('button', {name: 'Add Proposed Date'})
-      .click();
+    await editPage.addProposedDate('2026-06-15T18:30');
+    await expect(page.getByRole('alert')
+      .filter({hasText: 'Proposed date added!'}))
+      .toBeVisible();
 
     const editUrl = page.url();
 
-    await joinAsPlayer(page, session.homeHref, 'Alice');
-    await castVote(getVoteForm(page), 0, 'Yes');
-    await castVote(getVoteForm(page), 1, 'No');
-    await page.getByRole('button', {name: 'Submit Votes'})
-      .click();
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+    await joinPage.castVote(0, 'Yes');
+    await joinPage.castVote(1, 'No');
+    await joinPage.submitVotes();
 
     await page.goto(editUrl);
     await checkA11y();

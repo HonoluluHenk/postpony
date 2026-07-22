@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures';
+import { EditPage, ScrapePage } from './pages';
 
 /**
  * Drives the full click-tt.ch scraping drilldown (leagues → groups → teams →
@@ -12,22 +13,25 @@ import { expect, test } from './fixtures';
  * rather than just generic shapes or counts.
  */
 test.describe('Scraping Flow', () => {
+  let scrapePage: ScrapePage;
+
   test.beforeEach(async ({page}) => {
-    await page.goto('/create/scrape');
+    scrapePage = await new ScrapePage(page)
+      .goto();
   });
 
-  test('should list the concrete leagues from the start-page fixture', async ({page, checkA11y}) => {
-    await expect(page.getByRole('heading', {name: 'Choose your league', level: 2}))
+  test('should list the concrete leagues from the start-page fixture', async ({checkA11y}) => {
+    await expect(scrapePage.heading)
       .toBeVisible();
 
     // Concrete leagues from leagues.html.
-    await expect(page.getByRole('link', {name: 'MTTV 2026/27'}))
+    await expect(scrapePage.leagueLink('MTTV 2026/27'))
       .toBeVisible();
-    await expect(page.getByRole('link', {name: 'Nationalliga 2026/27'}))
+    await expect(scrapePage.leagueLink('Nationalliga 2026/27'))
       .toBeVisible();
 
     // The fixture lists exactly 12 leagues.
-    await expect(page.getByRole('listitem'))
+    await expect(scrapePage.listItems)
       .toHaveCount(12);
 
     await checkA11y();
@@ -35,24 +39,22 @@ test.describe('Scraping Flow', () => {
 
   test('should drill down through league, group, team and create a postponement', async ({page, checkA11y}) => {
     // 1. Leagues → pick a league
-    await page.getByRole('link', {name: 'MTTV 2026/27'})
-      .click();
+    await scrapePage.pickLeague('MTTV 2026/27');
 
     // 2. Groups → concrete groups from groups.html, then pick one
-    await expect(page.getByRole('heading', {name: 'Choose your group', level: 2}))
+    await expect(scrapePage.groupsHeading)
       .toBeVisible();
-    await expect(page.getByRole('link', {name: 'HE 1. Liga', exact: true}))
+    await expect(scrapePage.groupLink('HE 1. Liga'))
       .toBeVisible();
-    await expect(page.getByRole('link', {name: 'HE 2. Liga Gr. 1', exact: true}))
+    await expect(scrapePage.groupLink('HE 2. Liga Gr. 1'))
       .toBeVisible();
     // The league-page fixture lists exactly 23 groups.
-    await expect(page.getByRole('listitem'))
+    await expect(scrapePage.listItems)
       .toHaveCount(23);
-    await page.getByRole('link', {name: 'O40 1. Liga', exact: true})
-      .click();
+    await scrapePage.pickGroup('O40 1. Liga');
 
     // 3. Teams → concrete teams from group.html, then pick one
-    await expect(page.getByRole('heading', {name: 'Choose your team', level: 2}))
+    await expect(scrapePage.teamsHeading)
       .toBeVisible();
     for (const team of
       [
@@ -60,29 +62,27 @@ test.describe('Scraping Flow', () => {
         'Solothurn', 'Bern', 'Ostermundigen',
       ])
     {
-      await expect(page.getByRole('link', {name: team, exact: true}))
+      await expect(scrapePage.teamLink(team))
         .toBeVisible();
     }
     // The group-page fixture lists exactly 8 teams.
-    await expect(page.getByRole('listitem'))
+    await expect(scrapePage.listItems)
       .toHaveCount(8);
-    await page.getByRole('link', {name: 'Ostermundigen', exact: true})
-      .click();
+    await scrapePage.pickTeam('Ostermundigen');
 
     // 4. Meetings → concrete rows from team.html
-    await expect(page.getByRole('heading', {name: 'Choose the match to reschedule', level: 2}))
+    await expect(scrapePage.meetingsHeading)
       .toBeVisible();
     // The action column has an accessible (visually-hidden) header.
-    await expect(page.getByRole('columnheader', {name: 'Actions'}))
+    await expect(scrapePage.actionsColumnHeader)
       .toBeAttached();
     // header row + 14 meeting rows (7 first-half + 7 second-half).
-    await expect(page.getByRole('row'))
+    await expect(scrapePage.meetingRows)
       .toHaveCount(15);
 
     // Concrete meetings from the team-page fixture (matched by their date,
     // which uniquely identifies each leg of the schedule).
-    const firstMeeting = page.getByRole('row')
-      .filter({hasText: '29.08.2026'});
+    const firstMeeting = scrapePage.meetingRow('29.08.2026');
     await expect(firstMeeting)
       .toContainText('16:00');
     await expect(firstMeeting)
@@ -90,8 +90,7 @@ test.describe('Scraping Flow', () => {
     await expect(firstMeeting)
       .toContainText('Ostermundigen');
 
-    const returnMeeting = page.getByRole('row')
-      .filter({hasText: '14.01.2027'});
+    const returnMeeting = scrapePage.meetingRow('14.01.2027');
     await expect(returnMeeting)
       .toContainText('Ostermundigen');
     await expect(returnMeeting)
@@ -100,33 +99,31 @@ test.describe('Scraping Flow', () => {
     // 5. Create a postponement from the first meeting
     await Promise.all([
       page.waitForURL(/\/edit\/.+/),
-      page.getByRole('button', {name: 'Create Postponement for this match'})
-        .first()
+      scrapePage.createPostponementButton.first()
         .click(),
     ]);
 
     // 6. We land on the edit screen for the scraped match
-    await expect(page.getByRole('heading', {name: 'Editing Postponement', level: 1}))
+    const editPage = new EditPage(page);
+    await expect(editPage.heading)
       .toBeVisible();
-    await expect(page.getByText('Status:'))
+    await expect(editPage.status)
       .toContainText('Draft');
 
     // 7. The proposed-date field defaults to the original match's date/time.
-    await expect(page.getByLabel('Proposed Date & Time'))
+    await expect(editPage.proposedDateTimeInput)
       .toHaveValue('2026-08-29T16:00');
 
     await checkA11y();
   });
 
-  test('should navigate back from groups to leagues', async ({page, checkA11y}) => {
-    await page.getByRole('link', {name: 'MTTV 2026/27'})
-      .click();
-    await expect(page.getByRole('heading', {name: 'Choose your group', level: 2}))
+  test('should navigate back from groups to leagues', async ({checkA11y}) => {
+    await scrapePage.pickLeague('MTTV 2026/27');
+    await expect(scrapePage.groupsHeading)
       .toBeVisible();
 
-    await page.getByRole('link', {name: 'Back'})
-      .click();
-    await expect(page.getByRole('heading', {name: 'Choose your league', level: 2}))
+    await scrapePage.clickBack();
+    await expect(scrapePage.heading)
       .toBeVisible();
 
     await checkA11y();

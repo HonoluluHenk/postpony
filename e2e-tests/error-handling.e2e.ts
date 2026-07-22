@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures';
+import { CreatePage } from './pages';
 
 test.describe('Error Handling', () => {
   test('should show 404 error page for non-existent session', async ({page, checkA11y}) => {
@@ -34,19 +35,13 @@ test.describe('Error Handling', () => {
 
   test('should show HTMX error for invalid updates in edit page', async ({page, checkA11y}) => {
     // 1. Create a session first
-    await page.goto('/create');
-    await page.getByLabel('Postponement Name')
-      .fill('Error Test Session');
-    await page.getByRole('button', {name: 'Create Postponement'})
-      .click();
-    await page.waitForURL(/\/edit\/.+/);
-
-    const url = page.url();
-    const _sessionId = url.split('/edit/')[1]?.split('?')[0];
+    const createPage = await new CreatePage(page)
+      .goto();
+    await createPage.create('Error Test Session');
 
     // 2. Manually trigger an HTMX request to a non-existent session's sub-route
     await page.evaluate(async () => {
-      const response = await fetch(`/edit/invalid-id/venue`, {
+      const response = await fetch('/edit/invalid-id/venue', {
         method: 'POST',
         headers: {'HX-Request': 'true'},
       });
