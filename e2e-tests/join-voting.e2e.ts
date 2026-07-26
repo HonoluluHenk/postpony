@@ -2,6 +2,23 @@ import { expect, test } from './fixtures';
 import { EditPage, JoinPage } from './pages';
 
 test.describe('Join and Voting', () => {
+  test('shows inline validation error when submitting empty join form', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, 'Join Validation');
+
+    // Submit empty form with no name selection
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.continueButton.click();
+
+    // Error should be visible, focusable, and have alert role
+    const error = page.getByRole('alert')
+      .filter({hasText: 'Please select your name'});
+    await expect(error)
+      .toBeVisible();
+
+    await checkA11y();
+  });
+
   test('lets a new player join, cast and change a vote', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, 'Join Happy Path', ['2026-03-05T20:00']);
 

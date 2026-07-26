@@ -14,7 +14,16 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
   });
 
   if (!player) {
-    app.failure(app.t('join_select_required'), 400);
+    const players = session.players.filter((p) => p.teamId === team);
+    const html = app.render('join/join.eta', {
+      title: app.t('join_title'),
+      sessionId: id,
+      team,
+      token,
+      players,
+      error: app.t('join_select_required'),
+    });
+    return app.c.html(html);
   }
 
   app.sessions[id] = updated;

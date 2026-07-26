@@ -4,13 +4,20 @@
   <h2><%= it.t('join_title') %></h2>
 </header>
 
+<% if (it.error) { %>
+  <div id="join-error" class="error padding white-text" role="alert">
+    <i aria-hidden="true">error</i>
+    <div class="max"><p><%= it.error %></p></div>
+  </div>
+<% } %>
+
 <form method="post" action="/join/<%= it.sessionId %>/<%= it.team %>/register?token=<%= it.token %>" hx-boost="false">
   <% if (it.players.length > 0) { %>
     <fieldset class="field border">
       <legend><%= it.t('join_select_player') %></legend>
       <% it.players.forEach(function (player) { %>
         <label class="radio">
-          <input type="radio" name="playerId" value="<%= player.id %>">
+          <input type="radio" name="playerId" value="<%= player.id %>" aria-required="true">
           <span><%= player.name %></span>
         </label>
       <% }) %>
@@ -19,8 +26,8 @@
     <p><%= it.t('join_or_new') %></p>
   <% } %>
 
-  <div class="field label border">
-    <input type="text" id="newPlayerName" name="newPlayerName" autocomplete="name">
+  <div class="field label border <%= it.error ? 'invalid' : '' %>">
+    <input type="text" id="newPlayerName" name="newPlayerName" autocomplete="name" <%= it.error ? 'aria-invalid="true" aria-describedby="join-error"' : '' %>>
     <label for="newPlayerName"><%= it.t('join_new_player') %></label>
   </div>
 
