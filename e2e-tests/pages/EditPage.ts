@@ -88,6 +88,10 @@ export class EditPage {
     return this.page.getByRole('list', {name: 'Home Team Players'});
   }
 
+  playerItem(name: string): Locator {
+    return this.page.getByText(name);
+  }
+
   get proposedDateTimeInput(): Locator {
     return this.page.getByLabel('Proposed Date & Time');
   }

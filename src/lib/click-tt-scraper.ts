@@ -37,6 +37,10 @@ export interface Team {
   teamtable: string;
 }
 
+export interface PlayerOnTeam {
+  name: string;
+}
+
 export interface Meeting {
   day: string;
   date: string;
@@ -266,4 +270,53 @@ export async function fetchMeetings(
     }
   }
   return meetings;
+}
+
+/**
+ * Scrapes the roster (player list) of a single team from its team page
+ * (`teamPortrait`). The page lists the players in a ranking table with columns
+ * for rank, name, classification, and statistics. Returns an empty array when
+ * the page does not include a roster table.
+ */
+export async function fetchPlayers(
+  championship: string,
+  group: string,
+  teamtable: string,
+  preferredLanguage: ClickTTLanguage = 'German',
+): Promise<PlayerOnTeam[]> {
+  const root = await fetchHtml(buildUrl(TEAM_URL, {teamtable, championship, group, preferredLanguage}));
+
+  const tables = root.querySelectorAll('table.result-set');
+  for (const table of tables) {
+    const headerCells = table.querySelectorAll('th');
+    const hasRankHeader = [...headerCells].some(
+      (cell) => /^(Rang|Rank)$/.test(cell.text.trim()),
+    );
+    if (!hasRankHeader) {
+      continue;
+    }
+
+    // ponytail: O(n) scan per table — the player table has at most ~30 rows.
+    const players: PlayerOnTeam[] = [];
+    const rows = table.querySelectorAll('tr');
+    for (const row of rows) {
+      const cells = row.querySelectorAll('td');
+      if (cells.length < 2) {
+        continue;
+      }
+      const rank = (cells[0]?.text ?? '').trim();
+      // Skip summary rows (Einzel/Doppel/Total) — they have no rank.
+      if (!rank || !/^\d/.test(rank)) {
+        continue;
+      }
+      const name = (cells[1]?.text ?? '').replace(/\u00a0/g, ' ')
+        .trim();
+      if (!name) {
+        continue;
+      }
+      players.push({name: decode(name)});
+    }
+    return players;
+  }
+  return [];
 }

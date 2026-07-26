@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../../lib/crypto-utils';
-import { DEFAULT_CLUB_ID, type RescheduleSession } from '../../../lib/models';
+import { DEFAULT_CLUB_ID, type Player, type RescheduleSession } from '../../../lib/models';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
 
 const MeetingSchema = v.object({
@@ -14,10 +14,21 @@ const MeetingSchema = v.object({
   leagueName: v.optional(v.string(), ''),
   championship: v.optional(v.string(), ''),
   group: v.optional(v.string(), ''),
+  teamName: v.optional(v.string(), ''),
 });
 
+function parsePlayerNames(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.filter((n): n is string => typeof n === 'string' && n.length > 0);
+  }
+  if (typeof raw === 'string' && raw.length > 0) {
+    return [raw];
+  }
+  return [];
+}
+
 export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
-  const body = await app.c.req.parseBody();
+  const body = await app.c.req.parseBody({all: true});
   const validation = v.safeParse(MeetingSchema, body);
   if (!validation.success) {
     app.failure(app.t('missing_param', {name: 'meeting'}));
@@ -30,6 +41,14 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
 
   const name = `${m.homeTeam} vs ${m.guestTeam} – ${m.date}${m.time ? ' ' + m.time : ''}`;
 
+  const playerNames = parsePlayerNames(body['playerName']);
+  const teamId = m.teamName === m.homeTeam ? 'home' : 'away';
+  const players: Player[] = playerNames.map((pn) => ({
+    id: generateId(),
+    name: pn,
+    teamId,
+  }));
+
   const session: RescheduleSession = {
     id,
     clubId: DEFAULT_CLUB_ID,
@@ -38,7 +57,7 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
     invitationPasswordHash: hashPassword(invitationPassword),
     invitationPassword,
     status: 'Draft',
-    players: [],
+    players,
     proposedDates: [],
     votes: [],
     originalMatchDateTime: parseClickTtDateTime(m.date, m.time),

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchGroups, fetchLeagues, fetchMeetings, fetchTeams } from './click-tt-scraper';
+import { fetchGroups, fetchLeagues, fetchMeetings, fetchPlayers, fetchTeams } from './click-tt-scraper';
 import { ClickTTError } from './errors';
 
 
@@ -188,6 +188,28 @@ describe('click-tt-scraper', () => {
               homeTeam: 'Ostermundigen',
               guestTeam: 'Bern',
             },
+          ]),
+        );
+    });
+  });
+
+  describe('fetchPlayers', () => {
+    test('parses the 3 players from the roster table', async () => {
+      const players = await fetchPlayers('MTTV 26/27', '219397', '1732193');
+
+      expect(players.length)
+        .toBe(3);
+    });
+
+    test('parses known player names', async () => {
+      const players = await fetchPlayers('MTTV 26/27', '219397', '1732193');
+
+      expect(players)
+        .toEqual(
+          expect.arrayContaining([
+            {name: 'Linder, Christoph'},
+            {name: 'Schmid, Oliver'},
+            {name: 'Milcu, Sasha'},
           ]),
         );
     });

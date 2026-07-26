@@ -1,5 +1,5 @@
 import type { App } from '../../../app';
-import { fetchMeetings } from '../../../lib/click-tt-scraper';
+import { fetchMeetings, fetchPlayers } from '../../../lib/click-tt-scraper';
 
 export const handleScrapeMeetingsGet = async (app: App): Promise<Response> => {
   const championship = app.c.req.query('championship');
@@ -18,12 +18,16 @@ export const handleScrapeMeetingsGet = async (app: App): Promise<Response> => {
   const groupName = app.c.req.query('groupName') ?? '';
   const teamName = app.c.req.query('teamName') ?? '';
 
-  const meetings = await fetchMeetings(championship, group, teamtable);
+  const [meetings, players] = await Promise.all([
+    fetchMeetings(championship, group, teamtable),
+    fetchPlayers(championship, group, teamtable),
+  ]);
 
   const html = app.render('create/scrape/meetings.eta', {
     title: app.t('scrape_choose_match'),
     isPartial: app.isPartial,
     meetings,
+    players,
     leagueName,
     groupName,
     teamName,
