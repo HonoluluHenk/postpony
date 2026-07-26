@@ -11,7 +11,7 @@ A web app for postponing sports matches. SSR (Hono + Eta + HTMX), no SPA framewo
 
 ## General instructions
 
-* Keep answers short and concise, do not babble.
+* Keep answers short and concise.
 * Keep everything strongly typed (not "stringly").
 * Keep coverage >= 80% for all metrics
 * Implement E2E tests for the happy path and some likely error-paths
