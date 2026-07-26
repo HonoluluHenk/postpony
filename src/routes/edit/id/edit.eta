@@ -31,11 +31,11 @@
 
 <div>
   <header>
-    <h3><%= it.t('scheduling_engine_info') %></h3>
+    <h2><%= it.t('scheduling_engine_info') %></h2>
   </header>
 
   <div id="scheduling-info" class="grid">
-    <section id="venue-management" class="padding small-round surface-variant s12 m4">
+    <section id="venue-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
       <header>
         <h4 tabindex="-1"><%= it.t('venue_management') %></h4>
       </header>
@@ -56,7 +56,7 @@
       </form>
     </section>
 
-    <section id="team-management" class="padding small-round surface-variant s12 m4">
+    <section id="team-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
       <header>
         <h4 tabindex="-1"><%= it.t('players') %></h4>
       </header>
@@ -102,7 +102,7 @@
       </form>
     </section>
 
-    <section id="proposed-dates-management" class="padding small-round surface-variant s12 m4">
+    <section id="proposed-dates-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
       <header>
         <h4 tabindex="-1"><%= it.t('proposed_dates_management') %></h4>
       </header>
@@ -136,11 +136,11 @@
 
   <div id="vote-tally-section" class="grid">
     <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_home') %>">
-      <%~ include('../../partials/vote-tally.eta', {headingLevel: 4, title: it.t('vote_summary_home'), proposedDates: it.homeProposedDates, t: it.t}) %>
+      <%~ include('../../partials/vote-tally.eta', {headingLevel: 3, title: it.t('vote_summary_home'), proposedDates: it.homeProposedDates, t: it.t}) %>
     </section>
 
     <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_away') %>">
-      <%~ include('../../partials/vote-tally.eta', {headingLevel: 4, title: it.t('vote_summary_away'), proposedDates: it.awayProposedDates, t: it.t}) %>
+      <%~ include('../../partials/vote-tally.eta', {headingLevel: 3, title: it.t('vote_summary_away'), proposedDates: it.awayProposedDates, t: it.t}) %>
     </section>
   </div>
 </div>

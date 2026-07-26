@@ -83,7 +83,7 @@ test.describe('Postponement Editing', () => {
     await page.goto(editUrl);
 
     const homeTally = editPage.homeTallySection();
-    await expect(homeTally.getByRole('heading', {level: 4}))
+    await expect(homeTally.getByRole('heading', {level: 3}))
       .toContainText('Home Team Votes');
 
     const homeRows = homeTally.getByRole('rowgroup')
@@ -185,7 +185,7 @@ test.describe('Postponement Editing', () => {
 
     // Home Team Votes tally
     const homeTallySection = editPage.homeTallySection();
-    await expect(homeTallySection.getByRole('heading', {level: 4}))
+    await expect(homeTallySection.getByRole('heading', {level: 3}))
       .toContainText('Home Team Votes');
     const homeTallyRows = homeTallySection.getByRole('rowgroup')
       .last()
@@ -197,7 +197,7 @@ test.describe('Postponement Editing', () => {
 
     // Away Team Votes tally
     const awayTallySection = editPage.awayTallySection();
-    await expect(awayTallySection.getByRole('heading', {level: 4}))
+    await expect(awayTallySection.getByRole('heading', {level: 3}))
       .toContainText('Away Team Votes');
     const awayTallyRows = awayTallySection.getByRole('rowgroup')
       .last()

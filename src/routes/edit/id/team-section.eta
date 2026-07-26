@@ -1,5 +1,5 @@
 <%~ include('../../partials/error-container.eta', {globalError: it.globalError}) %>
-<section id="team-management" class="padding small-round surface-variant s12 m4">
+<section id="team-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
   <header>
     <h4 tabindex="-1"><%= it.t('players') %></h4>
   </header>
@@ -17,13 +17,13 @@
     <input type="hidden" name="teamId" value="home">
     <div class="field label border fill <%= (!it.teamId || it.teamId === 'home') && it.error ? 'invalid' : '' %>">
       <% if ((!it.teamId || it.teamId === 'home') && it.error) { %>
-        <input type="text" id="playerName" name="playerName" value="<%= it.playerName %>">
+        <input type="text" id="playerName" name="playerName" value="<%= it.playerName %>" aria-invalid="true" aria-describedby="playerName-error">
       <% } else { %>
         <input type="text" id="playerName" name="playerName" required>
       <% } %>
       <label for="playerName"><%= it.t('new_player_name') %></label>
       <% if ((!it.teamId || it.teamId === 'home') && it.error) { %>
-        <span class="error" role="alert"><%= it.error %></span>
+        <span id="playerName-error" class="error" role="alert"><%= it.error %></span>
       <% } %>
     </div>
     <div class="right-align">
@@ -44,13 +44,13 @@
       <input type="hidden" name="teamId" value="away">
       <div class="field label border fill <%= it.teamId === 'away' && it.error ? 'invalid' : '' %>">
         <% if (it.teamId === 'away' && it.error) { %>
-          <input type="text" id="playerNameAway" name="playerName" value="<%= it.playerName %>">
+          <input type="text" id="playerNameAway" name="playerName" value="<%= it.playerName %>" aria-invalid="true" aria-describedby="playerNameAway-error">
         <% } else { %>
           <input type="text" id="playerNameAway" name="playerName" required>
         <% } %>
         <label for="playerNameAway"><%= it.t('new_player_name') %></label>
         <% if (it.teamId === 'away' && it.error) { %>
-          <span class="error" role="alert"><%= it.error %></span>
+          <span id="playerNameAway-error" class="error" role="alert"><%= it.error %></span>
         <% } %>
       </div>
       <div class="right-align">

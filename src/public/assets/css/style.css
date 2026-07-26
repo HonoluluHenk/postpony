@@ -149,5 +149,13 @@
     .global-spinner__circle {
       animation: none;
     }
+
+    .skip-link {
+      transition: none;
+    }
+
+    .clipboard-btn {
+      transition: none;
+    }
   }
 }
