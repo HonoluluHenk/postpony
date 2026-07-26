@@ -91,6 +91,13 @@
     font-size: 1.1em;
     opacity: 0.5;
     transition: opacity 0.15s;
+    border: none;
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-family: inherit;
+    display: inline;
+    line-height: inherit;
   }
 
   .clipboard-btn:hover {

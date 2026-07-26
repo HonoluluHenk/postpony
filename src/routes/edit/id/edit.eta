@@ -20,11 +20,11 @@
   <div class="list">
     <div class="row no-wrap items-center gap">
       <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>"><%= it.t('invite_link_home_label') %></a>
-      <i class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" role="button" tabindex="0">content_copy</i>
+      <button class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" type="button"><i>content_copy</i></button>
     </div>
     <div class="row no-wrap items-center gap">
       <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>"><%= it.t('invite_link_away_label') %></a>
-      <i class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" role="button" tabindex="0">content_copy</i>
+      <button class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" type="button"><i>content_copy</i></button>
     </div>
   </div>
 </div>
