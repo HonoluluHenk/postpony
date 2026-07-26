@@ -96,6 +96,32 @@ function initClipboard() {
   });
 }
 
+/**
+ * Moves focus after an HTMX swap to the first heading (h2-h4) in the target,
+ * or to the first [role="alert"] on validation failure.
+ * For boosted navigation, focuses the heading in #main-content.
+ */
+function initFocusManagement() {
+  if (typeof htmx === 'undefined') {
+    return;
+  }
+  document.addEventListener('htmx:afterSettle', (evt) => {
+    const target = evt.detail.target;
+    if (!target || !(target instanceof Element)) return;
+
+    const alert = target.querySelector('[role="alert"]');
+    if (alert && target.closest('#error-container')) {
+      alert.focus();
+      return;
+    }
+
+    const heading = target.querySelector('h2, h3, h4');
+    if (heading) {
+      heading.focus();
+    }
+  });
+}
+
 // main.js is loaded in <head> without defer, so the DOM (including #global-spinner)
 // is not ready yet; construct the spinner once the page has loaded.
 window.addEventListener('load', () => {
@@ -104,4 +130,5 @@ window.addEventListener('load', () => {
   initLanguage();
   initHtmx(spinner);
   initClipboard();
+  initFocusManagement();
 });

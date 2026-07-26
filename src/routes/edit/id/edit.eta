@@ -37,7 +37,7 @@
   <div id="scheduling-info" class="grid">
     <section id="venue-management" class="padding small-round surface-variant s12 m4">
       <header>
-        <h4><%= it.t('venue_management') %></h4>
+        <h4 tabindex="-1"><%= it.t('venue_management') %></h4>
       </header>
       <div>
         <a class="button"
@@ -58,7 +58,7 @@
 
     <section id="team-management" class="padding small-round surface-variant s12 m4">
       <header>
-        <h4><%= it.t('players') %></h4>
+        <h4 tabindex="-1"><%= it.t('players') %></h4>
       </header>
 
       <h5><%= it.t('home_team') %></h5>
@@ -104,7 +104,7 @@
 
     <section id="proposed-dates-management" class="padding small-round surface-variant s12 m4">
       <header>
-        <h4><%= it.t('proposed_dates_management') %></h4>
+        <h4 tabindex="-1"><%= it.t('proposed_dates_management') %></h4>
       </header>
       <ul id="proposed-date-list" class="list" aria-label="<%= it.t('proposed_dates_management') %>">
         <% it.proposedDates.forEach(proposedDate => { %>
