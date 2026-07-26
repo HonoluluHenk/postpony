@@ -114,10 +114,18 @@ test.describe('Scraping Flow', () => {
     await expect(editPage.proposedDateTimeInput)
       .toHaveValue('2026-08-29T16:00');
 
-    // 8. Players scraped from the team roster are prefilled.
+    // 8. Players scraped from both teams' rosters are prefilled.
     // The scraper navigated for Ostermundigen; in the chosen meeting
-    // (29.08.2026) Ostermundigen is the guest team.
+    // (29.08.2026) Ostermundigen is the guest team and Thun is the home team.
+    // Ostermundigen uses team.html fixture, Thun uses team-thun.html — each
+    // has 3 players → 6 total.
+    await expect(editPage.playerItems)
+      .toHaveCount(6);
     for (const name of ['Linder, Christoph', 'Schmid, Oliver', 'Milcu, Sasha']) {
+      await expect(editPage.playerItem(name))
+        .toBeVisible();
+    }
+    for (const name of ['Nemeth, Philippe-Janos', 'Troxler, Roger', 'Wenger, Markus']) {
       await expect(editPage.playerItem(name))
         .toBeVisible();
     }

@@ -58,10 +58,12 @@
 
     <section id="team-management" class="padding small-round surface-variant s12 m4">
       <header>
-        <h4><%= it.t('home_team_players') %></h4>
+        <h4><%= it.t('players') %></h4>
       </header>
-      <ul id="player-list" class="list" aria-label="<%= it.t('home_team_players') %>">
-        <% it.session.players.forEach(player => { %>
+
+      <h5><%= it.t('home_team') %></h5>
+      <ul id="home-player-list" class="list" aria-label="<%= it.t('home_team') %>">
+        <% it.session.players.filter(p => p.teamId === 'home').forEach(player => { %>
           <li>
             <i>person</i>
             <div class="max"><%= player.name %></div>
@@ -69,9 +71,30 @@
         <% }) %>
       </ul>
       <form hx-post="/edit/<%= it.session.id %>/players" hx-target="#team-management" class="mt-4">
+        <input type="hidden" name="teamId" value="home">
         <div class="field label border fill">
           <input type="text" id="playerName" name="playerName" required>
           <label for="playerName"><%= it.t('new_player_name') %></label>
+        </div>
+        <div class="right-align">
+          <button type="submit"><%= it.t('add_player') %></button>
+        </div>
+      </form>
+
+      <h5><%= it.t('away_team') %></h5>
+      <ul id="away-player-list" class="list" aria-label="<%= it.t('away_team') %>">
+        <% it.session.players.filter(p => p.teamId === 'away').forEach(player => { %>
+          <li>
+            <i>person</i>
+            <div class="max"><%= player.name %></div>
+          </li>
+        <% }) %>
+      </ul>
+      <form hx-post="/edit/<%= it.session.id %>/players" hx-target="#team-management" class="mt-4">
+        <input type="hidden" name="teamId" value="away">
+        <div class="field label border fill">
+          <input type="text" id="playerNameAway" name="playerName" required>
+          <label for="playerNameAway"><%= it.t('new_player_name') %></label>
         </div>
         <div class="right-align">
           <button type="submit"><%= it.t('add_player') %></button>

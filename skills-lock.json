@@ -13,6 +13,12 @@
       "skillPath": "skills/hono/SKILL.md",
       "computedHash": "220e5e1b12bbaeec49ec362b6e2262d77632d0536e9758bba9acbbc323fef990"
     },
+    "html": {
+      "source": "stolinski/s-stack",
+      "sourceType": "github",
+      "skillPath": "skills/html/SKILL.md",
+      "computedHash": "ea46c44a2c26af6362feb6618c0e2b4d723953c0c549a511aa7c4cd434772828"
+    },
     "htmx": {
       "source": "mindrally/skills",
       "sourceType": "github",

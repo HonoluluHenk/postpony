@@ -5,6 +5,7 @@ import { Reschedule } from '../../../lib/reschedule';
 
 const PlayerSchema = v.object({
   playerName: v.pipe(v.string(), v.minLength(1, 'Player name is required')),
+  teamId: v.optional(v.picklist(['home', 'away']), 'home'),
 });
 
 export const handleEditPlayersPost = async (app: App): Promise<Response> => {
@@ -14,7 +15,7 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
     app.notFound('Session not found');
   }
 
-  const values = await app.c.req.parseBody();
+  const values = await app.c.req.parseBody({all: true});
   const validation = v.safeParse(PlayerSchema, values);
 
   if (!validation.success) {
@@ -25,6 +26,7 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
         sessionId: session.id,
         players: session.players,
         playerName: (values['playerName'] as string | undefined) ?? '',
+        teamId: (values['teamId'] as string | undefined) ?? 'home',
         error: errors.fields['playerName'],
         globalError: errors.global,
       }), {status: 400});
@@ -33,8 +35,8 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
     return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
   }
 
-  const {playerName} = validation.output;
-  const updated = new Reschedule().addPlayer(session, playerName).session;
+  const {playerName, teamId} = validation.output;
+  const updated = new Reschedule().addPlayer(session, playerName, teamId).session;
   app.sessions[id] = updated;
 
   if (app.isPartial) {

@@ -20,6 +20,9 @@ describe('click-tt-scraper', () => {
   function fixtureForUrl(url: string): string {
     // Team page (lists the team's meetings).
     if (url.includes('teamPortrait')) {
+      if (url.includes('teamtable=1732195')) {
+        return fixture('team-thun.html');
+      }
       return fixture('team.html');
     }
     // Plain group page (lists the teams of a group).

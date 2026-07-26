@@ -87,6 +87,10 @@ function queryParam(href: string, name: string): string | null {
  */
 function fixtureNameForUrl(url: string): string {
   if (url.includes('teamPortrait')) {
+    const teamtable = queryParam(url, 'teamtable');
+    if (teamtable === '1732195') {
+      return 'team-thun.html';
+    }
     return 'team.html';
   }
   if (url.includes('groupPage')) {

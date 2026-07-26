@@ -1,5 +1,6 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
+import { fetchPlayers } from '../../../lib/click-tt-scraper';
 import { generateId, generateRandomPassword, hashPassword } from '../../../lib/crypto-utils';
 import { DEFAULT_CLUB_ID, type Player, type RescheduleSession } from '../../../lib/models';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
@@ -15,6 +16,7 @@ const MeetingSchema = v.object({
   championship: v.optional(v.string(), ''),
   group: v.optional(v.string(), ''),
   teamName: v.optional(v.string(), ''),
+  opponentTeamtable: v.optional(v.string(), ''),
 });
 
 function parsePlayerNames(raw: unknown): string[] {
@@ -25,6 +27,10 @@ function parsePlayerNames(raw: unknown): string[] {
     return [raw];
   }
   return [];
+}
+
+function makePlayer(name: string, teamId: 'home' | 'away'): Player {
+  return {id: generateId(), name, teamId};
 }
 
 export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
@@ -41,13 +47,17 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
 
   const name = `${m.homeTeam} vs ${m.guestTeam} – ${m.date}${m.time ? ' ' + m.time : ''}`;
 
-  const playerNames = parsePlayerNames(body['playerName']);
-  const teamId = m.teamName === m.homeTeam ? 'home' : 'away';
-  const players: Player[] = playerNames.map((pn) => ({
-    id: generateId(),
-    name: pn,
-    teamId,
-  }));
+  const selectedTeamPlayers = parsePlayerNames(body['playerName']);
+  const selectedTeamId: 'home' | 'away' = m.teamName === m.homeTeam ? 'home' : 'away';
+  const players: Player[] = selectedTeamPlayers.map((pn) => makePlayer(pn, selectedTeamId));
+
+  const opponentTeamId: 'home' | 'away' = selectedTeamId === 'home' ? 'away' : 'home';
+  if (m.opponentTeamtable) {
+    const opponentPlayers = await fetchPlayers(m.championship, m.group, m.opponentTeamtable);
+    for (const op of opponentPlayers) {
+      players.push(makePlayer(op.name, opponentTeamId));
+    }
+  }
 
   const session: RescheduleSession = {
     id,

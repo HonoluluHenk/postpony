@@ -76,20 +76,24 @@ export class EditPage {
     return this.page.getByRole('button', {name: 'Update Venue Settings'});
   }
 
-  get playerNameInput(): Locator {
-    return this.page.getByLabel('New Player Name');
-  }
-
-  get addPlayerButton(): Locator {
-    return this.page.getByRole('button', {name: 'Add Player'});
-  }
-
-  get playerList(): Locator {
-    return this.page.getByRole('list', {name: 'Home Team Players'});
+  get playerItems(): Locator {
+    return this.page.locator('#team-management .list li');
   }
 
   playerItem(name: string): Locator {
-    return this.page.getByText(name);
+    return this.page.getByText(name)
+      .first();
+  }
+
+  async addPlayer(name: string, team: 'home' | 'away' = 'home'): Promise<void> {
+    const form = this.page.locator('form[hx-post*="/players"]')
+      .filter({
+        has: this.page.locator(`input[name="teamId"][value="${team}"]`),
+      });
+    await form.getByLabel('New Player Name')
+      .fill(name);
+    await form.getByRole('button', {name: 'Add Player'})
+      .click();
   }
 
   get proposedDateTimeInput(): Locator {
@@ -129,11 +133,6 @@ export class EditPage {
   async updateVenueSettings(maxOverlaps: string): Promise<void> {
     await this.maxOverlapsInput.fill(maxOverlaps);
     await this.updateVenueButton.click();
-  }
-
-  async addPlayer(name: string): Promise<void> {
-    await this.playerNameInput.fill(name);
-    await this.addPlayerButton.click();
   }
 
   async addProposedDate(dt: string): Promise<void> {

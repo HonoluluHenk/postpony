@@ -42,6 +42,7 @@
                 <input type="hidden" name="championship" value="<%= it.championship %>">
                 <input type="hidden" name="group" value="<%= it.group %>">
                 <input type="hidden" name="teamName" value="<%= it.teamName %>">
+                <input type="hidden" name="opponentTeamtable" value="<%= m.opponentTeamtable %>">
                 <% for (let j = 0; j < (it.players || []).length; j++) { %>
                   <input type="hidden" name="playerName" value="<%= it.players[j].name %>">
                 <% } %>

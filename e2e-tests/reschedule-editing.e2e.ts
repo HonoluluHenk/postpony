@@ -29,13 +29,13 @@ test.describe('Postponement Editing', () => {
     await editPage.addPlayer('John Doe');
 
     // Verify player is in the list
-    await expect(editPage.playerList)
-      .toContainText('John Doe');
+    await expect(editPage.playerItem('John Doe'))
+      .toBeVisible();
 
     // Add another player
     await editPage.addPlayer('Jane Smith');
-    await expect(editPage.playerList)
-      .toContainText('Jane Smith');
+    await expect(editPage.playerItem('Jane Smith'))
+      .toBeVisible();
 
     await checkA11y();
   });

@@ -1,10 +1,12 @@
 <%~ include('../../partials/error-container.eta', {globalError: it.globalError}) %>
 <section id="team-management" class="padding small-round surface-variant s12 m4">
   <header>
-    <h4><%= it.t('home_team_players') %></h4>
+    <h4><%= it.t('players') %></h4>
   </header>
-  <ul id="player-list" class="list" aria-label="<%= it.t('home_team_players') %>">
-    <% it.players.forEach(function (player) { %>
+
+  <h5><%= it.t('home_team') %></h5>
+  <ul id="home-player-list" class="list" aria-label="<%= it.t('home_team') %>">
+    <% it.players.filter(function (p) { return p.teamId === 'home'; }).forEach(function (player) { %>
       <li>
         <i>person</i>
         <div class="max"><%= player.name %></div>
@@ -12,14 +14,15 @@
     <% }) %>
   </ul>
   <form hx-post="/edit/<%= it.sessionId %>/players" hx-target="#team-management" class="mt-4">
-    <div class="field label border fill <%= it.error ? 'invalid' : '' %>">
-      <% if (it.error) { %>
+    <input type="hidden" name="teamId" value="home">
+    <div class="field label border fill <%= (!it.teamId || it.teamId === 'home') && it.error ? 'invalid' : '' %>">
+      <% if ((!it.teamId || it.teamId === 'home') && it.error) { %>
         <input type="text" id="playerName" name="playerName" value="<%= it.playerName %>">
       <% } else { %>
         <input type="text" id="playerName" name="playerName" required>
       <% } %>
       <label for="playerName"><%= it.t('new_player_name') %></label>
-      <% if (it.error) { %>
+      <% if ((!it.teamId || it.teamId === 'home') && it.error) { %>
         <span class="error" role="alert"><%= it.error %></span>
       <% } %>
     </div>
@@ -27,4 +30,31 @@
       <button type="submit"><%= it.t('add_player') %></button>
     </div>
   </form>
-</section>
+
+  <h5><%= it.t('away_team') %></h5>
+    <ul id="away-player-list" class="list" aria-label="<%= it.t('away_team') %>">
+      <% it.players.filter(function (p) { return p.teamId === 'away'; }).forEach(function (player) { %>
+        <li>
+          <i>person</i>
+          <div class="max"><%= player.name %></div>
+        </li>
+      <% }) %>
+    </ul>
+    <form hx-post="/edit/<%= it.sessionId %>/players" hx-target="#team-management" class="mt-4">
+      <input type="hidden" name="teamId" value="away">
+      <div class="field label border fill <%= it.teamId === 'away' && it.error ? 'invalid' : '' %>">
+        <% if (it.teamId === 'away' && it.error) { %>
+          <input type="text" id="playerNameAway" name="playerName" value="<%= it.playerName %>">
+        <% } else { %>
+          <input type="text" id="playerNameAway" name="playerName" required>
+        <% } %>
+        <label for="playerNameAway"><%= it.t('new_player_name') %></label>
+        <% if (it.teamId === 'away' && it.error) { %>
+          <span class="error" role="alert"><%= it.error %></span>
+        <% } %>
+      </div>
+      <div class="right-align">
+        <button type="submit"><%= it.t('add_player') %></button>
+      </div>
+    </form>
+  </section>

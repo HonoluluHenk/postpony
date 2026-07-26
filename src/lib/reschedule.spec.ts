@@ -21,12 +21,22 @@ class FakeReschedule extends Reschedule {
 describe('reschedule', () => {
 
   describe('addPlayer', () => {
-    test('adds a home-team player and returns the new session and player', () => {
+    test('defaults to home team', () => {
       const before = aSession();
       const {session, player} = new FakeReschedule().addPlayer(before, 'Alice');
 
       expect(player)
         .toEqual({id: 'id-1', name: 'Alice', teamId: 'home'});
+      expect(session.players)
+        .toEqual([player]);
+    });
+
+    test('adds an away-team player when specified', () => {
+      const before = aSession();
+      const {session, player} = new FakeReschedule().addPlayer(before, 'Bob', 'away');
+
+      expect(player)
+        .toEqual({id: 'id-1', name: 'Bob', teamId: 'away'});
       expect(session.players)
         .toEqual([player]);
     });

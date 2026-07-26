@@ -72,12 +72,13 @@ export class Reschedule {
   addPlayer(
     session: RescheduleSession,
     name: string,
+    teamId: Team = 'home',
   ): {
     session: RescheduleSession;
     player: Player
   }
   {
-    const player: Player = {id: this.newId(), name, teamId: 'home'};
+    const player: Player = {id: this.newId(), name, teamId};
     return {session: {...session, players: [...session.players, player]}, player};
   }
 
