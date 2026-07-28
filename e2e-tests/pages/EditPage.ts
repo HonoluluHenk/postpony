@@ -21,11 +21,11 @@ export class EditPage {
       .goto();
     const editPage = await createPage.create(name ?? 'Test Session');
 
-    for (const dt of dates ?? []) {
+    for (const [i, dt] of (dates ?? []).entries()) {
       await editPage.proposedDateTimeInput.fill(dt);
       await editPage.addProposedDateButton.click();
       await expect(editPage.proposedDateList.getByRole('listitem'))
-        .toHaveCount(1);
+        .toHaveCount(i + 1);
     }
 
     const homeHref = await editPage.homeInviteLink.getAttribute('href');

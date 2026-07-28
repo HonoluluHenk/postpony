@@ -165,6 +165,8 @@ test.describe('Postponement Editing', () => {
 
     // Make both dates votable for away team
     await editPage.toggleAwayVotable(0);
+    await expect(editPage.awayVoteToggle(0))
+      .toBeVisible();
     await editPage.toggleAwayVotable(1);
 
     // Join as home player and vote Yes on first date
@@ -172,12 +174,14 @@ test.describe('Postponement Editing', () => {
       .goto(session.homeHref);
     await joinPage.join('HomePlayer');
     await joinPage.castVote(0, 'Yes');
+    await joinPage.castVote(1, 'No');
     await joinPage.submitVotes();
 
     // Join as away player and vote No on first date
     await joinPage.goto(session.awayHref);
     await joinPage.join('AwayPlayer');
     await joinPage.castVote(0, 'No');
+    await joinPage.castVote(1, 'Yes');
     await joinPage.submitVotes();
 
     // Return to edit page and check split tallies
