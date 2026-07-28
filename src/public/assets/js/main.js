@@ -97,27 +97,30 @@ function initClipboard() {
 }
 
 /**
- * Moves focus after an HTMX swap to the first heading (h2-h4) in the target,
- * or to the first [role="alert"] on validation failure.
- * For boosted navigation, focuses the heading in #main-content.
+ * Focuses a heading inside the swap target, or the error alert when validation fails.
+ * Called from hx-on::after-request on forms that trigger partial swaps.
+ * @param {string} targetSelector - CSS selector for the swap target element
  */
 function initFocusManagement() {
-  if (typeof htmx === 'undefined') {
-    return;
-  }
-  document.addEventListener('htmx:afterSettle', (evt) => {
-    const target = evt.detail.target;
-    if (!target || !(target instanceof Element)) return;
+  document.addEventListener('htmx:afterSettle', function (evt) {
+    var el = evt.target;
+    if (!el || el.nodeType !== 1) return;
 
-    const alert = target.querySelector('[role="alert"]');
-    if (alert && target.closest('#error-container')) {
-      alert.focus();
+    if (el.matches('#main-content')) {
+      var h = el.querySelector('h2, h3, h4');
+      if (h) {
+        h.setAttribute('tabindex', '-1');
+        h.focus();
+      }
       return;
     }
 
-    const heading = target.querySelector('h2, h3, h4');
-    if (heading) {
-      heading.focus();
+    if (el.matches('#team-management, #venue-management, #proposed-dates-management')) {
+      var heading = el.querySelector('h2, h3, h4');
+      if (heading) {
+        heading.setAttribute('tabindex', '-1');
+        heading.focus();
+      }
     }
   });
 }

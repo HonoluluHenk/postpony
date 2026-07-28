@@ -27,7 +27,7 @@
   <% } %>
 
   <div class="field label border <%= it.error ? 'invalid' : '' %>">
-    <input type="text" id="newPlayerName" name="newPlayerName" autocomplete="name" <%= it.error ? 'aria-invalid="true" aria-describedby="join-error"' : '' %>>
+    <input type="text" id="newPlayerName" name="newPlayerName" autocomplete="name"<% if (it.error) { %> aria-invalid="true" aria-describedby="join-error"<% } %>>
     <label for="newPlayerName"><%= it.t('join_new_player') %></label>
   </div>
 

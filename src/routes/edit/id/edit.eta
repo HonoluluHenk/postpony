@@ -45,7 +45,7 @@
           <%= it.t('scrape_start_wizard') %>
         </a>
       </div>
-      <form hx-post="/edit/<%= it.session.id %>/venue" hx-target="#venue-management">
+      <form hx-post="/edit/<%= it.session.id %>/venue" hx-target="#venue-management" hx-on::after-request="focusAfterSwap('#venue-management')">
         <div class="field label border fill">
           <input type="number" id="maxOverlaps" name="maxOverlaps" value="<%= it.session.maxOverlaps || '' %>" min="0">
           <label for="maxOverlaps"><%= it.t('max_overlaps') %></label>
@@ -70,7 +70,7 @@
           </li>
         <% }) %>
       </ul>
-      <form hx-post="/edit/<%= it.session.id %>/players" hx-target="#team-management" class="mt-4">
+      <form hx-post="/edit/<%= it.session.id %>/players" hx-target="#team-management" class="mt-4" hx-on::after-request="focusAfterSwap('#team-management')">
         <input type="hidden" name="teamId" value="home">
         <div class="field label border fill">
           <input type="text" id="playerName" name="playerName" required>
@@ -90,7 +90,7 @@
           </li>
         <% }) %>
       </ul>
-      <form hx-post="/edit/<%= it.session.id %>/players" hx-target="#team-management" class="mt-4">
+      <form hx-post="/edit/<%= it.session.id %>/players" hx-target="#team-management" class="mt-4" hx-on::after-request="focusAfterSwap('#team-management')">
         <input type="hidden" name="teamId" value="away">
         <div class="field label border fill">
           <input type="text" id="playerNameAway" name="playerName" required>
@@ -121,7 +121,7 @@
           </li>
         <% }) %>
       </ul>
-      <form hx-post="/edit/<%= it.session.id %>/proposed-dates" hx-target="#proposed-dates-management" class="mt-4">
+      <form hx-post="/edit/<%= it.session.id %>/proposed-dates" hx-target="#proposed-dates-management" class="mt-4" hx-on::after-request="focusAfterSwap('#proposed-dates-management')">
         <div class="field label border fill">
           <input type="datetime-local" id="proposedDateTime" name="proposedDateTime"
                  value="<%= it.session.originalMatchDateTime || '' %>" required lang="de">

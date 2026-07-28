@@ -152,7 +152,7 @@ describe('join handlers', () => {
         .toContain('playerId=home-1');
     });
 
-    test('throws when neither a name nor a selection is provided', async () => {
+    test('returns the join form with an inline error when neither a name nor a selection is provided', async () => {
       const session = seedSession();
       const app = createApp({
         params: {id: session.id, team: 'home'},
@@ -161,9 +161,17 @@ describe('join handlers', () => {
       });
       app.sessions[session.id] = session;
 
-      await expect(handleJoinRegisterPost(app))
-        .rejects
-        .toThrow('Please select your name or enter a new one.');
+      const response = await handleJoinRegisterPost(app);
+      const body = await response.text();
+
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain('Please select your name or enter a new one.');
+      expect(body)
+        .toContain('role="alert"');
+      expect(body)
+        .toContain('aria-invalid="true"');
     });
 
     test('throws when the token is wrong', async () => {
