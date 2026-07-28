@@ -45,7 +45,7 @@
     <% } %>
   </form>
 
-  <section role="region" aria-label="<%= it.t('vote_summary') %>">
+  <section aria-label="<%= it.t('vote_summary') %>">
     <%~ include('../partials/vote-tally.eta', {...it, headingLevel: 3}) %>
   </section>
 <% } %>

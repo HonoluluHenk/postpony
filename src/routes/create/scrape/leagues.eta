@@ -8,7 +8,7 @@
   <% if (!it.leagues || it.leagues.length === 0) { %>
     <p><%= it.t('scrape_no_leagues') %></p>
   <% } else { %>
-    <ul class="list border" role="list">
+    <ul class="list border">
       <% for (const league of it.leagues) { %>
         <li>
           <% const groupsQuery = `championship=${encodeURIComponent(league.championship)}&leagueName=${encodeURIComponent(league.name)}` %>

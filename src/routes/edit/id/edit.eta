@@ -17,16 +17,16 @@
 
 <div>
   <p><%= it.t('invite_link_label') %></p>
-  <div class="list">
-    <div class="row no-wrap items-center gap">
+  <ul class="list">
+    <li class="row no-wrap items-center gap">
       <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>"><%= it.t('invite_link_home_label') %></a>
       <button class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" type="button"><i>content_copy</i></button>
-    </div>
-    <div class="row no-wrap items-center gap">
+    </li>
+    <li class="row no-wrap items-center gap">
       <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>"><%= it.t('invite_link_away_label') %></a>
       <button class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" type="button"><i>content_copy</i></button>
-    </div>
-  </div>
+    </li>
+  </ul>
 </div>
 
 <div>
@@ -37,7 +37,7 @@
   <div id="scheduling-info" class="grid">
     <section id="venue-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
       <header>
-        <h4 tabindex="-1"><%= it.t('venue_management') %></h4>
+        <h3 tabindex="-1"><%= it.t('venue_management') %></h3>
       </header>
       <div>
         <a class="button"
@@ -58,7 +58,7 @@
 
     <section id="team-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
       <header>
-        <h4 tabindex="-1"><%= it.t('players') %></h4>
+        <h3 tabindex="-1"><%= it.t('players') %></h3>
       </header>
 
       <h5><%= it.t('home_team') %></h5>
@@ -104,7 +104,7 @@
 
     <section id="proposed-dates-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
       <header>
-        <h4 tabindex="-1"><%= it.t('proposed_dates_management') %></h4>
+        <h3 tabindex="-1"><%= it.t('proposed_dates_management') %></h3>
       </header>
       <ul id="proposed-date-list" class="list" aria-label="<%= it.t('proposed_dates_management') %>">
         <% it.proposedDates.forEach(proposedDate => { %>

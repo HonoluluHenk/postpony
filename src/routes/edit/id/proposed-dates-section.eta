@@ -1,7 +1,7 @@
 <%~ include('../../partials/error-container.eta', {globalError: it.globalError}) %>
 <section id="proposed-dates-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
   <header>
-    <h4 tabindex="-1"><%= it.t('proposed_dates_management') %></h4>
+    <h3 tabindex="-1"><%= it.t('proposed_dates_management') %></h3>
   </header>
   <ul id="proposed-date-list" class="list" aria-label="<%= it.t('proposed_dates_management') %>">
     <% it.proposedDates.forEach(function (proposedDate) { %>

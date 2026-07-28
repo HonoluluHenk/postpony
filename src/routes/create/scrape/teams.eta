@@ -12,7 +12,7 @@
   <% if (!it.teams || it.teams.length === 0) { %>
     <p><%= it.t('scrape_no_teams') %></p>
   <% } else { %>
-    <ul class="list border" role="list">
+    <ul class="list border">
       <% for (const team of it.teams) { %>
         <li>
           <% const meetingsQuery = `championship=${encodeURIComponent(team.championship)}&group=${encodeURIComponent(team.group)}&teamtable=${encodeURIComponent(team.teamtable)}&teamName=${encodeURIComponent(team.name)}&groupName=${encodeURIComponent(it.groupName || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>

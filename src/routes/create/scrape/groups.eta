@@ -9,7 +9,7 @@
   <% if (!it.groups || it.groups.length === 0) { %>
     <p><%= it.t('scrape_no_groups') %></p>
   <% } else { %>
-    <ul class="list border" role="list">
+    <ul class="list border">
       <% for (const group of it.groups) { %>
         <li>
           <% const teamsQuery = `championship=${encodeURIComponent(group.championship)}&group=${encodeURIComponent(group.group)}&groupName=${encodeURIComponent(group.name)}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>

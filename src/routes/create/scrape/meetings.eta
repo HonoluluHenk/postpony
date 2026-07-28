@@ -12,7 +12,8 @@
   <% if (!it.meetings || it.meetings.length === 0) { %>
     <p><%= it.t('scrape_no_meetings') %></p>
   <% } else { %>
-    <table class="border" role="table">
+    <table class="border">
+      <caption><%= it.t('scrape_choose_match') %></caption>
       <thead>
         <tr>
           <th scope="col"><%= it.t('scrape_match_date') %></th>

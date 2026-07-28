@@ -1,6 +1,7 @@
 <% if (it.proposedDates.length > 0) { %>
   <h<%= it.headingLevel || 3 %>><%= it.title || it.t('vote_summary') %></h<%= it.headingLevel || 3 %>>
   <table>
+    <caption><%= it.title || it.t('vote_summary') %></caption>
     <thead>
       <tr>
         <th scope="col"><%= it.t('proposed_date_time_label') %></th>

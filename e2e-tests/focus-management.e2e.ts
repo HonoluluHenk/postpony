@@ -7,7 +7,7 @@ test.describe('Focus management after HTMX swaps', () => {
     await EditPage.createSession(page, 'Focus Test');
     await editPage.addPlayer('Alice');
 
-    await expect(page.locator('#team-management h4')).toBeFocused();
+    await expect(page.locator('#team-management h3')).toBeFocused();
     await checkA11y();
   });
 
@@ -16,7 +16,7 @@ test.describe('Focus management after HTMX swaps', () => {
     await EditPage.createSession(page, 'Focus Test');
     await editPage.addProposedDate('2026-03-05T20:00');
 
-    await expect(page.locator('#proposed-dates-management h4')).toBeFocused();
+    await expect(page.locator('#proposed-dates-management h3')).toBeFocused();
     await checkA11y();
   });
 
@@ -26,7 +26,7 @@ test.describe('Focus management after HTMX swaps', () => {
     await editPage.maxOverlapsInput.fill('3');
     await editPage.updateVenueButton.click();
 
-    await expect(page.locator('#venue-management h4')).toBeFocused();
+    await expect(page.locator('#venue-management h3')).toBeFocused();
     await checkA11y();
   });
 
