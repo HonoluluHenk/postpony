@@ -88,7 +88,7 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
     },
   };
 
-  app.sessions[id] = session;
+  await app.store.save(session);
 
   const redirectUrl = `/edit/${id}?ownerPassword=${ownerPassword}`;
   if (app.isPartial) {

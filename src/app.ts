@@ -4,9 +4,9 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import path from 'node:path';
 import config from './config';
 import { AppError, InternalError, StateError } from './lib/errors';
-import type { RescheduleSession } from './lib/models';
 import { defaultLocale, getTranslation, LOCALE_KEY, type Locale, type TranslationKeys } from './locales';
 import { Timestamp } from './lib/timestamp';
+import { type SessionStore, MemorySessionStore } from './lib/session-store';
 
 export const eta = new Eta({views: path.join(process.cwd(), 'src/routes')});
 
@@ -15,26 +15,26 @@ export class App {
 
   readonly locale: Locale;
 
+  readonly store: SessionStore;
+
   private constructor(
     readonly isPartial: boolean,
     readonly c: Context,
+    store: SessionStore,
   )
   {
+    this.store = store;
     this.locale = (c.get(LOCALE_KEY) as Locale | undefined) ?? defaultLocale;
   }
 
-  static create(c: Context): App {
+  static create(c: Context, store?: SessionStore): App {
     const partial = !!c.req.header('HX-Request');
-    return new App(partial, c);
+    return new App(partial, c, store ?? new MemorySessionStore());
   }
 
   t(key: TranslationKeys, params: Record<string, string> = {}): string {
     return getTranslation(this.locale, key, params);
   }
-
-  private static readonly sessions: Record<string, RescheduleSession> = {};
-
-  readonly sessions: Record<string, RescheduleSession> = App.sessions;
 
   render(template: string, data: object): string {
     const url = new URL(this.c.req.url);

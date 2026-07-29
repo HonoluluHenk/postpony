@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
 import { LOCALE_KEY } from '../../../locales';
+import { MemorySessionStore } from '../../../lib/session-store';
 import { handleEditPlayersPost } from './players-post';
 import { handleEditProposedDatesPost } from './proposed-dates-post';
 import { handleEditVenuePost } from './venue-post';
@@ -15,6 +16,7 @@ interface MockOptions {
 
 function createApp(options: MockOptions = {}): App {
   const {params = {}, queries = {}, headers = {}, body = {}} = options;
+  const store = new MemorySessionStore();
   const context = {
     get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en' : undefined),
     req: {
@@ -28,7 +30,7 @@ function createApp(options: MockOptions = {}): App {
     redirect: vi.fn((url: string) => new Response(null, {status: 302, headers: {Location: url}})),
   } as any;
 
-  return App.create(context);
+  return App.create(context, store);
 }
 
 describe('edit handlers', () => {
@@ -45,11 +47,11 @@ describe('edit handlers', () => {
     test('adds a player to a session that has none', async () => {
       const session = aSession();
       const app = createApp({params: {id: session.id}, body: {playerName: 'Alice'}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       await handleEditPlayersPost(app);
 
-      const stored = app.sessions[session.id];
+      const stored = await app.store.get(session.id);
       expect(stored?.players)
         .toHaveLength(1);
       expect(stored?.players[0]?.name)
@@ -61,11 +63,11 @@ describe('edit handlers', () => {
     test('appends to the existing players', async () => {
       const session = aSession({players: [aPlayer()]});
       const app = createApp({params: {id: session.id}, body: {playerName: 'Bob'}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       await handleEditPlayersPost(app);
 
-      const stored = app.sessions[session.id];
+      const stored = await app.store.get(session.id);
       expect(stored?.players)
         .toHaveLength(2);
       expect(stored?.players[1]?.name)
@@ -75,11 +77,12 @@ describe('edit handlers', () => {
     test('redirects without adding a player when the name is missing', async () => {
       const session = aSession();
       const app = createApp({params: {id: session.id}, body: {}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleEditPlayersPost(app);
 
-      expect(app.sessions[session.id]?.players)
+      const stored = await app.store.get(session.id);
+      expect(stored?.players)
         .toHaveLength(0);
       expect(response.status)
         .toBe(302);
@@ -98,11 +101,11 @@ describe('edit handlers', () => {
     test('adds a proposed date to the session', async () => {
       const session = aSession();
       const app = createApp({params: {id: session.id}, body: {proposedDateTime: '2025-09-01T20:00'}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       await handleEditProposedDatesPost(app);
 
-      const stored = app.sessions[session.id];
+      const stored = await app.store.get(session.id);
       expect(stored?.proposedDates)
         .toHaveLength(1);
       const proposedDate = stored?.proposedDates[0];
@@ -117,22 +120,24 @@ describe('edit handlers', () => {
     test('appends to the existing proposed dates', async () => {
       const session = aSession({proposedDates: [aProposedDate()]});
       const app = createApp({params: {id: session.id}, body: {proposedDateTime: '2025-09-02T18:30'}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       await handleEditProposedDatesPost(app);
 
-      expect(app.sessions[session.id]?.proposedDates)
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates)
         .toHaveLength(2);
     });
 
     test('redirects without adding when the datetime is invalid', async () => {
       const session = aSession();
       const app = createApp({params: {id: session.id}, body: {proposedDateTime: 'not-a-date'}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleEditProposedDatesPost(app);
 
-      expect(app.sessions[session.id]?.proposedDates)
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates)
         .toHaveLength(0);
       expect(response.status)
         .toBe(302);
@@ -151,22 +156,24 @@ describe('edit handlers', () => {
     test('sets maxOverlaps on the session', async () => {
       const session = aSession();
       const app = createApp({params: {id: session.id}, body: {maxOverlaps: '3'}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       await handleEditVenuePost(app);
 
-      expect(app.sessions[session.id]?.maxOverlaps)
+      const stored = await app.store.get(session.id);
+      expect(stored?.maxOverlaps)
         .toBe(3);
     });
 
     test('clears maxOverlaps when the field is empty', async () => {
       const session = aSession({maxOverlaps: 5});
       const app = createApp({params: {id: session.id}, body: {maxOverlaps: ''}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       await handleEditVenuePost(app);
 
-      expect(app.sessions[session.id]?.maxOverlaps)
+      const stored = await app.store.get(session.id);
+      expect(stored?.maxOverlaps)
         .toBeUndefined();
     });
   });
@@ -181,7 +188,7 @@ describe('edit handlers', () => {
         headers: partialHeaders,
         body: {playerName: 'Alice'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const html = await (await handleEditPlayersPost(app)).text();
 
@@ -199,7 +206,7 @@ describe('edit handlers', () => {
     test('players: renders the error-container and keeps the invalid input on failure', async () => {
       const session = aSession();
       const app = createApp({params: {id: session.id}, headers: partialHeaders, body: {playerName: ''}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleEditPlayersPost(app);
       const html = await response.text();
@@ -221,7 +228,7 @@ describe('edit handlers', () => {
         headers: partialHeaders,
         body: {proposedDateTime: '2025-09-01T20:00'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const html = await (await handleEditProposedDatesPost(app)).text();
 
@@ -238,7 +245,7 @@ describe('edit handlers', () => {
         headers: partialHeaders,
         body: {proposedDateTime: 'not-a-date'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
@@ -258,7 +265,7 @@ describe('edit handlers', () => {
         headers: partialHeaders,
         body: {maxOverlaps: '3'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const html = await (await handleEditVenuePost(app)).text();
 
@@ -277,7 +284,7 @@ describe('edit handlers', () => {
         headers: partialHeaders,
         body: {maxOverlaps: '-1'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleEditVenuePost(app);
       const html = await response.text();

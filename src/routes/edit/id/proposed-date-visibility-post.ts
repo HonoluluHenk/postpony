@@ -3,9 +3,9 @@ import { Reschedule } from '../../../lib/reschedule';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 import { toIntlLocale } from '../../../locales';
 
-export const handleProposedDateVisibilityPost = (app: App): Response => {
+export const handleProposedDateVisibilityPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
-  const session = app.sessions[id];
+  const session = await app.store.get(id);
   if (!session) {
     app.notFound(app.t('session_not_found'));
   }
@@ -15,7 +15,7 @@ export const handleProposedDateVisibilityPost = (app: App): Response => {
 
   const reschedule = new Reschedule();
   const updated = reschedule.setAwayTeamVotable(session, proposedDateId, votable);
-  app.sessions[id] = updated;
+  await app.store.save(updated);
 
   const locale = toIntlLocale(app.locale);
   const tallies = reschedule.tally(updated);

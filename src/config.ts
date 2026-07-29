@@ -42,6 +42,20 @@ const config = convict({
     env: 'APP_CLICK_TT_FIXTURES_DIR',
     arg: 'click-tt-fixtures-dir',
   },
+  dbUrl: {
+    doc: 'SQLite database URL (libsql:// or file:).',
+    format: String,
+    default: 'file:./data/postpony.db',
+    env: 'APP_DB_URL',
+    arg: 'db-url',
+  },
+  dbAuthToken: {
+    doc: 'Auth token for Turso/libSQL (empty for local file).',
+    format: String,
+    default: '',
+    env: 'APP_DB_AUTH_TOKEN',
+    arg: 'db-auth-token',
+  },
 });
 
 // Perform validation

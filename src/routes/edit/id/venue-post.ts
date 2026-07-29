@@ -16,7 +16,7 @@ const VenueSchema = v.object({
 
 export const handleEditVenuePost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
-  const session = app.sessions[id];
+  const session = await app.store.get(id);
   if (!session) {
     app.notFound('Session not found');
   }
@@ -42,7 +42,7 @@ export const handleEditVenuePost = async (app: App): Promise<Response> => {
   const {maxOverlaps} = validation.output;
 
   const updated = new Reschedule().setVenueLimit(session, maxOverlaps);
-  app.sessions[id] = updated;
+  await app.store.save(updated);
 
   if (app.isPartial) {
     return app.c.html(app.render('edit/id/venue-section.eta', {

@@ -10,7 +10,7 @@ const PlayerSchema = v.object({
 
 export const handleEditPlayersPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
-  const session = app.sessions[id];
+  const session = await app.store.get(id);
   if (!session) {
     app.notFound('Session not found');
   }
@@ -37,7 +37,7 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
 
   const {playerName, teamId} = validation.output;
   const updated = new Reschedule().addPlayer(session, playerName, teamId).session;
-  app.sessions[id] = updated;
+  await app.store.save(updated);
 
   if (app.isPartial) {
     return app.c.html(app.render('edit/id/team-section.eta', {

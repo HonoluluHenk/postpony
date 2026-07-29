@@ -3,6 +3,7 @@ import { App } from '../../app';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../lib/__test-utils__/builders';
 import { hashPassword } from '../../lib/crypto-utils';
 import { LOCALE_KEY } from '../../locales';
+import { MemorySessionStore } from '../../lib/session-store';
 import { handleJoinGet } from './join-get';
 import { handleJoinRegisterPost } from './join-register-post';
 import { handleJoinVoteGet } from './join-vote-get';
@@ -19,6 +20,7 @@ interface MockOptions {
 
 function createApp(options: MockOptions = {}): App {
   const {params = {}, queries = {}, headers = {}, body = {}} = options;
+  const store = new MemorySessionStore();
   const context = {
     get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en' : undefined),
     req: {
@@ -32,7 +34,7 @@ function createApp(options: MockOptions = {}): App {
     redirect: vi.fn((url: string) => new Response(null, {status: 302, headers: {Location: url}})),
   } as any;
 
-  return App.create(context);
+  return App.create(context, store);
 }
 
 function seedSession(overrides: Parameters<typeof aSession>[0] = {}): ReturnType<typeof aSession> {
@@ -42,46 +44,50 @@ function seedSession(overrides: Parameters<typeof aSession>[0] = {}): ReturnType
 describe('join handlers', () => {
 
   describe('handleJoinGet', () => {
-    test('throws when the session does not exist', () => {
+    test('throws when the session does not exist', async () => {
       const app = createApp({params: {id: 'missing', team: 'home'}, queries: {token: TOKEN}});
 
-      expect(() => handleJoinGet(app))
+      await expect(handleJoinGet(app))
+        .rejects
         .toThrow('Session not found');
     });
 
-    test('throws when the token is missing', () => {
+    test('throws when the token is missing', async () => {
       const session = seedSession();
       const app = createApp({params: {id: session.id, team: 'home'}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
-      expect(() => handleJoinGet(app))
+      await expect(handleJoinGet(app))
+        .rejects
         .toThrow('Invalid or missing invitation token.');
     });
 
-    test('throws when the token is wrong', () => {
+    test('throws when the token is wrong', async () => {
       const session = seedSession();
       const app = createApp({params: {id: session.id, team: 'home'}, queries: {token: 'nope'}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
-      expect(() => handleJoinGet(app))
+      await expect(handleJoinGet(app))
+        .rejects
         .toThrow('Invalid or missing invitation token.');
     });
 
-    test('throws when the team parameter is invalid', () => {
+    test('throws when the team parameter is invalid', async () => {
       const session = seedSession();
       const app = createApp({params: {id: session.id, team: 'spectators'}, queries: {token: TOKEN}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
-      expect(() => handleJoinGet(app))
+      await expect(handleJoinGet(app))
+        .rejects
         .toThrow('Invalid team. Expected \'home\' or \'away\'.');
     });
 
-    test('renders the join page for a valid token and team', () => {
+    test('renders the join page for a valid token and team', async () => {
       const session = seedSession({players: [aPlayer({name: 'Alice'})]});
       const app = createApp({params: {id: session.id, team: 'home'}, queries: {token: TOKEN}});
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
-      const response = handleJoinGet(app);
+      const response = await handleJoinGet(app);
 
       expect(response.status)
         .toBe(200);
@@ -96,11 +102,11 @@ describe('join handlers', () => {
         queries: {token: TOKEN},
         body: {newPlayerName: 'Alice'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleJoinRegisterPost(app);
 
-      const stored = app.sessions[session.id];
+      const stored = await app.store.get(session.id);
       expect(stored?.players)
         .toHaveLength(1);
       expect(stored?.players[0]?.name)
@@ -124,11 +130,12 @@ describe('join handlers', () => {
         queries: {token: TOKEN},
         body: {newPlayerName: 'bob'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleJoinRegisterPost(app);
 
-      expect(app.sessions[session.id]?.players)
+      const stored = await app.store.get(session.id);
+      expect(stored?.players)
         .toHaveLength(1);
       expect(response.headers.get('Location') ?? '')
         .toContain('playerId=away-1');
@@ -142,11 +149,12 @@ describe('join handlers', () => {
         queries: {token: TOKEN},
         body: {playerId: 'home-1'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleJoinRegisterPost(app);
 
-      expect(app.sessions[session.id]?.players)
+      const stored = await app.store.get(session.id);
+      expect(stored?.players)
         .toHaveLength(1);
       expect(response.headers.get('Location') ?? '')
         .toContain('playerId=home-1');
@@ -159,7 +167,7 @@ describe('join handlers', () => {
         queries: {token: TOKEN},
         body: {},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleJoinRegisterPost(app);
       const body = await response.text();
@@ -181,7 +189,7 @@ describe('join handlers', () => {
         queries: {token: 'nope'},
         body: {newPlayerName: 'Alice'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       await expect(handleJoinRegisterPost(app))
         .rejects
@@ -190,7 +198,7 @@ describe('join handlers', () => {
   });
 
   describe('handleJoinVoteGet', () => {
-    test('renders the vote step for an identified player', () => {
+    test('renders the vote step for an identified player', async () => {
       const session = seedSession({
         players: [aPlayer()],
         proposedDates: [aProposedDate()],
@@ -199,23 +207,23 @@ describe('join handlers', () => {
         params: {id: session.id, team: 'home'},
         queries: {token: TOKEN, playerId: 'player-1'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
-      const response = handleJoinVoteGet(app);
+      const response = await handleJoinVoteGet(app);
 
       expect(response.status)
         .toBe(200);
     });
 
-    test('redirects to step 1 when the player is unknown', () => {
+    test('redirects to step 1 when the player is unknown', async () => {
       const session = seedSession({proposedDates: [aProposedDate()]});
       const app = createApp({
         params: {id: session.id, team: 'home'},
         queries: {token: TOKEN, playerId: 'ghost'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
-      const response = handleJoinVoteGet(app);
+      const response = await handleJoinVoteGet(app);
 
       expect(response.status)
         .toBe(302);
@@ -235,11 +243,11 @@ describe('join handlers', () => {
         queries: {token: TOKEN, playerId: 'player-1'},
         body: {'vote-proposed-date-1': 'Yes'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleJoinVotePost(app);
 
-      const stored = app.sessions[session.id];
+      const stored = await app.store.get(session.id);
       expect(stored?.votes)
         .toHaveLength(1);
       expect(stored?.votes[0]?.type)
@@ -263,11 +271,11 @@ describe('join handlers', () => {
         queries: {token: TOKEN, playerId: 'player-1'},
         body: {'vote-proposed-date-1': 'No'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       await handleJoinVotePost(app);
 
-      const stored = app.sessions[session.id];
+      const stored = await app.store.get(session.id);
       expect(stored?.votes)
         .toHaveLength(1);
       expect(stored?.votes[0]?.type)
@@ -286,11 +294,11 @@ describe('join handlers', () => {
         queries: {token: TOKEN, playerId: 'player-1'},
         body: {'vote-proposed-date-1': 'No'},
       });
-      app.sessions[session.id] = session;
+      await app.store.save(session);
 
       const response = await handleJoinVotePost(app);
 
-      const stored = app.sessions[session.id];
+      const stored = await app.store.get(session.id);
       expect(stored?.votes)
         .toHaveLength(1);
       expect(stored?.votes[0]?.type)

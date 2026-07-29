@@ -7,7 +7,7 @@ Domain glossary for PostPony — one shared vocabulary for humans and agents. Se
 The primary entity: one postponement of a match, from draft to a confirmed new date.
 
 - **Deep module** (`src/lib/reschedule.ts`, the `Reschedule` class) — owns the rules that used to leak across the edit handlers (`src/routes/edit/id/*-post.ts`) and the join handlers (`src/routes/join/*-post.ts`, `vote-view.ts`); handlers now call `new Reschedule().<op>(...)`.
-- **State** is a plain, serializable `RescheduleSession` (`src/lib/models.ts`), so it fits the session store unchanged — in-memory today, Firestore per ADR-0007.
+- **State** is a plain, serializable `RescheduleSession` (`src/lib/models.ts`), so it fits the session store unchanged — MemorySessionStore for tests, SqliteSessionStore (`@libsql/client`) for development and production (Turso for production).
 - **Contract** — operations are pure methods that take a session and return a new session; handlers write the returned session back to the store.
 - **Operations** (first cut owns all of them):
     - `registerParticipant` — join or match a player on a team.

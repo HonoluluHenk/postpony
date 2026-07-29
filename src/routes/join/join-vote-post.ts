@@ -10,7 +10,7 @@ function isVoteType(value: unknown): value is Vote['type'] {
 
 export const handleJoinVotePost = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
-  const {id, session, token} = requireSessionAndToken(app);
+  const {session, token} = await requireSessionAndToken(app);
 
   const playerId = app.c.req.query('playerId') ?? '';
   const player = session.players.find((p) => p.id === playerId && p.teamId === team);
@@ -34,7 +34,7 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
       }
       updated = reschedule.castVote(updated, pd.id, player.id, value);
     }
-    app.sessions[id] = updated;
+    await app.store.save(updated);
   }
 
   return renderVoteStep(app, {session: updated, team, token, player, updated: canVote});

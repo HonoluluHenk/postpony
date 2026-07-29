@@ -56,7 +56,7 @@ function toVoteTallyItems(
 
 export const handleEditProposedDatesPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
-  const session = app.sessions[id];
+  const session = await app.store.get(id);
   if (!session) {
     app.notFound('Session not found');
   }
@@ -108,7 +108,7 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
   const dt = Temporal.PlainDateTime.from(proposedDateTime)
     .toString();
   const updated = reschedule.proposeDate(session, dt, 'owner').session;
-  app.sessions[id] = updated;
+  await app.store.save(updated);
 
   if (app.isPartial) {
     const tallies = reschedule.tally(updated);

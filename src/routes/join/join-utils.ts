@@ -18,9 +18,9 @@ export interface JoinContext {
   token: string;
 }
 
-export function requireSessionAndToken(app: App): JoinContext {
+export async function requireSessionAndToken(app: App): Promise<JoinContext> {
   const id = app.requireParam('id');
-  const session = app.sessions[id];
+  const session = await app.store.get(id);
   if (!session) {
     app.notFound(app.t('session_not_found'));
   }

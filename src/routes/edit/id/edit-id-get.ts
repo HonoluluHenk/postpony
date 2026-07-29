@@ -4,9 +4,9 @@ import { Reschedule } from '../../../lib/reschedule';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 import { toIntlLocale } from '../../../locales';
 
-export const handleEditGet = (app: App): Response => {
+export const handleEditGet = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
-  const session = app.sessions[id];
+  const session = await app.store.get(id);
   if (!session) {
     app.notFound(app.t('session_not_found'));
   }

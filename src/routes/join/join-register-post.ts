@@ -4,7 +4,7 @@ import { requireSessionAndToken, requireTeam } from './join-utils';
 
 export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
-  const {id, session, token} = requireSessionAndToken(app);
+  const {id, session, token} = await requireSessionAndToken(app);
 
   const body = await app.c.req.parseBody();
 
@@ -26,7 +26,7 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
     return app.c.html(html);
   }
 
-  app.sessions[id] = updated;
+  await app.store.save(updated);
 
   const voteUrl = `/join/${id}/${team}/vote?playerId=${encodeURIComponent(player.id)}` +
     `&token=${encodeURIComponent(token)}`;

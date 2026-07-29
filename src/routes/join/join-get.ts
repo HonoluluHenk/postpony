@@ -1,9 +1,9 @@
 import type { App } from '../../app';
 import { requireSessionAndToken, requireTeam } from './join-utils';
 
-export const handleJoinGet = (app: App): Response => {
+export const handleJoinGet = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
-  const {session, token} = requireSessionAndToken(app);
+  const {session, token} = await requireSessionAndToken(app);
 
   const players = session.players.filter((p) => p.teamId === team);
 

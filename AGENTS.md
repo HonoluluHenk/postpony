@@ -68,8 +68,8 @@ Not lazy about: input validation at trust boundaries, error handling that preven
 ```
 src/
   index.ts            — server entry, Hono app wiring, HTTPS server
-  app.ts              — App class wrapping Hono Context (render, t, sessions, isPartial, requireParam, failure, notFound)
-  config.ts           — convict config: APP_PORT, APP_HOSTNAME, APP_BASE_URL, APP_USE_FIXTURES, APP_CLICK_TT_FIXTURES_DIR
+  app.ts              — App class wrapping Hono Context (render, t, store, isPartial, requireParam, failure, notFound)
+  config.ts           — convict config: APP_PORT, APP_HOSTNAME, APP_BASE_URL, APP_USE_FIXTURES, APP_CLICK_TT_FIXTURES_DIR, APP_DB_URL, APP_DB_AUTH_TOKEN
   routes/             — per-feature routers (create/, edit/, join/) with *-get.ts / *-post.ts handlers and *.eta templates
   lib/
     reschedule.ts     — domain module: pure operations on RescheduleSession, overridable newId()/now() seam
@@ -83,7 +83,7 @@ src/
 e2e-tests/
   pages/              — Page Object Model classes (StartPage, CreatePage, EditPage, JoinPage, ScrapePage)
   fixtures.ts         — Custom Playwright fixtures (checkA11y, makeAxeBuilder)
-docs/adr/             — 13 ADRs
+docs/adr/             — 14 ADRs
 ```
 
 ## Framework patterns
@@ -94,7 +94,7 @@ docs/adr/             — 13 ADRs
 - **Locale**: set via `?lang=en|de` → cookie → `Accept-Language` fallback. LanguageMiddleware sets `c.set('locale', ...)`.
 - **Validation**: Valibot schemas → `mapValidationToErrors()` for UI.
 - **Error handling**: throw `AppError | StateError` in handlers; caught by `onError` in `src/index.ts`.
-- **Sessions**: in-memory `App.sessions` (static `Record<string, RescheduleSession>`). Upgrade path: Firestore (ADR-0007).
+- **Sessions**: `SessionStore` seam (`src/lib/session-store.ts`) with `MemorySessionStore` (tests) and `SqliteSessionStore` (dev/prod). Access via `app.store.get()` / `app.store.save()`. Upgrade path: Turso/SQLite (ADR-0014).
 - **Join routes**: `/join/:id/:team?token=<invitationPassword>`. Guards in `src/routes/join/join-utils.ts`: `requireTeam`, `requireSessionAndToken`.
 - **Player identity**: per-postponement per-team in `localStorage` key `postpony-player-<sessionId>-<team>`, no cookies/auth. ADR-0013.
 
@@ -115,7 +115,7 @@ docs/adr/             — 13 ADRs
 - **Heading ambiguity**: layout has `<h1>` brand + page `<h2>`s. Use `getByRole('heading', { name, level: 2 })`. Note: edit page uses the layout `<h1>` only (no duplicate `<h2>`), so its tests use `level: 1`.
 - **`<section>` must have a heading**: each `<section>` needs a heading (`<h1>`–`<h6>`) as first child. Layout wrappers use `<div>`. Don't nest `<section>` inside `<section>` unless the inner one is a true subsection.
 - **e2e type-checking**: `tsconfig.e2e.json` adds DOM lib; `npm run lint` validates e2e separately.
-- **Fixture builders**: `aSession()`, `aPlayer()`, etc. from `src/lib/__test-utils__/builders.ts`. Use deep-partial overrides. Inject via `app.sessions[session.id] = session`.
+- **Fixture builders**: `aSession()`, `aPlayer()`, etc. from `src/lib/__test-utils__/builders.ts`. Use deep-partial overrides. Inject via `await app.store.save(session)`.
 - **Builder drift**: `builders.spec.ts` asserts every required field — a model change must update builders in lockstep.
 - **Unit test mock Hono**: test files create a minimal context object and pass it to `App.create()`. See `edit-handlers.spec.ts` and `app-handler.spec.ts` for the pattern.
 

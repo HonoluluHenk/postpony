@@ -1,6 +1,6 @@
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import * as fs from 'fs';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
 import { HTTPException } from 'hono/http-exception';
 
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
@@ -12,6 +12,7 @@ import { AppError, ClickTTError } from './lib/errors';
 import { factory, handleAppRequest } from './lib/hono-factory';
 import { logger } from './lib/logger';
 import { languageMiddleware } from './lib/middleware/language';
+import { SqliteSessionStore } from './lib/session-store';
 import createRouter from './routes/create/router';
 import editRouter from './routes/edit/router';
 import { handleIndexGet } from './routes/index-get';
@@ -19,12 +20,30 @@ import joinRouter from './routes/join/router';
 
 const app = factory.createApp();
 
+const dbUrl = config.get('dbUrl');
+const dbAuthToken = config.get('dbAuthToken');
+// ponytail: ensure the data directory exists for the default SQLite file path;
+// upgrade to orchestrated setup script if additional resources are needed.
+const dbPath = dbUrl.startsWith('file:') ? dbUrl.slice(5) : null;
+if (dbPath) {
+  const dbDir = path.dirname(dbPath);
+  if (!existsSync(dbDir)) {
+    mkdirSync(dbDir, {recursive: true});
+  }
+}
+const sessionStore = new SqliteSessionStore(dbUrl, dbAuthToken || undefined);
+await sessionStore.migrate();
+
 // Resolve absolute paths to avoid CWD differences between dev and test runners
 const publicDir = path.resolve(process.cwd(), 'src/public');
 
 app.use('/assets/*', serveStatic({root: publicDir}));
 
 app.use('*', languageMiddleware);
+app.use('*', async (c, next) => {
+  c.set('sessionStore', sessionStore);
+  await next();
+});
 
 app.get('/', handleAppRequest(handleIndexGet));
 app.route('/create', createRouter);
@@ -74,8 +93,8 @@ const hostname = config.get('hostname');
 const certPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.pem`);
 const keyPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.key`);
 
-if (!(fs.existsSync(certPath) && fs.existsSync(keyPath))) {
-  const missingFile = !fs.existsSync(certPath) ? certPath : keyPath;
+if (!(existsSync(certPath) && existsSync(keyPath))) {
+  const missingFile = !existsSync(certPath) ? certPath : keyPath;
   throw new Error(`SSL certificate file is missing: ${missingFile}. Run 'npm run certs' to generate certificates.`);
 }
 
@@ -85,8 +104,8 @@ const serverOptions = {
   fetch: app.fetch,
   createServer: createHttpsServer,
   serverOptions: {
-    key: fs.readFileSync(keyPath),
-    cert: fs.readFileSync(certPath),
+    key: readFileSync(keyPath),
+    cert: readFileSync(certPath),
   },
 };
 

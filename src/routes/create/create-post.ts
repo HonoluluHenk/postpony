@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import type { App } from '../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../lib/crypto-utils';
-import { DEFAULT_CLUB_ID } from '../../lib/models';
+import { DEFAULT_CLUB_ID, type RescheduleSession } from '../../lib/models';
 import { mapValidationToErrors } from '../../lib/map-validation-to-errors';
 
 export async function handleCreatePost(app: App): Promise<Response> {
@@ -31,7 +31,7 @@ export async function handleCreatePost(app: App): Promise<Response> {
   const ownerPassword = generateRandomPassword();
   const invitationPassword = generateRandomPassword();
 
-  app.sessions[id] = {
+  const session: RescheduleSession = {
     id,
     clubId: DEFAULT_CLUB_ID,
     name,
@@ -44,6 +44,8 @@ export async function handleCreatePost(app: App): Promise<Response> {
     votes: [],
     createdAt: app.timestamp.now(),
   };
+
+  await app.store.save(session);
 
   const redirectUrl = `/edit/${id}?ownerPassword=${ownerPassword}`;
   if (app.isPartial) {
