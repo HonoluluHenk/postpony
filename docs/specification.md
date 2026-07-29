@@ -72,7 +72,7 @@ The system suggests possible dates and times based on the following restrictions
 
 * **Architecture**: Server-side rendered (SSR) backend in **TypeScript** using **Hono** and **HTMX** for dynamic UI updates.
 * **Frontend**: Plain HTML with the **Eta** templating engine, **Beer.css** (Material Design 3) for components and layout, and a custom design system via CSS custom properties (`design-tokens.css`).
-* **Data Store**: **Google Firestore** (Document store with streaming support).
+* **Data Store**: **SQLite via `@libsql/client`** (local file for development, [Turso](https://turso.tech) for production). Sessions stored as JSON blobs in a `sessions` table. See [ADR-0014](adr/0014-sqlite-session-store.md).
 * **Localized UI**: Framework-level support for i18n.
 * **Security**: Password-protected access to specific rescheduling events. No permanent accounts for players. No password recovery mechanism for session owners in the initial version.
 

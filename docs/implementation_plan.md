@@ -5,43 +5,27 @@ To proceed from specification to a working software implementation, the followin
 ## 1. Technical Stack (Proposed)
 See [ADR 0003: Core Tech Stack](adr/0003-core-tech-stack.md) for details.
 
-## 2. Data Models (Document Store)
-We need to define the collection structure for Firestore to support multiple clubs:
+## 2. Data Models (Session Store)
 
-* **Club (Collection)**: The top-level tenant entity.
-    * `Document ID`: `club_id`.
-    * `name`, `settings`.
-    * `adminPasswordHash`: Hashed password for the Club Manager.
-* **OnboardingToken (Collection)**: See [ADR 0011](adr/0011-token-security-and-structure.md).
-    * `tokenHash`: Hashed random token.
-    * `club_id`, `role`, `expiresAt`, `used`.
-* **Team (Sub-collection of Club)**:
-    * `name`, `manager_id`.
-* **Venue (Sub-collection of Club)**:
-    * `name`, `location`.
-    * `availability`: Array/Map of date/time ranges.
-    * `bookings`: Array/Map of specific blackout date/time ranges.
-    * `maxOverlaps`: Number (optional).
-* **RescheduleSession (Collection)**:
-    * `Document ID`: Unique slug/UUID.
-    * `club_id`: Reference for multi-tenant isolation.
-    * `ownerPasswordHash`, `invitationPasswordHash`.
-    * `status`: (Draft, Proposed, Voting, Confirmed by Opponent, Confirmed).
-    * `maxOverlaps`: Number (optional).
-    * `metadata`: Map for flexible settings.
-    * **ProposedDate (Sub-collection of RescheduleSession)**:
-        * `dateTimeRange`, `proposerId`.
-    * **Vote (Sub-collection of ProposedDate)**:
-        * `participantId`, `type`.
-* **AvailabilityRecord (Sub-collection of RescheduleSession)**:
-    * `participantId`, `ranges`.
+The application uses a `SessionStore` seam (`src/lib/session-store.ts`) with two implementations:
+- `MemorySessionStore` — in-memory `Map`, used in tests.
+- `SqliteSessionStore` — `@libsql/client` backed, used in development and production (Turso for production).
+
+The core entity, `RescheduleSession`, is serialised as a JSON blob and stored in a single `sessions` table:
+- `id TEXT PRIMARY KEY` — session slug/UUID.
+- `club_id TEXT NOT NULL` — tenant identifier for multi-tenancy (see [ADR 0001](adr/0001-multi-tenancy-strategy.md)).
+- `data TEXT NOT NULL` — the full `RescheduleSession` JSON blob, including players, proposed dates, and votes.
+
+Nested data (players, proposed dates, votes) is embedded in the JSON rather than stored in separate tables or sub-collections — acceptable because each session's data volume is small and always loaded/saved as a unit.
+
+An earlier plan modelled Firestore sub-collections for `ProposedDate` and `Vote`. This was superseded by the simpler SQLite/JSON-blob approach (see [ADR-0014](adr/0014-sqlite-session-store.md)).
 
 ## 3. Core Algorithms
 
-* **Suggestion Engine (MVP)**: A TypeScript-based logic component that performs "intersection" operations on date and time ranges fetched from Firestore:
+* **Suggestion Engine (MVP)**: A TypeScript-based logic component that performs "intersection" operations on date and time ranges fetched from the session store:
     * Logic (Initial): `Venue Open Hours` MINUS `Existing Bookings` MINUS `Overlapping Match Limits`.
     * Future Iterations: INTERSECT `Opponent Availability` INTERSECT `Home Team Availability`.
-    * Implementation: Since Firestore does not support complex joins, the engine will fetch relevant documents and perform the intersection in-memory on the backend.
+    * Implementation: The engine works with in-memory `RescheduleSession` objects fetched via `app.store.get()`, so no complex database joins are needed.
 
 ## 4. Integration & Infrastructure
 

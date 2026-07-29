@@ -34,22 +34,22 @@ Model test data comes from the deep-merge partial builders in
 
 ## Route-handler unit tests
 
-Handlers take an `App` (see the `route-handlers` skill), so unit tests build a minimal mock `Context`, wrap it with `App.create`, and inject sessions directly into the in-memory store. This is the established pattern in
+Handlers take an `App` (see the `route-handlers` skill), so unit tests build a minimal mock `Context`, wrap it with `App.create`, and inject sessions into a `MemorySessionStore`. This is the established pattern in
 `src/routes/edit/id/edit-handlers.spec.ts`:
 
 ```ts
 const session = aSession();
 const app = createApp({params: {id: session.id}, body: {playerName: 'Alice'}});
-app.sessions[session.id] = session;      // inject into the in-memory store
+await app.store.save(session);             // inject into the MemorySessionStore
 
 await handleEditPlayersPost(app);
-expect(session.players[0]?.name)
+expect((await app.store.get(session.id))?.players[0]?.name)
     .toBe('Alice');
 ```
 
-- Copy the `createApp` / `MockOptions` helper from `edit-handlers.spec.ts`; it mocks `param`, `query`, `header`, `parseBody`, `html`, and `redirect`, and returns `'en'` for `LOCALE_KEY` so `app.t(...)` resolves real strings.
+- Copy the `createApp` / `MockOptions` helper from `edit-handlers.spec.ts`; it creates a `MemorySessionStore`, mocks `param`, `query`, `header`, `parseBody`, `html`, and `redirect`, and returns `'en'` for `LOCALE_KEY` so `app.t(...)` resolves real strings.
 - Assert error paths with `.rejects.toThrow(...)` — handlers signal failures by throwing `AppError`/`StateError` via `app.failure`/`app.notFound`.
-- `app.sessions` is a **static** record shared across `App` instances, so seed it per test; don't rely on isolation between the store and a fresh `App`.
+- Each test gets its own `MemorySessionStore` instance (injected via `App.create(context, store)`), so tests are fully isolated from one another.
 
 ## Page Object Model
 

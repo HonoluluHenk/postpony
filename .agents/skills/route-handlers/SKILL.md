@@ -37,7 +37,7 @@ Key members:
 - `app.isPartial` — `true` when the request carries `HX-Request`. Render a fragment when partial, the full layout otherwise.
 - `app.render(template, data)` — renders an `.eta` template from `src/routes/`; automatically injects `t`, `locale`, `isPartial`, and `baseUrl`.
 - `app.requireParam(name)` / `app.requireParam(name, transform)` — reads a path param, throwing a localized `missing_param` failure if absent; the second form maps the value (e.g. to a number).
-- `app.sessions` — the static in-memory session store (`Record<string, RescheduleSession>`).
+- `app.store` — the session store (`SessionStore` interface). Use `await app.store.get(id)` to read and `await app.store.save(session)` to write. See `src/lib/session-store.ts` for the interface and implementations (`MemorySessionStore` for tests, `SqliteSessionStore` for dev/prod).
 
 ### Signalling errors
 
@@ -80,6 +80,6 @@ Routes for token-gated participants reuse the guards in
 `src/routes/join/join-utils.ts` (see [ADR 0013](../../../docs/adr/0013-join-participant-identity.md)):
 
 - `requireTeam(app): 'home' | 'away'` — validates the `:team` path param.
-- `requireSessionAndToken(app): {id, session, token}` — resolves the session and verifies `?token=` against `invitationPasswordHash`.
+- `await requireSessionAndToken(app): Promise<JoinContext>` — resolves the session via `app.store.get(id)` and verifies `?token=` against `invitationPasswordHash`. Async — always `await` it.
 
 Reuse these for any future invited-participant route instead of re-implementing token/team checks.
