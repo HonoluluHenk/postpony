@@ -28,6 +28,7 @@ node_modules/
 /dist/
 .env
 /playwright-report/
+/.playwright-mcp/
 /test-results/
 /coverage/
 # generated on typscript incremental builds
