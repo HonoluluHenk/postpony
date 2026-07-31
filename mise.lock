@@ -63,3 +63,37 @@ url = "https://nodejs.org/dist/v26.5.0/node-v26.5.0-darwin-x64.tar.gz"
 [tools.node."platforms.windows-x64"]
 checksum = "sha256:d3b2277dbcccfdf24ef6302928f64f484cff1d77a6d3caa3a28f4d20ce9158f6"
 url = "https://nodejs.org/dist/v26.5.0/node-v26.5.0-win-x64.zip"
+
+[[tools.turso]]
+version = "1.0.31"
+backend = "aqua:tursodatabase/turso-cli"
+
+[tools.turso."platforms.linux-arm64"]
+checksum = "sha256:dbc3c51edc4bbbc1c2a6be0585a28c79256cfd3f2dd1d4cdba961e7550db9dd5"
+url = "https://github.com/tursodatabase/turso-cli/releases/download/v1.0.31/turso-cli_Linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/tursodatabase/turso-cli/releases/assets/491561319"
+
+[tools.turso."platforms.linux-arm64-musl"]
+checksum = "sha256:dbc3c51edc4bbbc1c2a6be0585a28c79256cfd3f2dd1d4cdba961e7550db9dd5"
+url = "https://github.com/tursodatabase/turso-cli/releases/download/v1.0.31/turso-cli_Linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/tursodatabase/turso-cli/releases/assets/491561319"
+
+[tools.turso."platforms.linux-x64"]
+checksum = "sha256:84f5f564f778b3f3df2fee2aa56f0886db9acde654d80e66d95b9e228348d5a0"
+url = "https://github.com/tursodatabase/turso-cli/releases/download/v1.0.31/turso-cli_Linux_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/tursodatabase/turso-cli/releases/assets/491561318"
+
+[tools.turso."platforms.linux-x64-musl"]
+checksum = "sha256:84f5f564f778b3f3df2fee2aa56f0886db9acde654d80e66d95b9e228348d5a0"
+url = "https://github.com/tursodatabase/turso-cli/releases/download/v1.0.31/turso-cli_Linux_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/tursodatabase/turso-cli/releases/assets/491561318"
+
+[tools.turso."platforms.macos-arm64"]
+checksum = "sha256:28c4af17f3aa0e91471fb2ae573794a56f4e9c039427e7382e983d6bf4ec5bec"
+url = "https://github.com/tursodatabase/turso-cli/releases/download/v1.0.31/turso-cli_Darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/tursodatabase/turso-cli/releases/assets/491561349"
+
+[tools.turso."platforms.macos-x64"]
+checksum = "sha256:44efaf6e14fb85b036b9b2e4439674ec463593fa7208005c073efa325b0af772"
+url = "https://github.com/tursodatabase/turso-cli/releases/download/v1.0.31/turso-cli_Darwin_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/tursodatabase/turso-cli/releases/assets/491561321"

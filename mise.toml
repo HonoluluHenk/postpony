@@ -1,3 +1,4 @@
 [tools]
 mkcert = "1"
 node = "26"
+turso = "latest"
