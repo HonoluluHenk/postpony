@@ -5,8 +5,7 @@ description: Reference for the npm scripts defined in this project's package.jso
 
 # PostPony npm Scripts
 
-This skill documents every script defined in `package.json` so that agents
-can pick the right command quickly and never invent ad-hoc ones.
+This skill documents every script defined in `package.json` so that agents can pick the right command quickly and never invent ad-hoc ones.
 
 ## When to Use This Skill
 
@@ -43,19 +42,15 @@ Use this skill whenever you need to:
 
 ### Development loops
 
-- `npm run dev` — primary dev server. The app entry is `src/index.ts`; routes
-  live in `src/routes/`, views in `src/views/` (`.eta`).
-- Run `npm run dev:lint` in a second terminal for fast type feedback while
-  coding.
+- `npm run dev` — primary dev server. The app entry is `src/index.ts`; routes live in `src/routes/`, views in `src/views/` (`.eta`).
+- Run `npm run dev:lint` in a second terminal for fast type feedback while coding.
 - Run `npm run dev:test` for Vitest watch mode while writing unit tests.
 
 ### Tests
 
 - Unit tests use **Vitest** and are colocated with the source as `*.spec.ts`
-  (e.g. `src/app-handler.spec.ts`, `src/lib/temporal-utils.spec.ts`).
-  Run them with `npm test` (one shot) or `npm run dev:test` (watch).
-- E2E tests use **Playwright** in `e2e-tests/` with the `*.e2e.ts` suffix.
-  Run them with `npm run e2e`. For interactive debugging use
+  (e.g. `src/app-handler.spec.ts`, `src/lib/temporal-utils.spec.ts`). Run them with `npm test` (one shot) or `npm run dev:test` (watch).
+- E2E tests use **Playwright** in `e2e-tests/` with the `*.e2e.ts` suffix. Run them with `npm run e2e`. For interactive debugging use
   `npm run playwright:ui`.
 - A11y checks are wired into Playwright via the `checkA11y` fixture in
   `e2e-tests/fixtures.ts` — no separate script is needed.
@@ -63,8 +58,7 @@ Use this skill whenever you need to:
 ### Type-checking / linting
 
 - `npm run lint` is an aggregator (`run-s -l lint:*`) that runs every
-  `lint:*` script in sequence. Add new `lint:*` entries to extend it
-  rather than editing `lint` itself. Note that a single `*` does not match
+  `lint:*` script in sequence. Add new `lint:*` entries to extend it rather than editing `lint` itself. Note that a single `*` does not match
   `:`, so `lint:eslint:fix` is intentionally excluded from the aggregator.
 - `npm run lint:source` covers application code (`src/`).
 - `npm run lint:e2e` covers e2e tests (`e2e-tests/`) using
@@ -72,14 +66,12 @@ Use this skill whenever you need to:
 - `npm run lint:eslint` runs ESLint via the flat config in
   `eslint.config.js`. Warnings-as-errors is enforced using `--max-warnings 0`, so any violation fails the script.
 - Unused identifiers prefixed with `_` are ignored.
-- Running `npm run lint` alone covers all three; `npm run verify` also relies
-  on it.
+- Running `npm run lint` alone covers all three; `npm run verify` also relies on it.
 
 ### Build and run
 
 - `npm run build` uses Vite (`vite.config.ts`) and writes output to `dist/`.
-- `npm start` boots the built server with plain Node. Use it to validate that
-  the production bundle works; `npm run dev` is preferred during development.
+- `npm start` boots the built server with plain Node. Use it to validate that the production bundle works; `npm run dev` is preferred during development.
 - `npm run clean` deletes `dist/`, `playwright-report/`, and `test-results/`
   when you need a fully fresh build/test run.
 
@@ -92,20 +84,19 @@ npm run verify
 ```
 
 This chains `lint → test → build → e2e` via `npm-run-all` (and `lint`
-itself fans out to `lint:source` + `lint:e2e`). Treat any failure as
-blocking — never weaken assertions or skip tests to make it pass.
+itself fans out to `lint:source` + `lint:e2e`). Treat any failure as blocking — never weaken assertions or skip tests to make it pass.
 
 ## Conventions and Gotchas
 
-- Node.js is pinned to **v26** via `mise.toml`; run `mise install` if your
-  local Node version is wrong.
-- `tsx` is used as the dev runner; production runs plain `node` on the Vite
-  output.
+- Node.js is pinned to **v26** via `mise.toml`; run `mise install` if your local Node version is wrong.
+- `tsx` is used as the dev runner; production runs plain `node` on the Vite output.
 - `npm test` runs Vitest **once**. Use `npm run dev:test` for watch mode.
 - `npm run e2e` requires Playwright browsers; if they are missing run
   `npx playwright install` once.
 - HTTPS in dev requires local certs — generate them with
   `scripts/create-certs.sh` (stored under `developer-local-settings/`).
+- Local config comes from a `.env` file at the repo root (loaded by
+  `src/config.ts` at startup). On a fresh checkout, copy `.env-template` to
+  `.env` and adjust the values — `.env` is git-ignored, `.env-template` is tracked and is the source of truth for which variables exist.
 - Do not invent new scripts ad-hoc; if a new workflow is needed, add it to
-  `package.json` (and update this skill) so agents and humans share the
-  same vocabulary.
+  `package.json` (and update this skill) so agents and humans share the same vocabulary.

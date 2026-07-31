@@ -107,7 +107,7 @@ function fixtureNameForUrl(url: string): string {
 
 async function fetchHtml(url: string): Promise<HTMLElement> {
   // Offline/E2E mode: serve downloaded HTML fixtures instead of live requests.
-  const fixturesDir = config.get('clickTtFixturesDir');
+  const fixturesDir = config.get('click-tt-fixtures-dir');
   if (fixturesDir) {
     const html = readFileSync(join(fixturesDir, fixtureNameForUrl(url)), 'utf-8');
     return parse(html);

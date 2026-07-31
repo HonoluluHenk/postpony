@@ -11,7 +11,7 @@
 - [ ] `migrate()` method runs `CREATE TABLE IF NOT EXISTS sessions (id TEXT PK, club_id TEXT, data TEXT)`
 - [ ] `get()` deserialises the JSON `data` column into a `RescheduleSession`
 - [ ] `save()` serialises the session to JSON and upserts via `ON CONFLICT(id) DO UPDATE`
-- [ ] Config entries `dbUrl` (default `file:./data/postpony.db`) and `dbAuthToken` added
+- [ ] Config entries `db-url` (default `file:./data/postpony.db`) and `db-auth-token` added
 - [ ] `src/index.ts` creates `SqliteSessionStore`, calls `migrate()`, passes to the factory
 - [ ] `npm run dev` — create a session, restart server, edit the session works (survived restart)
 - [ ] `npm run test` passes; `npm run lint` passes; `npm run e2e` passes

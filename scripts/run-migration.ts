@@ -1,8 +1,8 @@
 import config from '../src/config';
 import { SqliteSessionStore } from '../src/lib/session-store';
 
-const dbUrl = config.get('dbUrl');
-const dbAuthToken = config.get('dbAuthToken');
+const dbUrl = config.get('db-url');
+const dbAuthToken = config.get('db-auth-token');
 const store = new SqliteSessionStore(dbUrl, dbAuthToken || undefined);
 
 await store.migrate();

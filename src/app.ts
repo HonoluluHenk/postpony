@@ -4,9 +4,9 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import path from 'node:path';
 import config from './config';
 import { AppError, InternalError, StateError } from './lib/errors';
-import { defaultLocale, getTranslation, LOCALE_KEY, type Locale, type TranslationKeys } from './locales';
+import { MemorySessionStore, type SessionStore } from './lib/session-store';
 import { Timestamp } from './lib/timestamp';
-import { type SessionStore, MemorySessionStore } from './lib/session-store';
+import { defaultLocale, getTranslation, type Locale, LOCALE_KEY, type TranslationKeys } from './locales';
 
 export const eta = new Eta({views: path.join(process.cwd(), 'src/routes')});
 
@@ -38,7 +38,7 @@ export class App {
 
   render(template: string, data: object): string {
     const url = new URL(this.c.req.url);
-    const baseUrl = config.get('baseUrl') || `${url.protocol}//${url.host}`;
+    const baseUrl = config.get('base-url') || `${url.protocol}//${url.host}`;
 
     return eta.render(template, {
       ...data,

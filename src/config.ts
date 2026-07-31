@@ -1,4 +1,12 @@
 import convict from 'convict';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { loadEnvFile } from 'node:process';
+
+const envFile = resolve(process.cwd(), '.env');
+if (existsSync(envFile)) {
+  loadEnvFile(envFile);
+}
 
 const config = convict({
   env: {
@@ -21,35 +29,35 @@ const config = convict({
     env: 'APP_HOSTNAME',
     arg: 'hostname',
   },
-  baseUrl: {
+  'base-url': {
     doc: 'The base URL of the application.',
     format: String,
     default: '',
     env: 'APP_BASE_URL',
     arg: 'base-url',
   },
-  useFixtures: {
+  'use-fixtures': {
     doc: 'Whether to use fixtures.',
     format: Boolean,
     default: false,
     env: 'APP_USE_FIXTURES',
     arg: 'use-fixtures',
   },
-  clickTtFixturesDir: {
+  'click-tt-fixtures-dir': {
     doc: 'The directory containing click-tt.ch HTML fixtures.',
     format: String,
     default: '',
     env: 'APP_CLICK_TT_FIXTURES_DIR',
     arg: 'click-tt-fixtures-dir',
   },
-  dbUrl: {
+  'db-url': {
     doc: 'SQLite database URL (libsql:// or file:).',
     format: String,
-    default: 'file:./data/postpony.db',
+    default: '',
     env: 'APP_DB_URL',
     arg: 'db-url',
   },
-  dbAuthToken: {
+  'db-auth-token': {
     doc: 'Auth token for Turso/libSQL (empty for local file).',
     format: String,
     default: '',
@@ -60,12 +68,22 @@ const config = convict({
 
 // Perform validation
 config.validate({allowed: 'strict'});
-if (config.get('useFixtures') && !config.get('clickTtFixturesDir')) {
 
-  config.set('clickTtFixturesDir', './src/lib/__fixtures__');
+const dbUrl = config.get('db-url');
+if (!dbUrl) {
+  throw Error('Missing required config: db-url');
+} else {
+  if (!dbUrl.startsWith('file:') && !config.get('db-auth-token')) {
+    throw Error('Missing required config: db-auth-token');
+  }
 }
-if (config.get('clickTtFixturesDir') && !config.get('useFixtures')) {
-  config.set('useFixtures', true);
+
+if (config.get('use-fixtures') && !config.get('click-tt-fixtures-dir')) {
+
+  config.set('click-tt-fixtures-dir', './src/lib/__fixtures__');
+}
+if (config.get('click-tt-fixtures-dir') && !config.get('use-fixtures')) {
+  config.set('use-fixtures', true);
 }
 config.validate({allowed: 'strict'});
 

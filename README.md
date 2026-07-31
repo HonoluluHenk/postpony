@@ -22,7 +22,9 @@ A web-based application for postponing sports matches as quick and easy as the P
    Before starting, copy the template configuration files:
    ```bash
    cp -r developer-local-settings-template developer-local-settings
+   cp .env-template .env
    ```
+   Adjust the values in `.env` as needed — it is git-ignored, so your local configuration stays private.
 
 2. **Setup /etc/hosts**:
    To access the application at `game-scheduler.localhost`, you need to add an entry to your hosts file.

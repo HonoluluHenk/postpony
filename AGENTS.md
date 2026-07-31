@@ -29,6 +29,10 @@ A web app for postponing sports matches. SSR (Hono + Eta + HTMX), no SPA framewo
 | `npm run verify`          | lint → test → build → e2e (full CI gate)                                           |
 | `npm run build`           | Vite build (SSR) → `dist/`                                                         |
 
+## Local configuration
+
+For local development, copy `.env-template` to `.env` (git-ignored) and adjust the values there. `src/config.ts` loads `.env` from the repo root at startup via native `process.loadEnvFile`; already-set env vars (shell/npm scripts) take precedence.
+
 ## HTTPS & certificates
 
 The app only runs on HTTPS. Certs live at `developer-local-settings/conf/certs/<hostname>.pem` / `.key`. Generate them: `scripts/create-certs.sh` (requires `mkcert` from mise). URL: `https://game-scheduler.localhost:3000`

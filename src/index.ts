@@ -20,8 +20,8 @@ import joinRouter from './routes/join/router';
 
 const app = factory.createApp();
 
-const dbUrl = config.get('dbUrl');
-const dbAuthToken = config.get('dbAuthToken');
+const dbUrl = config.get('db-url');
+const dbAuthToken = config.get('db-auth-token');
 // ponytail: ensure the data directory exists for the default SQLite file path;
 // upgrade to orchestrated setup script if additional resources are needed.
 const dbPath = dbUrl.startsWith('file:') ? dbUrl.slice(5) : null;
