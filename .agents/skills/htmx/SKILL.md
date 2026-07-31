@@ -63,7 +63,6 @@ You are an expert in HTMX for building dynamic web applications with minimal Jav
 ### User Confirmation
 
 ```html
-
 <button hx-delete="/api/item/1"
         hx-confirm="Are you sure you want to delete this?">
     Delete

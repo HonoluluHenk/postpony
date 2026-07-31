@@ -1,12 +1,6 @@
 {
   "version": 1,
   "skills": {
-    "accessibility-a11y": {
-      "source": "mindrally/skills",
-      "sourceType": "github",
-      "skillPath": "accessibility-a11y/SKILL.md",
-      "computedHash": "3117d5b0302f4fbb90cf7b3b65474aa0ea70eadaf91036ab9e20c912d68f9289"
-    },
     "hono": {
       "source": "yusukebe/hono-skill",
       "sourceType": "github",
@@ -18,6 +12,12 @@
       "sourceType": "github",
       "skillPath": "htmx/SKILL.md",
       "computedHash": "6e1f97a1af33384fe4e9ea60078770bacdacfb48d26a601c2bf17c61447c8532"
+    },
+    "semantic-html": {
+      "source": "honoluluhenk/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/semantic-html/SKILL.md",
+      "computedHash": "1c81b170f681faf8e941ba75e1af8d3d1c0a3c3a2fa9d2698f7021951f623e25"
     }
   }
 }
