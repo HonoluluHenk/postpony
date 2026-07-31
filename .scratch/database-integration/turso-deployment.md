@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [Turso CLI](https://docs.turso.tech/reference/turso-cli) installed (`brew install tursodatabase/tap/turso` or `npm i -g @turso/cli`)
+- [Turso CLI](https://docs.turso.tech/reference/turso-cli) installed (`mise use turso@latest`)
 - Logged in: `turso auth login`
 
 ## Steps
