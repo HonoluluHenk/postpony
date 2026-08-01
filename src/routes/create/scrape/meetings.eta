@@ -27,11 +27,11 @@
         <% for (let i = 0; i < it.meetings.length; i++) { %>
           <% const m = it.meetings[i]; %>
           <tr>
-            <td><%= m.day %> <%= m.date %></td>
-            <td><%= m.time %></td>
-            <td><%= m.homeTeam %></td>
-            <td><%= m.guestTeam %></td>
-            <td>
+            <td data-label="<%= it.t('scrape_match_date') %>"><%= m.day %> <%= m.date %></td>
+            <td data-label="<%= it.t('scrape_match_time') %>"><%= m.time %></td>
+            <td data-label="<%= it.t('scrape_match_home') %>"><%= m.homeTeam %></td>
+            <td data-label="<%= it.t('scrape_match_guest') %>"><%= m.guestTeam %></td>
+            <td data-label="<%= it.t('scrape_match_actions') %>">
               <form method="post" action="/create/scrape/meeting">
                 <input type="hidden" name="day" value="<%= m.day %>">
                 <input type="hidden" name="date" value="<%= m.date %>">

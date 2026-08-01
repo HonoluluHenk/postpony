@@ -13,10 +13,10 @@
     <tbody>
       <% it.proposedDates.forEach(function (pd) { %>
         <tr>
-          <td><%= pd.display %></td>
-          <td><%= pd.yes %></td>
-          <td><%= pd.maybe %></td>
-          <td><%= pd.no %></td>
+          <td data-label="<%= it.t('proposed_date_time_label') %>"><%= pd.display %></td>
+          <td data-label="<%= it.t('vote_yes') %>"><%= pd.yes %></td>
+          <td data-label="<%= it.t('vote_maybe') %>"><%= pd.maybe %></td>
+          <td data-label="<%= it.t('vote_no') %>"><%= pd.no %></td>
         </tr>
       <% }) %>
     </tbody>

@@ -124,6 +124,23 @@ export class EditPage {
     return this.page.getByRole('region', {name: 'Away Team Votes'});
   }
 
+  homeTallyTable(): Locator {
+    return this.homeTallySection()
+      .getByRole('table');
+  }
+
+  homeCopyButton(): Locator {
+    return this.page.locator('li')
+      .filter({has: this.homeInviteLink})
+      .locator('button.clipboard-btn');
+  }
+
+  awayCopyButton(): Locator {
+    return this.page.locator('li')
+      .filter({has: this.awayInviteLink})
+      .locator('button.clipboard-btn');
+  }
+
   awayVoteToggle(dateIndex: number): Locator {
     // ponytail: beer.css hides native checkboxes; toggle via label text
     return this.page.getByText('Allow away team to vote')

@@ -18,11 +18,11 @@
 <div>
   <p><%= it.t('invite_link_label') %></p>
   <ul class="list">
-    <li class="row no-wrap items-center gap">
+    <li class="row items-center gap wrap">
       <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>"><%= it.t('invite_link_home_label') %></a>
       <button class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/home?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" type="button"><i>content_copy</i></button>
     </li>
-    <li class="row no-wrap items-center gap">
+    <li class="row items-center gap wrap">
       <a href="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>"><%= it.t('invite_link_away_label') %></a>
       <button class="clipboard-btn" data-copy="<%= it.baseUrl %>/join/<%= it.session.id %>/away?token=<%= it.invitationPassword %>" aria-label="<%= it.t('copy_to_clipboard') %>" type="button"><i>content_copy</i></button>
     </li>

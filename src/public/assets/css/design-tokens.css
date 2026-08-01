@@ -4,7 +4,7 @@
     --primary: #1a237e;
 
     /* Layout */
-    --container-max-width: 800px;
+    --container-max-width: 75rem;
 
     /* Typography — modular scale */
     --heading-scale: 0.875;

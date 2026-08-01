@@ -61,7 +61,7 @@
 
   /* Specific UI Elements */
   .password-display {
-    font-family: var(--monospace-font);
+    font-family: var(--monospace-font), monospace;
     background: var(--surface-variant);
     color: var(--on-surface-variant);
     padding: var(--space-1) var(--space-2);
@@ -106,6 +106,69 @@
 
   .mt-4 {
     margin-top: var(--space-5);
+  }
+
+  /* List rows inherit BeerCSS `white-space: nowrap`, which stops long
+     proposed-date strings and player names from wrapping. Let the flex
+     `.max` box shrink and wrap so it stays inside its row instead of
+     pushing the row's switch out of view. */
+  .list .max {
+    min-width: 0;
+    white-space: normal;
+  }
+
+  /* BeerCSS `.list > li` is `flex-wrap: nowrap`; when a long proposed date
+     and the "away team votable" switch cannot share one line, let the row
+     wrap so the switch drops below the date instead of overlapping it. */
+  .list li {
+    flex-wrap: wrap;
+  }
+
+  /* Below 600px the header row may wrap so the page title drops onto its
+     own line instead of being clipped between the logo and the language
+     buttons. At 600px and wider it stays a single row. */
+  @media (max-width: 599px) {
+    header > .row.no-wrap {
+      flex-wrap: wrap;
+    }
+
+    header > .row.no-wrap > h1 {
+      flex-basis: 100%;
+    }
+  }
+
+  /* Below 993px tables stack into labeled cards instead of overflowing.
+     The header row is visually hidden (clip pattern) but keeps real
+     table semantics for screen readers; each cell prints its column label
+     above its value via data-label. */
+  @media (max-width: 992px) {
+    table:has(td[data-label]) > thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    table:has(td[data-label]) tbody,
+    table:has(td[data-label]) tr {
+      display: block;
+    }
+
+    table:has(td[data-label]) td {
+      display: block;
+    }
+
+    table:has(td[data-label]) td[data-label]::before {
+      content: attr(data-label);
+      display: block;
+      color: var(--on-surface-variant);
+      font-size: 0.75rem;
+    }
   }
 
   /* Global loading spinner */
