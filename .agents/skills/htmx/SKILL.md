@@ -17,7 +17,6 @@ You are an expert in HTMX for building dynamic web applications with minimal Jav
 ## HTMX Usage Guidelines
 
 ### Request Attributes
-
 - `hx-get` - Make GET request to URL
 - `hx-post` - Make POST request to URL
 - `hx-put` - Make PUT request to URL
@@ -25,47 +24,42 @@ You are an expert in HTMX for building dynamic web applications with minimal Jav
 - `hx-delete` - Make DELETE request to URL
 
 ### DOM Manipulation
-
 - `hx-target` - Specify where response content gets injected
 - `hx-swap` - Customize DOM insertion method (innerHTML, outerHTML, beforeend, etc.)
 - `hx-trigger` - Customize event handling and control request timing
 - `hx-select` - Select specific content from response
 
 ### URL Management
-
 - `hx-push-url` - Update browser URL without full page refresh
 - `hx-replace-url` - Replace current URL in history
 
 ## Best Practices
 
 ### Request Handling
-
 ```html
 <!-- Load content on click -->
 <button hx-get="/api/users" hx-target="#user-list">
-    Load Users
+  Load Users
 </button>
 
 <!-- Submit form via AJAX -->
 <form hx-post="/api/submit" hx-target="#result" hx-swap="innerHTML">
-    <input name="email" type="email">
-    <button type="submit">Submit</button>
+  <input name="email" type="email">
+  <button type="submit">Submit</button>
 </form>
 ```
 
 ### Error Handling
-
 - Implement server-side validation before processing requests
 - Return appropriate HTTP status codes (4xx for client errors, 5xx for server errors)
 - Provide user-friendly error messages
 - Use `hx-swap` for customizing error feedback presentation
 
 ### User Confirmation
-
 ```html
 <button hx-delete="/api/item/1"
         hx-confirm="Are you sure you want to delete this?">
-    Delete
+  Delete
 </button>
 ```
 
@@ -79,13 +73,11 @@ You are an expert in HTMX for building dynamic web applications with minimal Jav
 ## Integration Patterns
 
 ### With CSS Frameworks
-
 - Combine HTMX with Bootstrap or Tailwind without script conflicts
 - Use loading indicators for better UX
 - Handle transitions smoothly
 
 ### Template Organization
-
 - Organize templates as efficient, reusable HTMX fragments
 - Maintain clear separation of concerns
 - Use partial templates for common components

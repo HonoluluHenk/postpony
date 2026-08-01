@@ -12,16 +12,7 @@ description: >-
     output.
 metadata:
     category: Frontend & Accessibility
-    tags:
-        - html
-        - semantics
-        - accessibility
-        - a11y
-        - aria
-        - wcag
-        - landmarks
-        - forms
-        - keyboard
+    tags: html,semantics,accessibility,a11y,aria,wcag,landmarks,forms,keyboard,svg,tables
 ---
 
 # Semantic HTML
@@ -34,14 +25,14 @@ Write HTML that is semantic, accessible, and structurally honest. Every element 
 - choosing between semantic elements and `div`/`span` fallbacks (full element list in rule A.1)
 - auditing or fixing heading hierarchy and landmark structure
 - applying or reviewing ARIA roles, states, and properties
-- reviewing form labels, field grouping, or error associations
+- reviewing form labels, input types, field grouping, or error associations
 - checking keyboard accessibility, focus order, and skip links
-- writing alt text, table captions, or accessible names
+- writing alt text, icon/SVG names, table captions, or accessible names
 - debugging screen-reader or accessibility-tree output
 
 Do not use this skill for:
 
-- CSS layout, styling, or visual design decisions
+- CSS layout, styling, or visual design decisions (including colour contrast, reflow, and reduced motion)
 - JavaScript behaviour unless the HTML or ARIA choice is the root issue
 - template or component-framework syntax (Svelte, JSX, etc.) unless the HTML semantics within them are the subject
 - content strategy, copywriting, or plain-text concerns
@@ -50,67 +41,61 @@ Do not use this skill for:
 
 1. **Read the markup in source order.**  Map the landmarks, the heading outline, and the focus order before judging anything.
 2. **Walk the rules section by section** (A–I below). For each violation, record where it is, which rule it breaks, and a concrete fix.
-3. **Run the Heuristics checklist.**  Answer every item; do not stop until each one is answered.
-4. **Verify what you claim.**  Confirm accessible-name, ARIA, and keyboard claims against the accessibility tree or a keyboard-only walkthrough where you can — do not assert conformance you have not checked.
-5. **Present the results** using the template under Present Results to User.
+3. **Verify what you claim.**  Confirm accessible-name, ARIA, and keyboard claims against the accessibility tree or a keyboard-only walkthrough where you can — do not assert conformance you have not checked.
+4. **Present the results** using the template under Present Results to User.
 
-Completion criterion: every rule in sections A–I has been checked, every heuristic answered, and each finding names the offending element plus a concrete fix. If any part is unverifiable, say so rather than assuming it passes.
+When writing new markup rather than reviewing, work in the same order: build the semantic skeleton and a logical source order first, give every interactive control an accessible name, and leave presentation to CSS.
+
+Completion criterion: every rule in sections A–I has been checked against the markup, and each finding names the offending element plus a concrete fix. If any part is unverifiable, say so rather than assuming it passes.
 
 ## Rules
 
-For the exact WCAG 2.2 criteria, the target-size exceptions, the accessible-name algorithm, and ARIA attribute details, read
-`references/wcag-and-aria.md` when a finding needs to cite a criterion or handle an edge case.
+Each rule is the single source of truth for its topic; the offending markup and its correction live beside it. For worked before/after snippets per section, read `references/examples.md`. For the exact WCAG 2.2 criteria, the target-size exceptions, the accessible-name algorithm, and ARIA attribute details, read `references/wcag-and-aria.md`
+when a finding needs to cite a criterion or handle an edge case.
 
 ### A. Core Principles
 
-1. **Prefer semantic elements.**  Use the HTML element whose meaning matches the content (`section`, `article`, `aside`,
-   `nav`, `main`, `header`,
-   `footer`, `form`, `button`, `a`, `p`, `h1`–`h6`, `ul`, `ol`, `li`, `dl`,
-   `dt`, `dd`, `figure`, `figcaption`, `details`, `summary`, `dialog`,
-   `table`, `th`, `td`, `caption`, `img`, `blockquote`, `hr`, `address`,
-   `pre`, `code`, `em`, `strong`, `abbr`, `time`, `mark`, `cite`, `dfn`,
-   `progress`, `meter`). Do not use `div`/`span` when a semantic element is clearly better.
+1. **Prefer semantic elements.**  Use the HTML element whose meaning matches the content (`section`, `article`,
+   `aside`, `nav`, `main`, `header`, `footer`, `form`, `button`, `a`, `p`, `h1`–`h6`, `ul`, `ol`, `li`, `dl`, `dt`,
+   `dd`, `figure`, `figcaption`, `details`, `summary`, `dialog`, `table`, `th`, `td`, `caption`, `img`, `blockquote`,
+   `hr`, `address`, `pre`, `code`, `em`, `strong`, `abbr`, `time`, `mark`, `cite`, `dfn`, `progress`, `meter`). Reach for `div`/`span` only when no semantic element fits.
 
-2. **Avoid semantic overfitting.**  Do not force a semantic element where a plain container is more accurate. A `div` is fine when no stronger semantic exists. Accuracy over mechanical compliance.
+2. **Avoid semantic overfitting.**  Do not force a semantic element where a plain container is more accurate. A `div`
+   is fine when no stronger semantic exists. Accuracy over mechanical compliance.
 
-3. **Content and behaviour separate.**  HTML defines structure, CSS defines presentation, JavaScript defines behaviour. No inline `onclick=""`
-   strings or inline styles.
+3. **Content and behaviour separate.**  HTML defines structure, CSS defines presentation, JavaScript defines behaviour. No inline `onclick=""` strings or inline styles; build the semantic structure before any layout.
 
 4. **Keep nesting shallow.**  No unnecessary wrappers. Every extra layer must justify itself on structural, semantic, or accessibility grounds.
 
 ### B. Document Structure
 
-1. **Source order must be logical.**  The reading and navigation order must make sense without CSS. Place content in DOM order so that screen-reader users encounter it in a meaningful sequence.
+1. **Source order must be logical.**  The reading and navigation order must make sense without CSS. Place content in DOM order so that screen-reader users encounter it in a meaningful sequence, before any visual reordering.
 
-2. **Landmarks must be meaningful.**  Use `main`, `nav`, `header`, `footer`,
-   `aside` where they help orientation. When multiple landmarks of the same type appear on a page, distinguish them with
-   `aria-label` or
-   `aria-labelledby`. Do not wrap every subsection in a landmark.
+2. **Landmarks must be meaningful.**  Use `main`, `nav`, `header`, `footer`, `aside` where they help orientation. When multiple landmarks of the same type appear on a page, distinguish them with `aria-label` or `aria-labelledby`. Do not wrap every subsection in a landmark.
 
-3. **Headings form a logical hierarchy.**  One `h1` per page or main view. Follow a clear order (`h1` → `h2` → `h3`). Do not skip levels without reason. Every sectioning element (`section`, `article`, `nav`, `aside`)
-   should contain a heading that describes its content.
+3. **Headings form a logical hierarchy.**  One `h1` per page or main view. Follow a clear order (`h1` → `h2` → `h3`); do not skip levels without reason, and never pick a heading level for its visual size. Every sectioning element (`section`, `article`, `nav`, `aside`) should contain a heading that describes its content.
 
-4. **Declare the language.**  Set `lang` on `<html>` and on any content that switches language, so screen readers pronounce text correctly.
+4. **Declare the language and direction.**  Set `lang` on `<html>` and on any content that switches language, so screen readers pronounce text correctly. Set `dir` when the base direction is right-to-left.
 
 ### C. Content Semantics
 
-1. **Use lists only for actual lists.**  `ul`/`ol` for list semantics (steps, menu items, grouped items where list membership is the meaning). Do not use list markup just because content repeats.
+1. **Use lists only for actual lists.**  `ul`/`ol` for list semantics (steps, menu items, grouped items where list membership is the meaning). Do not wrap merely decorative or repeating content in `ul`/`li` when list membership carries no meaning.
 
-2. **Use `article` for standalone entries.**  Use `article` when each repeated item can stand on its own — cards, posts, results, stories — with its own heading, metadata, or actions.
+2. **Use `article` for standalone entries.**  Use `article` when each repeated item can stand on its own — cards, posts, results, stories — with its own heading, metadata, or actions. For a genuine list of such entries, nest them as
+   `li > article`.
 
-3. **Use native disclosure and status widgets.**  Prefer `<details>` /
-   `<summary>` for collapsible sections, `<dialog>` for modals, `<progress>`
-   for task completion, `<meter>` for scalar measurements. These expose state automatically to the accessibility tree.
+3. **Use native disclosure and status widgets.**  Prefer `<details>` / `<summary>` for collapsible sections,
+   `<dialog>` for modals, `<progress>` for task completion, `<meter>` for scalar measurements. These expose state automatically to the accessibility tree.
 
-### D. Images
+### D. Images & Icons
 
-1. **Images need intentional `alt`.**  `alt=""` for decorative images. Descriptive, concise `alt` text for informative images conveying information a sighted user would see and that matters in context. Use
-   `figure`/`figcaption` when the caption is part of the content. Never include text as an image.
+1. **Images need intentional `alt`.**  `alt=""` for decorative images. Descriptive, concise `alt` text for informative images conveying information a sighted user would see and that matters in context. Use `figure`/`figcaption` when the caption is part of the content. Never render text as an image.
+
+2. **Icons and inline SVG carry a name or are hidden.**  An inline `<svg>` that conveys meaning needs `role="img"` plus a `<title>` (or `aria-label`); a decorative icon or SVG gets `aria-hidden="true"`. An icon-only button needs an accessible name via `aria-label` or visually-hidden text — the glyph alone names nothing.
 
 ### E. Tables
 
-1. **Data tables must be accessible.**  Use `<th>` with `scope="col"` /
-   `scope="row"`. Provide a `<caption>` for the table's accessible name. Avoid using tables for layout.
+1. **Data tables must be accessible.**  Use `<th>` with `scope="col"` / `scope="row"`, and provide a `<caption>` for the table's accessible name. For tables with multiple header levels or an irregular layout, associate each cell with its headers via `headers`/`id`. Never use tables for layout.
 
 ### F. Links
 
@@ -123,16 +108,21 @@ For the exact WCAG 2.2 criteria, the target-size exceptions, the accessible-name
 
 ### G. Interactive Elements & Forms
 
-1. **Use correct interactive elements.**  `<button>` for actions, `<a
-    href="...">` for navigation. Never use a clickable `div` or `span` as a button or link. If a non-interactive element must play an interactive role, add `role`, `tabindex`, and keyboard event handling.
+1. **Use correct interactive elements.**  `<button>` for actions, `<a href="...">` for navigation. Never use a clickable
+   `div` or `span`, or a bare `<a>` with a click handler but no `href` — neither is focusable or operable by keyboard. Give every `<button>` in a form an explicit `type` (`submit`, `button`, or `reset`); the default is
+   `submit`. If a non-interactive element must play an interactive role, add `role`, `tabindex`, and keyboard event handling.
 
 2. **Forms must be explicit.**  Every input needs an associated `<label>`. Use `fieldset`/`legend` for grouped controls (radio groups, address blocks). Mark required fields with the `required` attribute, not only text. Do not rely on
    `placeholder` as a label.
 
-3. **Error messages associate with input.**  Link error text to the input via `aria-describedby`, and mark the field
+3. **Inputs declare their purpose.**  Choose the input `type` that matches the data (`email`, `tel`, `url`, `number`,
+   `date`) so browsers validate and mobile keyboards adapt, and add the right `autocomplete` token (`name`, `email`,
+   `username`, `current-password`, `new-password`) so browsers and password managers can fill (WCAG 2.2 AA: Identify Input Purpose).
+
+4. **Error messages associate with input.**  Link error text to the input via `aria-describedby`, and mark the field
    `aria-invalid`. Errors must be perceivable and programmatically associated.
 
-4. **Authentication must not require cognitive-function tests.**  Provide at least one authentication path that does not rely on a cognitive-function test — remembering a site-specific password, transcribing a code, or solving a puzzle (WCAG 2.2 AA: Accessible Authentication, Minimum). If a cognitive test is used, offer an alternative method, and never block paste or password-manager fill. Object-recognition tests are permitted at AA level; the strict "no cognitive tests at all" rule is AAA.
+5. **Authentication must not require cognitive-function tests.**  Provide at least one authentication path that does not rely on a cognitive-function test — remembering a site-specific password, transcribing a code, or solving a puzzle (WCAG 2.2 AA: Accessible Authentication, Minimum). If a cognitive test is used, offer an alternative method, and never block paste or password-manager fill. Object-recognition tests are permitted at AA level; the strict "no cognitive tests at all" rule is AAA.
 
 ### H. Focus & Keyboard
 
@@ -145,75 +135,23 @@ For the exact WCAG 2.2 criteria, the target-size exceptions, the accessible-name
 4. **`tabindex` stays minimal.**  Use `0` for natively focusable elements and `-1` for programmatic focus. Never use
    `tabindex` greater than 0, and avoid `tabindex` on non-interactive content.
 
-5. **Dialogs and overlays manage focus.**  Move focus into the dialog on open, keep it inside while open, and restore it to the trigger on close. Use `aria-modal="true"` on modal dialogs. Native `<dialog>` with
-   `.showModal()` does this for you.
+5. **Dialogs and overlays manage focus.**  Move focus into the dialog on open, keep it inside while open, and restore it to the trigger on close. Use `aria-modal="true"` on modal dialogs. Native `<dialog>` with `.showModal()` does this for you.
 
 ### I. ARIA
 
 1. **Four rules of ARIA.**
 
-   a. Prefer native HTML elements and attributes over ARIA. b. Do not change native semantics unless absolutely necessary. If you need a tab, do not write `<h2 role="tab">`; use
-   `<div role="tab"><h2>…</h2></div>`. c. All interactive ARIA controls must be keyboard usable. d. Never apply
-   `aria-hidden="true"` or `role="presentation"` to a focusable element.
+   a. Prefer native HTML elements and attributes over ARIA — do not add ARIA when native HTML already provides the semantics. b. Do not change native semantics unless absolutely necessary. If you need a tab, do not write
+   `<h2 role="tab">`; use `<div role="tab"><h2>…</h2></div>`. c. All interactive ARIA controls must be keyboard usable. d. Never apply `aria-hidden="true"` or `role="presentation"` to a focusable element.
 
-2. **Accessible names.**  Precedence: `aria-labelledby` > `aria-label` >
-   native mechanism (`label`, `alt`, `caption`, `legend`) > `title` /
-   `placeholder` fallback. Prefer visible text. Prefer native techniques. Do not include role names in accessible names (e.g. "Submit button"
-   creates duplicate output — the role is announced automatically).
+2. **Accessible names.**  Precedence: `aria-labelledby` > `aria-label` > native mechanism (`label`, `alt`, `caption`,
+   `legend`) > `title` / `placeholder` fallback. Prefer visible text and native techniques. Do not include role names in accessible names (e.g. "Submit button" creates duplicate output — the role is announced automatically).
 
-3. **Accessible state and properties.**  Use `aria-expanded` for toggleable sections, `aria-controls` to reference the controlled element,
-   `aria-current` for the current item in a set, `aria-selected` for tab/listbox selection, `aria-hidden` to hide decorative or offscreen content from the accessibility tree (only on non-focusable elements).
+3. **Accessible state and properties.**  Use `aria-expanded` for toggleable sections, `aria-controls` to reference the controlled element, `aria-current` for the current item in a set, `aria-selected` for tab/listbox selection,
+   `aria-hidden` to hide decorative or offscreen content from the accessibility tree (only on non-focusable elements).
 
-4. **Live regions for dynamic content.**  Use `aria-live="polite"` for content that updates without user action (feeds, stock tickers). Use
-   `aria-live="assertive"` sparingly for urgent, time-sensitive messages. Prefer `role="status"` and `role="alert"` over raw `aria-live`.
-
-## Anti-Patterns
-
-- using `div` for buttons or links
-- using links with Javascript without `href` attribute but with click-handlers
-- adding ARIA when native HTML already provides the semantics
-- `aria-hidden="true"` or `role="presentation"` on a focusable element
-- skipping labels on form inputs
-- using `placeholder` as a substitute for `<label>`
-- using headings for visual styling only
-- wrapping merely decorative card layouts in `ul`/`li` where list membership carries no meaning — but do use
-  `li > article` for a genuine list of standalone entries
-- using `section` without a heading
-- deeply nested wrapper `div` chains
-- using tables for layout
-- "click here" / "read more" link text
-- forcing a semantic element where it does not fit
-- including the role name in an accessible name
-- applying `aria-live` to regions that do not update dynamically
-- `tabindex` values greater than 0
-
-## Heuristics
-
-- does every element have a reason to exist?
-- would this structure make sense without CSS?
-- can a screen reader parse the heading hierarchy?
-- are landmarks present where they help, absent where they would be noise?
-- is `lang` declared on the document and at every language switch?
-- is every interactive element reachable and operable by keyboard?
-- does every dialog manage focus (move in, contain, restore)?
-- are `tabindex` values limited to `0` and `-1`?
-- does every form control have a visible, programmatically associated label?
-- is every image's `alt` correct (descriptive or empty)?
-- are ARIA attributes used only where native HTML cannot express the needed semantics?
-- is the accessible name for every interactive element clear, concise, and free of role duplication?
-- are dynamic content updates announced via appropriate live regions?
-- are error messages associated with their inputs?
-- would this pass a keyboard-only walkthrough?
-
-## Output Guidelines
-
-- start with semantic structure, not visual layout
-- choose the element that most accurately reflects the content's meaning
-- add ARIA only when native HTML cannot express the needed semantics
-- prefer visible text labels over `aria-label` where possible
-- keep the markup minimal — every element must earn its keep
-- logical source order before visual reordering
-- test with the accessibility tree, not just the DOM
+4. **Live regions for dynamic content.**  Use `aria-live="polite"` for content that updates without user action (feeds, stock tickers). Use `aria-live="assertive"` sparingly for urgent, time-sensitive messages. Prefer `role="status"`
+   and `role="alert"` over raw `aria-live`, and do not put `aria-live` on regions that never update dynamically.
 
 ## Present Results to User
 
