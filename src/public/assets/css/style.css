@@ -228,4 +228,47 @@
       transition: none;
     }
   }
+
+  /* air-datepicker themed to the BeerCSS/Material palette (design layer beats vendor). */
+  .air-datepicker {
+    --adp-background-color: var(--surface);
+    --adp-background-color-hover: var(--surface-container-high);
+    --adp-background-color-active: var(--surface-container-high);
+    --adp-color: var(--on-surface);
+    --adp-color-secondary: var(--on-surface-variant);
+    --adp-accent-color: var(--primary);
+    --adp-color-current-date: var(--primary);
+    --adp-color-other-month: var(--on-surface-variant);
+    --adp-color-disabled: var(--on-surface-variant);
+    --adp-border-color: var(--outline-variant);
+    --adp-border-color-inner: var(--outline-variant);
+    --adp-border-radius: var(--border-radius);
+    --adp-nav-arrow-color: var(--on-surface-variant);
+    --adp-nav-color-secondary: var(--on-surface-variant);
+    --adp-day-name-color: var(--primary);
+    --adp-day-name-color-hover: var(--primary);
+    --adp-cell-border-radius: var(--border-radius);
+    --adp-cell-background-color-hover: var(--surface-container-high);
+    --adp-cell-background-color-selected: var(--primary);
+    --adp-cell-background-color-selected-hover: var(--primary);
+    --adp-cell-border-color-in-range: var(--primary);
+    --adp-btn-color: var(--primary);
+    --adp-time-track-color: var(--outline);
+    --adp-time-track-color-hover: var(--primary);
+    --adp-time-day-period-color: var(--on-surface-variant);
+  }
+
+  .air-datepicker--pointer:after {
+    background: var(--surface);
+  }
+
+  /* WCAG 2.2 AA target size: air-datepicker's 17px-tall time sliders fail
+     target-size/target-offset; grow the rows and the gap between them. */
+  .air-datepicker-time--row {
+    height: 24px;
+  }
+
+  .air-datepicker-time--row:first-child {
+    margin-bottom: 24px;
+  }
 }

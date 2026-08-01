@@ -91,6 +91,8 @@ export default tseslint.config(
         htmx: 'readonly',
         ui: 'readonly',
         Spinner: 'readonly',
+        AirDatepicker: 'readonly',
+        AirDatepickerLocale: 'readonly',
       },
     },
   },

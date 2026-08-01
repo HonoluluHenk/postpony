@@ -9,10 +9,13 @@
   <script src="/assets/vendor/js/htmx.min.js"></script>
   <style>
     @import url('/assets/vendor/css/beer.min.css') layer(vendor);
+    @import url('/assets/vendor/css/air-datepicker.css') layer(vendor);
     @layer design;
   </style>
   <script type="module" src="/assets/vendor/js/beer.min.js"></script>
   <script type="module" src="/assets/vendor/js/material-dynamic-colors.min.js"></script>
+  <script src="/assets/vendor/js/air-datepicker.min.js"></script>
+  <script src="/assets/vendor/js/air-datepicker-locales.js"></script>
   <script src="/assets/js/spinner.js"></script>
   <script src="/assets/js/main.js"></script>
   <link rel="stylesheet" href="/assets/css/design-tokens.css">

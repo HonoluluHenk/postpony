@@ -96,6 +96,59 @@ function initClipboard() {
   });
 }
 
+// ponytail: single proposed-date picker per page; destroyed and recreated on
+// every HTMX swap so the fresh input always gets a live instance.
+let activeDatePicker = null;
+
+/**
+ * Progressively enhances the proposed-date input with air-datepicker on
+ * fine-pointer (desktop) devices. Touch devices keep the native
+ * datetime-local picker, which is better UX and a11y on mobile.
+ * The input emits YYYY-MM-DD HH:mm (space separator); the server accepts
+ * both T and space forms and normalizes to T on save.
+ */
+function initProposedDateTimePicker() {
+  const input = document.getElementById('proposedDateTime');
+  if (!input || typeof AirDatepicker === 'undefined') return;
+  if (window.matchMedia('(pointer: coarse)').matches) return;
+
+  if (activeDatePicker) {
+    activeDatePicker.destroy();
+  }
+  input.type = 'text';
+
+  const locales = window.AirDatepickerLocale || {};
+  const locale = locales[document.documentElement.lang] || locales.en;
+  activeDatePicker = new AirDatepicker(input, {
+    locale: locale,
+    // ponytail: air-datepicker's format tokenizer treats 'T' as a literal
+    // (not a token boundary), so the separator must be a space; the server
+    // accepts both and normalizes to 'T' on save.
+    dateFormat: 'yyyy-MM-dd',
+    timeFormat: 'HH:mm',
+    dateTimeSeparator: ' ',
+    timepicker: true,
+    // ponytail: popup opens above the field so it never covers the
+    // "Add Proposed Date" submit button that sits directly below the input.
+    position: 'top center',
+    selectedDates: input.value ? [input.value] : [],
+    onShow: patchTimeSliderLabels,
+  });
+}
+
+// ponytail: air-datepicker ships no ARIA labels on its time sliders; patch
+// them with localized names so axe (and screen readers) see labelled fields.
+// The picker builds its DOM lazily on first show, hence this runs per open.
+function patchTimeSliderLabels() {
+  if (!activeDatePicker) return;
+  const locale = activeDatePicker.opts.locale;
+  const sliderLabels = [locale.hours, locale.minutes];
+  activeDatePicker.$datepicker.querySelectorAll('input[type="range"]')
+    .forEach((slider, i) => {
+      slider.setAttribute('aria-label', sliderLabels[i] ?? '');
+    });
+}
+
 /**
  * Focuses a heading inside the swap target, or the error alert when validation fails.
  * Called from hx-on::after-request on forms that trigger partial swaps.
@@ -105,6 +158,8 @@ function initFocusManagement() {
   document.addEventListener('htmx:afterSettle', function (evt) {
     var el = evt.target;
     if (!el || el.nodeType !== 1) return;
+
+    initProposedDateTimePicker();
 
     if (el.matches('#main-content')) {
       var h = el.querySelector('h2, h3, h4');
@@ -134,4 +189,5 @@ window.addEventListener('load', () => {
   initHtmx(spinner);
   initClipboard();
   initFocusManagement();
+  initProposedDateTimePicker();
 });

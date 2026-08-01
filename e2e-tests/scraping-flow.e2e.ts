@@ -111,8 +111,9 @@ test.describe('Scraping Flow', () => {
       .toContainText('Draft');
 
     // 7. The proposed-date field defaults to the original match's date/time.
+    // The desktop date picker renders the value with an ISO-8601 space separator.
     await expect(editPage.proposedDateTimeInput)
-      .toHaveValue('2026-08-29T16:00');
+      .toHaveValue('2026-08-29 16:00');
 
     // 8. Players scraped from both teams' rosters are prefilled.
     // The scraper navigated for Ostermundigen; in the chosen meeting

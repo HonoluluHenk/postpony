@@ -46,9 +46,11 @@ export function parseIsoToPlainDateTime(isoString: string): Temporal.PlainDateTi
 }
 
 /**
- * Matches the value format produced by an `<input type="datetime-local">`.
+ * Matches the value format produced by an `<input type="datetime-local">`
+ * (T separator) or by the desktop air-datepicker enhancement (ISO-8601 space
+ * separator). Both are accepted by Temporal and normalized to T on save.
  */
-export const DATETIME_LOCAL_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+export const DATETIME_LOCAL_PATTERN = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}$/;
 
 /**
  * Converts a click-tt.ch meeting's `date` (`dd.mm.yyyy`) and `time` (`HH:mm`,

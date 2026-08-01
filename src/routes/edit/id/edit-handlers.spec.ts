@@ -117,6 +117,20 @@ describe('edit handlers', () => {
         .toBe(proposedDate?.dateTimeRange.end);
     });
 
+    test('accepts an ISO-8601 space separator and normalizes it to T on save', async () => {
+      const session = aSession();
+      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '2025-09-01 20:00'}});
+      await app.store.save(session);
+
+      await handleEditProposedDatesPost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates)
+        .toHaveLength(1);
+      expect(stored?.proposedDates[0]?.dateTimeRange.start.toString())
+        .toBe('2025-09-01T20:00:00');
+    });
+
     test('appends to the existing proposed dates', async () => {
       const session = aSession({proposedDates: [aProposedDate()]});
       const app = createApp({params: {id: session.id}, body: {proposedDateTime: '2025-09-02T18:30'}});
