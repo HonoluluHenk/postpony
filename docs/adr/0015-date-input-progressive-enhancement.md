@@ -1,7 +1,7 @@
 # ADR 0015: Proposed-Date Picker — Progressive Enhancement
 
 ## Status
-Accepted
+Superseded by ADR-0016
 
 ## Context
 The edit page lets the owner add proposed dates via a single `<input type="datetime-local">`. That native control is excellent on mobile/touch (platform keyboard, scroll wheels, locale-aware) but poor on desktop: collapsed into two cramped text fields, no calendar, and inconsistent time entry across browsers.
