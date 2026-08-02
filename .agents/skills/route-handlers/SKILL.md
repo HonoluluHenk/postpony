@@ -35,7 +35,8 @@ Key members:
 - `app.t(key, params?)` — localized string; `key` is typed as `TranslationKeys`
   (see the `localization` skill).
 - `app.isPartial` — `true` when the request carries `HX-Request`. Render a fragment when partial, the full layout otherwise.
-- `app.render(template, data)` — renders an `.eta` template from `src/routes/`; automatically injects `t`, `locale`, `isPartial`, and `baseUrl`.
+- `app.locale` — the resolved `AppLocale` (`'de-CH' | 'fr-CH' | 'it-CH' | 'en-US'`). Use it directly (e.g. for `formatLocalizedDateTime`, `parseLocaleDateTime`, `formatIsoToLocaleTokens`) — there is no `toIntlLocale` mapping anymore.
+- `app.render(template, data)` — renders an `.eta` template from `src/routes/`; automatically injects `t`, `locale`, `languageOptions`, `inputFormat`, `isPartial`, and `baseUrl`.
 - `app.requireParam(name)` / `app.requireParam(name, transform)` — reads a path param, throwing a localized `missing_param` failure if absent; the second form maps the value (e.g. to a number).
 - `app.store` — the session store (`SessionStore` interface). Use `await app.store.get(id)` to read and `await app.store.save(session)` to write. See `src/lib/session-store.ts` for the interface and implementations (`MemorySessionStore` for tests, `SqliteSessionStore` for dev/prod).
 
@@ -44,7 +45,7 @@ Key members:
 Do **not** build error responses by hand. Throw via these `App` helpers; the
 `onError` handler in `src/index.ts` turns them into the right UI response (an out-of-band `#error-container` for HTMX partials, or the `error.eta` page):
 
-- `app.failure(message, status = 400)` → `AppError`
+- `app.failure(message, status = 400)` → `AppError`; **returns `never`**, so code after an `if (!parsed) { app.failure(...) }` guard type-narrows to defined — useful for "unreachable" branches after validation.
 - `app.notFound(message?)` → `StateError` (404)
 - `app.internal(message?)` → `InternalError` (500)
 

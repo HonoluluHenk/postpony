@@ -79,15 +79,16 @@ src/
     reschedule.ts     — domain module: pure operations on RescheduleSession, overridable newId()/now() seam
     models.ts         — RescheduleSession, Player, ProposedDate, Vote, Venue interfaces
     errors.ts         — AppError (400), StateError (404), InternalError (500), ClickTTError
+    temporal-utils.ts — locale-aware date parsing/formatting (parseLocaleDateTime, formatIsoToLocaleTokens); note Temporal's object form *balances* invalid dates, so validation goes through a strict ISO string
     __test-utils__/builders.ts — deep-partial fixture builders (aSession, aPlayer, aProposedDate, aVote, aVenue)
-  locales/            — en.json, de.json; TranslationKeys type derived from en.json keys
+  locales/            — config.ts (AppLocale = de-CH|fr-CH|it-CH|en-US single source of truth), constants.ts, en.json, de.json; TranslationKeys derived from en.json keys
   public/assets/
     css/design-tokens.css — design tokens in @layer design
     vendor/           — BeerCSS (Material 3) in @layer vendor
 e2e-tests/
   pages/              — Page Object Model classes (StartPage, CreatePage, EditPage, JoinPage, ScrapePage)
   fixtures.ts         — Custom Playwright fixtures (checkA11y, makeAxeBuilder)
-docs/adr/             — 14 ADRs
+docs/adr/             — 16 ADRs
 ```
 
 ## Framework patterns
@@ -95,7 +96,7 @@ docs/adr/             — 14 ADRs
 - **Handlers**: `factory.createApp()` per router; wrap each handler with `handleAppRequest(fn)`.
 - **App class**: all handlers receive `App` (not raw Hono `Context`). Use `app.t()`, `app.render()`, `app.requireParam()`, `app.failure()`, `app.notFound()`, `app.isPartial`.
 - **HTMX**: default swap is `outerHTML`. Errors rendered via `hx-swap-oob="true"` into `#error-container` element. **Partial vs initial render gotcha**: any UI element rendered by an HTMX partial must also be present in the initial template — tests loading the page fresh (e.g. `/edit/:id`) hit the initial render, not the partial. Keep both in sync.
-- **Locale**: set via `?lang=en|de` → cookie → `Accept-Language` fallback. LanguageMiddleware sets `c.set('locale', ...)`.
+- **Locale**: `AppLocale = 'de-CH' | 'fr-CH' | 'it-CH' | 'en-US'` (default `de-CH`), resolved by `languageMiddleware` from `?lang=` → `lang` cookie → `Accept-Language` prefix mapping (`de*`→de-CH, `fr*`→fr-CH, `it*`→it-CH, `en*`→en-US). `src/locales/config.ts` is the single source of truth for input formats (`dd.MM.yyyy HH:mm` / `MM/dd/yyyy hh:mm aa`). fr-CH/it-CH reuse the English UI text until dedicated translations land (ADR-0016).
 - **Validation**: Valibot schemas → `mapValidationToErrors()` for UI.
 - **Error handling**: throw `AppError | StateError` in handlers; caught by `onError` in `src/index.ts`.
 - **Sessions**: `SessionStore` seam (`src/lib/session-store.ts`) with `MemorySessionStore` (tests) and `SqliteSessionStore` (dev/prod). Access via `app.store.get()` / `app.store.save()`. Upgrade path: Turso/SQLite (ADR-0014).

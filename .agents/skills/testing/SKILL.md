@@ -47,7 +47,7 @@ expect((await app.store.get(session.id))?.players[0]?.name)
     .toBe('Alice');
 ```
 
-- Copy the `createApp` / `MockOptions` helper from `edit-handlers.spec.ts`; it creates a `MemorySessionStore`, mocks `param`, `query`, `header`, `parseBody`, `html`, and `redirect`, and returns `'en'` for `LOCALE_KEY` so `app.t(...)` resolves real strings.
+- Copy the `createApp` / `MockOptions` helper from `edit-handlers.spec.ts`; it creates a `MemorySessionStore`, mocks `param`, `query`, `header`, `parseBody`, `html`, and `redirect`, and returns `'en-US'` (or `'de-CH'`) for `LOCALE_KEY` so `app.t(...)` resolves real strings. If the handler/middleware reads cookies, the mock must also provide `req.raw: {headers: new Headers(...)}` — Hono's `getCookie` reads `c.req.raw.headers`, not `c.req.header()` (see the `hono` skill).
 - Assert error paths with `.rejects.toThrow(...)` — handlers signal failures by throwing `AppError`/`StateError` via `app.failure`/`app.notFound`.
 - Each test gets its own `MemorySessionStore` instance (injected via `App.create(context, store)`), so tests are fully isolated from one another.
 
@@ -57,7 +57,7 @@ All Playwright tests use Page Object classes from `e2e-tests/pages/`:
 
 | Class        | Page                     | Key methods / locators                                                                                                                                                  |
 |--------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `StartPage`  | `/`                      | `goto()`, `createLink`, `editLink`, `switchLanguage(lang)`, `spinner`, `main`, `banner`, `contentinfo`                                                                  |
+| `StartPage`  | `/`                      | `goto()`, `createLink`, `editLink`, `switchLanguage(locale)` (via the header `<select>`), `spinner`, `main`, `banner`, `contentinfo`                                    |
 | `CreatePage` | `/create`                | `goto()`, `nameInput`, `submitButton`, `create(name)` → `EditPage`                                                                                                      |
 | `EditPage`   | `/edit/:id`              | `addPlayer(name)`, `addProposedDate(dt)`, `updateVenueSettings(max)`, `toggleAwayVotable(index)`, `homeTallySection()`, `awayTallySection()`, `status`, `ownerPassword` |
 | `JoinPage`   | `/join/:id/:team?token=` | `goto(href)`, `join(name)`, `castVote(index, vote)`, `submitVotes()`, `voteForm`, `tallySection()`, `voteRadio(vote)`                                                   |
@@ -109,6 +109,21 @@ Prefer writing semantic HTML instead of sprinkling `aria-*` attributes everywher
 
 e2e files are type-checked separately under `tsconfig.e2e.json`; a full
 `npm run lint` validates them (see the `npm-scripts` skill).
+
+### Locale & `Accept-Language` in e2e
+
+- Playwright navigations send `Accept-Language: en-US` by default, so pages default to `en-US` UI in tests — that is what most assertions expect.
+- **Raw requests carry no `Accept-Language`.** `page.request.post(...)` (and
+  `request.get`) send no `Accept-Language`, so locale resolution falls back to the server default (`de-CH`). A test that asserts English error text on a raw POST must set the header explicitly:
+  `headers: {Accept: 'text/html', 'Accept-Language': 'en-US'}`.
+- Date-input e2e values are locale-dependent: `EditPage.isoToLocaleTokens`
+  mirrors the server formatter from `<html lang>`; use `addProposedDate('...')` /
+  `createSession` with ISO values and let the page object convert.
+
+### Coverage report gotcha
+
+- Judge per-file coverage from a **full** `npm run test` (v8/lcov/HTML report). The istanbul **text** reporter silently drops subdirectory groups that are fully covered in a single file (e.g. `src/lib/middleware/language.ts` at 100% vanished from the text table but shows in `coverage/lcov.info` and the HTML report). The `lcov` and `html` reporters are authoritative.
+- A `--coverage` run limited to one spec reports a misleading global percentage (coverage `all` semantics) — don't infer per-file coverage from it.
 
 ## Conventions
 
