@@ -6,14 +6,22 @@ import config from './config';
 import { AppError, InternalError, StateError } from './lib/errors';
 import { MemorySessionStore, type SessionStore } from './lib/session-store';
 import { Timestamp } from './lib/timestamp';
-import { defaultLocale, getTranslation, type Locale, LOCALE_KEY, type TranslationKeys } from './locales';
+import {
+  type AppLocale,
+  defaultLocale,
+  getTranslation,
+  inputFormat,
+  languageOptions,
+  LOCALE_KEY,
+  type TranslationKeys,
+} from './locales';
 
 export const eta = new Eta({views: path.join(process.cwd(), 'src/routes')});
 
 export class App {
   readonly timestamp = new Timestamp();
 
-  readonly locale: Locale;
+  readonly locale: AppLocale;
 
   readonly store: SessionStore;
 
@@ -24,7 +32,7 @@ export class App {
   )
   {
     this.store = store;
-    this.locale = (c.get(LOCALE_KEY) as Locale | undefined) ?? defaultLocale;
+    this.locale = (c.get(LOCALE_KEY) as AppLocale | undefined) ?? defaultLocale;
   }
 
   static create(c: Context, store?: SessionStore): App {
@@ -46,6 +54,8 @@ export class App {
       locale: this.locale,
       isPartial: this.isPartial,
       baseUrl,
+      languageOptions: languageOptions(),
+      inputFormat: inputFormat(this.locale),
     });
   }
 

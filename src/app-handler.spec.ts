@@ -23,7 +23,7 @@ describe('App.requireParam', () => {
     mockContext.req.param = (_name: string): string | undefined => undefined;
     mockContext.req.query = (_name: string): string | undefined => undefined;
     mockContext.req.header = (_name: string): string | undefined => undefined;
-    mockContext.get.mockReturnValue('en');
+    mockContext.get.mockReturnValue('en-US');
   });
 
   it('should return the parameter value when it exists', () => {
@@ -58,28 +58,28 @@ describe('App.requireParam', () => {
 
   describe('Localization', () => {
     it('should use locale from context', () => {
-      mockContext.get.mockReturnValue('de');
+      mockContext.get.mockReturnValue('de-CH');
       const app = createApp(mockContext);
       expect(app.locale)
-        .toBe('de');
+        .toBe('de-CH');
       expect(mockContext.get)
         .toHaveBeenCalledWith('locale');
     });
 
     it('should translate keys correctly', () => {
-      mockContext.get.mockReturnValue('en');
+      mockContext.get.mockReturnValue('en-US');
       const appEn = createApp(mockContext);
       expect(appEn.t('welcome'))
         .toBe('Welcome to PostPony');
 
-      mockContext.get.mockReturnValue('de');
+      mockContext.get.mockReturnValue('de-CH');
       const appDe = createApp(mockContext);
       expect(appDe.t('welcome'))
         .toBe('Willkommen bei PostPony');
     });
 
     it('should handle parameters in translations', () => {
-      mockContext.get.mockReturnValue('en');
+      mockContext.get.mockReturnValue('en-US');
       const app = createApp(mockContext);
       expect(app.t('missing_param', {name: 'foo'}))
         .toBe('Missing required parameter: foo');

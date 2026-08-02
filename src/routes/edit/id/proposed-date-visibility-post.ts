@@ -1,7 +1,6 @@
 import type { App } from '../../../app';
 import { Reschedule } from '../../../lib/reschedule';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
-import { toIntlLocale } from '../../../locales';
 
 export const handleProposedDateVisibilityPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
@@ -17,7 +16,7 @@ export const handleProposedDateVisibilityPost = async (app: App): Promise<Respon
   const updated = reschedule.setAwayTeamVotable(session, proposedDateId, votable);
   await app.store.save(updated);
 
-  const locale = toIntlLocale(app.locale);
+  const locale = app.locale;
   const tallies = reschedule.tally(updated);
   const homeTallies = reschedule.tally(updated, 'home');
   const awayTallies = reschedule.tally(updated, 'away');

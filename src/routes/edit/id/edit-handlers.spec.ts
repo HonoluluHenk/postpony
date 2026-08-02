@@ -18,7 +18,7 @@ function createApp(options: MockOptions = {}): App {
   const {params = {}, queries = {}, headers = {}, body = {}} = options;
   const store = new MemorySessionStore();
   const context = {
-    get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en' : undefined),
+    get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en-US' : undefined),
     req: {
       param: (name: string): string | undefined => params[name],
       query: (name: string): string | undefined => queries[name],
@@ -100,7 +100,7 @@ describe('edit handlers', () => {
 
     test('adds a proposed date to the session', async () => {
       const session = aSession();
-      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '2025-09-01T20:00'}});
+      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '09/01/2025 08:00 pm'}});
       await app.store.save(session);
 
       await handleEditProposedDatesPost(app);
@@ -115,11 +115,13 @@ describe('edit handlers', () => {
         .toBe('owner');
       expect(proposedDate?.dateTimeRange.start)
         .toBe(proposedDate?.dateTimeRange.end);
+      expect(proposedDate?.dateTimeRange.start.toString())
+        .toBe('2025-09-01T20:00:00');
     });
 
-    test('accepts an ISO-8601 space separator and normalizes it to T on save', async () => {
+    test('accepts a tolerant en-US input (no leading zeros, no space before pm) and normalizes to ISO on save', async () => {
       const session = aSession();
-      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '2025-09-01 20:00'}});
+      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '9/1/2025 8:00pm'}});
       await app.store.save(session);
 
       await handleEditProposedDatesPost(app);
@@ -133,7 +135,7 @@ describe('edit handlers', () => {
 
     test('appends to the existing proposed dates', async () => {
       const session = aSession({proposedDates: [aProposedDate()]});
-      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '2025-09-02T18:30'}});
+      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '09/02/2025 06:30 pm'}});
       await app.store.save(session);
 
       await handleEditProposedDatesPost(app);
@@ -240,7 +242,7 @@ describe('edit handlers', () => {
       const app = createApp({
         params: {id: session.id},
         headers: partialHeaders,
-        body: {proposedDateTime: '2025-09-01T20:00'},
+        body: {proposedDateTime: '09/01/2025 08:00 pm'},
       });
       await app.store.save(session);
 

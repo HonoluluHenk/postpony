@@ -1,16 +1,18 @@
 import de from './de.json';
 import en from './en.json';
+import type { AppLocale } from './config';
 
-export const Locales = ['en', 'de'] as const;
-
-export type Locale = typeof Locales[number];
 export type TranslationKeys = keyof typeof en;
 
-export const translations: Record<Locale, Record<TranslationKeys, string>> = {
-  en,
-  de,
+// de-CH reuses the German UI text, en-US the English; fr-CH and it-CH fall
+// back to the English text until dedicated translations land (ADR-0016).
+export const translations: Record<AppLocale, Record<TranslationKeys, string>> = {
+  'de-CH': de,
+  'en-US': en,
+  'fr-CH': en,
+  'it-CH': en,
 };
 
-export const defaultLocale: Locale = 'en';
+export const defaultLocale: AppLocale = 'de-CH';
 
 export const LOCALE_KEY = 'locale';

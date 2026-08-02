@@ -1,11 +1,10 @@
-import { Temporal } from '@js-temporal/polyfill';
 import * as v from 'valibot';
 import type { App } from '../../../app';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import type { ProposedDate, VoteTallyItem } from '../../../lib/models';
 import { Reschedule } from '../../../lib/reschedule';
-import { DATETIME_LOCAL_PATTERN, formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
-import { toIntlLocale } from '../../../locales';
+import { formatLocalizedDateTime, parseIsoToPlainDateTime, parseLocaleDateTime } from '../../../lib/temporal-utils';
+import type { AppLocale } from '../../../locales';
 
 interface ProposedDateTallyItem extends VoteTallyItem {
   awayTeamVotable: boolean;
@@ -18,7 +17,7 @@ function toProposedDateItems(
     no: number;
     maybe: number
   }>,
-  locale: 'de-DE' | 'en-GB' | 'en-US',
+  locale: AppLocale,
 ): ProposedDateTallyItem[] {
   return proposedDates.map((pd) => {
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
@@ -40,7 +39,7 @@ function toVoteTallyItems(
     no: number;
     maybe: number
   }>,
-  locale: 'de-DE' | 'en-GB' | 'en-US',
+  locale: AppLocale,
 ): VoteTallyItem[] {
   return proposedDates.map((pd) => {
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
@@ -61,22 +60,15 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
     app.notFound('Session not found');
   }
 
+  const locale = app.locale;
+
   const ProposedDateSchema = v.object({
     proposedDateTime: v.pipe(
       v.string(),
-      v.regex(DATETIME_LOCAL_PATTERN, app.t('proposed_date_time_invalid')),
-      v.check((val: string): boolean => {
-        try {
-          Temporal.PlainDateTime.from(val);
-          return true;
-        } catch {
-          return false;
-        }
-      }, app.t('proposed_date_time_invalid')),
+      v.check((val: string): boolean => parseLocaleDateTime(val, locale) !==
+        undefined, app.t('proposed_date_time_invalid')),
     ),
   });
-
-  const locale = toIntlLocale(app.locale);
 
   const values = await app.c.req.parseBody();
   const validation = v.safeParse(ProposedDateSchema, values);
@@ -105,9 +97,12 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
   }
 
   const {proposedDateTime} = validation.output;
-  const dt = Temporal.PlainDateTime.from(proposedDateTime)
-    .toString();
-  const updated = reschedule.proposeDate(session, dt, 'owner').session;
+  const parsed = parseLocaleDateTime(proposedDateTime, locale);
+  if (!parsed) {
+    // Unreachable: the schema already checked parseability.
+    app.failure(app.t('proposed_date_time_invalid'));
+  }
+  const updated = reschedule.proposeDate(session, parsed.toString(), 'owner').session;
   await app.store.save(updated);
 
   if (app.isPartial) {

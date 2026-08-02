@@ -58,15 +58,8 @@ export class StartPage {
     return this.page.getByRole('navigation', {name});
   }
 
-  async switchLanguage(lang: 'en' | 'de'): Promise<void> {
-    if (lang === 'de') {
-      await this.page.getByRole('navigation', {name: 'Language selection'})
-        .getByRole('link', {name: 'German'})
-        .click();
-    } else {
-      await this.page.getByRole('navigation', {name: 'Sprachauswahl'})
-        .getByRole('link', {name: 'Englisch'})
-        .click();
-    }
+  async switchLanguage(locale: string): Promise<void> {
+    await this.page.locator('#language-select')
+      .selectOption(locale);
   }
 }

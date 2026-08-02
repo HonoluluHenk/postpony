@@ -21,7 +21,9 @@ test.describe('Error Handling', () => {
     // We use a direct request to avoid HTMX/Playwright interaction complexities for this specific edge case
     const response = await page.request.post('/create', {
       form: {name: ''},
-      headers: {'Accept': 'text/html'},
+      // Raw requests send no Accept-Language; pick English explicitly so the
+      // asserted message is deterministic regardless of the default locale.
+      headers: {'Accept': 'text/html', 'Accept-Language': 'en-US'},
     });
 
     expect(response.status())

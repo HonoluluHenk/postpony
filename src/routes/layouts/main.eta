@@ -31,12 +31,14 @@
         </a>
         <h1 class="max center-align"><%= it.title %></h1>
         <nav class="row no-wrap shrink" aria-label="<%= it.t('language_selection') %>">
-          <a class="button circle transparent" href="?lang=en" title="<%= it.t('language_en') %>" hx-boost="false">
-            <i><img src="/assets/vendor/img/flags/gb.svg" width="20" alt="<%= it.t('language_en') %>"></i>
-          </a>
-          <a class="button circle transparent" href="?lang=de" title="<%= it.t('language_de') %>" hx-boost="false">
-            <i><img src="/assets/vendor/img/flags/de.svg" width="20" alt="<%= it.t('language_de') %>"></i>
-          </a>
+          <form method="get" hx-boost="false" class="no-margin" onchange="this.submit()">
+            <label class="visually-hidden" for="language-select"><%= it.t('language_selection') %></label>
+            <select id="language-select" name="lang" aria-label="<%= it.t('language_selection') %>">
+              <% it.languageOptions.forEach((option) => { %>
+                <option value="<%= option.code %>" <%= it.locale === option.code ? 'selected' : '' %>><%= option.label %></option>
+              <% }) %>
+            </select>
+          </form>
         </nav>
       </div>
     </header>

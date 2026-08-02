@@ -1,8 +1,7 @@
 import type { App } from '../../../app';
 import type { VoteTallyItem } from '../../../lib/models';
 import { Reschedule } from '../../../lib/reschedule';
-import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
-import { toIntlLocale } from '../../../locales';
+import { formatIsoToLocaleTokens, formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 
 export const handleEditGet = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
@@ -13,7 +12,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
 
   const ownerPassword = app.c.req.query('ownerPassword') ?? null;
   const isPartial = app.isPartial;
-  const locale = toIntlLocale(app.locale);
+  const locale = app.locale;
   const reschedule = new Reschedule();
   const tallies = reschedule.tally(session);
   const homeTallies = reschedule.tally(session, 'home');
@@ -61,6 +60,9 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     proposedDates,
     homeProposedDates,
     awayProposedDates,
+    proposedDateTime: session.originalMatchDateTime
+                      ? formatIsoToLocaleTokens(session.originalMatchDateTime, locale)
+                      : '',
     ownerPassword,
     invitationPassword: session.invitationPassword,
     isPartial,

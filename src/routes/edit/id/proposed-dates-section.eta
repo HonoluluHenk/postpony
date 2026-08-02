@@ -19,16 +19,19 @@
     <% }) %>
   </ul>
   <form hx-post="/edit/<%= it.sessionId %>/proposed-dates" hx-target="#proposed-dates-management" class="mt-4">
-    <div class="field label border fill <%= it.error ? 'invalid' : '' %>">
-      <% if (it.error) { %>
-        <input type="datetime-local" id="proposedDateTime" name="proposedDateTime" value="<%= it.proposedDateTime %>" aria-invalid="true" aria-describedby="proposedDateTime-error">
-      <% } else { %>
-        <input type="datetime-local" id="proposedDateTime" name="proposedDateTime" required>
-      <% } %>
-      <label for="proposedDateTime"><%= it.t('proposed_date_time_label') %></label>
-      <% if (it.error) { %>
-        <span id="proposedDateTime-error" class="error" role="alert"><%= it.error %></span>
-      <% } %>
+    <div class="row items-center gap">
+      <div class="field label border fill max <%= it.error ? 'invalid' : '' %>">
+        <% if (it.error) { %>
+          <input type="text" id="proposedDateTime" name="proposedDateTime" value="<%= it.proposedDateTime %>" aria-invalid="true" aria-describedby="proposedDateTime-error" placeholder="<%= it.inputFormat %>" lang="<%= it.locale %>" autocomplete="off">
+        <% } else { %>
+          <input type="text" id="proposedDateTime" name="proposedDateTime" value="<%= it.proposedDateTime || '' %>" required placeholder="<%= it.inputFormat %>" lang="<%= it.locale %>" autocomplete="off">
+        <% } %>
+        <label for="proposedDateTime"><%= it.t('proposed_date_time_label') %></label>
+        <% if (it.error) { %>
+          <span id="proposedDateTime-error" class="error" role="alert"><%= it.error %></span>
+        <% } %>
+      </div>
+      <button type="button" id="proposedDateTimePicker" class="button" aria-label="<%= it.t('proposed_date_time_picker_label') %>" title="<%= it.t('proposed_date_time_picker_label') %>"><i>calendar_today</i></button>
     </div>
     <div class="right-align">
       <button type="submit"><%= it.t('add_proposed_date') %></button>

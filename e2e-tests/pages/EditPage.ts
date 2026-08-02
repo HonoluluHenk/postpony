@@ -3,6 +3,27 @@ import { expect } from '../fixtures';
 import type { SessionFixture } from '../test-session';
 import { CreatePage } from './CreatePage';
 
+/**
+ * Formats a stored ISO datetime (`YYYY-MM-DDTHH:mm`) into the input-format
+ * tokens of the locale the page is currently rendered in. Mirrors the server's
+ * `formatIsoToLocaleTokens`; kept small because the e2e suite cannot import
+ * from `src/`.
+ */
+function isoToLocaleTokens(lang: string | null, iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso);
+  if (!match) {
+    return iso;
+  }
+  const [, year, month, day, hour, minute] = match;
+  if (lang === 'en-US') {
+    const hour12 = Number(hour) % 12 || 12;
+    const ampm = Number(hour) < 12 ? 'am' : 'pm';
+    return `${month}/${day}/${year} ${String(hour12)
+      .padStart(2, '0')}:${minute} ${ampm}`;
+  }
+  return `${day}.${month}.${year} ${hour}:${minute}`;
+}
+
 export class EditPage {
   constructor(private readonly page: Page) {
   }
@@ -22,8 +43,7 @@ export class EditPage {
     const editPage = await createPage.create(name ?? 'Test Session');
 
     for (const [i, dt] of (dates ?? []).entries()) {
-      await editPage.proposedDateTimeInput.fill(dt);
-      await editPage.addProposedDateButton.click();
+      await editPage.addProposedDate(dt);
       await expect(editPage.proposedDateList.getByRole('listitem'))
         .toHaveCount(i + 1);
     }
@@ -104,6 +124,10 @@ export class EditPage {
     return this.page.getByRole('button', {name: 'Add Proposed Date'});
   }
 
+  get pickerButton(): Locator {
+    return this.page.getByRole('button', {name: 'Open calendar'});
+  }
+
   get proposedDateList(): Locator {
     return this.page.getByRole('list', {name: 'Proposed Dates'});
   }
@@ -153,7 +177,9 @@ export class EditPage {
   }
 
   async addProposedDate(dt: string): Promise<void> {
-    await this.proposedDateTimeInput.fill(dt);
+    const lang = await this.page.locator('html')
+      .getAttribute('lang');
+    await this.proposedDateTimeInput.fill(isoToLocaleTokens(lang, dt));
     await this.addProposedDateButton.click();
   }
 

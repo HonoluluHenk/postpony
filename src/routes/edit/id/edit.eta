@@ -122,10 +122,14 @@
         <% }) %>
       </ul>
       <form hx-post="/edit/<%= it.session.id %>/proposed-dates" hx-target="#proposed-dates-management" class="mt-4" hx-on::after-request="focusAfterSwap('#proposed-dates-management')">
-        <div class="field label border fill">
-          <input type="datetime-local" id="proposedDateTime" name="proposedDateTime"
-                 value="<%= it.session.originalMatchDateTime || '' %>" required lang="de">
-          <label for="proposedDateTime"><%= it.t('proposed_date_time_label') %></label>
+        <div class="row items-center gap">
+          <div class="field label border fill max">
+            <input type="text" id="proposedDateTime" name="proposedDateTime"
+                   value="<%= it.proposedDateTime || '' %>" required
+                   placeholder="<%= it.inputFormat %>" lang="<%= it.locale %>" autocomplete="off">
+            <label for="proposedDateTime"><%= it.t('proposed_date_time_label') %></label>
+          </div>
+          <button type="button" id="proposedDateTimePicker" class="button" aria-label="<%= it.t('proposed_date_time_picker_label') %>" title="<%= it.t('proposed_date_time_picker_label') %>"><i>calendar_today</i></button>
         </div>
         <div class="right-align">
           <button type="submit"><%= it.t('add_proposed_date') %></button>

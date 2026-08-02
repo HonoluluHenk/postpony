@@ -46,8 +46,9 @@ function initTheme() {
 function initLanguage() {
   const urlParams = new URLSearchParams(window.location.search);
   const queryLang = urlParams.get('lang');
+  const supportedLocales = ['de-CH', 'fr-CH', 'it-CH', 'en-US'];
 
-  if (queryLang && (queryLang === 'en' || queryLang === 'de')) {
+  if (queryLang && supportedLocales.includes(queryLang)) {
     localStorage.setItem('lang', queryLang);
   }
 
@@ -65,15 +66,10 @@ function initLanguage() {
     window.location.href = window.location.pathname + '?lang=' + storedLang;
   }
 
-  // Update localStorage whenever a language link is clicked
-  document.querySelectorAll('a[href*="lang="]').forEach(link => {
-    link.addEventListener('click', () => {
-      const url = new URL(link.href, window.location.origin);
-      const lang = url.searchParams.get('lang');
-      if (lang) {
-        localStorage.setItem('lang', lang);
-      }
-    });
+  // Update localStorage whenever the header language dropdown changes, so the
+  // choice survives cookie-clearing (the form itself navigates via ?lang=).
+  document.getElementById('language-select')?.addEventListener('change', (event) => {
+    localStorage.setItem('lang', event.target.value);
   });
 }
 
@@ -101,39 +97,55 @@ function initClipboard() {
 let activeDatePicker = null;
 
 /**
- * Progressively enhances the proposed-date input with air-datepicker on
- * fine-pointer (desktop) devices. Touch devices keep the native
- * datetime-local picker, which is better UX and a11y on mobile.
- * The input emits YYYY-MM-DD HH:mm (space separator); the server accepts
- * both T and space forms and normalizes to T on save.
+ * Progressively enhances the proposed-date input with air-datepicker on every
+ * device. The picker is opened only via the explicit calendar button, never on
+ * focus (the input is a plain text field the server parses tolerantly). The
+ * picker writes the locale's token format, which matches the input placeholder
+ * and the server grammar, e.g. `02.08.2026 20:00` or `08/02/2026 08:00 pm`.
  */
 function initProposedDateTimePicker() {
   const input = document.getElementById('proposedDateTime');
   if (!input || typeof AirDatepicker === 'undefined') return;
-  if (window.matchMedia('(pointer: coarse)').matches) return;
+
+  const locales = window.AirDatepickerLocale || {};
+  const locale = locales[document.documentElement.lang] || locales['de-CH'];
+  if (!locale) return;
 
   if (activeDatePicker) {
     activeDatePicker.destroy();
   }
-  input.type = 'text';
 
-  const locales = window.AirDatepickerLocale || {};
-  const locale = locales[document.documentElement.lang] || locales.en;
-  activeDatePicker = new AirDatepicker(input, {
+  const options = {
     locale: locale,
-    // ponytail: air-datepicker's format tokenizer treats 'T' as a literal
-    // (not a token boundary), so the separator must be a space; the server
-    // accepts both and normalizes to 'T' on save.
-    dateFormat: 'yyyy-MM-dd',
-    timeFormat: 'HH:mm',
+    dateFormat: locale.dateFormat,
+    timeFormat: locale.timeFormat,
     dateTimeSeparator: ' ',
     timepicker: true,
-    // ponytail: popup opens above the field so it never covers the
-    // "Add Proposed Date" submit button that sits directly below the input.
+    // ponytail: a never-fired event keeps the picker closed until the explicit
+    // button calls show(); `''` would also work but the string event is clearer.
+    showEvent: 'adp-never-fire',
     position: 'top center',
-    selectedDates: input.value ? [input.value] : [],
     onShow: patchTimeSliderLabels,
-  });
+  };
+
+  try {
+    activeDatePicker = new AirDatepicker(input, {
+      ...options,
+      selectedDates: input.value ? [input.value] : [],
+    });
+  } catch {
+    // ponytail: an unparseable echoed value (validation error) must not kill
+    // the picker; retry without a selection so it still opens for picking.
+    activeDatePicker = new AirDatepicker(input, {...options, selectedDates: []});
+  }
+
+  const button = document.getElementById('proposedDateTimePicker');
+  if (button) {
+    button.onclick = (e) => {
+      e.preventDefault();
+      activeDatePicker?.show();
+    };
+  }
 }
 
 // ponytail: air-datepicker ships no ARIA labels on its time sliders; patch

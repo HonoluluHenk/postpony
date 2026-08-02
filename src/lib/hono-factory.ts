@@ -1,12 +1,12 @@
 import type { Context } from 'hono';
 import { createFactory } from 'hono/factory';
 import { App } from '../app';
-import type { Locale } from '../locales';
+import type { AppLocale } from '../locales';
 import type { SessionStore } from './session-store';
 
 export interface HonoEnv {
   Variables: {
-    locale: Locale;
+    locale: AppLocale;
     sessionStore: SessionStore;
   };
 }

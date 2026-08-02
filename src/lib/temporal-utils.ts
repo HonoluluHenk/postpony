@@ -1,4 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill';
+import type { AppLocale } from '../locales';
+import { defaultLocale, localeConfig } from '../locales';
 import ComparisonResult = Temporal.ComparisonResult;
 
 /**
@@ -29,13 +31,13 @@ export function doRangesOverlap(range1: DateTimeRange, range2: DateTimeRange): b
  */
 export function formatLocalizedDateTime(
   dateTime: Temporal.PlainDateTime | Temporal.ZonedDateTime | Temporal.PlainDate,
-  locale: 'de-DE' | 'en-GB' | 'en-US' = 'de-DE',
+  locale: AppLocale = defaultLocale,
   options: Intl.DateTimeFormatOptions = {
     dateStyle: 'medium',
     timeStyle: 'short',
   },
 ): string {
-  return dateTime.toLocaleString(locale, options);
+  return dateTime.toLocaleString(localeConfig(locale).intlTag, options);
 }
 
 /**
@@ -46,11 +48,82 @@ export function parseIsoToPlainDateTime(isoString: string): Temporal.PlainDateTi
 }
 
 /**
- * Matches the value format produced by an `<input type="datetime-local">`
- * (T separator) or by the desktop air-datepicker enhancement (ISO-8601 space
- * separator). Both are accepted by Temporal and normalized to T on save.
+ * Parses a user-typed datetime in the locale's input format into a
+ * PlainDateTime. Tolerant: leading zeros are optional, `.` `/` `-` are all
+ * accepted as date separators, and the en-US `am`/`pm` marker is case
+ * insensitive with optional surrounding whitespace. The 12-hour clock never
+ * guesses: an en-US time without an am/pm marker is rejected, as is any time
+ * that falls outside the locale's clock (e.g. `20:00 pm`). Returns undefined
+ * for anything unparseable instead of throwing.
  */
-export const DATETIME_LOCAL_PATTERN = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}$/;
+export function parseLocaleDateTime(value: string, locale: AppLocale): Temporal.PlainDateTime | undefined {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const config = localeConfig(locale);
+  const match = config.clock24
+                ? DATE_TIME_24H_PATTERN.exec(trimmed)
+                : DATE_TIME_12H_PATTERN.exec(trimmed);
+  if (!match) {
+    return undefined;
+  }
+  const [, first = '', , second = '', year = '', hour = '', minute = '', marker] = match;
+  const day = config.dayFirst ? first : second;
+  const month = config.dayFirst ? second : first;
+  let hours = Number(hour);
+  if (!config.clock24) {
+    if (hours < 1 || hours > 12) {
+      return undefined;
+    }
+    const isPm = marker?.toLowerCase() === 'pm';
+    if (hours === 12) {
+      hours = isPm ? 12 : 0;
+    } else if (isPm) {
+      hours += 12;
+    }
+  }
+  // Building a strict ISO string (rather than the object form) lets
+  // `PlainDateTime.from` reject impossible values (2026-02-30, hour 24, ...)
+  // with a RangeError, which we surface as `undefined`.
+  const iso = `${year}-${pad2(month)}-${pad2(day)}T${pad2(hours)}:${pad2(minute)}`;
+  try {
+    return Temporal.PlainDateTime.from(iso);
+  } catch {
+    return undefined;
+  }
+}
+
+// Matches `dd.MM.yyyy HH:mm` (24h locales), day and month in either order
+// depending on dayFirst. Backreference \2 keeps the two date separators
+// consistent (no `02.08/2026` mixes).
+const DATE_TIME_24H_PATTERN = /^(\d{1,2})([./-])(\d{1,2})\2(\d{4})\s+(\d{1,2}):(\d{1,2})$/;
+// Matches `MM/dd/yyyy hh:mm aa` (12h en-US): the am/pm marker is required.
+const DATE_TIME_12H_PATTERN = /^(\d{1,2})([./-])(\d{1,2})\2(\d{4})\s+(\d{1,2}):(\d{1,2})\s*(am|pm)$/i;
+
+const pad2 = (value: number | string): string => String(value)
+  .padStart(2, '0');
+
+/**
+ * Formats a stored ISO datetime string (which may carry second precision,
+ * e.g. `2026-08-02T20:00:00`) into the locale's input-format tokens at minute
+ * precision, e.g. `02.08.2026 20:00` or `08/02/2026 08:00 pm`.
+ */
+export function formatIsoToLocaleTokens(isoString: string, locale: AppLocale): string {
+  const dateTime = parseIsoToPlainDateTime(isoString);
+  const config = localeConfig(locale);
+  const datePart = config.dateFormat
+    .replace('yyyy', String(dateTime.year))
+    .replace('dd', pad2(dateTime.day))
+    .replace('MM', pad2(dateTime.month));
+  const hours = config.clock24 ? dateTime.hour : dateTime.hour % 12 || 12;
+  const timePart = config.timeFormat
+    .replace('HH', pad2(dateTime.hour))
+    .replace('hh', pad2(hours))
+    .replace('mm', pad2(dateTime.minute))
+    .replace('aa', dateTime.hour < 12 ? 'am' : 'pm');
+  return `${datePart} ${timePart}`;
+}
 
 /**
  * Converts a click-tt.ch meeting's `date` (`dd.mm.yyyy`) and `time` (`HH:mm`,

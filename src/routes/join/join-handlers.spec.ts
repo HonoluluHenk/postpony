@@ -22,7 +22,7 @@ function createApp(options: MockOptions = {}): App {
   const {params = {}, queries = {}, headers = {}, body = {}} = options;
   const store = new MemorySessionStore();
   const context = {
-    get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en' : undefined),
+    get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en-US' : undefined),
     req: {
       param: (name: string): string | undefined => params[name],
       query: (name: string): string | undefined => queries[name],

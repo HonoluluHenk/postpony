@@ -41,7 +41,7 @@ export interface RescheduleSession {
   players: Player[];
   proposedDates: ProposedDate[];
   votes: Vote[];
-  originalMatchDateTime?: string; // format YYYY-MM-DDTHH:mm, matches <input type="datetime-local">
+  originalMatchDateTime?: string; // format YYYY-MM-DDTHH:mm, ISO storage form
   metadata?: Record<string, unknown>;
   createdAt: string;
 }
