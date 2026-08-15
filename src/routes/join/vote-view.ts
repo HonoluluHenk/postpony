@@ -1,4 +1,5 @@
 import type { App } from '../../app';
+import type { AppLocale } from '../../locales';
 import type { Player, Postponement, ProposedDate, Vote, VoteTallyItem } from '../../lib/models';
 import { PostponementRules } from '../../lib/postponement';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
@@ -25,6 +26,23 @@ export function visibleDatesForTeam(session: Postponement, team: Team): Proposed
   return session.proposedDates.filter((pd) => (team === 'away' ? pd.votableByOpponent : true));
 }
 
+export function confirmedDateDisplay(session: Postponement, locale: AppLocale): string | undefined {
+  const confirmed = session.proposedDates.find((pd) => pd.id === session.confirmedProposedDateId);
+  return confirmed
+         ? formatLocalizedDateTime(parseIsoToPlainDateTime(confirmed.dateTimeRange.start), locale)
+         : undefined;
+}
+
+export function renderConfirmedInfo(app: App, session: Postponement): Response {
+  const html = app.render('join/confirmed-info.eta', {
+    title: app.t('confirmed_date_title'),
+    confirmedDateDisplay: confirmedDateDisplay(session, app.locale),
+    reopenCount: session.reopenCount,
+  });
+
+  return app.c.html(html);
+}
+
 export function buildPlayerVoteRows(
   session: Postponement,
   team: Team,
@@ -45,8 +63,11 @@ export function buildPlayerVoteRows(
 
 export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const {session, team, token, player, updated = false} = options;
-  const readOnly = session.status === 'Confirmed';
   const locale = app.locale;
+
+  if (session.status === 'Confirmed') {
+    return renderConfirmedInfo(app, session);
+  }
 
   const rules = new PostponementRules();
   const tallies = rules.tally(session, team);
@@ -76,7 +97,6 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
     playerName: player.name,
     proposedDates,
     playerVoteRows,
-    readOnly,
     updated,
   });
 

@@ -1,0 +1,14 @@
+<% layout('../layouts/main.eta') %>
+
+<header>
+  <h2><%= it.t('confirmed_date_title') %></h2>
+</header>
+
+<p><%= it.t('confirmed_view_info') %></p>
+
+<div class="row items-center wrap">
+  <p class="chip outline"><%= it.t('confirmed_date_label') %>: <%= it.confirmedDateDisplay %></p>
+  <% if (it.reopenCount > 0) { %>
+    <p class="chip outline"><%= it.t('reopened_count', {count: String(it.reopenCount)}) %></p>
+  <% } %>
+</div>

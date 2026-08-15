@@ -182,6 +182,44 @@ describe('join handlers', () => {
         .toContain('aria-invalid="true"');
     });
 
+    test('blocks registration when the session is Confirmed and redirects to the confirmed view', async () => {
+      const session = seedSession({status: 'Confirmed'});
+      const app = createApp({
+        params: {id: session.id, team: 'away'},
+        queries: {token: TOKEN},
+        body: {newPlayerName: 'Alice'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinRegisterPost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.players)
+        .toHaveLength(0);
+      expect(response.status)
+        .toBe(302);
+      expect(response.headers.get('Location') ?? '')
+        .toContain(`/join/${session.id}/away`);
+    });
+
+    test('allows registration when the session is Draft (pre-proposal)', async () => {
+      const session = seedSession({status: 'Draft'});
+      const app = createApp({
+        params: {id: session.id, team: 'away'},
+        queries: {token: TOKEN},
+        body: {newPlayerName: 'Alice'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinRegisterPost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.players)
+        .toHaveLength(1);
+      expect(response.status)
+        .toBe(302);
+    });
+
     test('throws when the token is wrong', async () => {
       const session = seedSession();
       const app = createApp({
@@ -229,6 +267,93 @@ describe('join handlers', () => {
         .toBe(302);
       expect(response.headers.get('Location') ?? '')
         .toContain(`/join/${session.id}/home`);
+    });
+
+    test('renders the pre-proposal empty-state hint for an away team with no votable dates', async () => {
+      const session = seedSession({
+        status: 'Draft',
+        players: [aPlayer({teamId: 'away'})],
+        proposedDates: [aProposedDate({votableByOpponent: false})],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'away'},
+        queries: {token: TOKEN, playerId: 'player-1'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+      const body = await response.text();
+
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain('No dates have been proposed yet');
+      expect(body)
+        .not
+        .toContain('name="vote-');
+      expect(body)
+        .not
+        .toContain("Your Team's Votes");
+    });
+
+    test('renders the confirmed-info view on the vote route when the session is Confirmed', async () => {
+      const session = seedSession({
+        status: 'Confirmed',
+        confirmedProposedDateId: 'proposed-date-1',
+        reopenCount: 1,
+        players: [aPlayer()],
+        proposedDates: [aProposedDate()],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'player-1'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+      const body = await response.text();
+
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain('Voting is closed');
+      expect(body)
+        .toContain('Sep 1, 2025');
+      expect(body)
+        .toContain('Reopened');
+      expect(body)
+        .not
+        .toContain('name="vote-');
+      expect(body)
+        .not
+        .toContain("Your Team's Votes");
+    });
+
+    test('renders the confirmed-info view on the join route when the session is Confirmed', async () => {
+      const session = seedSession({
+        status: 'Confirmed',
+        confirmedProposedDateId: 'proposed-date-1',
+        proposedDates: [aProposedDate()],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinGet(app);
+      const body = await response.text();
+
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain('Voting is closed');
+      expect(body)
+        .not
+        .toContain('join_select_player');
+      expect(body)
+        .not
+        .toContain('name="newPlayerName"');
     });
   });
 
@@ -305,6 +430,8 @@ describe('join handlers', () => {
         .toBe('Yes');
       expect(response.status)
         .toBe(200);
+      expect(await response.text())
+        .toContain('Voting is closed');
     });
   });
 

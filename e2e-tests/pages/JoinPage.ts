@@ -18,6 +18,10 @@ export class JoinPage {
     return this.page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2});
   }
 
+  get confirmedHeading(): Locator {
+    return this.page.getByRole('heading', {name: 'Postponement Confirmed', level: 2});
+  }
+
   get playerNameInput(): Locator {
     return this.page.getByLabel('Or enter your name');
   }

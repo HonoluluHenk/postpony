@@ -18,7 +18,8 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
     return app.c.redirect(`/join/${session.id}/${team}?token=${encodeURIComponent(token)}`);
   }
 
-  // ponytail: voting is locked once the admin confirms; a locked POST just re-renders read-only.
+  // ponytail: voting is locked once the admin confirms; a locked POST just
+  // re-renders the confirmed-info view via renderVoteStep.
   const canVote = session.status !== 'Confirmed';
   let updated = session;
   if (canVote) {

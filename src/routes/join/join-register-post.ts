@@ -6,6 +6,10 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
   const {id, session, token} = await requireSessionAndToken(app);
 
+  if (session.status === 'Confirmed') {
+    return app.c.redirect(`/join/${id}/${team}?token=${encodeURIComponent(token)}`);
+  }
+
   const body = await app.c.req.parseBody();
 
   const {session: updated, player} = new PostponementRules().registerParticipant(session, team, {

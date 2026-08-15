@@ -240,4 +240,123 @@ test.describe('Join and Voting', () => {
     await joinPage.join('Dora');
     await checkA11y();
   });
+
+  test('shows the pre-proposal empty state to an opponent with no votable dates', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, 'Away Pre-Proposal', ['2026-03-05T20:00']);
+
+    const awayJoinPage = await new JoinPage(page)
+      .goto(session.awayHref);
+    await awayJoinPage.join('Charlie');
+
+    await expect(awayJoinPage.noDatesMessage)
+      .toBeVisible();
+    await expect(awayJoinPage.submitVotesButton)
+      .toHaveCount(0);
+    await expect(awayJoinPage.teamResultsSection())
+      .toHaveCount(0);
+
+    await checkA11y();
+  });
+
+  test('full happy path: propose, both teams vote, confirm, confirmed-info view', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, 'Vote Flow', ['2026-03-05T20:00']);
+
+    // Home team: two players join and vote.
+    const homeJoinPage = new JoinPage(page);
+    await homeJoinPage.goto(session.homeHref);
+    await homeJoinPage.join('Alice');
+    await homeJoinPage.castVote(0, 'Yes');
+    await homeJoinPage.submitVotes();
+
+    // Second same-team voter: the first join set localStorage, which auto-redirects
+    // the join page; clear the stored identity so Bob reaches the register form.
+    await page.evaluate(
+      (sid) => {
+        localStorage.removeItem(`postpony-player-${sid}-home`);
+      },
+      session.id,
+    );
+    await homeJoinPage.goto(session.homeHref);
+    await homeJoinPage.join('Bob');
+    await homeJoinPage.castVote(0, 'Yes');
+    await homeJoinPage.submitVotes();
+
+    // Edit view: per-player votes by name + "N/M voted" count.
+    const editPage = new EditPage(page);
+    await editPage.goto(session.editUrl);
+    await expect(editPage.ownTeamTable())
+      .toContainText('Alice');
+    await expect(editPage.ownTeamTable())
+      .toContainText('Bob');
+    await expect(editPage.ownTeamTable().getByText('2/2 voted'))
+      .toBeVisible();
+
+    // Propose to the opponent and have them vote.
+    await editPage.toggleVotableByOpponent(0);
+
+    const awayJoinPage = new JoinPage(page);
+    await awayJoinPage.goto(session.awayHref);
+    await awayJoinPage.join('Charlie');
+    await awayJoinPage.castVote(0, 'No');
+    await awayJoinPage.submitVotes();
+
+    await editPage.goto(session.editUrl);
+    await expect(editPage.awayTallySection()
+      .getByRole('table')
+      .getByRole('row')
+      .nth(1)
+      .getByRole('cell')
+      .nth(3))
+      .toHaveText('1'); // no
+
+    // Confirm the date.
+    await editPage.confirmDate(0);
+    await expect(editPage.status)
+      .toContainText('Confirmed');
+
+    // Both team-facing routes now render the pure-info confirmed view.
+    const confirmedPage = new JoinPage(page);
+    await confirmedPage.goto(session.homeHref);
+    await expect(confirmedPage.confirmedHeading)
+      .toBeVisible();
+    await expect(page.getByText(/Confirmed date:/))
+      .toBeVisible();
+    await expect(page.getByRole('button', {name: 'Continue'}))
+      .toHaveCount(0);
+
+    const awayPlayerId = await page.evaluate(
+      (sid) => localStorage.getItem(`postpony-player-${sid}-away`),
+      session.id,
+    );
+    await page.goto(`/join/${session.id}/away/vote?playerId=${awayPlayerId}&token=${session.token}`);
+    await expect(confirmedPage.confirmedHeading)
+      .toBeVisible();
+    await expect(confirmedPage.voteForm)
+      .toHaveCount(0);
+
+    await checkA11y();
+  });
+
+  test('blocks registration after confirm: join link renders the confirmed view, no register form', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, 'Blocked Register', ['2026-03-05T20:00']);
+
+    const editPage = new EditPage(page);
+    await editPage.goto(session.editUrl);
+    await editPage.toggleVotableByOpponent(0);
+    await editPage.confirmDate(0);
+    await expect(editPage.status)
+      .toContainText('Confirmed');
+
+    const confirmedPage = new JoinPage(page);
+    await confirmedPage.goto(session.awayHref);
+
+    await expect(confirmedPage.confirmedHeading)
+      .toBeVisible();
+    await expect(page.getByRole('button', {name: 'Continue'}))
+      .toHaveCount(0);
+    await expect(page.getByLabel('Or enter your name'))
+      .toHaveCount(0);
+
+    await checkA11y();
+  });
 });
