@@ -1,5 +1,5 @@
 import merge from 'lodash-es/merge';
-import type { Player, ProposedDate, RescheduleSession, Venue, Vote } from '../models';
+import type { Player, ProposedDate, RescheduleSession, Vote } from '../models';
 
 /**
  * Deep-partial so nested objects (e.g. `dateTimeRange`) can be overridden field-by-field,
@@ -37,16 +37,6 @@ export function aVote(overrides: DeepPartial<Vote> = {}): Vote {
     proposedDateId: 'proposed-date-1',
     participantId: 'player-1',
     type: 'Yes',
-  }, overrides);
-}
-
-export function aVenue(overrides: DeepPartial<Venue> = {}): Venue {
-  return merge({
-    id: 'venue-1',
-    clubId: 'test-club',
-    name: 'Test Venue',
-    availability: [],
-    bookings: [],
   }, overrides);
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { aPlayer, aProposedDate, aSession, aVenue, aVote } from './builders';
+import { aPlayer, aProposedDate, aSession, aVote } from './builders';
 
 describe('builders', () => {
 
@@ -62,19 +62,6 @@ describe('builders', () => {
     test('applies literal-union overrides', () => {
       expect(aVote({type: 'Maybe'}).type)
         .toBe('Maybe');
-    });
-  });
-
-  describe('aVenue', () => {
-    test('returns a fully-populated venue by default', () => {
-      expect(aVenue())
-        .toEqual({
-          id: 'venue-1',
-          clubId: 'test-club',
-          name: 'Test Venue',
-          availability: [],
-          bookings: [],
-        });
     });
   });
 

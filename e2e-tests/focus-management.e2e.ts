@@ -20,16 +20,6 @@ test.describe('Focus management after HTMX swaps', () => {
     await checkA11y();
   });
 
-  test('should focus section heading after updating venue settings', async ({page, checkA11y}) => {
-    const editPage = new EditPage(page);
-    await EditPage.createSession(page, 'Focus Test');
-    await editPage.maxOverlapsInput.fill('3');
-    await editPage.updateVenueButton.click();
-
-    await expect(page.locator('#venue-management h3')).toBeFocused();
-    await checkA11y();
-  });
-
   test('should move focus to heading after boosted navigation', async ({page, checkA11y}) => {
     await page.goto('/');
     await page.getByRole('link', {name: /create/i}).click();

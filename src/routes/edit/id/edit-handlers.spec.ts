@@ -5,7 +5,6 @@ import { LOCALE_KEY } from '../../../locales';
 import { MemorySessionStore } from '../../../lib/session-store';
 import { handleEditPlayersPost } from './players-post';
 import { handleEditProposedDatesPost } from './proposed-dates-post';
-import { handleEditVenuePost } from './venue-post';
 
 interface MockOptions {
   params?: Record<string, string>;
@@ -160,40 +159,6 @@ describe('edit handlers', () => {
     });
   });
 
-  describe('handleEditVenuePost', () => {
-    test('throws when the session does not exist', async () => {
-      const app = createApp({params: {id: 'missing'}});
-
-      await expect(handleEditVenuePost(app))
-        .rejects
-        .toThrow('Session not found');
-    });
-
-    test('sets maxOverlaps on the session', async () => {
-      const session = aSession();
-      const app = createApp({params: {id: session.id}, body: {maxOverlaps: '3'}});
-      await app.store.save(session);
-
-      await handleEditVenuePost(app);
-
-      const stored = await app.store.get(session.id);
-      expect(stored?.maxOverlaps)
-        .toBe(3);
-    });
-
-    test('clears maxOverlaps when the field is empty', async () => {
-      const session = aSession({maxOverlaps: 5});
-      const app = createApp({params: {id: session.id}, body: {maxOverlaps: ''}});
-      await app.store.save(session);
-
-      await handleEditVenuePost(app);
-
-      const stored = await app.store.get(session.id);
-      expect(stored?.maxOverlaps)
-        .toBeUndefined();
-    });
-  });
-
   describe('partial (HX-Request) fragment rendering', () => {
     const partialHeaders = {'HX-Request': 'true'};
 
@@ -270,47 +235,6 @@ describe('edit handlers', () => {
         .toBe(400);
       expect(html)
         .toContain('id="error-container" hx-swap-oob="true"');
-      expect(html)
-        .toContain('invalid');
-    });
-
-    test('venue: renders the section with the stored value and a success toast', async () => {
-      const session = aSession();
-      const app = createApp({
-        params: {id: session.id},
-        headers: partialHeaders,
-        body: {maxOverlaps: '3'},
-      });
-      await app.store.save(session);
-
-      const html = await (await handleEditVenuePost(app)).text();
-
-      expect(html)
-        .toContain('<section id="venue-management"');
-      expect(html)
-        .toContain('value="3"');
-      expect(html)
-        .toContain('toast success');
-    });
-
-    test('venue: renders the error-container and keeps the value on failure', async () => {
-      const session = aSession();
-      const app = createApp({
-        params: {id: session.id},
-        headers: partialHeaders,
-        body: {maxOverlaps: '-1'},
-      });
-      await app.store.save(session);
-
-      const response = await handleEditVenuePost(app);
-      const html = await response.text();
-
-      expect(response.status)
-        .toBe(400);
-      expect(html)
-        .toContain('id="error-container" hx-swap-oob="true"');
-      expect(html)
-        .toContain('value="-1"');
       expect(html)
         .toContain('invalid');
     });

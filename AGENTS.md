@@ -78,10 +78,10 @@ src/
   routes/             — per-feature routers (create/, edit/, join/) with *-get.ts / *-post.ts handlers and *.eta templates
   lib/
     reschedule.ts     — domain module: pure operations on RescheduleSession, overridable newId()/now() seam
-    models.ts         — RescheduleSession, Player, ProposedDate, Vote, Venue interfaces
+    models.ts         — RescheduleSession, Player, ProposedDate, Vote interfaces
     errors.ts         — AppError (400), StateError (404), InternalError (500), ClickTTError
     temporal-utils.ts — locale-aware date parsing/formatting (parseLocaleDateTime, formatIsoToLocaleTokens); note Temporal's object form *balances* invalid dates, so validation goes through a strict ISO string
-    __test-utils__/builders.ts — deep-partial fixture builders (aSession, aPlayer, aProposedDate, aVote, aVenue)
+    __test-utils__/builders.ts — deep-partial fixture builders (aSession, aPlayer, aProposedDate, aVote)
   locales/            — config.ts (AppLocale = de-CH|fr-CH|it-CH|en-US single source of truth), constants.ts, en.json, de.json; TranslationKeys derived from en.json keys
   public/assets/
     css/design-tokens.css — design tokens in @layer design

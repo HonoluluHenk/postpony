@@ -43,7 +43,7 @@ test.describe('Error Handling', () => {
 
     // 2. Manually trigger an HTMX request to a non-existent session's sub-route
     await page.evaluate(async () => {
-      const response = await fetch('/edit/invalid-id/venue', {
+      const response = await fetch('/edit/invalid-id/players', {
         method: 'POST',
         headers: {'HX-Request': 'true'},
       });

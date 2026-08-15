@@ -291,20 +291,6 @@ describe('reschedule', () => {
     });
   });
 
-  describe('setVenueLimit', () => {
-    test('sets and clears the max overlaps', () => {
-      const reschedule = new FakeReschedule();
-
-      const set = reschedule.setVenueLimit(aSession(), 3);
-      expect(set.maxOverlaps)
-        .toBe(3);
-
-      const cleared = reschedule.setVenueLimit(set, undefined);
-      expect(cleared.maxOverlaps)
-        .toBeUndefined();
-    });
-  });
-
   describe('default seams', () => {
     test('produce distinct ids and an ISO timestamp', () => {
       const reschedule = new Reschedule();

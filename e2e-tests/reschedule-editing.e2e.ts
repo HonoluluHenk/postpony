@@ -9,21 +9,6 @@ test.describe('Postponement Editing', () => {
     ({session} = await EditPage.createSession(page, 'Edit Test Session'));
   });
 
-  test('should update venue settings', async ({page, checkA11y}) => {
-    const editPage = new EditPage(page);
-    const maxOverlapsInput = editPage.maxOverlapsInput;
-    await maxOverlapsInput.fill('3');
-    await editPage.updateVenueButton.click();
-
-    // Verify success message
-    await expect(page.getByText('Venue settings updated!'))
-      .toBeVisible();
-    await expect(maxOverlapsInput)
-      .toHaveValue('3');
-
-    await checkA11y();
-  });
-
   test('should add players to the home team', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addPlayer('John Doe');

@@ -35,26 +35,12 @@
   </header>
 
   <div id="scheduling-info" class="grid">
-    <section id="venue-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
-      <header>
-        <h3 tabindex="-1"><%= it.t('venue_management') %></h3>
-      </header>
-      <div>
-        <a class="button"
-           href="/create/scrape">
-          <%= it.t('scrape_start_wizard') %>
-        </a>
-      </div>
-      <form hx-post="/edit/<%= it.session.id %>/venue" hx-target="#venue-management" hx-on::after-request="focusAfterSwap('#venue-management')">
-        <div class="field label border fill">
-          <input type="number" id="maxOverlaps" name="maxOverlaps" value="<%= it.session.maxOverlaps || '' %>" min="0">
-          <label for="maxOverlaps"><%= it.t('max_overlaps') %></label>
-        </div>
-        <div class="right-align">
-          <button type="submit"><%= it.t('update_venue_settings') %></button>
-        </div>
-      </form>
-    </section>
+    <div class="padding small-round surface-variant s12 m4">
+      <a class="button"
+         href="/create/scrape">
+        <%= it.t('scrape_start_wizard') %>
+      </a>
+    </div>
 
     <section id="team-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
       <header>

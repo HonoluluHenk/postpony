@@ -181,14 +181,4 @@ export class Reschedule {
     return {...session, proposedDates};
   }
 
-  /**
-   * Sets the venue overlap limit.
-   */
-  setVenueLimit(
-    session: RescheduleSession,
-    maxOverlaps: number | undefined,
-  ): RescheduleSession {
-    return {...session, maxOverlaps};
-  }
-
 }

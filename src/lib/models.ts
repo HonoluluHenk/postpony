@@ -6,16 +6,6 @@ export const DEFAULT_CLUB_ID = 'default-club';
 
 export type RescheduleStatus = 'Draft' | 'Proposed' | 'Voting' | 'Confirmed by Opponent' | 'Confirmed';
 
-export interface Venue {
-  id: string;
-  clubId: string;
-  name: string;
-  location?: string;
-  availability: DateTimeRange[];
-  bookings: DateTimeRange[];
-  maxOverlaps?: number;
-}
-
 export interface Player {
   id: string;
   name: string;
@@ -35,9 +25,6 @@ export interface RescheduleSession {
   invitationPasswordHash: string;
   invitationPassword: string;
   status: RescheduleStatus;
-  maxOverlaps?: number;
-  venueId?: string;
-  opponentVenueId?: string;
   players: Player[];
   proposedDates: ProposedDate[];
   votes: Vote[];

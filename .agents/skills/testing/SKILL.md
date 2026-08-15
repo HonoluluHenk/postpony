@@ -20,7 +20,7 @@ Use this skill whenever you need to:
 
 Model test data comes from the deep-merge partial builders in
 `src/lib/__test-utils__/builders.ts`: `aSession`, `aPlayer`, `aProposedDate`,
-`aVote`, `aVenue`. Each returns a fully-populated, valid entity and accepts a deep-partial override.
+`aVote`. Each returns a fully-populated, valid entity and accepts a deep-partial override.
 
 - Prefer partial overrides over hand-built literals:
 
@@ -59,7 +59,7 @@ All Playwright tests use Page Object classes from `e2e-tests/pages/`:
 |--------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `StartPage`  | `/`                      | `goto()`, `createLink`, `editLink`, `switchLanguage(locale)` (via the header `<select>`), `spinner`, `main`, `banner`, `contentinfo`                                    |
 | `CreatePage` | `/create`                | `goto()`, `nameInput`, `submitButton`, `create(name)` → `EditPage`                                                                                                      |
-| `EditPage`   | `/edit/:id`              | `addPlayer(name)`, `addProposedDate(dt)`, `updateVenueSettings(max)`, `toggleAwayVotable(index)`, `homeTallySection()`, `awayTallySection()`, `status`, `ownerPassword` |
+| `EditPage`   | `/edit/:id`              | `addPlayer(name)`, `addProposedDate(dt)`, `toggleAwayVotable(index)`, `homeTallySection()`, `awayTallySection()`, `status`, `ownerPassword` |
 | `JoinPage`   | `/join/:id/:team?token=` | `goto(href)`, `join(name)`, `castVote(index, vote)`, `submitVotes()`, `voteForm`, `tallySection()`, `voteRadio(vote)`                                                   |
 | `ScrapePage` | `/create/scrape`         | `goto()`, `pickLeague(name)`, `pickGroup(name)`, `pickTeam(name)`, `clickBack()`, `meetingRow(filter)`                                                                  |
 

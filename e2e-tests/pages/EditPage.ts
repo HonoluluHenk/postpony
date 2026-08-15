@@ -88,14 +88,6 @@ export class EditPage {
       .textContent();
   }
 
-  get maxOverlapsInput(): Locator {
-    return this.page.getByLabel('Maximum Overlapping Matches');
-  }
-
-  get updateVenueButton(): Locator {
-    return this.page.getByRole('button', {name: 'Update Venue Settings'});
-  }
-
   get playerItems(): Locator {
     return this.page.locator('#team-management .list li');
   }
@@ -169,11 +161,6 @@ export class EditPage {
     // ponytail: beer.css hides native checkboxes; toggle via label text
     return this.page.getByText('Allow away team to vote')
       .nth(dateIndex);
-  }
-
-  async updateVenueSettings(maxOverlaps: string): Promise<void> {
-    await this.maxOverlapsInput.fill(maxOverlaps);
-    await this.updateVenueButton.click();
   }
 
   async addProposedDate(dt: string): Promise<void> {
