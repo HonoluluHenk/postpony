@@ -241,7 +241,11 @@ export class PostponementRules {
       const voted = teamPlayers.filter((p) => dateVoterIds.has(p.id)).length;
       const nonVoters = teamPlayers
         .filter((p) => !dateVoterIds.has(p.id))
-        .map((player) => ({player, joined: joinedIds.has(player.id)}));
+        .map((player) => ({
+          playerId: player.id,
+          playerName: player.name,
+          joined: joinedIds.has(player.id),
+        }));
       result[pd.id] = {voted, total: teamPlayers.length, nonVoters};
     }
     return result;
@@ -278,24 +282,23 @@ export class PostponementRules {
         })),
         voted: dateCompletion.voted,
         total: dateCompletion.total,
-        nonVoters: dateCompletion.nonVoters.map(({player, joined}) => ({
-          playerId: player.id,
-          playerName: player.name,
-          joined,
-        })),
+        nonVoters: dateCompletion.nonVoters,
       };
     });
   }
 
 }
 
+export interface NonVoter {
+  playerId: string;
+  playerName: string;
+  joined: boolean;
+}
+
 export interface DateCompletion {
   voted: number;
   total: number;
-  nonVoters: {
-    player: Player;
-    joined: boolean
-  }[];
+  nonVoters: NonVoter[];
 }
 
 export interface OwnTeamVoteCell {
@@ -309,9 +312,5 @@ export interface OwnTeamDateResults {
   votes: OwnTeamVoteCell[];
   voted: number;
   total: number;
-  nonVoters: {
-    playerId: string;
-    playerName: string;
-    joined: boolean
-  }[];
+  nonVoters: NonVoter[];
 }

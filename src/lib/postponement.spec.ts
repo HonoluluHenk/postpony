@@ -447,8 +447,8 @@ describe('postponement', () => {
           voted: 1,
           total: 3,
           nonVoters: [
-            {player: homePlayers[1], joined: true},
-            {player: homePlayers[2], joined: false},
+            {playerId: 'p2', playerName: 'JoinedElsewhere', joined: true},
+            {playerId: 'p3', playerName: 'RosterOnly', joined: false},
           ],
         });
       expect(completion['pd-2'])
@@ -456,8 +456,8 @@ describe('postponement', () => {
           voted: 1,
           total: 3,
           nonVoters: [
-            {player: homePlayers[0], joined: true},
-            {player: homePlayers[2], joined: false},
+            {playerId: 'p1', playerName: 'Voter', joined: true},
+            {playerId: 'p3', playerName: 'RosterOnly', joined: false},
           ],
         });
     });
