@@ -60,8 +60,7 @@ This use case describes how the Admin generates and shares the invitation with p
 4. **Copy/Share**:
     * **Copy to Clipboard**: The user copies the text to manually paste it into their app of choice (e.g., WhatsApp, Email).
     * **Manual Distribution**: The Admin is responsible for sending the message; the application does not send notifications automatically.
-5. **Completion**: The Admin confirms the invitation has been sent, and the session state moves to "Input" or
-   "Proposed".
+5. **Completion**: The Admin confirms the invitation has been sent.
 
 ## 4. Participant Interaction (Voting & Proposing)
 
@@ -133,16 +132,14 @@ This use case describes how the system handles multiple clubs and how Club Manag
 
 ## 7. Approval & Finalization
 
-This use case describes the two-step confirmation process to lock a rescheduled game.
+This use case describes how a rescheduled game is locked in: the Admin proposes dates to the opponent, the opponent votes, and the Admin locks the final date alone. A soft reopen starts a new voting round for both teams.
 
 ### 7.1. Steps
 
-1. **Opponent Review**: The Opponent Captain accesses the Reschedule session via the invitation link.
-2. **Date Confirmation**: The Opponent Captain reviews the proposed dates (and/or voting results) and selects one or more dates/times that are acceptable to them.
-3. **Opponent Approval**: The Opponent Captain confirms their selection. The session state moves to "Confirmed by Opponent".
-4. **Admin Notification**: The system notifies the Initiating Admin (Team Captain) that the opponent has confirmed.
-5. **Final Selection**: The Initiating Admin reviews the dates confirmed by the opponent.
-6. **Lock Date**: The Initiating Admin selects the final date and time.
-7. **Session Closed**: The system locks the Reschedule session. The status moves to "Confirmed".
+1. **Propose to Opponent**: The Admin proposes one or more of the proposed dates to the opponent by toggling each date's "opponent may vote" switch.
+2. **Opponent Votes**: The opponent accesses the Reschedule session via the invitation link and votes (e.g., "Yes", "No", "Maybe") on the proposed dates.
+3. **Lock Date**: The Admin reviews the voting results and selects the final date and time.
+4. **Session Confirmed**: The system locks the Reschedule session. The status moves to "Confirmed" and the locked date is recorded as `confirmedProposedDateId`.
+5. **Soft Reopen (Optional)**: If a new voting round is needed, the Admin reopens the session. The status returns to "Voting", the reopen count increments, and both teams vote again on all proposed dates.
 
 ---

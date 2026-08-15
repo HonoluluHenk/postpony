@@ -41,8 +41,14 @@ export class ScrapePage {
     return this.page.getByRole('columnheader', {name: 'Actions'});
   }
 
-  get createPostponementButton(): Locator {
-    return this.page.getByRole('button', {name: 'Create Postponement for this match'});
+  createButton(teamName: string, rowFilter?: string): Locator {
+    const scope = rowFilter === undefined ? this.page : this.matchRow(rowFilter);
+    return scope.getByRole('button', {name: `Create as ${teamName}`});
+  }
+
+  matchRowButtons(rowFilter: string): Locator {
+    return this.matchRow(rowFilter)
+      .getByRole('button');
   }
 
   leagueLink(name: string): Locator {

@@ -92,6 +92,14 @@ export class EditPage {
     return this.page.locator('#team-management .list li');
   }
 
+  get homePlayerList(): Locator {
+    return this.page.getByRole('list', {name: 'Home Team'});
+  }
+
+  get awayPlayerList(): Locator {
+    return this.page.getByRole('list', {name: 'Away Team'});
+  }
+
   playerItem(name: string): Locator {
     return this.page.getByText(name)
       .first();

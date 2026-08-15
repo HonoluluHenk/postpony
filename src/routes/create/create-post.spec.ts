@@ -46,6 +46,8 @@ describe('handleCreatePost', () => {
     const stored = [...sessionsMap.values()][0];
     expect(stored?.name).toBe('Match Postponement');
     expect(stored?.status).toBe('Draft');
+    expect(stored?.organizerTeam).toBe('home');
+    expect(stored?.reopenCount).toBe(0);
     expect(stored?.id).toBeDefined();
     expect(stored?.ownerPasswordHash).toBeDefined();
     expect(stored?.invitationPasswordHash).toBeDefined();

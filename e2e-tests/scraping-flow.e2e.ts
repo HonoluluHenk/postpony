@@ -90,16 +90,26 @@ test.describe('Scraping Flow', () => {
     await expect(firstMatch)
       .toContainText('Ostermundigen');
 
+    // Each match row shows two create buttons, one per side, labelled with
+    // the respective team names.
+    await expect(scrapePage.matchRowButtons('29.08.2026'))
+      .toHaveCount(2);
+    await expect(scrapePage.createButton('Thun', '29.08.2026'))
+      .toBeVisible();
+    await expect(scrapePage.createButton('Ostermundigen', '29.08.2026'))
+      .toBeVisible();
+
     const returnMatch = scrapePage.matchRow('14.01.2027');
     await expect(returnMatch)
       .toContainText('Ostermundigen');
     await expect(returnMatch)
       .toContainText('Thun');
 
-    // 5. Create a postponement from the first match
+    // 5. Create a postponement from the first match, claiming the guest side:
+    // Ostermundigen (the team picked in step 3) is the guest team against Thun.
     await Promise.all([
       page.waitForURL(/\/edit\/.+/),
-      scrapePage.createPostponementButton.first()
+      scrapePage.createButton('Ostermundigen', '29.08.2026')
         .click(),
     ]);
 
@@ -130,6 +140,49 @@ test.describe('Scraping Flow', () => {
       await expect(editPage.playerItem(name))
         .toBeVisible();
     }
+
+    // 9. Claiming the guest side maps to organizerTeam 'away': the organizer's
+    // roster (Ostermundigen) is stored as the away team, Thun as the home team.
+    await expect(editPage.awayPlayerList)
+      .toContainText('Linder, Christoph');
+    await expect(editPage.homePlayerList)
+      .toContainText('Nemeth, Philippe-Janos');
+
+    await checkA11y();
+  });
+
+  test('should create with organizerTeam home when the organizer claims the home side', async ({page, checkA11y}) => {
+    await scrapePage.pickLeague('MTTV 2026/27');
+    await scrapePage.pickGroup('O40 1. Liga');
+    await scrapePage.pickTeam('Ostermundigen');
+
+    await expect(scrapePage.matchesHeading)
+      .toBeVisible();
+    await expect(scrapePage.matchRowButtons('14.01.2027'))
+      .toHaveCount(2);
+
+    // In the return match (14.01.2027) Ostermundigen is the home team, so
+    // claiming the Ostermundigen side maps to organizerTeam 'home'.
+    await Promise.all([
+      page.waitForURL(/\/edit\/.+/),
+      scrapePage.createButton('Ostermundigen', '14.01.2027')
+        .click(),
+    ]);
+
+    const editPage = new EditPage(page);
+    await expect(editPage.heading)
+      .toBeVisible();
+    await expect(editPage.status)
+      .toContainText('Draft');
+
+    // Organizer roster (Ostermundigen) is stored as the home team, Thun as the
+    // away team.
+    await expect(editPage.playerItems)
+      .toHaveCount(6);
+    await expect(editPage.homePlayerList)
+      .toContainText('Linder, Christoph');
+    await expect(editPage.awayPlayerList)
+      .toContainText('Nemeth, Philippe-Janos');
 
     await checkA11y();
   });

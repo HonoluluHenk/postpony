@@ -42,13 +42,15 @@
                 <input type="hidden" name="leagueName" value="<%= it.leagueName %>">
                 <input type="hidden" name="championship" value="<%= it.championship %>">
                 <input type="hidden" name="group" value="<%= it.group %>">
-                <input type="hidden" name="teamName" value="<%= it.teamName %>">
                 <input type="hidden" name="opponentTeamtable" value="<%= m.opponentTeamtable %>">
                 <% for (let j = 0; j < (it.players || []).length; j++) { %>
                   <input type="hidden" name="playerName" value="<%= it.players[j].name %>">
                 <% } %>
-                <button type="submit" class="small">
-                  <%= it.t('scrape_create_session') %>
+                <button type="submit" name="teamName" value="<%= m.homeTeam %>" class="small">
+                  <%= it.t('scrape_create_as_home', {teamName: m.homeTeam}) %>
+                </button>
+                <button type="submit" name="teamName" value="<%= m.guestTeam %>" class="small">
+                  <%= it.t('scrape_create_as_away', {teamName: m.guestTeam}) %>
                 </button>
               </form>
             </td>
