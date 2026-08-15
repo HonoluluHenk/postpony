@@ -5,7 +5,7 @@ description: Refresh the click-tt.ch HTML test fixtures (PostPony) and realign t
 
 # Update Test Fixtures (click-tt.ch)
 
-The scraper (`src/lib/click-tt-scraper.ts`) is exercised offline against four downloaded HTML pages in `src/lib/__fixtures__/`. Both the unit spec and the e2e flow assert **concrete** values (counts, names, ids, individual meeting rows), so refreshing a fixture always means updating its tests in lockstep. This skill is the repeatable "command" for that whole process.
+The scraper (`src/lib/click-tt-scraper.ts`) is exercised offline against four downloaded HTML pages in `src/lib/__fixtures__/`. Both the unit spec and the e2e flow assert **concrete** values (counts, names, ids, individual match rows), so refreshing a fixture always means updating its tests in lockstep. This skill is the repeatable "command" for that whole process.
 
 ## When to Use This Skill
 
@@ -25,7 +25,7 @@ Each fixture mirrors one live page. The scraper picks the file by URL in
 | `leagues.html` | Start page       | `index.htm.de`                        | `fetchLeagues`   |
 | `groups.html`  | League page      | `wa/leaguePage?championship=…`        | `fetchGroups`    |
 | `group.html`   | Plain group page | `wa/groupPage?championship=…&group=…` | `fetchTeams`     |
-| `team.html`    | Team page        | `wa/teamPortrait?teamtable=…&group=…` | `fetchMeetings`  |
+| `team.html`    | Team page        | `wa/teamPortrait?teamtable=…&group=…` | `fetchMatches`   |
 
 Also look for new fixtures in `src/lib/__fixtures__`. Ask the user if they should also be updated. If so, document them in this skill.
 
@@ -89,7 +89,7 @@ Never hand-count the HTML. Run the **real scraper** over the new fixtures with a
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
-import { fetchGroups, fetchLeagues, fetchMeetings, fetchTeams } from './click-tt-scraper';
+import { fetchGroups, fetchLeagues, fetchMatches, fetchTeams } from './click-tt-scraper';
 
 describe('dump', () => {
     const DIR = join(__dirname, '__fixtures__');
@@ -111,7 +111,7 @@ describe('dump', () => {
             leagues: await fetchLeagues(),
             groups: await fetchGroups('<CHAMP>'),
             teams: await fetchTeams('<CHAMP>', '<GROUP>'),
-            meetings: await fetchMeetings('<CHAMP>', '<GROUP>', '<TEAMTABLE>'),
+            matches: await fetchMatches('<CHAMP>', '<GROUP>', '<TEAMTABLE>'),
         }, null, 2));
     });
 });
@@ -126,9 +126,9 @@ rm -f src/lib/click-tt-dump.spec.ts   # always remove the throwaway spec
 
 Using the dumped values, update the concrete assertions:
 
-- `src/lib/click-tt-scraper.spec.ts` — the league/group/team/meeting counts, the spot-checked names + `championship`/`group`/`teamtable` ids, and the example meeting rows in `fetchMeetings`.
+- `src/lib/click-tt-scraper.spec.ts` — the league/group/team/match counts, the spot-checked names + `championship`/`group`/`teamtable` ids, and the example match rows in `fetchMatches`.
 - `e2e-tests/scraping-flow.e2e.ts` — the league name to click, the group name, the `listitem` counts (leagues, groups, teams), the full team-name list, the
-  `row` count (header + meetings), the concrete meeting rows, and the defaulted **Proposed Date & Time** value (from the first meeting via
+  `row` count (header + matches), the concrete match rows, and the defaulted **Proposed Date & Time** value (from the first match via
   `parseClickTtDateTime`).
 
 ## Step 4 — Verify (do not skip)
@@ -145,5 +145,5 @@ All three must pass. The e2e server is started by Playwright with
 ## Conventions and Gotchas
 
 - Confirm `team.html` is English (`lang="en"`, day names `Sat.`/`Mon.`); otherwise the day-name assertions break.
-- The proposed-date default comes only from meetings whose `date`/`time` parse (`dd.mm.yyyy` + `HH:mm`); a time of `00:00` becomes `…T00:00`.
+- The proposed-date default comes only from matches whose `date`/`time` parse (`dd.mm.yyyy` + `HH:mm`); a time of `00:00` becomes `…T00:00`.
 - For running/tests commands see the `npm-scripts` skill; for the beer.css / heading selector traps in the e2e file see the `testing` skill.

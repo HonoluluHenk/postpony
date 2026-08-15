@@ -21,7 +21,7 @@ export class ScrapePage {
     return this.page.getByRole('heading', {name: 'Choose your team', level: 2});
   }
 
-  get meetingsHeading(): Locator {
+  get matchesHeading(): Locator {
     return this.page.getByRole('heading', {name: 'Choose the match to reschedule', level: 2});
   }
 
@@ -33,7 +33,7 @@ export class ScrapePage {
     return this.page.getByRole('listitem');
   }
 
-  get meetingRows(): Locator {
+  get matchRows(): Locator {
     return this.page.getByRole('row');
   }
 
@@ -57,7 +57,7 @@ export class ScrapePage {
     return this.page.getByRole('link', {name, exact: true});
   }
 
-  meetingRow(filter: string): Locator {
+  matchRow(filter: string): Locator {
     return this.page.getByRole('row')
       .filter({hasText: filter});
   }

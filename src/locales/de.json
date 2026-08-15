@@ -56,7 +56,7 @@
   "scrape_match_time": "Zeit",
   "scrape_no_groups": "Für diese Liga wurden keine Gruppen gefunden.",
   "scrape_no_leagues": "Es konnten keine Ligen geladen werden.",
-  "scrape_no_meetings": "Für diese Mannschaft wurden keine Spiele gefunden.",
+  "scrape_no_matches": "Für diese Mannschaft wurden keine Spiele gefunden.",
   "scrape_no_teams": "Für diese Gruppe wurden keine Mannschaften gefunden.",
   "scrape_start_wizard": "Spiel suchen (click-tt.ch)",
   "session_not_found": "Sitzung nicht gefunden",

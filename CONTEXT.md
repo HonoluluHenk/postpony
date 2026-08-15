@@ -19,7 +19,7 @@ The primary entity: one postponed match, from draft to a confirmed new date. Per
 
 ## Match
 
-The scheduled fixture being postponed. A Postponement postpones exactly one Match; its original start is stored as `originalMatchDateTime`. Scraped from click-tt.ch, where the scraper still calls it a `Meeting` (alias to be renamed in code). _Avoid_: Meeting, fixture, game
+The scheduled fixture being postponed. A Postponement postpones exactly one Match; its original start is stored as `originalMatchDateTime`. Scraped from click-tt.ch, which calls it a "meeting" — that wording survives only in the outbound click-tt URLs. _Avoid_: Meeting, fixture, game
 
 ## Player
 

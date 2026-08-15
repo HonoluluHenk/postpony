@@ -56,7 +56,7 @@
   "scrape_match_time": "Time",
   "scrape_no_groups": "No groups found for this league.",
   "scrape_no_leagues": "No leagues could be loaded.",
-  "scrape_no_meetings": "No matches found for this team.",
+  "scrape_no_matches": "No matches found for this team.",
   "scrape_no_teams": "No teams found for this group.",
   "scrape_start_wizard": "Find your match (click-tt.ch)",
   "session_not_found": "Session not found",

@@ -126,7 +126,7 @@ export function formatIsoToLocaleTokens(isoString: string, locale: AppLocale): s
 }
 
 /**
- * Converts a click-tt.ch meeting's `date` (`dd.mm.yyyy`) and `time` (`HH:mm`,
+ * Converts a click-tt.ch match's `date` (`dd.mm.yyyy`) and `time` (`HH:mm`,
  * possibly with trailing junk such as `"19:45 v"`) into a datetime-local value.
  * Returns undefined if either input doesn't match the expected shape.
  */

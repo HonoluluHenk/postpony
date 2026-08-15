@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchGroups, fetchLeagues, fetchMeetings, fetchPlayers, fetchTeams } from './click-tt-scraper';
+import { fetchGroups, fetchLeagues, fetchMatches, fetchPlayers, fetchTeams } from './click-tt-scraper';
 import { ClickTTError } from './errors';
 
 
@@ -18,7 +18,7 @@ describe('click-tt-scraper', () => {
    * scrapers can be tested without hitting the live click-tt.ch site.
    */
   function fixtureForUrl(url: string): string {
-    // Team page (lists the team's meetings).
+    // Team page (lists the team's matches).
     if (url.includes('teamPortrait')) {
       if (url.includes('teamtable=1732195')) {
         return fixture('team-thun.html');
@@ -154,20 +154,20 @@ describe('click-tt-scraper', () => {
     });
   });
 
-  describe('fetchMeetings', () => {
-    test('parses all meetings of the team across both schedule tables', async () => {
-      const meetings = await fetchMeetings('MTTV 26/27', '219397', '1732193');
+  describe('fetchMatches', () => {
+    test('parses all matches of the team across both schedule tables', async () => {
+      const matches = await fetchMatches('MTTV 26/27', '219397', '1732193');
 
-      // 7 first-half + 7 second-half meetings on the team page fixture
-      expect(meetings.length)
+      // 7 first-half + 7 second-half matches on the team page fixture
+      expect(matches.length)
         .toBe(14);
     });
 
-    test('parses meetings with concrete examples from fixture', async () => {
-      const meetings = await fetchMeetings('MTTV 26/27', '219397', '1732193');
+    test('parses matches with concrete examples from fixture', async () => {
+      const matches = await fetchMatches('MTTV 26/27', '219397', '1732193');
 
-      // Verify concrete meeting examples from the team-page fixture
-      expect(meetings)
+      // Verify concrete match examples from the team-page fixture
+      expect(matches)
         .toEqual(
           expect.arrayContaining([
             {

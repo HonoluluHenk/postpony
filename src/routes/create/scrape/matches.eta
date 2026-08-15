@@ -9,8 +9,8 @@
     </p>
   </header>
 
-  <% if (!it.meetings || it.meetings.length === 0) { %>
-    <p><%= it.t('scrape_no_meetings') %></p>
+  <% if (!it.matches || it.matches.length === 0) { %>
+    <p><%= it.t('scrape_no_matches') %></p>
   <% } else { %>
     <table class="border">
       <caption><%= it.t('scrape_choose_match') %></caption>
@@ -24,15 +24,15 @@
         </tr>
       </thead>
       <tbody>
-        <% for (let i = 0; i < it.meetings.length; i++) { %>
-          <% const m = it.meetings[i]; %>
+        <% for (let i = 0; i < it.matches.length; i++) { %>
+          <% const m = it.matches[i]; %>
           <tr>
             <td data-label="<%= it.t('scrape_match_date') %>"><%= m.day %> <%= m.date %></td>
             <td data-label="<%= it.t('scrape_match_time') %>"><%= m.time %></td>
             <td data-label="<%= it.t('scrape_match_home') %>"><%= m.homeTeam %></td>
             <td data-label="<%= it.t('scrape_match_guest') %>"><%= m.guestTeam %></td>
             <td data-label="<%= it.t('scrape_match_actions') %>">
-              <form method="post" action="/create/scrape/meeting">
+              <form method="post" action="/create/scrape/match">
                 <input type="hidden" name="day" value="<%= m.day %>">
                 <input type="hidden" name="date" value="<%= m.date %>">
                 <input type="hidden" name="time" value="<%= m.time %>">

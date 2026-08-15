@@ -15,8 +15,8 @@
     <ul class="list border">
       <% for (const team of it.teams) { %>
         <li>
-          <% const meetingsQuery = `championship=${encodeURIComponent(team.championship)}&group=${encodeURIComponent(team.group)}&teamtable=${encodeURIComponent(team.teamtable)}&teamName=${encodeURIComponent(team.name)}&groupName=${encodeURIComponent(it.groupName || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
-          <a href="/create/scrape/meetings?<%= meetingsQuery %>">
+          <% const matchesQuery = `championship=${encodeURIComponent(team.championship)}&group=${encodeURIComponent(team.group)}&teamtable=${encodeURIComponent(team.teamtable)}&teamName=${encodeURIComponent(team.name)}&groupName=${encodeURIComponent(it.groupName || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
+          <a href="/create/scrape/matches?<%= matchesQuery %>">
             <%= team.name %>
           </a>
         </li>

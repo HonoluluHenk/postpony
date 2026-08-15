@@ -3,13 +3,13 @@ import { EditPage, ScrapePage } from './pages';
 
 /**
  * Drives the full click-tt.ch scraping drilldown (leagues → groups → teams →
- * meetings → create) end-to-end. The server is started with
+ * matches → create) end-to-end. The server is started with
  * `APP_CLICK_TT_FIXTURES_DIR` (see playwright.config.ts), so every scrape step is
  * served from the downloaded HTML fixtures in `src/lib/__fixtures__` instead of
  * the live site, keeping the test deterministic and offline.
  *
  * Because the fixtures are deterministic, the assertions check for the concrete
- * values they contain (league/group/team names and individual meeting rows)
+ * values they contain (league/group/team names and individual match rows)
  * rather than just generic shapes or counts.
  */
 test.describe('Scraping Flow', () => {
@@ -70,33 +70,33 @@ test.describe('Scraping Flow', () => {
       .toHaveCount(8);
     await scrapePage.pickTeam('Ostermundigen');
 
-    // 4. Meetings → concrete rows from team.html
-    await expect(scrapePage.meetingsHeading)
+    // 4. Matches → concrete rows from team.html
+    await expect(scrapePage.matchesHeading)
       .toBeVisible();
     // The action column has an accessible (visually-hidden) header.
     await expect(scrapePage.actionsColumnHeader)
       .toBeAttached();
-    // header row + 14 meeting rows (7 first-half + 7 second-half).
-    await expect(scrapePage.meetingRows)
+    // header row + 14 match rows (7 first-half + 7 second-half).
+    await expect(scrapePage.matchRows)
       .toHaveCount(15);
 
-    // Concrete meetings from the team-page fixture (matched by their date,
+    // Concrete matches from the team-page fixture (matched by their date,
     // which uniquely identifies each leg of the schedule).
-    const firstMeeting = scrapePage.meetingRow('29.08.2026');
-    await expect(firstMeeting)
+    const firstMatch = scrapePage.matchRow('29.08.2026');
+    await expect(firstMatch)
       .toContainText('16:00');
-    await expect(firstMeeting)
+    await expect(firstMatch)
       .toContainText('Thun');
-    await expect(firstMeeting)
+    await expect(firstMatch)
       .toContainText('Ostermundigen');
 
-    const returnMeeting = scrapePage.meetingRow('14.01.2027');
-    await expect(returnMeeting)
+    const returnMatch = scrapePage.matchRow('14.01.2027');
+    await expect(returnMatch)
       .toContainText('Ostermundigen');
-    await expect(returnMeeting)
+    await expect(returnMatch)
       .toContainText('Thun');
 
-    // 5. Create a postponement from the first meeting
+    // 5. Create a postponement from the first match
     await Promise.all([
       page.waitForURL(/\/edit\/.+/),
       scrapePage.createPostponementButton.first()
@@ -116,7 +116,7 @@ test.describe('Scraping Flow', () => {
       .toHaveValue('08/29/2026 04:00 pm');
 
     // 8. Players scraped from both teams' rosters are prefilled.
-    // The scraper navigated for Ostermundigen; in the chosen meeting
+    // The scraper navigated for Ostermundigen; in the chosen match
     // (29.08.2026) Ostermundigen is the guest team and Thun is the home team.
     // Ostermundigen uses team.html fixture, Thun uses team-thun.html — each
     // has 3 players → 6 total.

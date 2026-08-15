@@ -15,7 +15,7 @@ const START_URL = `${BASE_URL}/index.htm.de`;
 const LEAGUE_URL = `${WA_URL}/leaguePage?championship={championship}&preferredLanguage={preferredLanguage}`;
 /** Plain group page; lists every team (with its `teamPortrait` link) of a group. */
 const GROUP_URL = `${WA_URL}/groupPage?championship={championship}&group={group}&preferredLanguage={preferredLanguage}`;
-/** Team page; lists the team's meetings (complete schedule). */
+/** Team page; lists the team's matches (complete schedule). */
 const TEAM_URL =
   `${WA_URL}/teamPortrait?teamtable={teamtable}&championship={championship}&group={group}&preferredLanguage={preferredLanguage}`;
 
@@ -41,7 +41,7 @@ export interface PlayerOnTeam {
   name: string;
 }
 
-export interface Meeting {
+export interface Match {
   day: string;
   date: string;
   time: string;
@@ -226,20 +226,20 @@ export async function fetchTeams(
 }
 
 /**
- * Scrapes the meetings of a single team from its team page (`teamPortrait`).
- * The page lists the meetings across one or more schedule tables (e.g. first
+ * Scrapes the matches of a single team from its team page (`teamPortrait`).
+ * The page lists the matches across one or more schedule tables (e.g. first
  * and second half of the season); all of them are parsed.
  */
-export async function fetchMeetings(
+export async function fetchMatches(
   championship: string,
   group: string,
   teamtable: string,
   preferredLanguage: ClickTTLanguage = 'German',
-): Promise<Meeting[]> {
+): Promise<Match[]> {
   const root = await fetchHtml(buildUrl(TEAM_URL, {teamtable, championship, group, preferredLanguage}));
 
   const tables = root.querySelectorAll('table.result-set');
-  const meetings: Meeting[] = [];
+  const matches: Match[] = [];
   const seen = new Set<string>();
   for (const table of tables) {
     const rows = table.querySelectorAll('tr');
@@ -250,7 +250,7 @@ export async function fetchMeetings(
       }
       const day = (cells[0]?.text ?? '').trim();
       const date = (cells[1]?.text ?? '').trim();
-      // Only rows whose second cell is an actual date are meeting rows; this
+      // Only rows whose second cell is an actual date are match rows; this
       // skips the club-info and player-ranking tables on the team page.
       if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) {
         continue;
@@ -270,10 +270,10 @@ export async function fetchMeetings(
         continue;
       }
       seen.add(key);
-      meetings.push({day, date, time, homeTeam, guestTeam});
+      matches.push({day, date, time, homeTeam, guestTeam});
     }
   }
-  return meetings;
+  return matches;
 }
 
 /**

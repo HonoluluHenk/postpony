@@ -5,7 +5,7 @@ import { generateId, generateRandomPassword, hashPassword } from '../../../lib/c
 import { DEFAULT_CLUB_ID, type Player, type RescheduleSession } from '../../../lib/models';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
 
-const MeetingSchema = v.object({
+const MatchSchema = v.object({
   day: v.optional(v.string(), ''),
   date: v.pipe(v.string(), v.minLength(1)),
   time: v.optional(v.string(), ''),
@@ -33,11 +33,11 @@ function makePlayer(name: string, teamId: 'home' | 'away'): Player {
   return {id: generateId(), name, teamId};
 }
 
-export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
+export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   const body = await app.c.req.parseBody({all: true});
-  const validation = v.safeParse(MeetingSchema, body);
+  const validation = v.safeParse(MatchSchema, body);
   if (!validation.success) {
-    app.failure(app.t('missing_param', {name: 'meeting'}));
+    app.failure(app.t('missing_param', {name: 'match'}));
   }
   const m = validation.output;
 
@@ -74,7 +74,7 @@ export const handleScrapeMeetingPost = async (app: App): Promise<Response> => {
     createdAt: app.timestamp.now(),
     metadata: {
       source: 'click-tt.ch',
-      meeting: {
+      match: {
         day: m.day,
         date: m.date,
         time: m.time,
