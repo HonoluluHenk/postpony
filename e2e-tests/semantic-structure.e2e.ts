@@ -44,8 +44,8 @@ test.describe('Semantic structure', () => {
 
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
-    await editPage.toggleAwayVotable(0);
-    await editPage.toggleAwayVotable(1);
+    await editPage.toggleVotableByOpponent(0);
+    await editPage.toggleVotableByOpponent(1);
 
     const joinPage = await new JoinPage(page)
       .goto(session.homeHref);

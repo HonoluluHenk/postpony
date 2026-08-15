@@ -1,5 +1,5 @@
 import { createClient } from '@libsql/client';
-import type { Postponement } from './models';
+import type { Postponement, PostponementStatus, ProposedDate } from './models';
 
 export interface SessionStore {
   get(id: string): Promise<Postponement | undefined>;
@@ -7,11 +7,49 @@ export interface SessionStore {
   save(session: Postponement): Promise<void>;
 }
 
+/**
+ * Upgrades a session read from the store to the current shape. Old rows predate
+ * `votableByOpponent`, `organizerTeam`, `reopenCount`, and `confirmedProposedDateId`,
+ * and used removed statuses. Pure read-time normalization — nothing is rewritten.
+ */
+export function normalize(data: Record<string, unknown>): Postponement {
+  const status: PostponementStatus =
+    data['status'] === 'Draft' || data['status'] === 'Voting' || data['status'] === 'Confirmed'
+      ? data['status']
+      : 'Voting';
+
+  const proposedDates: ProposedDate[] = (
+    data['proposedDates'] as Record<string, unknown>[] | undefined ?? []
+  ).map((pd): ProposedDate => ({
+    id: pd['id'] as string,
+    sessionId: pd['sessionId'] as string,
+    dateTimeRange: pd['dateTimeRange'] as ProposedDate['dateTimeRange'],
+    proposerId: pd['proposerId'] as string,
+    votableByOpponent:
+      typeof pd['votableByOpponent'] === 'boolean'
+        ? pd['votableByOpponent']
+        : typeof pd['awayTeamVotable'] === 'boolean'
+          ? pd['awayTeamVotable']
+          : false,
+  }));
+
+  return {
+    ...(data as unknown as Postponement),
+    organizerTeam: data['organizerTeam'] === 'away' ? 'away' : 'home',
+    reopenCount: typeof data['reopenCount'] === 'number' ? data['reopenCount'] : 0,
+    status,
+    proposedDates,
+  };
+}
+
 export class MemorySessionStore implements SessionStore {
   private readonly store = new Map<string, Postponement>();
 
   get(id: string): Promise<Postponement | undefined> {
-    return Promise.resolve(this.store.get(id));
+    const session = this.store.get(id);
+    return Promise.resolve(
+      session ? normalize(session as unknown as Record<string, unknown>) : undefined,
+    );
   }
 
   save(session: Postponement): Promise<void> {
@@ -49,7 +87,7 @@ export class SqliteSessionStore implements SessionStore {
     if (!data['id'] || !data['clubId']) {
       throw new Error(`Corrupt session data for id=${id}`);
     }
-    return data as unknown as Postponement;
+    return normalize(data);
   }
 
   async save(session: Postponement): Promise<void> {

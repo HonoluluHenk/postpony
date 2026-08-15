@@ -27,7 +27,7 @@ export function aProposedDate(overrides: DeepPartial<ProposedDate> = {}): Propos
       end: '2025-09-01T22:00:00',
     },
     proposerId: 'player-1',
-    awayTeamVotable: false,
+    votableByOpponent: false,
   }, overrides);
 }
 
@@ -49,6 +49,8 @@ export function aSession(overrides: DeepPartial<Postponement> = {}): Postponemen
     invitationPasswordHash: 'hashed-invitation-pw',
     invitationPassword: 'invitation-pw',
     status: 'Draft',
+    organizerTeam: 'home',
+    reopenCount: 0,
     players: [],
     proposedDates: [],
     votes: [],

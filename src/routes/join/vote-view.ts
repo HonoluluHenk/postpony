@@ -25,7 +25,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const tallies = rules.tally(session, team);
 
   const visibleDates = session.proposedDates.filter((pd) =>
-    team === 'away' ? pd.awayTeamVotable : true,
+    team === 'away' ? pd.votableByOpponent : true,
   );
 
   const proposedDates: VotePageDate[] = visibleDates.map((pd) => {

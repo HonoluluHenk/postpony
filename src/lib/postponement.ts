@@ -1,7 +1,5 @@
 import { generateId } from './crypto-utils';
-import type { Player, Postponement, ProposedDate, Vote } from './models';
-
-export type Team = 'home' | 'away';
+import type { Player, Postponement, ProposedDate, Team, Vote } from './models';
 
 export interface VoteTally {
   yes: number;
@@ -84,6 +82,8 @@ export class PostponementRules {
 
   /**
    * Adds a Proposed Date. `start` must already be a normalized ISO datetime string.
+   * The first date moves the session from `Draft` to `Voting`; later adds keep `Voting`.
+   * New dates are never votable by the opponent until the organizer flips the flag.
    */
   proposeDate(
     session: Postponement,
@@ -101,9 +101,16 @@ export class PostponementRules {
       sessionId: session.id,
       dateTimeRange: {start, end: start},
       proposerId,
-      awayTeamVotable: false,
+      votableByOpponent: false,
     };
-    return {session: {...session, proposedDates: [...session.proposedDates, proposedDate]}, proposedDate};
+    return {
+      session: {
+        ...session,
+        status: session.status === 'Draft' ? 'Voting' : session.status,
+        proposedDates: [...session.proposedDates, proposedDate],
+      },
+      proposedDate,
+    };
   }
 
   /**
@@ -168,17 +175,85 @@ export class PostponementRules {
   }
 
   /**
-   * Sets whether a Proposed Date is votable by the away team.
+   * Sets whether a Proposed Date is votable by the opponent team.
    */
-  setAwayTeamVotable(
+  setVotableByOpponent(
     session: Postponement,
     proposedDateId: string,
     votable: boolean,
   ): Postponement {
     const proposedDates = session.proposedDates.map((pd) =>
-      pd.id === proposedDateId ? {...pd, awayTeamVotable: votable} : pd,
+      pd.id === proposedDateId ? {...pd, votableByOpponent: votable} : pd,
     );
     return {...session, proposedDates};
   }
 
+  /**
+   * Locks a date as final: sets `confirmedProposedDateId` and moves the session to
+   * `Confirmed`. A no-op for any date that is not `votableByOpponent` or unknown.
+   * Idempotent — confirming an already-confirmed date leaves the session unchanged.
+   */
+  confirmDate(
+    session: Postponement,
+    proposedDateId: string,
+  ): Postponement {
+    const date = session.proposedDates.find((pd) => pd.id === proposedDateId);
+    if (!date?.votableByOpponent) {
+      return session;
+    }
+    return {...session, status: 'Confirmed', confirmedProposedDateId: proposedDateId};
+  }
+
+  /**
+   * Reopens a Confirmed session back to `Voting`. The locked date stays as history in
+   * `confirmedProposedDateId`; all votes and per-date opponent flags are kept.
+   */
+  reopen(session: Postponement): Postponement {
+    return {
+      ...session,
+      status: 'Voting',
+      reopenCount: session.reopenCount + 1,
+    };
+  }
+
+  /**
+   * Own-team completion per Proposed Date, keyed by date id. "Voted" counts team players
+   * with a Vote on that date (any type); `total` is all team players — roster plus any
+   * added names, joined or not. `nonVoters` lists the team players without a Vote on that
+   * date; `joined` marks whether the player ever cast a Vote anywhere in the session.
+   */
+  teamCompletion(session: Postponement, team: Team): Record<string, DateCompletion> {
+    const teamPlayers = session.players.filter((p) => p.teamId === team);
+    const playerIds = new Set(teamPlayers.map((p) => p.id));
+
+    // ponytail: "joined" is inferred from having cast any vote; there is no explicit
+    // joined flag yet, so a registered-but-never-voted player is indistinguishable from
+    // a never-joined roster player. Upgrade path: persist a joined marker on Player.
+    const joinedIds = new Set(
+      session.votes.filter((v) => playerIds.has(v.participantId)).map((v) => v.participantId),
+    );
+
+    const result: Record<string, DateCompletion> = {};
+    for (const pd of session.proposedDates) {
+      const dateVoterIds = new Set(
+        session.votes.filter((v) => v.proposedDateId === pd.id).map((v) => v.participantId),
+      );
+      const voted = teamPlayers.filter((p) => dateVoterIds.has(p.id)).length;
+      const nonVoters = teamPlayers
+        .filter((p) => !dateVoterIds.has(p.id))
+        .map((player) => ({player, joined: joinedIds.has(player.id)}));
+      result[pd.id] = {voted, total: teamPlayers.length, nonVoters};
+    }
+    return result;
+  }
+
+}
+
+export interface DateCompletion {
+  voted: number;
+  total: number;
+  nonVoters: {
+    player: Player;
+    joined: boolean
+  }[];
 }

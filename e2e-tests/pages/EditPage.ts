@@ -157,9 +157,9 @@ export class EditPage {
       .locator('button.clipboard-btn');
   }
 
-  awayVoteToggle(dateIndex: number): Locator {
+  votableByOpponentToggle(dateIndex: number): Locator {
     // ponytail: beer.css hides native checkboxes; toggle via label text
-    return this.page.getByText('Allow away team to vote')
+    return this.page.getByText('Allow opponent to vote')
       .nth(dateIndex);
   }
 
@@ -170,9 +170,9 @@ export class EditPage {
     await this.addProposedDateButton.click();
   }
 
-  async toggleAwayVotable(dateIndex: number): Promise<void> {
+  async toggleVotableByOpponent(dateIndex: number): Promise<void> {
     // ponytail: beer.css hides native checkboxes; toggle via label text
-    await this.awayVoteToggle(dateIndex)
+    await this.votableByOpponentToggle(dateIndex)
       .click();
   }
 

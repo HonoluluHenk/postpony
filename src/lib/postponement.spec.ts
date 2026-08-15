@@ -105,8 +105,31 @@ describe('postponement', () => {
         .toBe(proposedDate.dateTimeRange.end);
       expect(proposedDate.proposerId)
         .toBe('owner');
+      expect(proposedDate.votableByOpponent)
+        .toBe(false);
       expect(session.proposedDates)
         .toEqual([proposedDate]);
+    });
+
+    test('moves a Draft session to Voting on the first add', () => {
+      const {session} = new FakePostponementRules().proposeDate(aSession({status: 'Draft'}), '2025-09-01T20:00', 'owner');
+
+      expect(session.status)
+        .toBe('Voting');
+    });
+
+    test('keeps Voting on later adds', () => {
+      const before = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate()],
+      });
+
+      const {session} = new FakePostponementRules().proposeDate(before, '2025-09-02T20:00', 'owner');
+
+      expect(session.status)
+        .toBe('Voting');
+      expect(session.proposedDates)
+        .toHaveLength(2);
     });
   });
 
@@ -256,38 +279,196 @@ describe('postponement', () => {
     });
   });
 
-  describe('setAwayTeamVotable', () => {
-    test('sets awayTeamVotable on a proposed date', () => {
+  describe('setVotableByOpponent', () => {
+    test('sets votableByOpponent on a proposed date', () => {
       const session = aSession({
-        proposedDates: [aProposedDate({id: 'pd-1', awayTeamVotable: false})],
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: false})],
       });
 
-      const updated = new FakePostponementRules().setAwayTeamVotable(session, 'pd-1', true);
+      const updated = new FakePostponementRules().setVotableByOpponent(session, 'pd-1', true);
 
-      expect(updated.proposedDates[0]?.awayTeamVotable)
+      expect(updated.proposedDates[0]?.votableByOpponent)
         .toBe(true);
     });
 
-    test('clears awayTeamVotable on a proposed date', () => {
+    test('clears votableByOpponent on a proposed date', () => {
       const session = aSession({
-        proposedDates: [aProposedDate({id: 'pd-1', awayTeamVotable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
       });
 
-      const updated = new FakePostponementRules().setAwayTeamVotable(session, 'pd-1', false);
+      const updated = new FakePostponementRules().setVotableByOpponent(session, 'pd-1', false);
 
-      expect(updated.proposedDates[0]?.awayTeamVotable)
+      expect(updated.proposedDates[0]?.votableByOpponent)
         .toBe(false);
     });
 
     test('does not mutate the input session', () => {
       const session = aSession({
-        proposedDates: [aProposedDate({id: 'pd-1', awayTeamVotable: false})],
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: false})],
       });
 
-      new FakePostponementRules().setAwayTeamVotable(session, 'pd-1', true);
+      new FakePostponementRules().setVotableByOpponent(session, 'pd-1', true);
 
-      expect(session.proposedDates[0]?.awayTeamVotable)
+      expect(session.proposedDates[0]?.votableByOpponent)
         .toBe(false);
+    });
+  });
+
+  describe('confirmDate', () => {
+    test('confirms a votable date and locks the session', () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+      });
+
+      const updated = new FakePostponementRules().confirmDate(session, 'pd-1');
+
+      expect(updated.status)
+        .toBe('Confirmed');
+      expect(updated.confirmedProposedDateId)
+        .toBe('pd-1');
+    });
+
+    test('is a no-op for a date that is not votable by the opponent', () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: false})],
+      });
+
+      const updated = new FakePostponementRules().confirmDate(session, 'pd-1');
+
+      expect(updated)
+        .toBe(session);
+      expect(updated.status)
+        .toBe('Voting');
+      expect(updated.confirmedProposedDateId)
+        .toBeUndefined();
+    });
+
+    test('is a no-op for an unknown date', () => {
+      const session = aSession({status: 'Voting', proposedDates: [aProposedDate()]});
+
+      const updated = new FakePostponementRules().confirmDate(session, 'ghost');
+
+      expect(updated)
+        .toBe(session);
+    });
+
+    test('is idempotent: confirming the same date twice keeps the same state', () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+      });
+
+      const first = new FakePostponementRules().confirmDate(session, 'pd-1');
+      const second = new FakePostponementRules().confirmDate(first, 'pd-1');
+
+      expect(second)
+        .toEqual(first);
+      expect(second.status)
+        .toBe('Confirmed');
+      expect(second.confirmedProposedDateId)
+        .toBe('pd-1');
+    });
+  });
+
+  describe('reopen', () => {
+    test('returns to Voting, increments reopenCount, and keeps history, votes, and flags', () => {
+      const session = aSession({
+        status: 'Confirmed',
+        reopenCount: 0,
+        confirmedProposedDateId: 'pd-1',
+        proposedDates: [
+          aProposedDate({id: 'pd-1', votableByOpponent: true}),
+          aProposedDate({id: 'pd-2', votableByOpponent: false}),
+        ],
+        votes: [aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
+      });
+
+      const updated = new FakePostponementRules().reopen(session);
+
+      expect(updated.status)
+        .toBe('Voting');
+      expect(updated.reopenCount)
+        .toBe(1);
+      expect(updated.confirmedProposedDateId)
+        .toBe('pd-1');
+      expect(updated.proposedDates)
+        .toEqual(session.proposedDates);
+      expect(updated.votes)
+        .toEqual(session.votes);
+    });
+
+    test('keeps the session in Voting when reopened twice', () => {
+      const session = aSession({
+        status: 'Confirmed',
+        reopenCount: 1,
+        confirmedProposedDateId: 'pd-1',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+      });
+
+      const updated = new FakePostponementRules().reopen(session);
+
+      expect(updated.status)
+        .toBe('Voting');
+      expect(updated.reopenCount)
+        .toBe(2);
+    });
+  });
+
+  describe('teamCompletion', () => {
+    const homePlayers = [
+      aPlayer({id: 'p1', name: 'Voter', teamId: 'home'}),
+      aPlayer({id: 'p2', name: 'JoinedElsewhere', teamId: 'home'}),
+      aPlayer({id: 'p3', name: 'RosterOnly', teamId: 'home'}),
+    ];
+
+    test('counts voted, uses all team players as denominator, and marks never-joined players', () => {
+      const session = aSession({
+        players: [
+          ...homePlayers,
+          aPlayer({id: 'a1', name: 'Away', teamId: 'away'}),
+        ],
+        proposedDates: [
+          aProposedDate({id: 'pd-1'}),
+          aProposedDate({id: 'pd-2'}),
+        ],
+        votes: [
+          aVote({proposedDateId: 'pd-1', participantId: 'p1', type: 'Yes'}),
+          aVote({proposedDateId: 'pd-2', participantId: 'p2', type: 'No'}),
+          aVote({proposedDateId: 'pd-1', participantId: 'a1', type: 'Yes'}),
+        ],
+      });
+
+      const completion = new FakePostponementRules().teamCompletion(session, 'home');
+
+      expect(completion['pd-1'])
+        .toEqual({
+          voted: 1,
+          total: 3,
+          nonVoters: [
+            {player: homePlayers[1], joined: true},
+            {player: homePlayers[2], joined: false},
+          ],
+        });
+      expect(completion['pd-2'])
+        .toEqual({
+          voted: 1,
+          total: 3,
+          nonVoters: [
+            {player: homePlayers[0], joined: true},
+            {player: homePlayers[2], joined: false},
+          ],
+        });
+    });
+
+    test('returns an empty result when the team has no proposed dates', () => {
+      const session = aSession({players: homePlayers});
+
+      const completion = new FakePostponementRules().teamCompletion(session, 'home');
+
+      expect(completion)
+        .toEqual({});
     });
   });
 

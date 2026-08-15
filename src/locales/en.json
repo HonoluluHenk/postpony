@@ -71,7 +71,7 @@
   "vote_title": "Vote on Proposed Dates",
   "vote_updated": "Your votes have been saved!",
   "vote_yes": "Yes",
-  "away_team_votable": "Allow away team to vote",
+  "votable_by_opponent": "Allow opponent to vote",
   "vote_summary_home": "Home Team Votes",
   "vote_summary_away": "Away Team Votes",
   "welcome": "Welcome to PostPony"

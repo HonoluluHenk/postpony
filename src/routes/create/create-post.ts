@@ -39,6 +39,8 @@ export async function handleCreatePost(app: App): Promise<Response> {
     invitationPasswordHash: hashPassword(invitationPassword),
     invitationPassword,
     status: 'Draft',
+    organizerTeam: 'home',
+    reopenCount: 0,
     players: [],
     proposedDates: [],
     votes: [],

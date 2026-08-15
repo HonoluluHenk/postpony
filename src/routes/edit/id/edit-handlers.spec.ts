@@ -144,6 +144,20 @@ describe('edit handlers', () => {
         .toHaveLength(2);
     });
 
+    test('moves a Draft session to Voting when the first date is added', async () => {
+      const session = aSession();
+      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '09/01/2025 08:00 pm'}});
+      await app.store.save(session);
+
+      await handleEditProposedDatesPost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Voting');
+      expect(stored?.proposedDates[0]?.votableByOpponent)
+        .toBe(false);
+    });
+
     test('redirects without adding when the datetime is invalid', async () => {
       const session = aSession();
       const app = createApp({params: {id: session.id}, body: {proposedDateTime: 'not-a-date'}});

@@ -7,7 +7,7 @@ import { formatLocalizedDateTime, parseIsoToPlainDateTime, parseLocaleDateTime }
 import type { AppLocale } from '../../../locales';
 
 interface ProposedDateTallyItem extends VoteTallyItem {
-  awayTeamVotable: boolean;
+  votableByOpponent: boolean;
 }
 
 function toProposedDateItems(
@@ -24,7 +24,7 @@ function toProposedDateItems(
     return {
       id: pd.id,
       display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
-      awayTeamVotable: pd.awayTeamVotable,
+      votableByOpponent: pd.votableByOpponent,
       yes: counts.yes,
       no: counts.no,
       maybe: counts.maybe,

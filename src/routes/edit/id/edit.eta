@@ -99,10 +99,10 @@
             <div class="max"><%= proposedDate.display %></div>
             <label class="switch">
               <input type="checkbox"
-                     hx-post="/edit/<%= it.session.id %>/proposed-date-visibility?proposedDateId=<%= proposedDate.id %>&votable=<%= !proposedDate.awayTeamVotable %>"
+                     hx-post="/edit/<%= it.session.id %>/proposed-date-visibility?proposedDateId=<%= proposedDate.id %>&votable=<%= !proposedDate.votableByOpponent %>"
                      hx-target="#proposed-dates-management"
-                     <%= proposedDate.awayTeamVotable ? 'checked' : '' %>>
-              <span><%= it.t('away_team_votable') %></span>
+                     <%= proposedDate.votableByOpponent ? 'checked' : '' %>>
+              <span><%= it.t('votable_by_opponent') %></span>
             </label>
           </li>
         <% }) %>

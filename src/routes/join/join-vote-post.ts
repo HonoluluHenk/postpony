@@ -25,7 +25,7 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
     const rules = new PostponementRules();
     const body = await app.c.req.parseBody();
     for (const pd of session.proposedDates) {
-      if (team === 'away' && !pd.awayTeamVotable) {
+      if (team === 'away' && !pd.votableByOpponent) {
         continue;
       }
       const value = body[`vote-${pd.id}`];

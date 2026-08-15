@@ -4,12 +4,14 @@ import { DateTimeRange } from './temporal-utils';
 // replace with real club resolution (from URL domain, user session, etc.).
 export const DEFAULT_CLUB_ID = 'default-club';
 
-export type PostponementStatus = 'Draft' | 'Proposed' | 'Voting' | 'Confirmed by Opponent' | 'Confirmed';
+export type Team = 'home' | 'away';
+
+export type PostponementStatus = 'Draft' | 'Voting' | 'Confirmed';
 
 export interface Player {
   id: string;
   name: string;
-  teamId: 'home' | 'away';
+  teamId: Team;
 }
 
 export interface AvailabilityRecord {
@@ -25,6 +27,9 @@ export interface Postponement {
   invitationPasswordHash: string;
   invitationPassword: string;
   status: PostponementStatus;
+  organizerTeam: Team;
+  reopenCount: number;
+  confirmedProposedDateId?: string;
   players: Player[];
   proposedDates: ProposedDate[];
   votes: Vote[];
@@ -41,7 +46,7 @@ export interface ProposedDate {
     end: string;   // ISO string
   };
   proposerId: string;
-  awayTeamVotable: boolean;
+  votableByOpponent: boolean;
 }
 
 export interface Vote {

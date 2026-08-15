@@ -67,6 +67,8 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     invitationPasswordHash: hashPassword(invitationPassword),
     invitationPassword,
     status: 'Draft',
+    organizerTeam: selectedTeamId,
+    reopenCount: 0,
     players,
     proposedDates: [],
     votes: [],

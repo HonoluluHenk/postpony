@@ -67,7 +67,7 @@ test.describe('Responsive Layout', () => {
 
     // A proposed-date row's "away team votable" switch stays fully visible
     // and reachable on a phone even with a date present.
-    await expectFullyInViewport(editPage.awayVoteToggle(0));
+    await expectFullyInViewport(editPage.votableByOpponentToggle(0));
   });
 
   test('desktop viewport: container caps at 1200px', async ({page}) => {

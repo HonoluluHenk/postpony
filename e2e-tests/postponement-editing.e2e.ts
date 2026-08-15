@@ -117,17 +117,17 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(1);
 
     // Toggle it on
-    await editPage.toggleAwayVotable(0);
-    await expect(editPage.awayVoteToggle(0))
+    await editPage.toggleVotableByOpponent(0);
+    await expect(editPage.votableByOpponentToggle(0))
       .toBeVisible();
 
     // Toggle it off
-    await editPage.toggleAwayVotable(0);
-    await expect(editPage.awayVoteToggle(0))
+    await editPage.toggleVotableByOpponent(0);
+    await expect(editPage.votableByOpponentToggle(0))
       .toBeVisible();
 
-    await editPage.toggleAwayVotable(0);
-    await expect(editPage.awayVoteToggle(0))
+    await editPage.toggleVotableByOpponent(0);
+    await expect(editPage.votableByOpponentToggle(0))
       .toBeVisible();
 
     await checkA11y();
@@ -149,10 +149,10 @@ test.describe('Postponement Editing', () => {
     const editUrl = page.url();
 
     // Make both dates votable for away team
-    await editPage.toggleAwayVotable(0);
-    await expect(editPage.awayVoteToggle(0))
+    await editPage.toggleVotableByOpponent(0);
+    await expect(editPage.votableByOpponentToggle(0))
       .toBeVisible();
-    await editPage.toggleAwayVotable(1);
+    await editPage.toggleVotableByOpponent(1);
 
     // Join as home player and vote Yes on first date
     const joinPage = await new JoinPage(page)

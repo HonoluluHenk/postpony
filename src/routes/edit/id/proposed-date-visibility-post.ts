@@ -13,7 +13,7 @@ export const handleProposedDateVisibilityPost = async (app: App): Promise<Respon
   const votable = app.c.req.query('votable') === 'true';
 
   const rules = new PostponementRules();
-  const updated = rules.setAwayTeamVotable(session, proposedDateId, votable);
+  const updated = rules.setVotableByOpponent(session, proposedDateId, votable);
   await app.store.save(updated);
 
   const locale = app.locale;
@@ -26,7 +26,7 @@ export const handleProposedDateVisibilityPost = async (app: App): Promise<Respon
     return {
       id: pd.id,
       display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
-      awayTeamVotable: pd.awayTeamVotable,
+      votableByOpponent: pd.votableByOpponent,
       yes: counts.yes,
       no: counts.no,
       maybe: counts.maybe,

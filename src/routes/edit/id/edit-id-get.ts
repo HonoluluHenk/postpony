@@ -19,13 +19,13 @@ export const handleEditGet = async (app: App): Promise<Response> => {
   const awayTallies = rules.tally(session, 'away');
 
   const proposedDates: (VoteTallyItem & {
-    awayTeamVotable: boolean
+    votableByOpponent: boolean
   })[] = session.proposedDates.map((pd) => {
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {
       id: pd.id,
       display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
-      awayTeamVotable: pd.awayTeamVotable,
+      votableByOpponent: pd.votableByOpponent,
       yes: counts.yes,
       no: counts.no,
       maybe: counts.maybe,

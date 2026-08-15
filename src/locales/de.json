@@ -71,7 +71,7 @@
   "vote_title": "Über vorgeschlagene Termine abstimmen",
   "vote_updated": "Ihre Stimmen wurden gespeichert!",
   "vote_yes": "Ja",
-  "away_team_votable": "Gastmannschaft abstimmen lassen",
+  "votable_by_opponent": "Gegner abstimmen lassen",
   "vote_summary_home": "Stimmen der Heimmannschaft",
   "vote_summary_away": "Stimmen der Gastmannschaft",
   "welcome": "Willkommen bei PostPony"

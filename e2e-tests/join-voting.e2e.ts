@@ -113,7 +113,7 @@ test.describe('Join and Voting', () => {
     // Make only the second date votable for away team
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
-    await editPage.toggleAwayVotable(1);
+    await editPage.toggleVotableByOpponent(1);
 
     // Join as away team — should see only 1 date
     const awayJoinPage = new JoinPage(page);
@@ -139,7 +139,7 @@ test.describe('Join and Voting', () => {
 
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
-    await editPage.toggleAwayVotable(0);
+    await editPage.toggleVotableByOpponent(0);
 
     // Join as home player and vote Yes
     const homeJoinPage = new JoinPage(page);
