@@ -4,8 +4,8 @@
 
 **Blocked by:** Reconcile with the locale-aware-dates tickets (`.scratch/locale-aware-dates/`) before editing, to avoid a merge conflict. Not blocked by any other ticket in this set.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] No hardcoded `lang` on the proposed-date input.
-- [ ] The input's `lang` matches the active locale, or is absent where the locale-aware-dates feature owns it.
-- [ ] No functional change to date entry or persistence.
+- [x] No hardcoded `lang` on the proposed-date input.
+- [x] The input's `lang` matches the active locale, or is absent where the locale-aware-dates feature owns it.
+- [x] No functional change to date entry or persistence.
