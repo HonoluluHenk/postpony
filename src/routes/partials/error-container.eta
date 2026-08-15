@@ -1,4 +1,4 @@
-<div id="error-container" hx-swap-oob="true" aria-live="polite">
+<div id="error-container" hx-swap-oob="true">
   <% if (it.globalError) { %>
     <div class="error padding white-text" role="alert">
       <i aria-hidden="true">error</i>

@@ -4,11 +4,11 @@
     <h3 tabindex="-1"><%= it.t('players') %></h3>
   </header>
 
-  <h5><%= it.t('home_team') %></h5>
+  <h4><%= it.t('home_team') %></h4>
   <ul id="home-player-list" class="list" aria-label="<%= it.t('home_team') %>">
     <% it.players.filter(function (p) { return p.teamId === 'home'; }).forEach(function (player) { %>
       <li>
-        <i>person</i>
+        <i aria-hidden="true">person</i>
         <div class="max"><%= player.name %></div>
       </li>
     <% }) %>
@@ -31,11 +31,11 @@
     </div>
   </form>
 
-  <h5><%= it.t('away_team') %></h5>
+  <h4><%= it.t('away_team') %></h4>
     <ul id="away-player-list" class="list" aria-label="<%= it.t('away_team') %>">
       <% it.players.filter(function (p) { return p.teamId === 'away'; }).forEach(function (player) { %>
         <li>
-          <i>person</i>
+          <i aria-hidden="true">person</i>
           <div class="max"><%= player.name %></div>
         </li>
       <% }) %>

@@ -17,7 +17,7 @@
       <legend><%= it.t('join_select_player') %></legend>
       <% it.players.forEach(function (player) { %>
         <label class="radio">
-          <input type="radio" name="playerId" value="<%= player.id %>" aria-required="true">
+          <input type="radio" name="playerId" value="<%= player.id %>">
           <span><%= player.name %></span>
         </label>
       <% }) %>

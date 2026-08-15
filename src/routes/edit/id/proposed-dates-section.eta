@@ -6,7 +6,7 @@
   <ul id="proposed-date-list" class="list" aria-label="<%= it.t('proposed_dates_management') %>">
     <% it.proposedDates.forEach(function (proposedDate) { %>
       <li>
-        <i>event</i>
+        <i aria-hidden="true">event</i>
         <div class="max"><%= proposedDate.display %></div>
         <label class="switch">
           <input type="checkbox"
@@ -31,7 +31,7 @@
           <span id="proposedDateTime-error" class="error" role="alert"><%= it.error %></span>
         <% } %>
       </div>
-      <button type="button" id="proposedDateTimePicker" class="button" aria-label="<%= it.t('proposed_date_time_picker_label') %>" title="<%= it.t('proposed_date_time_picker_label') %>"><i>calendar_today</i></button>
+      <button type="button" id="proposedDateTimePicker" class="button" aria-label="<%= it.t('proposed_date_time_picker_label') %>" title="<%= it.t('proposed_date_time_picker_label') %>"><i aria-hidden="true">calendar_today</i></button>
     </div>
     <div class="right-align">
       <button type="submit"><%= it.t('add_proposed_date') %></button>
@@ -48,10 +48,10 @@
 </section>
 
 <div id="vote-tally-section" hx-swap-oob="true" class="grid" aria-live="polite">
-  <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_home') %>">
-    <%~ include('../../partials/vote-tally.eta', {headingLevel: 3, title: it.t('vote_summary_home'), proposedDates: it.homeProposedDates, t: it.t}) %>
+  <section class="padding small-round surface-variant s12 m6"<%~ it.homeProposedDates.length > 0 ? ' aria-labelledby="vote-summary-home-title"' : '' %>>
+    <%~ include('../../partials/vote-tally.eta', {headingLevel: 3, title: it.t('vote_summary_home'), titleId: 'vote-summary-home-title', proposedDates: it.homeProposedDates, t: it.t}) %>
   </section>
-  <section class="padding small-round surface-variant s12 m6" aria-label="<%= it.t('vote_summary_away') %>">
-    <%~ include('../../partials/vote-tally.eta', {headingLevel: 3, title: it.t('vote_summary_away'), proposedDates: it.awayProposedDates, t: it.t}) %>
+  <section class="padding small-round surface-variant s12 m6"<%~ it.awayProposedDates.length > 0 ? ' aria-labelledby="vote-summary-away-title"' : '' %>>
+    <%~ include('../../partials/vote-tally.eta', {headingLevel: 3, title: it.t('vote_summary_away'), titleId: 'vote-summary-away-title', proposedDates: it.awayProposedDates, t: it.t}) %>
   </section>
 </div>
