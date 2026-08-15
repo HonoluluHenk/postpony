@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 — Decorative icons hidden from the accessibility tree, 02 — Clean heading outline on the owner edit page, 03 — Vote-summary regions named exactly once, 04 — Join page: optional player-selection radios no longer claim required, 05 — Consistent error-container live region, 06 — Locale-consistent date-input language attribute.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] axe `checkA11y` passes on every route.
 - [ ] Structural assertions fail if any of the following regress: a decorative icon exposes glyph text; a heading level is skipped; an optional radio group claims required.

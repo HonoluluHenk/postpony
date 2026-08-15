@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] The error container has the same live-region semantics in both the initial render and the HTMX-swapped partial — no `aria-live` on the container in either.
 - [ ] A global or validation error is still announced via the inner `role="alert"` in both paths.

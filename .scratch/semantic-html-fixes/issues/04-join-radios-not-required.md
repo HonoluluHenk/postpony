@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] No radio input on the join page declares `aria-required` (and none declares the native `required` attribute).
 - [ ] The participant can still join by selecting an existing player OR by typing a new player name.

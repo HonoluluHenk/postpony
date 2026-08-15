@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Every decorative Material icon on the edit page (including its partial renders) carries `aria-hidden="true"`; no bare icon exposes its glyph text.
 - [ ] The copy-to-clipboard buttons' accessible name is exactly the localized copy label.

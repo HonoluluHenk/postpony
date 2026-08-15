@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Each vote-summary `<section>` keeps its region role and name — the existing `getByRole('region', ...)` locators still resolve.
 - [ ] The vote-tally table no longer carries a caption duplicating the heading; the table still has a clear accessible name from the heading that precedes it.

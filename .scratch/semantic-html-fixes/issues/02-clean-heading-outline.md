@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] The outline has no skipped heading levels on the edit page (`h3` → `h4`, not `h3` → `h5`).
 - [ ] Heading text is unchanged; only the levels change.
