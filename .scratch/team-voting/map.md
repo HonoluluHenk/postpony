@@ -1,6 +1,6 @@
 # Two-phase team voting — wayfinder map
 
-Status: open Label: wayfinder:map
+Status: closed Label: wayfinder:map
 
 ## Destination
 
@@ -44,8 +44,11 @@ A **spec** (`spec.md` in this directory) for two-phase team voting: the organize
 - Own-team completion signal — no close act; per-date "N/M voted" count + non-voter list (never-joined marked "not joined"); M = roster + new names, organizer counted. ([ticket 01](issues/01-own-team-completion-signal.md))
 - Opponent pre-proposal experience — opponent registers pre-proposal (plain form); vote page shows empty state + hint organizer is still deciding dates; opponent-only, own team unchanged; registration blocked only when `Confirmed`. ([ticket 02](issues/02-opponent-pre-proposal-experience.md))
 - Status semantics — statuses shrink to `Draft | Voting | Confirmed`; `Draft` on creation, `Voting` on first date + reopen, `Confirmed` on lock; `Proposed` and `Confirmed by Opponent` removed. ([ticket 03](issues/03-status-semantics.md))
+- Write the two-phase team-voting spec — destination reached; implementation spec written to `spec.md` in this directory (model + migration, status lifecycle, domain ops, scrape team-pick, registration/confirmed view, edit + vote pages, locale keys, docs ripple, testing). ([ticket 04](issues/04-write-the-spec.md))
 
 ## Not yet specified
+
+The open wording items below are carried into `spec.md`'s Fog section (exact locale strings only; no behavioral decisions pending).
 
 - Later UI detail for the spec (fog, not yet sharp): exact wording/locale keys for
   "reopened N times", the confirmed-info view, and the per-team results section.
@@ -59,4 +62,4 @@ A **spec** (`spec.md` in this directory) for two-phase team voting: the organize
 
 ## Tickets
 
-Child tickets live in `issues/`. Frontier = open + unblocked: 03.
+Child tickets live in `issues/`. Frontier: none — all tickets closed, destination delivered (spec.md).
