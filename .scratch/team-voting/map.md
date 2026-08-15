@@ -43,10 +43,10 @@ A **spec** (`spec.md` in this directory) for two-phase team voting: the organize
 <!-- one line per closed ticket: title + link + gist -->
 
 - Own-team completion signal — no close act; per-date "N/M voted" count + non-voter list (never-joined marked "not joined"); M = roster + new names, organizer counted. ([ticket 01](issues/01-own-team-completion-signal.md))
+- Opponent pre-proposal experience — opponent registers pre-proposal (plain form); vote page shows empty state + hint organizer is still deciding dates; opponent-only, own team unchanged; registration blocked only when `Confirmed`. ([ticket 02](issues/02-opponent-pre-proposal-experience.md))
 
 ## Not yet specified
 
-- **Opponent's pre-proposal experience** — what the opponent sees on the vote page before any date is proposed, and whether they can register at that point. Fog: sharpens into ticket 02.
 - **Status semantics** — which statuses are written at which transition (Draft, Voting on reopen, Confirmed on lock). Fog: sharpens into ticket 03.
 - Later UI detail for the spec (fog, not yet sharp): exact wording/locale keys for
   "reopened N times", the confirmed-info view, and the per-team results section.
@@ -60,4 +60,4 @@ A **spec** (`spec.md` in this directory) for two-phase team voting: the organize
 
 ## Tickets
 
-Child tickets live in `issues/`. Frontier = open + unblocked: 01, 02, 03.
+Child tickets live in `issues/`. Frontier = open + unblocked: 03.
