@@ -6,7 +6,7 @@ test.describe('Postponement Editing', () => {
   let session: SessionFixture;
 
   test.beforeEach(async ({page}) => {
-    ({session} = await EditPage.createSession(page, 'Edit Test Session'));
+    ({session} = await EditPage.createSession(page));
   });
 
   test('should add players to the home team', async ({page, checkA11y}) => {

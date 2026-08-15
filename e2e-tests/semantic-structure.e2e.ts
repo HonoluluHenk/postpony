@@ -32,7 +32,7 @@ test.describe('Semantic structure', () => {
   });
 
   test('edit page (owner)', async ({page, checkA11y}) => {
-    await EditPage.createSession(page, 'Semantic Edit', ['2026-03-05T20:00']);
+    await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     await expectNoSkippedHeadings(page);
     await expectAllIconsHidden(page);
@@ -40,7 +40,7 @@ test.describe('Semantic structure', () => {
   });
 
   test('edit page with split tallies', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Semantic Tallies', ['2026-06-01T20:00', '2026-06-15T18:30']);
+    const {session} = await EditPage.createSession(page, ['2026-06-01T20:00', '2026-06-15T18:30']);
 
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
@@ -74,7 +74,7 @@ test.describe('Semantic structure', () => {
   });
 
   test('join page', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Semantic Join', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const joinPage = await new JoinPage(page)
       .goto(session.homeHref);
@@ -88,7 +88,7 @@ test.describe('Semantic structure', () => {
   });
 
   test('vote page', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Semantic Vote', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const joinPage = await new JoinPage(page)
       .goto(session.homeHref);

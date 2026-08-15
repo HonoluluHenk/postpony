@@ -3,10 +3,23 @@ import type { App } from '../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../lib/crypto-utils';
 import { mapValidationToErrors } from '../../lib/map-validation-to-errors';
 import { DEFAULT_CLUB_ID, type Postponement } from '../../lib/models';
+import { derivePostponementName } from '../../lib/postponement';
+import { parseLocaleDateTime } from '../../lib/temporal-utils';
 
 export async function handleCreatePost(app: App): Promise<Response> {
+  const locale = app.locale;
+
   const CreateSchema = v.object({
-    name: v.pipe(v.string(), v.minLength(2, app.t('name_required'))),
+    homeTeam: v.pipe(v.string(), v.trim(), v.minLength(1, app.t('home_team_required'))),
+    guestTeam: v.pipe(v.string(), v.trim(), v.minLength(1, app.t('guest_team_required'))),
+    originalMatchDateTime: v.pipe(
+      v.string(),
+      v.trim(),
+      v.check(
+        (val: string): boolean => parseLocaleDateTime(val, locale) !== undefined,
+        app.t('original_match_date_time_invalid'),
+      ),
+    ),
   });
 
   const values = await app.c.req.parseBody();
@@ -25,7 +38,13 @@ export async function handleCreatePost(app: App): Promise<Response> {
     return app.c.html(html, {status: 400});
   }
 
-  const {name} = validation.output;
+  const {homeTeam, guestTeam, originalMatchDateTime: rawDateTime} = validation.output;
+  const parsed = parseLocaleDateTime(rawDateTime, locale);
+  if (!parsed) {
+    // Unreachable: the schema already checked parseability.
+    app.failure(app.t('original_match_date_time_invalid'));
+  }
+  const originalMatchDateTime = parsed.toString({smallestUnit: 'minute'});
 
   const id = generateId();
   const ownerPassword = generateRandomPassword();
@@ -34,7 +53,10 @@ export async function handleCreatePost(app: App): Promise<Response> {
   const session: Postponement = {
     id,
     clubId: DEFAULT_CLUB_ID,
-    name,
+    name: derivePostponementName(homeTeam, guestTeam, originalMatchDateTime, locale),
+    homeTeam,
+    guestTeam,
+    originalMatchDateTime,
     ownerPasswordHash: hashPassword(ownerPassword),
     invitationPasswordHash: hashPassword(invitationPassword),
     invitationPassword,

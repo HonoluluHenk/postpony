@@ -6,7 +6,7 @@ test.describe('Invitation Link', () => {
     // 1. Create a new postponing-session
     const createPage = await new CreatePage(page)
       .goto();
-    const editPage = await createPage.create('My Match');
+    const editPage = await createPage.create();
 
     // baseURL in playwright.config.ts is https://game-scheduler.localhost:3001
     if (!baseURL) {

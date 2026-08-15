@@ -23,6 +23,8 @@ export interface Postponement {
   id: string;
   clubId: string;
   name: string;
+  homeTeam?: string;
+  guestTeam?: string;
   ownerPasswordHash: string;
   invitationPasswordHash: string;
   invitationPassword: string;

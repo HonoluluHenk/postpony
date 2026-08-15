@@ -3,6 +3,7 @@ import type { App } from '../../../app';
 import { fetchPlayers } from '../../../lib/click-tt-scraper';
 import { generateId, generateRandomPassword, hashPassword } from '../../../lib/crypto-utils';
 import { DEFAULT_CLUB_ID, type Player, type Postponement } from '../../../lib/models';
+import { derivePostponementName } from '../../../lib/postponement';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
 
 const MatchSchema = v.object({
@@ -45,7 +46,8 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   const ownerPassword = generateRandomPassword();
   const invitationPassword = generateRandomPassword();
 
-  const name = `${m.homeTeam} vs ${m.guestTeam} – ${m.date}${m.time ? ' ' + m.time : ''}`;
+  const originalMatchDateTime = parseClickTtDateTime(m.date, m.time);
+  const name = derivePostponementName(m.homeTeam, m.guestTeam, originalMatchDateTime, app.locale);
 
   const selectedTeamPlayers = parsePlayerNames(body['playerName']);
   const selectedTeamId: 'home' | 'away' = m.teamName === m.homeTeam ? 'home' : 'away';
@@ -63,6 +65,8 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     id,
     clubId: DEFAULT_CLUB_ID,
     name,
+    homeTeam: m.homeTeam,
+    guestTeam: m.guestTeam,
     ownerPasswordHash: hashPassword(ownerPassword),
     invitationPasswordHash: hashPassword(invitationPassword),
     invitationPassword,
@@ -72,17 +76,11 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     players,
     proposedDates: [],
     votes: [],
-    originalMatchDateTime: parseClickTtDateTime(m.date, m.time),
+    originalMatchDateTime,
     createdAt: app.timestamp.now(),
+    // metadata keeps scrape-only provenance; match details live in the typed fields.
     metadata: {
       source: 'click-tt.ch',
-      match: {
-        day: m.day,
-        date: m.date,
-        time: m.time,
-        homeTeam: m.homeTeam,
-        guestTeam: m.guestTeam,
-      },
       league: m.leagueName,
       group: m.groupName,
       championship: m.championship,

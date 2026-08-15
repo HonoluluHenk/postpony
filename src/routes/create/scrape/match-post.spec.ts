@@ -56,6 +56,14 @@ describe('handleScrapeMatchPost', () => {
       .toBe('home');
     expect(stored?.status)
       .toBe('Draft');
+    expect(stored?.homeTeam)
+      .toBe('Thun');
+    expect(stored?.guestTeam)
+      .toBe('Ostermundigen');
+    expect(stored?.originalMatchDateTime)
+      .toBe('2026-08-29T16:00');
+    expect(stored?.name)
+      .toBe('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
     expect(stored?.players)
       .toHaveLength(3);
     expect(stored?.players.every((p) => p.teamId === 'home'))

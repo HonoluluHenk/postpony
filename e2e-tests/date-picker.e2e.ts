@@ -4,7 +4,7 @@ import { EditPage } from './pages';
 
 test.describe('Proposed date picker', () => {
   test('opens via the explicit button and writes locale-format tokens', async ({page, checkA11y}) => {
-    await EditPage.createSession(page, 'Date Picker Session');
+    await EditPage.createSession(page);
 
     const editPage = new EditPage(page);
     const input = editPage.proposedDateTimeInput;
@@ -23,13 +23,28 @@ test.describe('Proposed date picker', () => {
     await expect(picker)
       .toBeVisible();
 
+    // The Material dynamic-color theme applies its tonal palette asynchronously;
+    // wait for it to settle before the axe scan — a mid-transition tone can sit
+    // just under the 4.5:1 contrast bar and flake the scan.
+    await expect.poll(async () => {
+      const sample = (): Promise<string> =>
+        picker.locator('.air-datepicker-body--day-name')
+          .first()
+          .evaluate((el) => getComputedStyle(el).color);
+      const first = await sample();
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const second = await sample();
+      return first === second ? first : '';
+    }).toBeDefined();
+
     await checkA11y();
 
-    const now = new Date();
-    const iso = `${now.getFullYear()}-${String(now.getMonth() + 1)
-      .padStart(2, '0')}-${String(now.getDate())
-      .padStart(2, '0')}`;
-    await picker.locator(`[data-iso-date="${iso}"]`)
+    // The edit page pre-fills the input with the original match datetime, so
+    // the picker opens on that month — click any in-month day rather than
+    // "today", which may live in another month. Exclude -other-month- cells
+    // (adjacent-month filler days).
+    await picker.locator('[data-iso-date]:not(.-other-month-)')
+      .first()
       .click();
 
     // The picker writes the locale's token format (en-US default in e2e).
@@ -43,7 +58,7 @@ test.describe('Proposed date picker on touch devices', () => {
   test.use({...touchDevice});
 
   test('also uses the text input with a button-opened picker', async ({page}) => {
-    await EditPage.createSession(page, 'Mobile Date Picker Session');
+    await EditPage.createSession(page);
 
     const editPage = new EditPage(page);
     const input = editPage.proposedDateTimeInput;

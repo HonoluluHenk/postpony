@@ -110,6 +110,42 @@ describe('normalize', () => {
     expect(session.proposedDates)
       .toEqual([]);
   });
+
+  test('migrates legacy metadata.match details into typed home/guest team fields', () => {
+    const session = normalize(legacySession({
+      metadata: {
+        source: 'click-tt.ch',
+        match: {day: 'Sat.', date: '29.08.2026', time: '16:00', homeTeam: 'Thun', guestTeam: 'Ostermundigen'},
+      },
+    }));
+
+    expect(session.homeTeam)
+      .toBe('Thun');
+    expect(session.guestTeam)
+      .toBe('Ostermundigen');
+  });
+
+  test('keeps typed home/guest team fields when present, ignoring legacy metadata', () => {
+    const session = normalize(legacySession({
+      homeTeam: 'Bern',
+      guestTeam: 'Zürich',
+      metadata: {match: {homeTeam: 'Thun', guestTeam: 'Ostermundigen'}},
+    }));
+
+    expect(session.homeTeam)
+      .toBe('Bern');
+    expect(session.guestTeam)
+      .toBe('Zürich');
+  });
+
+  test('leaves home/guest team fields undefined for sessions without match details', () => {
+    const session = normalize(legacySession());
+
+    expect(session.homeTeam)
+      .toBeUndefined();
+    expect(session.guestTeam)
+      .toBeUndefined();
+  });
 });
 
 describe('SqliteSessionStore', () => {

@@ -45,6 +45,8 @@ export function aSession(overrides: DeepPartial<Postponement> = {}): Postponemen
     id: 'test-session',
     clubId: 'test-club',
     name: 'Test Postponement',
+    homeTeam: 'Home Team',
+    guestTeam: 'Guest Team',
     ownerPasswordHash: 'hashed-owner-pw',
     invitationPasswordHash: 'hashed-invitation-pw',
     invitationPassword: 'invitation-pw',

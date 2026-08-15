@@ -18,6 +18,15 @@ export function normalize(data: Record<string, unknown>): Postponement {
       ? data['status']
       : 'Voting';
 
+  // Pre-ADR-0017 sessions stored match details untyped under `metadata.match.*`;
+  // the typed `homeTeam`/`guestTeam` fields win when both exist.
+  const legacyMatch = (data['metadata'] as Record<string, unknown> | undefined)?.['match'] as
+    Record<string, unknown> | undefined;
+  const homeTeam = (data['homeTeam'] as string | undefined) ??
+    (legacyMatch?.['homeTeam'] as string | undefined);
+  const guestTeam = (data['guestTeam'] as string | undefined) ??
+    (legacyMatch?.['guestTeam'] as string | undefined);
+
   const proposedDates: ProposedDate[] = (
     data['proposedDates'] as Record<string, unknown>[] | undefined ?? []
   ).map((pd): ProposedDate => ({
@@ -35,6 +44,8 @@ export function normalize(data: Record<string, unknown>): Postponement {
 
   return {
     ...(data as unknown as Postponement),
+    homeTeam,
+    guestTeam,
     organizerTeam: data['organizerTeam'] === 'away' ? 'away' : 'home',
     reopenCount: typeof data['reopenCount'] === 'number' ? data['reopenCount'] : 0,
     status,

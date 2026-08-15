@@ -17,10 +17,10 @@ test.describe('Error Handling', () => {
     await checkA11y();
   });
 
-  test('should show validation error for missing name in creation', async ({page}) => {
+  test('should show validation error for missing match details in creation', async ({page}) => {
     // We use a direct request to avoid HTMX/Playwright interaction complexities for this specific edge case
     const response = await page.request.post('/create', {
-      form: {name: ''},
+      form: {homeTeam: '', guestTeam: '', originalMatchDateTime: ''},
       // Raw requests send no Accept-Language; pick English explicitly so the
       // asserted message is deterministic regardless of the default locale.
       headers: {'Accept': 'text/html', 'Accept-Language': 'en-US'},
@@ -30,7 +30,9 @@ test.describe('Error Handling', () => {
       .toBe(400);
     const html = await response.text();
     expect(html)
-      .toContain('Name is required');
+      .toContain('Home team is required');
+    expect(html)
+      .toContain('Guest team is required');
     expect(html)
       .toContain('error');
   });
@@ -39,7 +41,7 @@ test.describe('Error Handling', () => {
     // 1. Create a session first
     const createPage = await new CreatePage(page)
       .goto();
-    await createPage.create('Error Test Session');
+    await createPage.create();
 
     // 2. Manually trigger an HTMX request to a non-existent session's sub-route
     await page.evaluate(async () => {

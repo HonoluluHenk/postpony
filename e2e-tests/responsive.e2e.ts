@@ -23,7 +23,7 @@ async function expectFullyInViewport(locator: Locator): Promise<void> {
 test.describe('Responsive Layout', () => {
   test('phone viewport: no horizontal overflow, wrapped header, stacked tables, reachable invite links', async ({page}) => {
     await page.setViewportSize(PHONE_VIEWPORT);
-    const {editPage} = await EditPage.createSession(page, 'Responsive Phone Session', ['2026-03-05T20:00']);
+    const {editPage} = await EditPage.createSession(page, ['2026-03-05T20:00']);
     await page.evaluate(() => {
       window.scrollTo(0, 0);
     });
@@ -72,7 +72,7 @@ test.describe('Responsive Layout', () => {
 
   test('desktop viewport: container caps at 1200px', async ({page}) => {
     await page.setViewportSize({width: 1440, height: 900});
-    await EditPage.createSession(page, 'Responsive Desktop Session');
+    await EditPage.createSession(page);
 
     await expect(page.locator('.container')
       .first())
@@ -81,7 +81,7 @@ test.describe('Responsive Layout', () => {
 
   test('phone viewport: stacked-table page stays accessible', async ({page, checkA11y}) => {
     await page.setViewportSize(PHONE_VIEWPORT);
-    await EditPage.createSession(page, 'Responsive A11y Session', ['2026-03-05T20:00']);
+    await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     await checkA11y();
   });

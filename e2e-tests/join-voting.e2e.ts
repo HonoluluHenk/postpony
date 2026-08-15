@@ -3,7 +3,7 @@ import { EditPage, JoinPage } from './pages';
 
 test.describe('Join and Voting', () => {
   test('shows inline validation error when submitting empty join form', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Join Validation');
+    const {session} = await EditPage.createSession(page);
 
     // Submit empty form with no name selection
     const joinPage = await new JoinPage(page)
@@ -20,7 +20,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('lets a new player join, cast and change a vote', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Join Happy Path', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     // Step 1: identify with a brand-new name.
     const joinPage = await new JoinPage(page)
@@ -51,7 +51,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('remembers the player on return visits via localStorage', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Join Return Visit', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const joinPage = await new JoinPage(page)
       .goto(session.homeHref);
@@ -67,7 +67,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('shows a message when no dates are proposed yet', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Join No Dates');
+    const {session} = await EditPage.createSession(page);
 
     const joinPage = await new JoinPage(page)
       .goto(session.homeHref);
@@ -82,7 +82,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('rejects an invalid invitation token', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Join Bad Token', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const response = await page.goto(`/join/${session.id}/home?token=WRONG`);
     expect(response?.status())
@@ -96,7 +96,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('rejects an invalid team parameter', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Join Bad Team', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const response = await page.goto(`/join/${session.id}/spectator?token=${session.token}`);
     expect(response?.status())
@@ -108,7 +108,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('home team sees all proposed dates; away team only sees votable ones', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Team Visibility', ['2026-03-05T20:00', '2026-03-12T18:30']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-12T18:30']);
 
     // Make only the second date votable for away team
     const editPage = new EditPage(page);
@@ -135,7 +135,7 @@ test.describe('Join and Voting', () => {
   // ponytail: EditPage.createSession() navigates to /create first, so if page was on
   // the editUrl it will navigate away. Call goto() on editPage before asserting.
   test('vote tally shows only own-team votes', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Team Tally', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
@@ -194,7 +194,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('shows own-team per-player votes by name in the results section', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Team Results', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
@@ -229,7 +229,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('join and vote steps are accessible', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Join A11y', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const joinPage = await new JoinPage(page)
       .goto(session.homeHref);
@@ -242,7 +242,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('shows the pre-proposal empty state to an opponent with no votable dates', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Away Pre-Proposal', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const awayJoinPage = await new JoinPage(page)
       .goto(session.awayHref);
@@ -259,7 +259,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('full happy path: propose, both teams vote, confirm, confirmed-info view', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Vote Flow', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     // Home team: two players join and vote.
     const homeJoinPage = new JoinPage(page);
@@ -338,7 +338,7 @@ test.describe('Join and Voting', () => {
   });
 
   test('blocks registration after confirm: join link renders the confirmed view, no register form', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, 'Blocked Register', ['2026-03-05T20:00']);
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);

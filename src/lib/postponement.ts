@@ -1,10 +1,31 @@
+import type { AppLocale } from '../locales';
 import { generateId } from './crypto-utils';
 import type { Player, Postponement, ProposedDate, Team, Vote } from './models';
+import { formatIsoToLocaleTokens } from './temporal-utils';
 
 export interface VoteTally {
   yes: number;
   no: number;
   maybe: number;
+}
+
+/**
+ * Derives a Postponement's display name from its typed match details:
+ * "Home vs Guest – <original date/time>" in the given locale's input tokens
+ * (e.g. `Thun vs Ostermundigen – 29.08.2026 16:00`). Shared by the manual and
+ * click-tt creation paths so both name the session identically.
+ */
+export function derivePostponementName(
+  homeTeam: string,
+  guestTeam: string,
+  originalMatchDateTime: string | undefined,
+  locale: AppLocale,
+): string {
+  const dateTime = originalMatchDateTime
+    ? formatIsoToLocaleTokens(originalMatchDateTime, locale)
+    : '';
+  const base = `${homeTeam} vs ${guestTeam}`;
+  return dateTime ? `${base} – ${dateTime}` : base;
 }
 
 /**

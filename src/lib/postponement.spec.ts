@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { aPlayer, aProposedDate, aSession, aVote } from './__test-utils__/builders';
-import { PostponementRules } from './postponement';
+import { derivePostponementName, PostponementRules } from './postponement';
 
 /**
  * Deterministic PostponementRules for assertions: overrides the `newId` and `now` seams so ids
@@ -19,6 +19,23 @@ class FakePostponementRules extends PostponementRules {
 }
 
 describe('postponement', () => {
+
+  describe('derivePostponementName', () => {
+    test('formats "Home vs Guest – date time" in de-CH locale tokens', () => {
+      expect(derivePostponementName('Thun', 'Ostermundigen', '2026-08-29T16:00', 'de-CH'))
+        .toBe('Thun vs Ostermundigen – 29.08.2026 16:00');
+    });
+
+    test('formats "Home vs Guest – date time" in en-US locale tokens', () => {
+      expect(derivePostponementName('Thun', 'Ostermundigen', '2026-08-29T16:00', 'en-US'))
+        .toBe('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
+    });
+
+    test('omits the date part when the original match datetime is unknown', () => {
+      expect(derivePostponementName('Thun', 'Ostermundigen', undefined, 'de-CH'))
+        .toBe('Thun vs Ostermundigen');
+    });
+  });
 
   describe('addPlayer', () => {
     test('defaults to home team', () => {
