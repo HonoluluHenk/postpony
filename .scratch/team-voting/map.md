@@ -28,8 +28,7 @@ A **spec** (`spec.md` in this directory) for two-phase team voting: the organize
 - Organizer views own team's votes per-player (names); opponent's votes as tallies only. Team members see their team's votes (names) + own-team tallies.
 - Voting starts automatically when dates are defined; no explicit "start vote" act.
 - Confirmed invite view: pure info — chosen date shown, no registration, no voting.
-- Organizer locks the final date alone (`Confirmed` directly); `Confirmed by Opponent`
-  stays unused.
+- Organizer locks the final date alone (`Confirmed` directly); `Confirmed by Opponent` removed from the status union (ticket 03).
 - Only dates already proposed to the opponent can be confirmed.
 - Confirmed is not terminal: organizer can reopen. Reopen: status → `Voting`, opponent votes kept, organizer may propose new dates, both teams re-vote on all proposed dates.
   `reopenCount` increments and is shown on the invite + edit views. Previous
@@ -44,10 +43,10 @@ A **spec** (`spec.md` in this directory) for two-phase team voting: the organize
 
 - Own-team completion signal — no close act; per-date "N/M voted" count + non-voter list (never-joined marked "not joined"); M = roster + new names, organizer counted. ([ticket 01](issues/01-own-team-completion-signal.md))
 - Opponent pre-proposal experience — opponent registers pre-proposal (plain form); vote page shows empty state + hint organizer is still deciding dates; opponent-only, own team unchanged; registration blocked only when `Confirmed`. ([ticket 02](issues/02-opponent-pre-proposal-experience.md))
+- Status semantics — statuses shrink to `Draft | Voting | Confirmed`; `Draft` on creation, `Voting` on first date + reopen, `Confirmed` on lock; `Proposed` and `Confirmed by Opponent` removed. ([ticket 03](issues/03-status-semantics.md))
 
 ## Not yet specified
 
-- **Status semantics** — which statuses are written at which transition (Draft, Voting on reopen, Confirmed on lock). Fog: sharpens into ticket 03.
 - Later UI detail for the spec (fog, not yet sharp): exact wording/locale keys for
   "reopened N times", the confirmed-info view, and the per-team results section.
 
