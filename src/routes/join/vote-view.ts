@@ -1,6 +1,6 @@
 import type { App } from '../../app';
-import type { Player, RescheduleSession, VoteTallyItem } from '../../lib/models';
-import { Reschedule } from '../../lib/reschedule';
+import type { Player, Postponement, VoteTallyItem } from '../../lib/models';
+import { PostponementRules } from '../../lib/postponement';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
 import type { Team } from './join-utils';
 
@@ -9,7 +9,7 @@ interface VotePageDate extends VoteTallyItem {
 }
 
 export interface VoteViewOptions {
-  session: RescheduleSession;
+  session: Postponement;
   team: Team;
   token: string;
   player: Player;
@@ -21,8 +21,8 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const readOnly = session.status === 'Confirmed';
   const locale = app.locale;
 
-  const reschedule = new Reschedule();
-  const tallies = reschedule.tally(session, team);
+  const rules = new PostponementRules();
+  const tallies = rules.tally(session, team);
 
   const visibleDates = session.proposedDates.filter((pd) =>
     team === 'away' ? pd.awayTeamVotable : true,

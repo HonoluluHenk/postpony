@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
-import { Reschedule } from '../../../lib/reschedule';
+import { PostponementRules } from '../../../lib/postponement';
 
 const PlayerSchema = v.object({
   playerName: v.pipe(v.string(), v.minLength(1, 'Player name is required')),
@@ -36,7 +36,7 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
   }
 
   const {playerName, teamId} = validation.output;
-  const updated = new Reschedule().addPlayer(session, playerName, teamId).session;
+  const updated = new PostponementRules().addPlayer(session, playerName, teamId).session;
   await app.store.save(updated);
 
   if (app.isPartial) {

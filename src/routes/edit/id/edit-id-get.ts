@@ -1,6 +1,6 @@
 import type { App } from '../../../app';
 import type { VoteTallyItem } from '../../../lib/models';
-import { Reschedule } from '../../../lib/reschedule';
+import { PostponementRules } from '../../../lib/postponement';
 import { formatIsoToLocaleTokens, formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 
 export const handleEditGet = async (app: App): Promise<Response> => {
@@ -13,10 +13,10 @@ export const handleEditGet = async (app: App): Promise<Response> => {
   const ownerPassword = app.c.req.query('ownerPassword') ?? null;
   const isPartial = app.isPartial;
   const locale = app.locale;
-  const reschedule = new Reschedule();
-  const tallies = reschedule.tally(session);
-  const homeTallies = reschedule.tally(session, 'home');
-  const awayTallies = reschedule.tally(session, 'away');
+  const rules = new PostponementRules();
+  const tallies = rules.tally(session);
+  const homeTallies = rules.tally(session, 'home');
+  const awayTallies = rules.tally(session, 'away');
 
   const proposedDates: (VoteTallyItem & {
     awayTeamVotable: boolean
@@ -55,7 +55,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
   });
 
   const html = app.render('edit/id/edit.eta', {
-    title: app.t('edit_reschedule_title', {name: session.name}),
+    title: app.t('edit_postponement_title', {name: session.name}),
     session,
     proposedDates,
     homeProposedDates,

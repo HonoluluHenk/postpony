@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import { aPlayer, aProposedDate, aSession, aVote } from './__test-utils__/builders';
-import { Reschedule } from './reschedule';
+import { PostponementRules } from './postponement';
 
 /**
- * Deterministic Reschedule for assertions: overrides the `newId` and `now` seams so ids
+ * Deterministic PostponementRules for assertions: overrides the `newId` and `now` seams so ids
  * and timestamps are predictable in tests.
  */
-class FakeReschedule extends Reschedule {
+class FakePostponementRules extends PostponementRules {
   private n = 0;
 
   override newId(): string {
@@ -18,12 +18,12 @@ class FakeReschedule extends Reschedule {
   }
 }
 
-describe('reschedule', () => {
+describe('postponement', () => {
 
   describe('addPlayer', () => {
     test('defaults to home team', () => {
       const before = aSession();
-      const {session, player} = new FakeReschedule().addPlayer(before, 'Alice');
+      const {session, player} = new FakePostponementRules().addPlayer(before, 'Alice');
 
       expect(player)
         .toEqual({id: 'id-1', name: 'Alice', teamId: 'home'});
@@ -33,7 +33,7 @@ describe('reschedule', () => {
 
     test('adds an away-team player when specified', () => {
       const before = aSession();
-      const {session, player} = new FakeReschedule().addPlayer(before, 'Bob', 'away');
+      const {session, player} = new FakePostponementRules().addPlayer(before, 'Bob', 'away');
 
       expect(player)
         .toEqual({id: 'id-1', name: 'Bob', teamId: 'away'});
@@ -43,7 +43,7 @@ describe('reschedule', () => {
 
     test('does not mutate the input session', () => {
       const before = aSession();
-      new FakeReschedule().addPlayer(before, 'Alice');
+      new FakePostponementRules().addPlayer(before, 'Alice');
 
       expect(before.players)
         .toHaveLength(0);
@@ -52,7 +52,7 @@ describe('reschedule', () => {
 
   describe('registerParticipant', () => {
     test('creates a new player for the team', () => {
-      const {session, player} = new FakeReschedule().registerParticipant(aSession(), 'away', {name: 'Alice'});
+      const {session, player} = new FakePostponementRules().registerParticipant(aSession(), 'away', {name: 'Alice'});
 
       expect(player?.teamId)
         .toBe('away');
@@ -63,7 +63,7 @@ describe('reschedule', () => {
     test('matches an existing player by name case-insensitively without duplicating', () => {
       const before = aSession({players: [aPlayer({id: 'away-1', name: 'Bob', teamId: 'away'})]});
 
-      const {session, player} = new FakeReschedule().registerParticipant(before, 'away', {name: 'bob'});
+      const {session, player} = new FakePostponementRules().registerParticipant(before, 'away', {name: 'bob'});
 
       expect(player)
         .toBe(before.players[0]);
@@ -74,14 +74,14 @@ describe('reschedule', () => {
     test('matches an existing player by id', () => {
       const before = aSession({players: [aPlayer({id: 'home-1', name: 'Carol', teamId: 'home'})]});
 
-      const {player} = new FakeReschedule().registerParticipant(before, 'home', {playerId: 'home-1'});
+      const {player} = new FakePostponementRules().registerParticipant(before, 'home', {playerId: 'home-1'});
 
       expect(player)
         .toBe(before.players[0]);
     });
 
     test('returns no player when neither a name nor a selection is given', () => {
-      const {player} = new FakeReschedule().registerParticipant(aSession(), 'home', {});
+      const {player} = new FakePostponementRules().registerParticipant(aSession(), 'home', {});
 
       expect(player)
         .toBeUndefined();
@@ -90,7 +90,7 @@ describe('reschedule', () => {
     test('returns no player when the selected id is on another team', () => {
       const before = aSession({players: [aPlayer({id: 'home-1', teamId: 'home'})]});
 
-      const {player} = new FakeReschedule().registerParticipant(before, 'away', {playerId: 'home-1'});
+      const {player} = new FakePostponementRules().registerParticipant(before, 'away', {playerId: 'home-1'});
 
       expect(player)
         .toBeUndefined();
@@ -99,7 +99,7 @@ describe('reschedule', () => {
 
   describe('proposeDate', () => {
     test('adds a proposed date with matching start and end', () => {
-      const {session, proposedDate} = new FakeReschedule().proposeDate(aSession(), '2025-09-01T20:00', 'owner');
+      const {session, proposedDate} = new FakePostponementRules().proposeDate(aSession(), '2025-09-01T20:00', 'owner');
 
       expect(proposedDate.dateTimeRange.start)
         .toBe(proposedDate.dateTimeRange.end);
@@ -114,7 +114,7 @@ describe('reschedule', () => {
     test('records a new vote', () => {
       const before = aSession({proposedDates: [aProposedDate()]});
 
-      const session = new FakeReschedule().castVote(before, 'proposed-date-1', 'player-1', 'Yes');
+      const session = new FakePostponementRules().castVote(before, 'proposed-date-1', 'player-1', 'Yes');
 
       expect(session.votes)
         .toHaveLength(1);
@@ -127,7 +127,7 @@ describe('reschedule', () => {
         votes: [aVote({proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'Yes'})],
       });
 
-      const session = new FakeReschedule().castVote(before, 'proposed-date-1', 'player-1', 'No');
+      const session = new FakePostponementRules().castVote(before, 'proposed-date-1', 'player-1', 'No');
 
       expect(session.votes)
         .toHaveLength(1);
@@ -143,7 +143,7 @@ describe('reschedule', () => {
         ],
       });
 
-      const session = new FakeReschedule().castVote(before, 'pd-1', 'a', 'No');
+      const session = new FakePostponementRules().castVote(before, 'pd-1', 'a', 'No');
 
       expect(session.votes)
         .toHaveLength(2);
@@ -158,7 +158,7 @@ describe('reschedule', () => {
         votes: [aVote({proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'Yes'})],
       });
 
-      new FakeReschedule().castVote(before, 'proposed-date-1', 'player-1', 'No');
+      new FakePostponementRules().castVote(before, 'proposed-date-1', 'player-1', 'No');
 
       expect(before.votes[0]?.type)
         .toBe('Yes');
@@ -177,7 +177,7 @@ describe('reschedule', () => {
         ],
       });
 
-      expect(new FakeReschedule().tally(session)['pd-1'])
+      expect(new FakePostponementRules().tally(session)['pd-1'])
         .toEqual({yes: 2, no: 1, maybe: 1});
     });
 
@@ -194,7 +194,7 @@ describe('reschedule', () => {
         ],
       });
 
-      expect(new FakeReschedule().tally(session, 'home')['pd-1'])
+      expect(new FakePostponementRules().tally(session, 'home')['pd-1'])
         .toEqual({yes: 1, no: 0, maybe: 0});
     });
 
@@ -211,7 +211,7 @@ describe('reschedule', () => {
         ],
       });
 
-      expect(new FakeReschedule().tally(session, 'away')['pd-1'])
+      expect(new FakePostponementRules().tally(session, 'away')['pd-1'])
         .toEqual({yes: 0, no: 1, maybe: 0});
     });
 
@@ -228,7 +228,7 @@ describe('reschedule', () => {
         ],
       });
 
-      expect(new FakeReschedule().tally(session)['pd-1'])
+      expect(new FakePostponementRules().tally(session)['pd-1'])
         .toEqual({yes: 1, no: 1, maybe: 0});
     });
   });
@@ -247,7 +247,7 @@ describe('reschedule', () => {
         ],
       });
 
-      const {home, away} = new FakeReschedule().splitTallies(session);
+      const {home, away} = new FakePostponementRules().splitTallies(session);
 
       expect(home['pd-1'])
         .toEqual({yes: 1, no: 0, maybe: 0});
@@ -262,7 +262,7 @@ describe('reschedule', () => {
         proposedDates: [aProposedDate({id: 'pd-1', awayTeamVotable: false})],
       });
 
-      const updated = new FakeReschedule().setAwayTeamVotable(session, 'pd-1', true);
+      const updated = new FakePostponementRules().setAwayTeamVotable(session, 'pd-1', true);
 
       expect(updated.proposedDates[0]?.awayTeamVotable)
         .toBe(true);
@@ -273,7 +273,7 @@ describe('reschedule', () => {
         proposedDates: [aProposedDate({id: 'pd-1', awayTeamVotable: true})],
       });
 
-      const updated = new FakeReschedule().setAwayTeamVotable(session, 'pd-1', false);
+      const updated = new FakePostponementRules().setAwayTeamVotable(session, 'pd-1', false);
 
       expect(updated.proposedDates[0]?.awayTeamVotable)
         .toBe(false);
@@ -284,7 +284,7 @@ describe('reschedule', () => {
         proposedDates: [aProposedDate({id: 'pd-1', awayTeamVotable: false})],
       });
 
-      new FakeReschedule().setAwayTeamVotable(session, 'pd-1', true);
+      new FakePostponementRules().setAwayTeamVotable(session, 'pd-1', true);
 
       expect(session.proposedDates[0]?.awayTeamVotable)
         .toBe(false);
@@ -293,12 +293,12 @@ describe('reschedule', () => {
 
   describe('default seams', () => {
     test('produce distinct ids and an ISO timestamp', () => {
-      const reschedule = new Reschedule();
+      const rules = new PostponementRules();
 
-      expect(reschedule.newId())
+      expect(rules.newId())
         .not
-        .toBe(reschedule.newId());
-      expect(reschedule.now())
+        .toBe(rules.newId());
+      expect(rules.now())
         .toMatch(/^\d{4}-\d{2}-\d{2}T/);
     });
   });

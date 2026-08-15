@@ -1,6 +1,6 @@
 import type { App } from '../../app';
 import { comparePassword } from '../../lib/crypto-utils';
-import type { RescheduleSession } from '../../lib/models';
+import type { Postponement } from '../../lib/models';
 
 export type Team = 'home' | 'away';
 
@@ -14,7 +14,7 @@ export function requireTeam(app: App): Team {
 
 export interface JoinContext {
   id: string;
-  session: RescheduleSession;
+  session: Postponement;
   token: string;
 }
 

@@ -1,8 +1,8 @@
 import * as v from 'valibot';
 import type { App } from '../../app';
 import { generateId, generateRandomPassword, hashPassword } from '../../lib/crypto-utils';
-import { DEFAULT_CLUB_ID, type RescheduleSession } from '../../lib/models';
 import { mapValidationToErrors } from '../../lib/map-validation-to-errors';
+import { DEFAULT_CLUB_ID, type Postponement } from '../../lib/models';
 
 export async function handleCreatePost(app: App): Promise<Response> {
   const CreateSchema = v.object({
@@ -16,7 +16,7 @@ export async function handleCreatePost(app: App): Promise<Response> {
     const errors = mapValidationToErrors(validation);
 
     const html = app.render('create/create.eta', {
-      title: app.t('create_reschedule_title'),
+      title: app.t('create_postponement_title'),
       isPartial: app.isPartial,
       errors,
       values,
@@ -31,7 +31,7 @@ export async function handleCreatePost(app: App): Promise<Response> {
   const ownerPassword = generateRandomPassword();
   const invitationPassword = generateRandomPassword();
 
-  const session: RescheduleSession = {
+  const session: Postponement = {
     id,
     clubId: DEFAULT_CLUB_ID,
     name,

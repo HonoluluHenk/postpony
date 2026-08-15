@@ -4,7 +4,7 @@ import { DateTimeRange } from './temporal-utils';
 // replace with real club resolution (from URL domain, user session, etc.).
 export const DEFAULT_CLUB_ID = 'default-club';
 
-export type RescheduleStatus = 'Draft' | 'Proposed' | 'Voting' | 'Confirmed by Opponent' | 'Confirmed';
+export type PostponementStatus = 'Draft' | 'Proposed' | 'Voting' | 'Confirmed by Opponent' | 'Confirmed';
 
 export interface Player {
   id: string;
@@ -17,14 +17,14 @@ export interface AvailabilityRecord {
   ranges: DateTimeRange[];
 }
 
-export interface RescheduleSession {
+export interface Postponement {
   id: string;
   clubId: string;
   name: string;
   ownerPasswordHash: string;
   invitationPasswordHash: string;
   invitationPassword: string;
-  status: RescheduleStatus;
+  status: PostponementStatus;
   players: Player[];
   proposedDates: ProposedDate[];
   votes: Vote[];

@@ -1,5 +1,5 @@
 import { generateId } from './crypto-utils';
-import type { Player, ProposedDate, RescheduleSession, Vote } from './models';
+import type { Player, Postponement, ProposedDate, Vote } from './models';
 
 export type Team = 'home' | 'away';
 
@@ -10,14 +10,14 @@ export interface VoteTally {
 }
 
 /**
- * The Reschedule domain module: the rules for one postponement, as pure operations that
+ * The Postponement domain module: the rules for one postponement, as pure operations that
  * take a session and return a new session (handlers write it back to the store).
  *
  * Non-determinism sits behind two overridable methods — `newId` and `now` — with real
  * defaults in production; tests subclass and override them for deterministic assertions.
  * The class is the test surface, so tests never construct a Hono context.
  */
-export class Reschedule {
+export class PostponementRules {
 
   newId(): string {
     return generateId();
@@ -35,14 +35,14 @@ export class Reschedule {
    * player, or `undefined` when neither a name nor a valid selection was given.
    */
   registerParticipant(
-    session: RescheduleSession,
+    session: Postponement,
     team: Team,
     input: {
       name?: string;
       playerId?: string
     },
   ): {
-    session: RescheduleSession;
+    session: Postponement;
     player: Player | undefined
   }
   {
@@ -70,11 +70,11 @@ export class Reschedule {
    * Adds a new home-team player from the edit view.
    */
   addPlayer(
-    session: RescheduleSession,
+    session: Postponement,
     name: string,
     teamId: Team = 'home',
   ): {
-    session: RescheduleSession;
+    session: Postponement;
     player: Player
   }
   {
@@ -86,11 +86,11 @@ export class Reschedule {
    * Adds a Proposed Date. `start` must already be a normalized ISO datetime string.
    */
   proposeDate(
-    session: RescheduleSession,
+    session: Postponement,
     start: string,
     proposerId: string,
   ): {
-    session: RescheduleSession;
+    session: Postponement;
     proposedDate: ProposedDate
   }
   {
@@ -111,11 +111,11 @@ export class Reschedule {
    * participant per Proposed Date; re-voting updates the existing Vote.
    */
   castVote(
-    session: RescheduleSession,
+    session: Postponement,
     proposedDateId: string,
     participantId: string,
     type: Vote['type'],
-  ): RescheduleSession {
+  ): Postponement {
     const existing = session.votes.find(
       (v) => v.proposedDateId === proposedDateId && v.participantId === participantId,
     );
@@ -133,7 +133,7 @@ export class Reschedule {
    * Aggregates Votes per Proposed Date, keyed by Proposed Date id.
    * When `team` is provided, only counts votes from participants on that team.
    */
-  tally(session: RescheduleSession, team?: Team): Record<string, VoteTally> {
+  tally(session: Postponement, team?: Team): Record<string, VoteTally> {
     const teamPlayerIds = team
                           ? new Set(session.players.filter((p) => p.teamId === team)
         .map((p) => p.id))
@@ -156,7 +156,7 @@ export class Reschedule {
   /**
    * Computes per-team tallies for the organizer view.
    */
-  splitTallies(session: RescheduleSession): {
+  splitTallies(session: Postponement): {
     home: Record<string, VoteTally>;
     away: Record<string, VoteTally>
   }
@@ -171,10 +171,10 @@ export class Reschedule {
    * Sets whether a Proposed Date is votable by the away team.
    */
   setAwayTeamVotable(
-    session: RescheduleSession,
+    session: Postponement,
     proposedDateId: string,
     votable: boolean,
-  ): RescheduleSession {
+  ): Postponement {
     const proposedDates = session.proposedDates.map((pd) =>
       pd.id === proposedDateId ? {...pd, awayTeamVotable: votable} : pd,
     );

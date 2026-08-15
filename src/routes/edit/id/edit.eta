@@ -4,7 +4,7 @@
   <div class="toast primary white-text top" role="alert">
     <i aria-hidden="true">info</i>
     <div class="max">
-      <p><strong><%= it.t('reschedule_created_success') %></strong></p>
+      <p><strong><%= it.t('postponement_created_success') %></strong></p>
       <p><%~ it.t('owner_password_label') %> <span class="password-display"><%= it.ownerPassword %></span></p>
       <p><%= it.t('save_password_warning') %></p>
     </div>

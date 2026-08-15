@@ -2,7 +2,7 @@ import * as v from 'valibot';
 import type { App } from '../../../app';
 import { fetchPlayers } from '../../../lib/click-tt-scraper';
 import { generateId, generateRandomPassword, hashPassword } from '../../../lib/crypto-utils';
-import { DEFAULT_CLUB_ID, type Player, type RescheduleSession } from '../../../lib/models';
+import { DEFAULT_CLUB_ID, type Player, type Postponement } from '../../../lib/models';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
 
 const MatchSchema = v.object({
@@ -59,7 +59,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     }
   }
 
-  const session: RescheduleSession = {
+  const session: Postponement = {
     id,
     clubId: DEFAULT_CLUB_ID,
     name,

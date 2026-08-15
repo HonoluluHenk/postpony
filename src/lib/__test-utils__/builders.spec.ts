@@ -71,7 +71,7 @@ describe('builders', () => {
         .toEqual({
           id: 'test-session',
           clubId: 'test-club',
-          name: 'Test Reschedule',
+          name: 'Test Postponement',
           ownerPasswordHash: 'hashed-owner-pw',
           invitationPasswordHash: 'hashed-invitation-pw',
           invitationPassword: 'invitation-pw',

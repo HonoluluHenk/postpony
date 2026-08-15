@@ -2,15 +2,15 @@
 
 <section id="create-section" class="padding small-round surface-variant">
   <header>
-    <h2><%= it.t('create_reschedule_title') %></h2>
+    <h2><%= it.t('create_postponement_title') %></h2>
   </header>
 
   <form action="/create" method="post">
     <div class="field label border fill <%= it.errors?.fields?.name ? 'invalid' : '' %>">
-      <input type="text" id="reschedule-name" name="name" required aria-required="true"
+      <input type="text" id="postponement-name" name="name" required aria-required="true"
              value="<%= it.values?.name || '' %>"
              <% if (it.errors?.fields?.name) { %> aria-invalid="true" aria-describedby="name-error" <% } %>>
-      <label for="reschedule-name"><%= it.t('reschedule_name') %></label>
+      <label for="postponement-name"><%= it.t('postponement_name') %></label>
       <span id="name-error" class="error" role="alert"><%= it.errors?.fields?.name || '' %></span>
     </div>
     <div class="right-align">

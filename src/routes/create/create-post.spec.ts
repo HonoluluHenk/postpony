@@ -32,7 +32,7 @@ function createApp(options: MockOptions = {}): App {
 
 describe('handleCreatePost', () => {
   test('creates a session and stores it via the SessionStore', async () => {
-    const app = createApp({body: {name: 'Match Reschedule'}});
+    const app = createApp({body: {name: 'Match Postponement'}});
 
     const response = await handleCreatePost(app);
 
@@ -44,7 +44,7 @@ describe('handleCreatePost', () => {
     expect(sessionsMap.size).toBe(1);
 
     const stored = [...sessionsMap.values()][0];
-    expect(stored?.name).toBe('Match Reschedule');
+    expect(stored?.name).toBe('Match Postponement');
     expect(stored?.status).toBe('Draft');
     expect(stored?.id).toBeDefined();
     expect(stored?.ownerPasswordHash).toBeDefined();

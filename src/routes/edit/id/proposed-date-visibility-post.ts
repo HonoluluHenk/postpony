@@ -1,5 +1,5 @@
 import type { App } from '../../../app';
-import { Reschedule } from '../../../lib/reschedule';
+import { PostponementRules } from '../../../lib/postponement';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 
 export const handleProposedDateVisibilityPost = async (app: App): Promise<Response> => {
@@ -12,14 +12,14 @@ export const handleProposedDateVisibilityPost = async (app: App): Promise<Respon
   const proposedDateId = app.c.req.query('proposedDateId') ?? '';
   const votable = app.c.req.query('votable') === 'true';
 
-  const reschedule = new Reschedule();
-  const updated = reschedule.setAwayTeamVotable(session, proposedDateId, votable);
+  const rules = new PostponementRules();
+  const updated = rules.setAwayTeamVotable(session, proposedDateId, votable);
   await app.store.save(updated);
 
   const locale = app.locale;
-  const tallies = reschedule.tally(updated);
-  const homeTallies = reschedule.tally(updated, 'home');
-  const awayTallies = reschedule.tally(updated, 'away');
+  const tallies = rules.tally(updated);
+  const homeTallies = rules.tally(updated, 'home');
+  const awayTallies = rules.tally(updated, 'away');
 
   const proposedDates = updated.proposedDates.map((pd) => {
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};

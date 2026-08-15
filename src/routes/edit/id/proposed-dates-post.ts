@@ -2,7 +2,7 @@ import * as v from 'valibot';
 import type { App } from '../../../app';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import type { ProposedDate, VoteTallyItem } from '../../../lib/models';
-import { Reschedule } from '../../../lib/reschedule';
+import { PostponementRules } from '../../../lib/postponement';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime, parseLocaleDateTime } from '../../../lib/temporal-utils';
 import type { AppLocale } from '../../../locales';
 
@@ -73,15 +73,15 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
   const values = await app.c.req.parseBody();
   const validation = v.safeParse(ProposedDateSchema, values);
 
-  const reschedule = new Reschedule();
+  const rules = new PostponementRules();
 
   if (!validation.success) {
     const errors = mapValidationToErrors(validation);
 
     if (app.isPartial) {
-      const tallies = reschedule.tally(session);
-      const homeTallies = reschedule.tally(session, 'home');
-      const awayTallies = reschedule.tally(session, 'away');
+      const tallies = rules.tally(session);
+      const homeTallies = rules.tally(session, 'home');
+      const awayTallies = rules.tally(session, 'away');
       return app.c.html(app.render('edit/id/proposed-dates-section.eta', {
         sessionId: session.id,
         proposedDates: toProposedDateItems(session.proposedDates, tallies, locale),
@@ -102,13 +102,13 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
     // Unreachable: the schema already checked parseability.
     app.failure(app.t('proposed_date_time_invalid'));
   }
-  const updated = reschedule.proposeDate(session, parsed.toString(), 'owner').session;
+  const updated = rules.proposeDate(session, parsed.toString(), 'owner').session;
   await app.store.save(updated);
 
   if (app.isPartial) {
-    const tallies = reschedule.tally(updated);
-    const homeTallies = reschedule.tally(updated, 'home');
-    const awayTallies = reschedule.tally(updated, 'away');
+    const tallies = rules.tally(updated);
+    const homeTallies = rules.tally(updated, 'home');
+    const awayTallies = rules.tally(updated, 'away');
     return app.c.html(app.render('edit/id/proposed-dates-section.eta', {
       sessionId: updated.id,
       proposedDates: toProposedDateItems(updated.proposedDates, tallies, locale),

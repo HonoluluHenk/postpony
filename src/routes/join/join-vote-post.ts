@@ -1,6 +1,6 @@
 import type { App } from '../../app';
 import type { Vote } from '../../lib/models';
-import { Reschedule } from '../../lib/reschedule';
+import { PostponementRules } from '../../lib/postponement';
 import { requireSessionAndToken, requireTeam } from './join-utils';
 import { renderVoteStep } from './vote-view';
 
@@ -22,7 +22,7 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
   const canVote = session.status !== 'Confirmed';
   let updated = session;
   if (canVote) {
-    const reschedule = new Reschedule();
+    const rules = new PostponementRules();
     const body = await app.c.req.parseBody();
     for (const pd of session.proposedDates) {
       if (team === 'away' && !pd.awayTeamVotable) {
@@ -32,7 +32,7 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
       if (!isVoteType(value)) {
         continue;
       }
-      updated = reschedule.castVote(updated, pd.id, player.id, value);
+      updated = rules.castVote(updated, pd.id, player.id, value);
     }
     await app.store.save(updated);
   }

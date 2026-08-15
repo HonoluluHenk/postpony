@@ -1,5 +1,5 @@
 import type { App } from '../../app';
-import { Reschedule } from '../../lib/reschedule';
+import { PostponementRules } from '../../lib/postponement';
 import { requireSessionAndToken, requireTeam } from './join-utils';
 
 export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
@@ -8,7 +8,7 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
 
   const body = await app.c.req.parseBody();
 
-  const {session: updated, player} = new Reschedule().registerParticipant(session, team, {
+  const {session: updated, player} = new PostponementRules().registerParticipant(session, team, {
     name: body['newPlayerName'] as string | undefined,
     playerId: body['playerId'] as string | undefined,
   });

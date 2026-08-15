@@ -4,9 +4,9 @@ Domain glossary for PostPony — one shared vocabulary for humans and agents. Se
 
 ## Postponement
 
-The primary entity: one postponed match, from draft to a confirmed new date. Persisted as a `RescheduleSession` (`src/lib/models.ts`); its rules live in the `Reschedule` module (`src/lib/reschedule.ts`). _Avoid_: Reschedule, session, reschedule
+The primary entity: one postponed match, from draft to a confirmed new date. Persisted as a `Postponement` (`src/lib/models.ts`); its rules live in the `PostponementRules` module (`src/lib/postponement.ts`). _Avoid_: Reschedule, session, reschedule
 
-- **State** is a plain, serializable `RescheduleSession`, so it fits the session store unchanged — MemorySessionStore for tests, SqliteSessionStore (`@libsql/client`) for development and production (Turso for production).
+- **State** is a plain, serializable `Postponement`, so it fits the session store unchanged — MemorySessionStore for tests, SqliteSessionStore (`@libsql/client`) for development and production (Turso for production).
 - **Contract** — operations are pure methods that take a session and return a new session; handlers write the returned session back to the store.
 - **Operations** (first cut owns all of them):
     - `registerParticipant` — join or match a participant on a team.
@@ -15,7 +15,7 @@ The primary entity: one postponed match, from draft to a confirmed new date. Per
     - `castVote` — record or update a Vote, one per participant per date.
     - `tally` / `splitTallies` — aggregate Votes per Proposed Date, optionally per team.
     - `setAwayTeamVotable` — expose a Proposed Date to the away team.
-- **Seam** — non-determinism sits behind two overridable methods, `newId` and `now` (an id generator and a clock): real defaults in production, overridden by a `FakeReschedule` subclass in tests. The class is the test surface.
+- **Seam** — non-determinism sits behind two overridable methods, `newId` and `now` (an id generator and a clock): real defaults in production, overridden by a `FakePostponementRules` subclass in tests. The class is the test surface.
 
 ## Match
 
