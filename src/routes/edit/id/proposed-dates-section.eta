@@ -55,3 +55,5 @@
     <%~ include('../../partials/vote-tally.eta', {headingLevel: 3, title: it.t('vote_summary_away'), titleId: 'vote-summary-away-title', proposedDates: it.awayProposedDates, t: it.t}) %>
   </section>
 </div>
+
+<%~ include('own-team-votes.eta', {oob: true, headingLevel: 3, title: it.t('own_team_votes'), organizerPlayers: it.organizerPlayers, ownTeamResults: it.ownTeamResults, t: it.t}) %>

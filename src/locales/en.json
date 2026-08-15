@@ -30,7 +30,11 @@
   "missing_param": "Missing required parameter: <%= it.name %>",
   "name_required": "Name is required",
   "new_player_name": "New Player Name",
+  "no_vote": "No vote",
+  "non_voters": "Not voted yet:",
   "not_found": "Not Found",
+  "not_joined": "not joined",
+  "own_team_votes": "Your Team Votes",
   "owner_password_label": "Your <strong>Owner Password</strong> is:",
   "proposed_date_added": "Proposed date added!",
   "proposed_date_time_invalid": "Please provide a valid date and time",
@@ -72,8 +76,11 @@
   "vote_title": "Vote on Proposed Dates",
   "vote_updated": "Your votes have been saved!",
   "vote_yes": "Yes",
+  "voted_column": "Voted",
+  "voted_count": "<%= it.voted %>/<%= it.total %> voted",
   "votable_by_opponent": "Allow opponent to vote",
   "vote_summary_home": "Home Team Votes",
   "vote_summary_away": "Away Team Votes",
-  "welcome": "Welcome to PostPony"
+  "welcome": "Welcome to PostPony",
+  "your_team_votes": "Your Team's Votes"
 }

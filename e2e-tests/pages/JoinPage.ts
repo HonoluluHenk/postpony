@@ -42,8 +42,20 @@ export class JoinPage {
     return this.page.getByRole('radio', {name: vote});
   }
 
-  tallySection(): Locator {
-    return this.page.getByRole('region', {name: 'Vote Summary'});
+  tallyTable(): Locator {
+    return this.teamResultsSection()
+      .getByRole('table')
+      .last();
+  }
+
+  teamResultsSection(): Locator {
+    return this.page.getByRole('region', {name: "Your Team's Votes"});
+  }
+
+  teamResultsTable(): Locator {
+    return this.teamResultsSection()
+      .getByRole('table')
+      .first();
   }
 
   async identify(name: string): Promise<void> {

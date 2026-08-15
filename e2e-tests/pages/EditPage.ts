@@ -148,6 +148,15 @@ export class EditPage {
     return this.page.getByRole('region', {name: 'Away Team Votes'});
   }
 
+  ownTeamSection(): Locator {
+    return this.page.getByRole('region', {name: 'Your Team Votes'});
+  }
+
+  ownTeamTable(): Locator {
+    return this.ownTeamSection()
+      .getByRole('table');
+  }
+
   homeTallyTable(): Locator {
     return this.homeTallySection()
       .getByRole('table');

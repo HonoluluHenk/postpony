@@ -247,6 +247,46 @@ export class PostponementRules {
     return result;
   }
 
+  /**
+   * View data for the organizer's own-team completion table: per Proposed Date, the vote
+   * type (or `null` for "no vote") of every team player in roster order, plus the per-date
+   * "N/M voted" count and the non-voter list with the never-joined marking. Reuses
+   * `teamCompletion` for the count and the non-voter list.
+   */
+  ownTeamResults(session: Postponement, team: Team): OwnTeamDateResults[] {
+    const teamPlayers = session.players.filter((p) => p.teamId === team);
+    const teamPlayerIds = new Set(teamPlayers.map((p) => p.id));
+    const completion = this.teamCompletion(session, team);
+
+    return session.proposedDates.map((pd) => {
+      const voteByPlayerId = new Map(
+        session.votes
+          .filter((v) => v.proposedDateId === pd.id && teamPlayerIds.has(v.participantId))
+          .map((v) => [v.participantId, v.type]),
+      );
+      const dateCompletion = completion[pd.id] ?? {
+        voted: 0,
+        total: teamPlayers.length,
+        nonVoters: [],
+      };
+      return {
+        dateId: pd.id,
+        votes: teamPlayers.map((p) => ({
+          playerId: p.id,
+          playerName: p.name,
+          vote: voteByPlayerId.get(p.id) ?? null,
+        })),
+        voted: dateCompletion.voted,
+        total: dateCompletion.total,
+        nonVoters: dateCompletion.nonVoters.map(({player, joined}) => ({
+          playerId: player.id,
+          playerName: player.name,
+          joined,
+        })),
+      };
+    });
+  }
+
 }
 
 export interface DateCompletion {
@@ -254,6 +294,24 @@ export interface DateCompletion {
   total: number;
   nonVoters: {
     player: Player;
+    joined: boolean
+  }[];
+}
+
+export interface OwnTeamVoteCell {
+  playerId: string;
+  playerName: string;
+  vote: Vote['type'] | null;
+}
+
+export interface OwnTeamDateResults {
+  dateId: string;
+  votes: OwnTeamVoteCell[];
+  voted: number;
+  total: number;
+  nonVoters: {
+    playerId: string;
+    playerName: string;
     joined: boolean
   }[];
 }

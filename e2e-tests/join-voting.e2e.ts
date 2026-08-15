@@ -153,8 +153,8 @@ test.describe('Join and Voting', () => {
     await awayJoinPage.goto(session.awayHref);
     await awayJoinPage.join('AwayVoter');
 
-    let tallySection = awayJoinPage.tallySection();
-    await expect(tallySection.getByRole('rowgroup')
+    let tallyTable = awayJoinPage.tallyTable();
+    await expect(tallyTable.getByRole('rowgroup')
       .last()
       .getByRole('row')
       .first()
@@ -167,28 +167,63 @@ test.describe('Join and Voting', () => {
     await awayJoinPage.submitVotes();
 
     // Now away team tally should show 1 No (0 Yes, 0 Maybe)
-    tallySection = awayJoinPage.tallySection();
-    await expect(tallySection.getByRole('rowgroup')
+    tallyTable = awayJoinPage.tallyTable();
+    await expect(tallyTable.getByRole('rowgroup')
       .last()
       .getByRole('row')
       .first()
       .getByRole('cell')
       .nth(1))
       .toHaveText('0'); // yes
-    await expect(tallySection.getByRole('rowgroup')
+    await expect(tallyTable.getByRole('rowgroup')
       .last()
       .getByRole('row')
       .first()
       .getByRole('cell')
       .nth(2))
       .toHaveText('0'); // maybe
-    await expect(tallySection.getByRole('rowgroup')
+    await expect(tallyTable.getByRole('rowgroup')
       .last()
       .getByRole('row')
       .first()
       .getByRole('cell')
       .nth(3))
       .toHaveText('1'); // no
+
+    await checkA11y();
+  });
+
+  test('shows own-team per-player votes by name in the results section', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, 'Team Results', ['2026-03-05T20:00']);
+
+    const editPage = new EditPage(page);
+    await editPage.goto(session.editUrl);
+    await editPage.toggleVotableByOpponent(0);
+
+    // Home voter casts a Yes.
+    const homeJoinPage = new JoinPage(page);
+    await homeJoinPage.goto(session.homeHref);
+    await homeJoinPage.join('HomeVoter');
+    await homeJoinPage.castVote(0, 'Yes');
+    await homeJoinPage.submitVotes();
+
+    // Home results show HomeVoter's name and their vote.
+    const homeResults = homeJoinPage.teamResultsSection();
+    await expect(homeResults.getByText('HomeVoter'))
+      .toBeVisible();
+    await expect(homeResults.getByRole('row', {name: /HomeVoter/}))
+      .toContainText('Yes');
+
+    // Away voter sees only their own team's names — HomeVoter never appears.
+    const awayJoinPage = new JoinPage(page);
+    await awayJoinPage.goto(session.awayHref);
+    await awayJoinPage.join('AwayVoter');
+
+    const awayResults = awayJoinPage.teamResultsSection();
+    await expect(awayResults.getByText('AwayVoter'))
+      .toBeVisible();
+    await expect(awayResults.getByText('HomeVoter'))
+      .toHaveCount(0);
 
     await checkA11y();
   });

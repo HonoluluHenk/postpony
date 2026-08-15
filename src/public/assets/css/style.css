@@ -169,6 +169,13 @@
       color: var(--on-surface-variant);
       font-size: 0.75rem;
     }
+
+    /* Row headers (player names) in the per-player results table stack the
+       same way, so the name sits above its votes instead of staying an
+       orphaned table-cell. */
+    table:has(td[data-label]) th[scope="row"] {
+      display: block;
+    }
   }
 
   /* Global loading spinner */

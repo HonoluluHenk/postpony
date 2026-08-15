@@ -94,7 +94,7 @@ test.describe('Semantic structure', () => {
       .goto(session.homeHref);
     await joinPage.join('Voter');
 
-    await expect(joinPage.tallySection())
+    await expect(joinPage.teamResultsSection())
       .toContainText('Vote Summary');
 
     await expectNoSkippedHeadings(page);

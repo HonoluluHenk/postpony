@@ -58,3 +58,5 @@
       </div>
     </form>
   </section>
+
+<%~ include('own-team-votes.eta', {oob: true, headingLevel: 3, title: it.t('own_team_votes'), organizerPlayers: it.organizerPlayers, ownTeamResults: it.ownTeamResults, t: it.t}) %>

@@ -1,0 +1,27 @@
+<% if (it.proposedDates.length > 0) { %>
+  <h<%= it.headingLevel || 3 %> id="<%= it.titleId || 'vote-results-title' %>"><%= it.title || it.t('your_team_votes') %></h<%= it.headingLevel || 3 %>>
+  <table>
+    <caption><%= it.title || it.t('your_team_votes') %></caption>
+    <thead>
+      <tr>
+        <th scope="col"><%= it.t('players') %></th>
+        <% it.proposedDates.forEach(function (pd) { %>
+          <th scope="col"><%= pd.display %></th>
+        <% }) %>
+      </tr>
+    </thead>
+    <tbody>
+      <% it.playerVoteRows.forEach(function (row) { %>
+        <tr>
+          <th scope="row"><%= row.playerName %></th>
+          <% row.votes.forEach(function (vote, idx) { %>
+            <td data-label="<%= it.proposedDates[idx].display %>">
+              <%= vote ? it.t('vote_' + vote.toLowerCase()) : it.t('no_vote') %>
+            </td>
+          <% }) %>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <%~ include('vote-tally.eta', {...it, headingLevel: 4, titleId: 'vote-tally-title', title: it.t('vote_summary')}) %>
+<% } %>

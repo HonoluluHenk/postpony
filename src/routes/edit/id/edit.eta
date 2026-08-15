@@ -124,6 +124,8 @@
     </section>
   </div>
 
+  <%~ include('own-team-votes.eta', {headingLevel: 3, title: it.t('own_team_votes'), organizerPlayers: it.organizerPlayers, ownTeamResults: it.ownTeamResults, t: it.t}) %>
+
   <div id="vote-tally-section" class="grid">
     <section class="padding small-round surface-variant s12 m6"<%~ it.homeProposedDates.length > 0 ? ' aria-labelledby="vote-summary-home-title"' : '' %>>
       <%~ include('../../partials/vote-tally.eta', {headingLevel: 3, title: it.t('vote_summary_home'), titleId: 'vote-summary-home-title', proposedDates: it.homeProposedDates, t: it.t}) %>

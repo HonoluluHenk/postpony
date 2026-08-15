@@ -1,11 +1,16 @@
 import type { App } from '../../app';
-import type { Player, Postponement, VoteTallyItem } from '../../lib/models';
+import type { Player, Postponement, ProposedDate, Vote, VoteTallyItem } from '../../lib/models';
 import { PostponementRules } from '../../lib/postponement';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
 import type { Team } from './join-utils';
 
 interface VotePageDate extends VoteTallyItem {
   currentVote: string;
+}
+
+export interface PlayerVoteRow {
+  playerName: string;
+  votes: (Vote['type'] | null)[];
 }
 
 export interface VoteViewOptions {
@@ -16,6 +21,28 @@ export interface VoteViewOptions {
   updated?: boolean;
 }
 
+export function visibleDatesForTeam(session: Postponement, team: Team): ProposedDate[] {
+  return session.proposedDates.filter((pd) => (team === 'away' ? pd.votableByOpponent : true));
+}
+
+export function buildPlayerVoteRows(
+  session: Postponement,
+  team: Team,
+  dates: ProposedDate[],
+): PlayerVoteRow[] {
+  return session.players
+    .filter((p) => p.teamId === team)
+    .map((player) => ({
+      playerName: player.name,
+      votes: dates.map((pd) => {
+        const vote = session.votes.find(
+          (v) => v.proposedDateId === pd.id && v.participantId === player.id,
+        );
+        return vote?.type ?? null;
+      }),
+    }));
+}
+
 export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const {session, team, token, player, updated = false} = options;
   const readOnly = session.status === 'Confirmed';
@@ -24,9 +51,8 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const rules = new PostponementRules();
   const tallies = rules.tally(session, team);
 
-  const visibleDates = session.proposedDates.filter((pd) =>
-    team === 'away' ? pd.votableByOpponent : true,
-  );
+  const visibleDates = visibleDatesForTeam(session, team);
+  const playerVoteRows = buildPlayerVoteRows(session, team, visibleDates);
 
   const proposedDates: VotePageDate[] = visibleDates.map((pd) => {
     const current = session.votes.find((vt) => vt.proposedDateId === pd.id && vt.participantId === player.id);
@@ -49,6 +75,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
     playerId: player.id,
     playerName: player.name,
     proposedDates,
+    playerVoteRows,
     readOnly,
     updated,
   });

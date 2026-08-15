@@ -30,7 +30,11 @@
   "missing_param": "Erforderlicher Parameter fehlt: <%= it.name %>",
   "name_required": "Name ist erforderlich",
   "new_player_name": "Name des neuen Spielers",
+  "no_vote": "Keine Stimme",
+  "non_voters": "Noch nicht abgestimmt:",
   "not_found": "Nicht gefunden",
+  "not_joined": "nicht beigetreten",
+  "own_team_votes": "Stimmen Ihrer Mannschaft",
   "owner_password_label": "Ihr <strong>Besitzer-Passwort</strong> ist:",
   "proposed_date_added": "Vorgeschlagener Termin hinzugefügt!",
   "proposed_date_time_invalid": "Bitte geben Sie ein gültiges Datum und eine gültige Uhrzeit an",
@@ -72,8 +76,11 @@
   "vote_title": "Über vorgeschlagene Termine abstimmen",
   "vote_updated": "Ihre Stimmen wurden gespeichert!",
   "vote_yes": "Ja",
+  "voted_column": "Abgestimmt",
+  "voted_count": "<%= it.voted %>/<%= it.total %> abgestimmt",
   "votable_by_opponent": "Gegner abstimmen lassen",
   "vote_summary_home": "Stimmen der Heimmannschaft",
   "vote_summary_away": "Stimmen der Gastmannschaft",
-  "welcome": "Willkommen bei PostPony"
+  "welcome": "Willkommen bei PostPony",
+  "your_team_votes": "Stimmen Ihrer Mannschaft"
 }

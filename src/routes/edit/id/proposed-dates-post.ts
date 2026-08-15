@@ -5,6 +5,7 @@ import type { ProposedDate, VoteTallyItem } from '../../../lib/models';
 import { PostponementRules } from '../../../lib/postponement';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime, parseLocaleDateTime } from '../../../lib/temporal-utils';
 import type { AppLocale } from '../../../locales';
+import { buildOwnTeamView } from './own-team-view';
 
 interface ProposedDateTallyItem extends VoteTallyItem {
   votableByOpponent: boolean;
@@ -82,11 +83,14 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
       const tallies = rules.tally(session);
       const homeTallies = rules.tally(session, 'home');
       const awayTallies = rules.tally(session, 'away');
+      const {organizerPlayers, ownTeamResults} = buildOwnTeamView(session, locale);
       return app.c.html(app.render('edit/id/proposed-dates-section.eta', {
         sessionId: session.id,
         proposedDates: toProposedDateItems(session.proposedDates, tallies, locale),
         homeProposedDates: toVoteTallyItems(session.proposedDates, homeTallies, locale),
         awayProposedDates: toVoteTallyItems(session.proposedDates, awayTallies, locale),
+        organizerPlayers,
+        ownTeamResults,
         proposedDateTime: (values['proposedDateTime'] as string | undefined) ?? '',
         error: errors.fields['proposedDateTime'],
         globalError: errors.global,
@@ -109,11 +113,14 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
     const tallies = rules.tally(updated);
     const homeTallies = rules.tally(updated, 'home');
     const awayTallies = rules.tally(updated, 'away');
+    const {organizerPlayers, ownTeamResults} = buildOwnTeamView(updated, locale);
     return app.c.html(app.render('edit/id/proposed-dates-section.eta', {
       sessionId: updated.id,
       proposedDates: toProposedDateItems(updated.proposedDates, tallies, locale),
       homeProposedDates: toVoteTallyItems(updated.proposedDates, homeTallies, locale),
       awayProposedDates: toVoteTallyItems(updated.proposedDates, awayTallies, locale),
+      organizerPlayers,
+      ownTeamResults,
       success: true,
     }));
   }

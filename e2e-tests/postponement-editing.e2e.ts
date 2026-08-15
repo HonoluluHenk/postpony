@@ -199,6 +199,80 @@ test.describe('Postponement Editing', () => {
     await checkA11y();
   });
 
+  test('should show own-team per-player votes and the N/M voted count in the edit view', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(page.getByRole('alert')
+      .filter({hasText: 'Proposed date added!'}))
+      .toBeVisible();
+    await editPage.addProposedDate('2026-06-15T18:30');
+    await expect(page.getByRole('alert')
+      .filter({hasText: 'Proposed date added!'}))
+      .toBeVisible();
+
+    // Roster: two home players; Jane Smith never joins.
+    await editPage.addPlayer('John Doe');
+    await expect(editPage.playerItem('John Doe'))
+      .toBeVisible();
+    await editPage.addPlayer('Jane Smith');
+    await expect(editPage.playerItem('Jane Smith'))
+      .toBeVisible();
+
+    const editUrl = page.url();
+
+    // An organizer-team member votes via the own-team link.
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('John Doe');
+    await joinPage.castVote(0, 'Yes');
+    await joinPage.castVote(1, 'No');
+    await joinPage.submitVotes();
+
+    await page.goto(editUrl);
+
+    const ownTeam = editPage.ownTeamSection();
+    await expect(ownTeam.getByRole('heading', {level: 3}))
+      .toContainText('Your Team Votes');
+
+    const bodyRows = ownTeam.getByRole('rowgroup')
+      .last()
+      .getByRole('row');
+
+    // Date 1: John Doe voted Yes, Jane Smith has no vote, 1/2 voted.
+    const dateRow1 = bodyRows.nth(0);
+    await expect(dateRow1.getByRole('cell')
+      .nth(0))
+      .toHaveText('Yes');
+    await expect(dateRow1.getByRole('cell')
+      .nth(1))
+      .toContainText('No vote');
+    await expect(dateRow1.getByRole('cell')
+      .nth(2))
+      .toHaveText('1/2 voted');
+
+    // The non-voter row marks Jane Smith as not joined.
+    await expect(bodyRows.nth(1)
+      .getByRole('cell')
+      .first())
+      .toContainText('Jane Smith');
+    await expect(bodyRows.nth(1)
+      .getByRole('cell')
+      .first())
+      .toContainText('not joined');
+
+    // Date 2: John Doe voted No, still 1/2 voted.
+    await expect(bodyRows.nth(2)
+      .getByRole('cell')
+      .nth(0))
+      .toHaveText('No');
+    await expect(bodyRows.nth(2)
+      .getByRole('cell')
+      .nth(2))
+      .toHaveText('1/2 voted');
+
+    await checkA11y();
+  });
+
   test('should maintain accessibility on the editing interface', async ({checkA11y}) => {
     await checkA11y();
   });

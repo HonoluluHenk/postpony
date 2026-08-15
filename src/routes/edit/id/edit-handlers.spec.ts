@@ -1,8 +1,9 @@
 import { describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
-import { aPlayer, aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
+import { aPlayer, aProposedDate, aSession, aVote } from '../../../lib/__test-utils__/builders';
 import { LOCALE_KEY } from '../../../locales';
 import { MemorySessionStore } from '../../../lib/session-store';
+import { buildOwnTeamView } from './own-team-view';
 import { handleEditPlayersPost } from './players-post';
 import { handleEditProposedDatesPost } from './proposed-dates-post';
 
@@ -194,6 +195,8 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('id="error-container" hx-swap-oob="true"');
       expect(html)
+        .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+      expect(html)
         .not
         .toContain('error padding white-text');
     });
@@ -231,6 +234,8 @@ describe('edit handlers', () => {
         .toContain('<section id="proposed-dates-management"');
       expect(html)
         .toContain('toast success');
+      expect(html)
+        .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
     });
 
     test('proposed dates: renders the error-container on an invalid datetime', async () => {
@@ -251,6 +256,79 @@ describe('edit handlers', () => {
         .toContain('id="error-container" hx-swap-oob="true"');
       expect(html)
         .toContain('invalid');
+    });
+  });
+
+  describe('buildOwnTeamView', () => {
+    test('returns the organizer-team roster and per-date results with a localized display', () => {
+      const session = aSession({
+        organizerTeam: 'home',
+        players: [
+          aPlayer({id: 'p1', name: 'Voter', teamId: 'home'}),
+          aPlayer({id: 'p2', name: 'SitsOut', teamId: 'home'}),
+          aPlayer({id: 'a1', name: 'Away', teamId: 'away'}),
+        ],
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+        votes: [aVote({proposedDateId: 'pd-1', participantId: 'p1', type: 'Yes'})],
+      });
+
+      const view = buildOwnTeamView(session, 'en-US');
+
+      expect(view.organizerPlayers
+        .map((p) => p.name))
+        .toEqual(['Voter', 'SitsOut']);
+      expect(view.ownTeamResults)
+        .toHaveLength(1);
+      expect(view.ownTeamResults[0])
+        .toMatchObject({
+          dateId: 'pd-1',
+          display: expect.stringContaining('2025'),
+          voted: 1,
+          total: 2,
+          votes: [
+            {playerId: 'p1', playerName: 'Voter', vote: 'Yes'},
+            {playerId: 'p2', playerName: 'SitsOut', vote: null},
+          ],
+          nonVoters: [{playerId: 'p2', playerName: 'SitsOut', joined: false}],
+        });
+    });
+
+    test('uses the organizer team even when it is the away side', () => {
+      const session = aSession({
+        organizerTeam: 'away',
+        players: [
+          aPlayer({id: 'h1', name: 'Home', teamId: 'home'}),
+          aPlayer({id: 'a1', name: 'AwayPlayer', teamId: 'away'}),
+        ],
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+        votes: [aVote({proposedDateId: 'pd-1', participantId: 'a1', type: 'No'})],
+      });
+
+      const view = buildOwnTeamView(session, 'en-US');
+
+      expect(view.organizerPlayers
+        .map((p) => p.name))
+        .toEqual(['AwayPlayer']);
+      expect(view.ownTeamResults[0])
+        .toMatchObject({
+          voted: 1,
+          total: 1,
+          votes: [{playerId: 'a1', playerName: 'AwayPlayer', vote: 'No'}],
+        });
+    });
+
+    test('returns no dates when the organizer team has no proposed dates', () => {
+      const session = aSession({
+        organizerTeam: 'home',
+        players: [aPlayer({id: 'p1', name: 'Voter', teamId: 'home'})],
+      });
+
+      const view = buildOwnTeamView(session, 'en-US');
+
+      expect(view.organizerPlayers)
+        .toHaveLength(1);
+      expect(view.ownTeamResults)
+        .toEqual([]);
     });
   });
 

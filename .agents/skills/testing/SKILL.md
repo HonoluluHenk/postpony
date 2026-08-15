@@ -59,8 +59,8 @@ All Playwright tests use Page Object classes from `e2e-tests/pages/`:
 |--------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `StartPage`  | `/`                      | `goto()`, `createLink`, `editLink`, `switchLanguage(locale)` (via the header `<select>`), `spinner`, `main`, `banner`, `contentinfo`                                    |
 | `CreatePage` | `/create`                | `goto()`, `nameInput`, `submitButton`, `create(name)` → `EditPage`                                                                                                      |
-| `EditPage`   | `/edit/:id`              | `addPlayer(name)`, `addProposedDate(dt)`, `toggleAwayVotable(index)`, `homeTallySection()`, `awayTallySection()`, `status`, `ownerPassword` |
-| `JoinPage`   | `/join/:id/:team?token=` | `goto(href)`, `join(name)`, `castVote(index, vote)`, `submitVotes()`, `voteForm`, `tallySection()`, `voteRadio(vote)`                                                   |
+| `EditPage`   | `/edit/:id`              | `addPlayer(name)`, `addProposedDate(dt)`, `toggleVotableByOpponent(index)`, `homeTallySection()`, `awayTallySection()`, `status`, `ownerPassword` |
+| `JoinPage`   | `/join/:id/:team?token=` | `goto(href)`, `join(name)`, `castVote(index, vote)`, `submitVotes()`, `voteForm`, `teamResultsSection()`, `teamResultsTable()`, `tallyTable()`, `voteRadio(vote)`                                                   |
 | `ScrapePage` | `/create/scrape`         | `goto()`, `pickLeague(name)`, `pickGroup(name)`, `pickTeam(name)`, `clickBack()`, `matchRow(filter)`                                                                    |
 
 **Cross-page workflows** use `EditPage.createSession(page, name?, dates?)` — a static factory that navigates `/ → /create → /edit/:id`, returns `{session, editPage}`.

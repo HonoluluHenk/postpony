@@ -1,6 +1,7 @@
 import type { App } from '../../../app';
 import { PostponementRules } from '../../../lib/postponement';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
+import { buildOwnTeamView } from './own-team-view';
 
 export const handleProposedDateVisibilityPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
@@ -55,11 +56,15 @@ export const handleProposedDateVisibilityPost = async (app: App): Promise<Respon
     };
   });
 
+  const {organizerPlayers, ownTeamResults} = buildOwnTeamView(updated, locale);
+
   const html = app.render('edit/id/proposed-dates-section.eta', {
     sessionId: updated.id,
     proposedDates,
     homeProposedDates,
     awayProposedDates,
+    organizerPlayers,
+    ownTeamResults,
   });
 
   return app.c.html(html);

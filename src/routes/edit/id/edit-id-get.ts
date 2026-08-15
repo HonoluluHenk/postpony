@@ -2,6 +2,7 @@ import type { App } from '../../../app';
 import type { VoteTallyItem } from '../../../lib/models';
 import { PostponementRules } from '../../../lib/postponement';
 import { formatIsoToLocaleTokens, formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
+import { buildOwnTeamView } from './own-team-view';
 
 export const handleEditGet = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
@@ -54,12 +55,16 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     };
   });
 
+  const {organizerPlayers, ownTeamResults} = buildOwnTeamView(session, locale);
+
   const html = app.render('edit/id/edit.eta', {
     title: app.t('edit_postponement_title', {name: session.name}),
     session,
     proposedDates,
     homeProposedDates,
     awayProposedDates,
+    organizerPlayers,
+    ownTeamResults,
     proposedDateTime: session.originalMatchDateTime
                       ? formatIsoToLocaleTokens(session.originalMatchDateTime, locale)
                       : '',

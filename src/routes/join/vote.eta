@@ -45,8 +45,8 @@
     <% } %>
   </form>
 
-  <section aria-labelledby="vote-summary-title">
-    <%~ include('../partials/vote-tally.eta', {...it, headingLevel: 3, titleId: 'vote-summary-title', title: it.t('vote_summary')}) %>
+  <section aria-labelledby="vote-results-title">
+    <%~ include('../partials/vote-player-results.eta', {...it, headingLevel: 3, titleId: 'vote-results-title', title: it.t('your_team_votes')}) %>
   </section>
 <% } %>
 

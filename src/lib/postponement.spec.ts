@@ -472,6 +472,104 @@ describe('postponement', () => {
     });
   });
 
+  describe('ownTeamResults', () => {
+    const teamPlayers = [
+      aPlayer({id: 'p1', name: 'Voter', teamId: 'home'}),
+      aPlayer({id: 'p2', name: 'SitsOut', teamId: 'home'}),
+    ];
+
+    test('shows each player vote type per date or null for no vote, with the N/M count and never-joined marking', () => {
+      const session = aSession({
+        players: [...teamPlayers, aPlayer({id: 'a1', name: 'Away', teamId: 'away'})],
+        proposedDates: [aProposedDate({id: 'pd-1'}), aProposedDate({id: 'pd-2'})],
+        votes: [
+          aVote({proposedDateId: 'pd-1', participantId: 'p1', type: 'Yes'}),
+          aVote({proposedDateId: 'pd-2', participantId: 'p1', type: 'Maybe'}),
+        ],
+      });
+
+      const results = new FakePostponementRules().ownTeamResults(session, 'home');
+
+      expect(results)
+        .toHaveLength(2);
+      expect(results[0])
+        .toEqual({
+          dateId: 'pd-1',
+          votes: [
+            {playerId: 'p1', playerName: 'Voter', vote: 'Yes'},
+            {playerId: 'p2', playerName: 'SitsOut', vote: null},
+          ],
+          voted: 1,
+          total: 2,
+          nonVoters: [{playerId: 'p2', playerName: 'SitsOut', joined: false}],
+        });
+      expect(results[1])
+        .toEqual({
+          dateId: 'pd-2',
+          votes: [
+            {playerId: 'p1', playerName: 'Voter', vote: 'Maybe'},
+            {playerId: 'p2', playerName: 'SitsOut', vote: null},
+          ],
+          voted: 1,
+          total: 2,
+          nonVoters: [{playerId: 'p2', playerName: 'SitsOut', joined: false}],
+        });
+    });
+
+    test('uses every team player as the denominator even when no one voted', () => {
+      const session = aSession({
+        players: teamPlayers,
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+      });
+
+      const [result] = new FakePostponementRules().ownTeamResults(session, 'home');
+
+      expect(result)
+        .toEqual({
+          dateId: 'pd-1',
+          votes: [
+            {playerId: 'p1', playerName: 'Voter', vote: null},
+            {playerId: 'p2', playerName: 'SitsOut', vote: null},
+          ],
+          voted: 0,
+          total: 2,
+          nonVoters: [
+            {playerId: 'p1', playerName: 'Voter', joined: false},
+            {playerId: 'p2', playerName: 'SitsOut', joined: false},
+          ],
+        });
+    });
+
+    test('excludes opponent-team votes and players', () => {
+      const session = aSession({
+        players: [aPlayer({id: 'p1', name: 'Home', teamId: 'home'}), aPlayer({id: 'a1', name: 'Away', teamId: 'away'})],
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+        votes: [
+          aVote({proposedDateId: 'pd-1', participantId: 'p1', type: 'Yes'}),
+          aVote({proposedDateId: 'pd-1', participantId: 'a1', type: 'No'}),
+        ],
+      });
+
+      const [result] = new FakePostponementRules().ownTeamResults(session, 'home');
+
+      expect(result)
+        .toEqual({
+          dateId: 'pd-1',
+          votes: [{playerId: 'p1', playerName: 'Home', vote: 'Yes'}],
+          voted: 1,
+          total: 1,
+          nonVoters: [],
+        });
+    });
+
+    test('returns an empty array when the team has no proposed dates', () => {
+      const session = aSession({players: teamPlayers});
+
+      expect(new FakePostponementRules().ownTeamResults(session, 'home'))
+        .toEqual([]);
+    });
+  });
+
   describe('default seams', () => {
     test('produce distinct ids and an ISO timestamp', () => {
       const rules = new PostponementRules();
