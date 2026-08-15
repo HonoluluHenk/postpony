@@ -1,58 +1,9 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
-import type { ProposedDate, VoteTallyItem } from '../../../lib/models';
 import { PostponementRules } from '../../../lib/postponement';
-import { formatLocalizedDateTime, parseIsoToPlainDateTime, parseLocaleDateTime } from '../../../lib/temporal-utils';
-import type { AppLocale } from '../../../locales';
-import { buildOwnTeamView } from './own-team-view';
-
-interface ProposedDateTallyItem extends VoteTallyItem {
-  votableByOpponent: boolean;
-}
-
-function toProposedDateItems(
-  proposedDates: ProposedDate[],
-  tallies: Record<string, {
-    yes: number;
-    no: number;
-    maybe: number
-  }>,
-  locale: AppLocale,
-): ProposedDateTallyItem[] {
-  return proposedDates.map((pd) => {
-    const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
-    return {
-      id: pd.id,
-      display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
-      votableByOpponent: pd.votableByOpponent,
-      yes: counts.yes,
-      no: counts.no,
-      maybe: counts.maybe,
-    };
-  });
-}
-
-function toVoteTallyItems(
-  proposedDates: ProposedDate[],
-  tallies: Record<string, {
-    yes: number;
-    no: number;
-    maybe: number
-  }>,
-  locale: AppLocale,
-): VoteTallyItem[] {
-  return proposedDates.map((pd) => {
-    const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
-    return {
-      id: pd.id,
-      display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
-      yes: counts.yes,
-      no: counts.no,
-      maybe: counts.maybe,
-    };
-  });
-}
+import { parseLocaleDateTime } from '../../../lib/temporal-utils';
+import { renderEditPartials } from './render-edit-partials';
 
 export const handleEditProposedDatesPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
@@ -74,23 +25,11 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
   const values = await app.c.req.parseBody();
   const validation = v.safeParse(ProposedDateSchema, values);
 
-  const rules = new PostponementRules();
-
   if (!validation.success) {
     const errors = mapValidationToErrors(validation);
 
     if (app.isPartial) {
-      const tallies = rules.tally(session);
-      const homeTallies = rules.tally(session, 'home');
-      const awayTallies = rules.tally(session, 'away');
-      const {organizerPlayers, ownTeamResults} = buildOwnTeamView(session, locale);
-      return app.c.html(app.render('edit/id/proposed-dates-section.eta', {
-        sessionId: session.id,
-        proposedDates: toProposedDateItems(session.proposedDates, tallies, locale),
-        homeProposedDates: toVoteTallyItems(session.proposedDates, homeTallies, locale),
-        awayProposedDates: toVoteTallyItems(session.proposedDates, awayTallies, locale),
-        organizerPlayers,
-        ownTeamResults,
+      return app.c.html(renderEditPartials(app, session, {
         proposedDateTime: (values['proposedDateTime'] as string | undefined) ?? '',
         error: errors.fields['proposedDateTime'],
         globalError: errors.global,
@@ -106,23 +45,11 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
     // Unreachable: the schema already checked parseability.
     app.failure(app.t('proposed_date_time_invalid'));
   }
-  const updated = rules.proposeDate(session, parsed.toString(), 'owner').session;
+  const updated = new PostponementRules().proposeDate(session, parsed.toString(), 'owner').session;
   await app.store.save(updated);
 
   if (app.isPartial) {
-    const tallies = rules.tally(updated);
-    const homeTallies = rules.tally(updated, 'home');
-    const awayTallies = rules.tally(updated, 'away');
-    const {organizerPlayers, ownTeamResults} = buildOwnTeamView(updated, locale);
-    return app.c.html(app.render('edit/id/proposed-dates-section.eta', {
-      sessionId: updated.id,
-      proposedDates: toProposedDateItems(updated.proposedDates, tallies, locale),
-      homeProposedDates: toVoteTallyItems(updated.proposedDates, homeTallies, locale),
-      awayProposedDates: toVoteTallyItems(updated.proposedDates, awayTallies, locale),
-      organizerPlayers,
-      ownTeamResults,
-      success: true,
-    }));
+    return app.c.html(renderEditPartials(app, updated, {success: true}));
   }
   return app.c.redirect(`/edit/${id}`);
 };

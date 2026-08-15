@@ -1,49 +1,66 @@
 <%~ include('../../partials/error-container.eta', {globalError: it.globalError}) %>
+<p class="chip outline" id="status-chip" hx-swap-oob="true"><%= it.t('status_label', {status: it.status}) %></p>
 <section id="proposed-dates-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
   <header>
     <h3 tabindex="-1"><%= it.t('proposed_dates_management') %></h3>
   </header>
-  <ul id="proposed-date-list" class="list" aria-label="<%= it.t('proposed_dates_management') %>">
-    <% it.proposedDates.forEach(function (proposedDate) { %>
-      <li>
-        <i aria-hidden="true">event</i>
-        <div class="max"><%= proposedDate.display %></div>
-        <label class="switch">
-          <input type="checkbox"
-                 hx-post="/edit/<%= it.sessionId %>/proposed-date-visibility?proposedDateId=<%= proposedDate.id %>&votable=<%= !proposedDate.votableByOpponent %>"
-                 hx-target="#proposed-dates-management"
-                 <%= proposedDate.votableByOpponent ? 'checked' : '' %>>
-          <span><%= it.t('votable_by_opponent') %></span>
-        </label>
-      </li>
-    <% }) %>
-  </ul>
-  <form hx-post="/edit/<%= it.sessionId %>/proposed-dates" hx-target="#proposed-dates-management" class="mt-4">
-    <div class="row items-center gap">
-      <div class="field label border fill max <%= it.error ? 'invalid' : '' %>">
-        <% if (it.error) { %>
-          <input type="text" id="proposedDateTime" name="proposedDateTime" value="<%= it.proposedDateTime %>" aria-invalid="true" aria-describedby="proposedDateTime-error" placeholder="<%= it.inputFormat %>" lang="<%= it.locale %>" autocomplete="off">
-        <% } else { %>
-          <input type="text" id="proposedDateTime" name="proposedDateTime" value="<%= it.proposedDateTime || '' %>" required placeholder="<%= it.inputFormat %>" lang="<%= it.locale %>" autocomplete="off">
-        <% } %>
-        <label for="proposedDateTime"><%= it.t('proposed_date_time_label') %></label>
-        <% if (it.error) { %>
-          <span id="proposedDateTime-error" class="error" role="alert"><%= it.error %></span>
-        <% } %>
+  <% if (it.reopenCount > 0) { %>
+    <p class="chip outline"><%= it.t('reopened_count', {count: String(it.reopenCount)}) %></p>
+  <% } %>
+  <% if (it.status === 'Confirmed') { %>
+    <form hx-post="/edit/<%= it.sessionId %>/reopen" hx-target="#proposed-dates-management" class="mt-4">
+      <button type="submit"><%= it.t('reopen') %></button>
+    </form>
+  <% } else { %>
+    <ul id="proposed-date-list" class="list" aria-label="<%= it.t('proposed_dates_management') %>">
+      <% it.proposedDates.forEach(function (proposedDate) { %>
+        <li>
+          <i aria-hidden="true">event</i>
+          <div class="max"><%= proposedDate.display %></div>
+          <label class="switch">
+            <input type="checkbox"
+                   hx-post="/edit/<%= it.sessionId %>/proposed-date-visibility?proposedDateId=<%= proposedDate.id %>&votable=<%= !proposedDate.votableByOpponent %>"
+                   hx-target="#proposed-dates-management"
+                   <%= proposedDate.votableByOpponent ? 'checked' : '' %>>
+            <span><%= it.t('votable_by_opponent') %></span>
+          </label>
+          <% if (proposedDate.votableByOpponent) { %>
+            <button type="button" class="button outline"
+                    hx-post="/edit/<%= it.sessionId %>/proposed-date-confirm?proposedDateId=<%= proposedDate.id %>"
+                    hx-target="#proposed-dates-management">
+              <%= it.t('confirm_date') %>
+            </button>
+          <% } %>
+        </li>
+      <% }) %>
+    </ul>
+    <form hx-post="/edit/<%= it.sessionId %>/proposed-dates" hx-target="#proposed-dates-management" class="mt-4">
+      <div class="row items-center gap">
+        <div class="field label border fill max <%= it.error ? 'invalid' : '' %>">
+          <% if (it.error) { %>
+            <input type="text" id="proposedDateTime" name="proposedDateTime" value="<%= it.proposedDateTime %>" aria-invalid="true" aria-describedby="proposedDateTime-error" placeholder="<%= it.inputFormat %>" lang="<%= it.locale %>" autocomplete="off">
+          <% } else { %>
+            <input type="text" id="proposedDateTime" name="proposedDateTime" value="<%= it.proposedDateTime || '' %>" required placeholder="<%= it.inputFormat %>" lang="<%= it.locale %>" autocomplete="off">
+          <% } %>
+          <label for="proposedDateTime"><%= it.t('proposed_date_time_label') %></label>
+          <% if (it.error) { %>
+            <span id="proposedDateTime-error" class="error" role="alert"><%= it.error %></span>
+          <% } %>
+        </div>
+        <button type="button" id="proposedDateTimePicker" class="button" aria-label="<%= it.t('proposed_date_time_picker_label') %>" title="<%= it.t('proposed_date_time_picker_label') %>"><i aria-hidden="true">calendar_today</i></button>
       </div>
-      <button type="button" id="proposedDateTimePicker" class="button" aria-label="<%= it.t('proposed_date_time_picker_label') %>" title="<%= it.t('proposed_date_time_picker_label') %>"><i aria-hidden="true">calendar_today</i></button>
-    </div>
-    <div class="right-align">
-      <button type="submit"><%= it.t('add_proposed_date') %></button>
-    </div>
-  </form>
-  <% if (it.success) { %>
-    <div class="toast success top" role="alert">
-      <i aria-hidden="true">check_circle</i>
-      <div class="max">
-        <p><%= it.t('proposed_date_added') %></p>
+      <div class="right-align">
+        <button type="submit"><%= it.t('add_proposed_date') %></button>
       </div>
-    </div>
+    </form>
+    <% if (it.success) { %>
+      <div class="toast success top" role="alert">
+        <i aria-hidden="true">check_circle</i>
+        <div class="max">
+          <p><%= it.t('proposed_date_added') %></p>
+        </div>
+      </div>
+    <% } %>
   <% } %>
 </section>
 

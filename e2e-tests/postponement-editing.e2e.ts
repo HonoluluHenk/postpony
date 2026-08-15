@@ -301,4 +301,62 @@ test.describe('Postponement Editing', () => {
     await page.goto(editUrl);
     await checkA11y();
   });
+
+  test('should confirm a proposed date, lock the session, and show the reopen control', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateList.getByRole('listitem'))
+      .toHaveCount(1);
+
+    // No confirm control until the date is proposed to the opponent.
+    await expect(editPage.proposedDateList.getByRole('button', {name: 'Confirm'}))
+      .toHaveCount(0);
+
+    await editPage.toggleVotableByOpponent(0);
+    await expect(editPage.confirmButton(0))
+      .toBeVisible();
+
+    await editPage.confirmDate(0);
+
+    await expect(editPage.status)
+      .toContainText('Confirmed');
+    await expect(editPage.reopenButton())
+      .toBeVisible();
+    // Date-management controls are gone once locked.
+    await expect(editPage.proposedDateList)
+      .toHaveCount(0);
+    await expect(editPage.proposedDateTimeInput)
+      .toHaveCount(0);
+
+    await checkA11y();
+  });
+
+  test('should reopen a confirmed postponement and start new dates non-votable', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await editPage.toggleVotableByOpponent(0);
+    await editPage.confirmDate(0);
+    await expect(editPage.status)
+      .toContainText('Confirmed');
+
+    await editPage.reopen();
+
+    await expect(editPage.status)
+      .toContainText('Voting');
+    await expect(editPage.reopenedCountNote())
+      .toContainText('Reopened 1 time(s)');
+    // The previously proposed date keeps its opponent flag.
+    await expect(editPage.votableCheckbox(0))
+      .toBeChecked();
+
+    // A new date added after the reopen starts non-votable until flipped.
+    await editPage.addProposedDate('2026-06-15T18:30');
+    await expect(editPage.proposedDateList.getByRole('listitem'))
+      .toHaveCount(2);
+    await expect(editPage.votableCheckbox(1))
+      .not
+      .toBeChecked();
+
+    await checkA11y();
+  });
 });

@@ -4,8 +4,10 @@ import { aPlayer, aProposedDate, aSession, aVote } from '../../../lib/__test-uti
 import { LOCALE_KEY } from '../../../locales';
 import { MemorySessionStore } from '../../../lib/session-store';
 import { buildOwnTeamView } from './own-team-view';
+import { handleConfirmDatePost } from './confirm-date-post';
 import { handleEditPlayersPost } from './players-post';
 import { handleEditProposedDatesPost } from './proposed-dates-post';
+import { handleReopenPost } from './reopen-post';
 
 interface MockOptions {
   params?: Record<string, string>;
@@ -256,6 +258,191 @@ describe('edit handlers', () => {
         .toContain('id="error-container" hx-swap-oob="true"');
       expect(html)
         .toContain('invalid');
+    });
+  });
+
+  describe('handleConfirmDatePost', () => {
+    test('throws when the session does not exist', async () => {
+      const app = createApp({params: {id: 'missing'}});
+
+      await expect(handleConfirmDatePost(app))
+        .rejects
+        .toThrow('Session not found');
+    });
+
+    test('confirms a votable date and locks the session', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+      });
+      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
+      await app.store.save(session);
+
+      await handleConfirmDatePost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Confirmed');
+      expect(stored?.confirmedProposedDateId)
+        .toBe('pd-1');
+    });
+
+    test('is a no-op for a date that is not votable by the opponent', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: false})],
+      });
+      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
+      await app.store.save(session);
+
+      await handleConfirmDatePost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Voting');
+      expect(stored?.confirmedProposedDateId)
+        .toBeUndefined();
+    });
+
+    test('is idempotent: confirming the same date again keeps the locked state', async () => {
+      const session = aSession({
+        status: 'Confirmed',
+        confirmedProposedDateId: 'pd-1',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+      });
+      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
+      await app.store.save(session);
+
+      await handleConfirmDatePost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Confirmed');
+      expect(stored?.confirmedProposedDateId)
+        .toBe('pd-1');
+    });
+
+    test('renders the partial with the reopen control and no confirm control when partial', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+      });
+      const app = createApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const html = await (await handleConfirmDatePost(app)).text();
+
+      expect(html)
+        .toContain('<section id="proposed-dates-management"');
+      expect(html)
+        .toContain(`hx-post="/edit/${session.id}/reopen"`);
+      expect(html)
+        .not
+        .toContain('proposed-date-confirm');
+      expect(html)
+        .toContain('id="status-chip" hx-swap-oob="true"');
+      expect(html)
+        .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+    });
+
+    test('redirects to the edit page when not partial', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+      });
+      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
+      await app.store.save(session);
+
+      const response = await handleConfirmDatePost(app);
+
+      expect(response.status)
+        .toBe(302);
+      expect(response.headers.get('location'))
+        .toBe(`/edit/${session.id}?ownerPassword=`);
+    });
+  });
+
+  describe('handleReopenPost', () => {
+    test('throws when the session does not exist', async () => {
+      const app = createApp({params: {id: 'missing'}});
+
+      await expect(handleReopenPost(app))
+        .rejects
+        .toThrow('Session not found');
+    });
+
+    test('reopens a confirmed session: Voting, count + 1, history, votes, and flags kept', async () => {
+      const session = aSession({
+        status: 'Confirmed',
+        reopenCount: 0,
+        confirmedProposedDateId: 'pd-1',
+        proposedDates: [
+          aProposedDate({id: 'pd-1', votableByOpponent: true}),
+          aProposedDate({id: 'pd-2', votableByOpponent: false}),
+        ],
+        votes: [aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
+      });
+      const app = createApp({params: {id: session.id}});
+      await app.store.save(session);
+
+      await handleReopenPost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Voting');
+      expect(stored?.reopenCount)
+        .toBe(1);
+      expect(stored?.confirmedProposedDateId)
+        .toBe('pd-1');
+      expect(stored?.proposedDates)
+        .toEqual(session.proposedDates);
+      expect(stored?.votes)
+        .toEqual(session.votes);
+    });
+
+    test('renders the partial with the date-management controls and reopen count when partial', async () => {
+      const session = aSession({
+        status: 'Confirmed',
+        reopenCount: 0,
+        confirmedProposedDateId: 'pd-1',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+      });
+      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      await app.store.save(session);
+
+      const html = await (await handleReopenPost(app)).text();
+
+      expect(html)
+        .toContain(`hx-post="/edit/${session.id}/proposed-date-confirm?proposedDateId=pd-1"`);
+      expect(html)
+        .toContain('Reopened 1 time(s)');
+      expect(html)
+        .toContain('id="status-chip" hx-swap-oob="true"');
+      expect(html)
+        .not
+        .toContain(`hx-post="/edit/${session.id}/reopen"`);
+    });
+
+    test('redirects to the edit page when not partial', async () => {
+      const session = aSession({
+        status: 'Confirmed',
+        reopenCount: 0,
+        confirmedProposedDateId: 'pd-1',
+        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+      });
+      const app = createApp({params: {id: session.id}});
+      await app.store.save(session);
+
+      const response = await handleReopenPost(app);
+
+      expect(response.status)
+        .toBe(302);
+      expect(response.headers.get('location'))
+        .toBe(`/edit/${session.id}?ownerPassword=`);
     });
   });
 

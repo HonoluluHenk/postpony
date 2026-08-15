@@ -193,6 +193,36 @@ export class EditPage {
       .click();
   }
 
+  votableCheckbox(dateIndex: number): Locator {
+    return this.proposedDateList.getByRole('listitem')
+      .nth(dateIndex)
+      .locator('input[type="checkbox"]');
+  }
+
+  confirmButton(dateIndex: number): Locator {
+    return this.proposedDateList.getByRole('listitem')
+      .nth(dateIndex)
+      .getByRole('button', {name: 'Confirm'});
+  }
+
+  reopenButton(): Locator {
+    return this.page.getByRole('button', {name: 'Reopen'});
+  }
+
+  reopenedCountNote(): Locator {
+    return this.page.getByText(/Reopened/);
+  }
+
+  async confirmDate(dateIndex: number): Promise<void> {
+    await this.confirmButton(dateIndex)
+      .click();
+  }
+
+  async reopen(): Promise<void> {
+    await this.reopenButton()
+      .click();
+  }
+
   async getInviteLinks(): Promise<{
     homeHref: string;
     awayHref: string
