@@ -1,5 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
+import { aPlayer, aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
+import { hashPassword } from '../../../lib/crypto-utils';
 import { LOCALE_KEY } from '../../../locales';
 import { MemorySessionStore } from '../../../lib/session-store';
 import { handleScrapeMatchPost } from './match-post';
@@ -89,5 +91,55 @@ describe('handleScrapeMatchPost', () => {
     await expect(handleScrapeMatchPost(app))
       .rejects
       .toThrow('Missing required parameter: match');
+  });
+});
+
+describe('handleScrapeMatchPost change mode (re-scrape)', () => {
+  const ownerPassword = 'owner-secret';
+
+  test('replaces the rosters in place, preserving id, passwords, votes, and proposed dates', async () => {
+    const session = aSession({
+      ownerPasswordHash: hashPassword(ownerPassword),
+      players: [aPlayer({id: 'old-p', name: 'Old Player'})],
+      proposedDates: [aProposedDate()],
+    });
+    const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: session.id, ownerPassword}});
+    await app.store.save(session);
+
+    await handleScrapeMatchPost(app);
+
+    const stored = await app.store.get(session.id);
+    expect(stored?.id).toBe(session.id);
+    expect(stored?.name).toBe('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
+    expect(stored?.homeTeam).toBe('Thun');
+    expect(stored?.guestTeam).toBe('Ostermundigen');
+    expect(stored?.originalMatchDateTime).toBe('2026-08-29T16:00');
+    expect(stored?.players.map((p) => p.name))
+      .toEqual(['Linder, Christoph', 'Schmid, Oliver', 'Milcu, Sasha']);
+    expect(stored?.players.every((p) => p.teamId === 'home'))
+      .toBe(true);
+    expect(stored?.organizerTeam)
+      .toBe('home');
+    expect(stored?.ownerPasswordHash).toBe(session.ownerPasswordHash);
+    expect(stored?.proposedDates).toEqual(session.proposedDates);
+    expect(stored?.votes).toEqual(session.votes);
+  });
+
+  test('rejects a wrong owner password', async () => {
+    const session = aSession({ownerPasswordHash: hashPassword('real-pw')});
+    const app = createApp({body: {...MATCH, sessionId: session.id, ownerPassword: 'wrong'}});
+    await app.store.save(session);
+
+    await expect(handleScrapeMatchPost(app))
+      .rejects
+      .toThrow('Invalid owner password.');
+  });
+
+  test('throws when the session does not exist', async () => {
+    const app = createApp({body: {...MATCH, sessionId: 'missing', ownerPassword}});
+
+    await expect(handleScrapeMatchPost(app))
+      .rejects
+      .toThrow('Session not found');
   });
 });

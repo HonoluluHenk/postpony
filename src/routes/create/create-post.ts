@@ -5,6 +5,7 @@ import { mapValidationToErrors } from '../../lib/map-validation-to-errors';
 import { DEFAULT_CLUB_ID, type Postponement } from '../../lib/models';
 import { derivePostponementName } from '../../lib/postponement';
 import { parseLocaleDateTime } from '../../lib/temporal-utils';
+import { requireChangeSession } from './change-utils';
 
 export async function handleCreatePost(app: App): Promise<Response> {
   const locale = app.locale;
@@ -25,15 +26,20 @@ export async function handleCreatePost(app: App): Promise<Response> {
   const values = await app.c.req.parseBody();
   const validation = v.safeParse(CreateSchema, values);
 
+  const sessionId = typeof values['sessionId'] === 'string' ? values['sessionId'] : undefined;
+  const ownerPassword = typeof values['ownerPassword'] === 'string' ? values['ownerPassword'] : undefined;
+  const changeMode = !!sessionId;
+
   if (!validation.success) {
     const errors = mapValidationToErrors(validation);
 
     const html = app.render('create/create.eta', {
-      title: app.t('create_postponement_title'),
+      title: changeMode ? app.t('change_match_details_title') : app.t('create_postponement_title'),
       isPartial: app.isPartial,
       errors,
       values,
       globalError: errors.global,
+      ...(changeMode ? {changeMode: true, sessionId, ownerPassword} : {}),
     });
     return app.c.html(html, {status: 400});
   }
@@ -46,8 +52,32 @@ export async function handleCreatePost(app: App): Promise<Response> {
   }
   const originalMatchDateTime = parsed.toString({smallestUnit: 'minute'});
 
+  if (changeMode) {
+    if (!ownerPassword) {
+      app.failure(app.t('invalid_owner_password'), 403);
+    }
+    const session = await requireChangeSession(app, sessionId, ownerPassword);
+    const updated: Postponement = {
+      ...session,
+      name: derivePostponementName(homeTeam, guestTeam, originalMatchDateTime, locale),
+      homeTeam,
+      guestTeam,
+      originalMatchDateTime,
+      // The match was entered by hand; the scrape-only provenance no longer applies.
+      metadata: undefined,
+    };
+    await app.store.save(updated);
+
+    const redirectUrl = `/edit/${session.id}?ownerPassword=${ownerPassword}`;
+    if (app.isPartial) {
+      app.c.header('HX-Redirect', redirectUrl);
+      return app.c.text('', 200);
+    }
+    return app.c.redirect(redirectUrl);
+  }
+
   const id = generateId();
-  const ownerPassword = generateRandomPassword();
+  const newOwnerPassword = generateRandomPassword();
   const invitationPassword = generateRandomPassword();
 
   const session: Postponement = {
@@ -57,7 +87,7 @@ export async function handleCreatePost(app: App): Promise<Response> {
     homeTeam,
     guestTeam,
     originalMatchDateTime,
-    ownerPasswordHash: hashPassword(ownerPassword),
+    ownerPasswordHash: hashPassword(newOwnerPassword),
     invitationPasswordHash: hashPassword(invitationPassword),
     invitationPassword,
     status: 'Draft',
@@ -71,7 +101,7 @@ export async function handleCreatePost(app: App): Promise<Response> {
 
   await app.store.save(session);
 
-  const redirectUrl = `/edit/${id}?ownerPassword=${ownerPassword}`;
+  const redirectUrl = `/edit/${id}?ownerPassword=${newOwnerPassword}`;
   if (app.isPartial) {
     app.c.header('HX-Redirect', redirectUrl);
     return app.c.text('', 200);

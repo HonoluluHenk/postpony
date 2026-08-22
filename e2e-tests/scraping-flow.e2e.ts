@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { EditPage, ScrapePage } from './pages';
+import { CreatePage, EditPage, ScrapePage } from './pages';
 
 /**
  * Drives the full click-tt.ch scraping drilldown (leagues → groups → teams →
@@ -205,6 +205,67 @@ test.describe('Scraping Flow', () => {
     await scrapePage.clickBack();
     await expect(scrapePage.heading)
       .toBeVisible();
+
+    await checkA11y();
+  });
+
+  test('change the match via the wizard: rosters replaced, session id preserved', async ({page, checkA11y}) => {
+    // Mint a manual session with a manually added player.
+    const createPage = await new CreatePage(page)
+      .goto();
+    let editPage = await createPage.create({
+      homeTeam: 'Aarberg',
+      guestTeam: 'Bern',
+      originalMatchDateTime: '08/29/2026 04:00 pm',
+    });
+    await editPage.addPlayer('Old Player');
+    await expect(editPage.playerItem('Old Player'))
+      .toBeVisible();
+    const originalId = new URL(page.url()).pathname.split('/')[2] ?? '';
+
+    // Change match details → cross-link into the wizard.
+    await editPage.changeMatchDetailsLink.click();
+    await page.getByRole('link', {name: 'Find the match on click-tt.ch instead'})
+      .click();
+    const scrapePage = new ScrapePage(page);
+    await expect(scrapePage.heading)
+      .toBeVisible();
+
+    // Back-navigation in change mode returns to the edit page.
+    await scrapePage.clickBack();
+    await expect(page)
+      .toHaveURL(/\/edit\/.+/);
+
+    // Re-enter the wizard for the actual change.
+    await editPage.changeMatchDetailsLink.click();
+    await page.getByRole('link', {name: 'Find the match on click-tt.ch instead'})
+      .click();
+    await expect(scrapePage.heading)
+      .toBeVisible();
+
+    // Drill down and pick the new match, claiming the guest side.
+    await scrapePage.pickLeague('MTTV 2026/27');
+    await scrapePage.pickGroup('O40 1. Liga');
+    await scrapePage.pickTeam('Ostermundigen');
+    await expect(scrapePage.matchesHeading)
+      .toBeVisible();
+    await Promise.all([
+      page.waitForURL(/\/edit\/.+/),
+      scrapePage.createButton('Ostermundigen', '29.08.2026')
+        .click(),
+    ]);
+
+    // Same session id, new match details, and the rosters replaced (the
+    // manually added player is gone, the scraped rosters are in).
+    expect(page.url())
+      .toContain(`/edit/${originalId}`);
+    editPage = new EditPage(page);
+    await expect(editPage.matchSummarySection)
+      .toContainText('Thun vs Ostermundigen');
+    await expect(page.getByText('Old Player'))
+      .toHaveCount(0);
+    await expect(editPage.playerItems)
+      .toHaveCount(6);
 
     await checkA11y();
   });

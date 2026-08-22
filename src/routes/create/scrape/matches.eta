@@ -33,6 +33,10 @@
             <td data-label="<%= it.t('scrape_match_guest') %>"><%= m.guestTeam %></td>
             <td data-label="<%= it.t('scrape_match_actions') %>">
               <form method="post" action="/create/scrape/match">
+                <% if (it.changeMode) { %>
+                  <input type="hidden" name="sessionId" value="<%= it.sessionId %>">
+                  <input type="hidden" name="ownerPassword" value="<%= it.ownerPassword %>">
+                <% } %>
                 <input type="hidden" name="day" value="<%= m.day %>">
                 <input type="hidden" name="date" value="<%= m.date %>">
                 <input type="hidden" name="time" value="<%= m.time %>">
@@ -61,9 +65,15 @@
   <% } %>
 
   <div class="right-align">
-    <% const teamsQuery = `championship=${encodeURIComponent(it.championship || '')}&group=${encodeURIComponent(it.group || '')}&groupName=${encodeURIComponent(it.groupName || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
-    <a href="/create/scrape/teams?<%= teamsQuery %>">
-      <%= it.t('scrape_back') %>
-    </a>
+    <% if (it.changeMode) { %>
+      <a href="/edit/<%= it.sessionId %>?ownerPassword=<%= it.ownerPassword %>">
+        <%= it.t('scrape_back') %>
+      </a>
+    <% } else { %>
+      <% const teamsQuery = `championship=${encodeURIComponent(it.championship || '')}&group=${encodeURIComponent(it.group || '')}&groupName=${encodeURIComponent(it.groupName || '')}&leagueName=${encodeURIComponent(it.leagueName || '')}` %>
+      <a href="/create/scrape/teams?<%= teamsQuery %>">
+        <%= it.t('scrape_back') %>
+      </a>
+    <% } %>
   </div>
 </section>

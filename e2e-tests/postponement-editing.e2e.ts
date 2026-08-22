@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { EditPage, JoinPage } from './pages';
+import { CreatePage, EditPage, JoinPage } from './pages';
 import type { SessionFixture } from './test-session';
 
 test.describe('Postponement Editing', () => {
@@ -356,6 +356,44 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.votableCheckbox(1))
       .not
       .toBeChecked();
+
+    await checkA11y();
+  });
+
+  test('change match details in place preserves the session id and its players', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addPlayer('Keep Me');
+    await expect(editPage.playerItem('Keep Me'))
+      .toBeVisible();
+
+    const originalId = session.id;
+
+    // The match summary offers a change link into the manual form.
+    await editPage.changeMatchDetailsLink.click();
+    const createPage = new CreatePage(page);
+    await expect(createPage.changeHeading)
+      .toBeVisible();
+
+    // The form is prefilled with the current match; correct the guest team
+    // and the original date/time.
+    await expect(createPage.homeTeamInput)
+      .toHaveValue('Home Team');
+    await expect(createPage.guestTeamInput)
+      .toHaveValue('Guest Team');
+    await createPage.guestTeamInput.fill('New Guest');
+    await createPage.originalMatchDateTimeInput.fill('08/29/2026 04:00 pm');
+    await createPage.changeSubmitButton.click();
+    await page.waitForURL(/\/edit\/.+/);
+
+    // Same session id, updated match details, and the players untouched.
+    expect(page.url())
+      .toContain(`/edit/${originalId}`);
+    await expect(editPage.heading)
+      .toContainText('Home Team vs New Guest – 08/29/2026 04:00 pm');
+    await expect(editPage.matchSummarySection)
+      .toContainText('Home Team vs New Guest');
+    await expect(editPage.playerItem('Keep Me'))
+      .toBeVisible();
 
     await checkA11y();
   });

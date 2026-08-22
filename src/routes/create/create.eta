@@ -2,10 +2,22 @@
 
 <section id="create-section" class="padding small-round surface-variant">
   <header>
-    <h2><%= it.t('create_postponement_title') %></h2>
+    <h2><%= it.changeMode ? it.t('change_match_details_title') : it.t('create_postponement_title') %></h2>
   </header>
 
+  <% if (it.changeMode) { %>
+    <p>
+      <a href="/create/scrape?sessionId=<%= it.sessionId %>&ownerPassword=<%= it.ownerPassword %>">
+        <%= it.t('change_via_scrape') %>
+      </a>
+    </p>
+  <% } %>
+
   <form action="/create" method="post">
+    <% if (it.changeMode) { %>
+      <input type="hidden" name="sessionId" value="<%= it.sessionId %>">
+      <input type="hidden" name="ownerPassword" value="<%= it.ownerPassword %>">
+    <% } %>
     <div class="field label border fill <%= it.errors?.fields?.homeTeam ? 'invalid' : '' %>">
       <input type="text" id="home-team" name="homeTeam" required aria-required="true"
              value="<%= it.values?.homeTeam || '' %>"
@@ -29,7 +41,15 @@
       <span id="original-match-date-time-error" class="error" role="alert"><%= it.errors?.fields?.originalMatchDateTime || '' %></span>
     </div>
     <div class="right-align">
-      <button type="submit"><%= it.t('create_button') %></button>
+      <button type="submit"><%= it.changeMode ? it.t('save_changes') : it.t('create_button') %></button>
     </div>
   </form>
+
+  <% if (it.changeMode) { %>
+    <div class="right-align">
+      <a href="/edit/<%= it.sessionId %>?ownerPassword=<%= it.ownerPassword %>">
+        <%= it.t('back_to_postponement') %>
+      </a>
+    </div>
+  <% } %>
 </section>

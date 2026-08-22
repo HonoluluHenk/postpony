@@ -1,5 +1,6 @@
 import type { App } from '../../../app';
 import { fetchTeams } from '../../../lib/click-tt-scraper';
+import { changeQuerySuffix } from '../change-utils';
 
 export const handleScrapeTeamsGet = async (app: App): Promise<Response> => {
   const championship = app.c.req.query('championship');
@@ -12,6 +13,9 @@ export const handleScrapeTeamsGet = async (app: App): Promise<Response> => {
   }
   const leagueName = app.c.req.query('leagueName') ?? '';
   const groupName = app.c.req.query('groupName') ?? '';
+  const sessionId = app.c.req.query('sessionId');
+  const ownerPassword = app.c.req.query('ownerPassword');
+  const changeMode = !!sessionId;
 
   const teams = await fetchTeams(championship, group);
 
@@ -23,6 +27,10 @@ export const handleScrapeTeamsGet = async (app: App): Promise<Response> => {
     group,
     leagueName,
     groupName,
+    changeMode,
+    changeSuffix: changeQuerySuffix(sessionId, ownerPassword),
+    sessionId,
+    ownerPassword,
   });
   return app.c.html(html);
 };

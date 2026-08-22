@@ -12,7 +12,7 @@
       <% for (const league of it.leagues) { %>
         <li>
           <% const groupsQuery = `championship=${encodeURIComponent(league.championship)}&leagueName=${encodeURIComponent(league.name)}` %>
-          <a href="/create/scrape/groups?<%= groupsQuery %>">
+          <a href="/create/scrape/groups?<%= groupsQuery %><%= it.changeSuffix %>">
             <%= league.name %>
           </a>
         </li>
@@ -21,8 +21,14 @@
   <% } %>
 
   <div class="right-align">
-    <a href="/create">
-      <%= it.t('scrape_back') %>
-    </a>
+    <% if (it.changeMode) { %>
+      <a href="/edit/<%= it.sessionId %>?ownerPassword=<%= it.ownerPassword %>">
+        <%= it.t('scrape_back') %>
+      </a>
+    <% } else { %>
+      <a href="/create">
+        <%= it.t('scrape_back') %>
+      </a>
+    <% } %>
   </div>
 </section>

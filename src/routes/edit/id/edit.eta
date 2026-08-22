@@ -42,6 +42,12 @@
       </header>
       <p><%= it.session.homeTeam || '' %> vs <%= it.session.guestTeam || '' %></p>
       <p><%= it.matchSummaryDateTime %></p>
+      <% if (it.ownerPassword) { %>
+        <a class="button outline"
+           href="/create?sessionId=<%= it.session.id %>&ownerPassword=<%= it.ownerPassword %>">
+          <%= it.t('change_match_details') %>
+        </a>
+      <% } %>
     </section>
 
     <section id="team-management" class="padding small-round surface-variant s12 m4" aria-live="polite">

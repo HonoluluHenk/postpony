@@ -26,6 +26,10 @@ export class CreatePage {
     return this.page.getByRole('heading', {name: 'Create a New Postponement'});
   }
 
+  get changeHeading(): Locator {
+    return this.page.getByRole('heading', {name: 'Change Match Details', level: 2});
+  }
+
   get homeTeamInput(): Locator {
     return this.page.getByLabel('Home Team');
   }
@@ -40,6 +44,10 @@ export class CreatePage {
 
   get submitButton(): Locator {
     return this.page.getByRole('button', {name: 'Create Postponement'});
+  }
+
+  get changeSubmitButton(): Locator {
+    return this.page.getByRole('button', {name: 'Save changes'});
   }
 
   async create(details: CreateMatchDetails = {}): Promise<EditPage> {
