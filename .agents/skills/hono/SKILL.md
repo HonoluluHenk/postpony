@@ -41,13 +41,8 @@ const app = new Hono()
 
 // With TypeScript generics
 type Env = {
-    Bindings: {
-        DATABASE: D1Database;
-        KV: KVNamespace
-    }
-    Variables: {
-        user: User
-    }
+  Bindings: { DATABASE: D1Database; KV: KVNamespace }
+  Variables: { user: User }
 }
 const app = new Hono<Env>()
 ```
@@ -71,13 +66,13 @@ app.on(['PUT', 'DELETE'], '/path', handler) // multiple methods
 ```ts
 // Path parameters
 app.get('/user/:name', (c) => {
-    const name = c.req.param('name')
-    return c.json({name})
+  const name = c.req.param('name')
+  return c.json({ name })
 })
 
 // Multiple params
 app.get('/posts/:id/comments/:commentId', (c) => {
-    const {id, commentId} = c.req.param()
+  const { id, commentId } = c.req.param()
 })
 
 // Optional parameters
@@ -88,14 +83,14 @@ app.get('/wild/*/card', (c) => c.text('Wildcard'))
 
 // Regexp constraints
 app.get('/post/:date{[0-9]+}/:title{[a-z]+}', (c) => {
-    const {date, title} = c.req.param()
+  const { date, title } = c.req.param()
 })
 
 // Chained routes
 app
-    .get('/endpoint', (c) => c.text('GET'))
-    .post((c) => c.text('POST'))
-    .delete((c) => c.text('DELETE'))
+  .get('/endpoint', (c) => c.text('GET'))
+  .post((c) => c.text('POST'))
+  .delete((c) => c.text('DELETE'))
 ```
 
 ### Route Grouping
@@ -116,11 +111,11 @@ app.get('/users', (c) => c.json([])) // GET /api/users
 ### Error Handling
 
 ```ts
-app.notFound((c) => c.json({message: 'Not Found'}, 404))
+app.notFound((c) => c.json({ message: 'Not Found' }, 404))
 
 app.onError((err, c) => {
-    console.error(err)
-    return c.json({message: 'Internal Server Error'}, 500)
+  console.error(err)
+  return c.json({ message: 'Internal Server Error' }, 500)
 })
 ```
 
@@ -132,7 +127,7 @@ app.onError((err, c) => {
 
 ```ts
 c.text('Hello') // text/plain
-c.json({message: 'Hello'}) // application/json
+c.json({ message: 'Hello' }) // application/json
 c.html('<h1>Hello</h1>') // text/html
 c.redirect('/new-path') // 302 redirect
 c.redirect('/new-path', 301) // 301 redirect
@@ -152,7 +147,7 @@ c.header('Cache-Control', 'no-store')
 
 ```ts
 // In middleware
-c.set('user', {id: 1, name: 'Alice'})
+c.set('user', { id: 1, name: 'Alice' })
 
 // In handler
 const user = c.get('user')
@@ -172,16 +167,15 @@ c.executionCtx.waitUntil(promise)
 
 ```ts
 app.use(async (c, next) => {
-    c.setRenderer((content) =>
-        c.html(
-            <html><body>{content} < /body></
-    html >
-)
-)
-    await next()
+  c.setRenderer((content) =>
+    c.html(
+      <html><body>{content}</body></html>
+    )
+  )
+  await next()
 })
 
-app.get('/', (c) => c.render(<h1>Hello < /h1>))
+app.get('/', (c) => c.render(<h1>Hello</h1>))
 ```
 
 ---
@@ -247,7 +241,7 @@ import { trailingSlash, trimTrailingSlash } from 'hono/trailing-slash'
 // Registration
 app.use(logger()) // all routes
 app.use('/api/*', cors()) // specific path
-app.post('/api/*', basicAuth({username: 'admin', password: 'secret'}))
+app.post('/api/*', basicAuth({ username: 'admin', password: 'secret' }))
 ```
 
 ### Custom Middleware
@@ -255,19 +249,19 @@ app.post('/api/*', basicAuth({username: 'admin', password: 'secret'}))
 ```ts
 // Inline
 app.use(async (c, next) => {
-    const start = Date.now()
-    await next()
-    const elapsed = Date.now() - start
-    c.res.headers.set('X-Response-Time', `${elapsed}ms`)
+  const start = Date.now()
+  await next()
+  const elapsed = Date.now() - start
+  c.res.headers.set('X-Response-Time', `${elapsed}ms`)
 })
 
 // Reusable with createMiddleware
 import { createMiddleware } from 'hono/factory'
 
 const auth = createMiddleware(async (c, next) => {
-    const token = c.req.header('Authorization')
-    if (!token) return c.json({error: 'Unauthorized'}, 401)
-    await next()
+  const token = c.req.header('Authorization')
+  if (!token) return c.json({ error: 'Unauthorized' }, 401)
+  await next()
 })
 
 app.use('/api/*', auth)
@@ -283,9 +277,9 @@ Request → mw1 before → mw2 before → handler → mw2 after → mw1 after �
 
 ```ts
 app.use(async (c, next) => {
-    // before handler
-    await next()
-    // after handler
+  // before handler
+  await next()
+  // after handler
 })
 ```
 
@@ -302,14 +296,13 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 
 const schema = z.object({
-    title: z.string()
-        .min(1),
-    body: z.string()
+  title: z.string().min(1),
+  body: z.string()
 })
 
 app.post('/posts', zValidator('json', schema), (c) => {
-    const data = c.req.valid('json') // fully typed
-    return c.json(data, 201)
+  const data = c.req.valid('json') // fully typed
+  return c.json(data, 201)
 })
 ```
 
@@ -319,11 +312,11 @@ app.post('/posts', zValidator('json', schema), (c) => {
 import { sValidator } from '@hono/standard-validator'
 import * as v from 'valibot'
 
-const schema = v.object({name: v.string(), age: v.number()})
+const schema = v.object({ name: v.string(), age: v.number() })
 
 app.post('/users', sValidator('json', schema), (c) => {
-    const data = c.req.valid('json')
-    return c.json(data, 201)
+  const data = c.req.valid('json')
+  return c.json(data, 201)
 })
 ```
 
@@ -337,10 +330,10 @@ In `tsconfig.json`:
 
 ```json
 {
-    "compilerOptions": {
-        "jsx": "react-jsx",
-        "jsxImportSource": "hono/jsx"
-    }
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx"
+  }
 }
 ```
 
@@ -354,28 +347,26 @@ Or use pragma: `/** @jsxImportSource hono/jsx */`
 import type { PropsWithChildren } from 'hono/jsx'
 
 const Layout = (props: PropsWithChildren) => (
-    <html>
+  <html>
     <head>
-        <title>My App</title>
+      <title>My App</title>
     </head>
     <body>{props.children}</body>
-    </html>
+  </html>
 )
 
-const UserCard = ({name}: {
-    name: string
-}) => (
-    <div class="card">
-        <h2>{name}</h2>
-    </div>
+const UserCard = ({ name }: { name: string }) => (
+  <div class="card">
+    <h2>{name}</h2>
+  </div>
 )
 
 app.get('/', (c) => {
-    return c.html(
-        <Layout>
-            <UserCard name="Alice"/>
-        </Layout>
-    )
+  return c.html(
+    <Layout>
+      <UserCard name="Alice" />
+    </Layout>
+  )
 })
 ```
 
@@ -387,14 +378,14 @@ Use `jsxRenderer` middleware for layouts. See `npx hono docs /docs/middleware/bu
 
 ```tsx
 const UserList = async () => {
-    const users = await fetchUsers()
-    return (
-        <ul>
-            {users.map((u) => (
-                <li>{u.name}</li>
-            ))}
-        </ul>
-    )
+  const users = await fetchUsers()
+  return (
+    <ul>
+      {users.map((u) => (
+        <li>{u.name}</li>
+      ))}
+    </ul>
+  )
 }
 ```
 
@@ -402,10 +393,10 @@ const UserList = async () => {
 
 ```tsx
 const Items = () => (
-    <>
-        <li>Item 1</li>
-        <li>Item 2</li>
-    </>
+  <>
+    <li>Item 1</li>
+    <li>Item 2</li>
+  </>
 )
 ```
 
@@ -418,35 +409,35 @@ import { stream, streamText, streamSSE } from 'hono/streaming'
 
 // Basic stream
 app.get('/stream', (c) => {
-    return stream(c, async (stream) => {
-        stream.onAbort(() => console.log('Aborted'))
-        await stream.write(new Uint8Array([0x48, 0x65]))
-        await stream.pipe(readableStream)
-    })
+  return stream(c, async (stream) => {
+    stream.onAbort(() => console.log('Aborted'))
+    await stream.write(new Uint8Array([0x48, 0x65]))
+    await stream.pipe(readableStream)
+  })
 })
 
 // Text stream
 app.get('/stream-text', (c) => {
-    return streamText(c, async (stream) => {
-        await stream.writeln('Hello')
-        await stream.sleep(1000)
-        await stream.write('World')
-    })
+  return streamText(c, async (stream) => {
+    await stream.writeln('Hello')
+    await stream.sleep(1000)
+    await stream.write('World')
+  })
 })
 
 // Server-Sent Events
 app.get('/sse', (c) => {
-    return streamSSE(c, async (stream) => {
-        let id = 0
-        while (true) {
-            await stream.writeSSE({
-                data: JSON.stringify({time: new Date().toISOString()}),
-                event: 'time-update',
-                id: String(id++)
-            })
-            await stream.sleep(1000)
-        }
-    })
+  return streamSSE(c, async (stream) => {
+    let id = 0
+    while (true) {
+      await stream.writeSSE({
+        data: JSON.stringify({ time: new Date().toISOString() }),
+        event: 'time-update',
+        id: String(id++)
+      })
+      await stream.sleep(1000)
+    }
+  })
 })
 ```
 
@@ -459,28 +450,26 @@ Test endpoints without starting an HTTP server:
 ```ts
 // GET
 const res = await app.request('/posts')
-expect(res.status)
-    .toBe(200)
-expect(await res.json())
-    .toEqual({posts: []})
+expect(res.status).toBe(200)
+expect(await res.json()).toEqual({ posts: [] })
 
 // POST with JSON
 const res = await app.request('/posts', {
-    method: 'POST',
-    body: JSON.stringify({title: 'Hello'}),
-    headers: {'Content-Type': 'application/json'}
+  method: 'POST',
+  body: JSON.stringify({ title: 'Hello' }),
+  headers: { 'Content-Type': 'application/json' }
 })
 
 // POST with FormData
 const formData = new FormData()
 formData.append('name', 'Alice')
-const res = await app.request('/users', {method: 'POST', body: formData})
+const res = await app.request('/users', { method: 'POST', body: formData })
 
 // With mock env (Cloudflare Workers bindings)
-const res = await app.request('/api/data', {}, {KV: mockKV, DATABASE: mockDB})
+const res = await app.request('/api/data', {}, { KV: mockKV, DATABASE: mockDB })
 
 // Using Request object
-const req = new Request('http://localhost/api', {method: 'DELETE'})
+const req = new Request('http://localhost/api', { method: 'DELETE' })
 const res = await app.request(req)
 ```
 
@@ -495,12 +484,12 @@ Type-safe API client using shared types between server and client.
 ```ts
 // Server: routes MUST be chained to preserve types
 const route = app
-    .post('/posts', zValidator('json', schema), (c) => {
-        return c.json({ok: true}, 201)
-    })
-    .get('/posts', (c) => {
-        return c.json({posts: []})
-    })
+  .post('/posts', zValidator('json', schema), (c) => {
+    return c.json({ ok: true }, 201)
+  })
+  .get('/posts', (c) => {
+    return c.json({ posts: [] })
+  })
 export type AppType = typeof route
 
 // Client: use hc() with the exported type
@@ -508,7 +497,7 @@ import { hc } from 'hono/client'
 import type { AppType } from './server'
 
 const client = hc<AppType>('http://localhost:8787/')
-const res = await client.posts.$post({json: {title: 'Hello'}})
+const res = await client.posts.$post({ json: { title: 'Hello' } })
 const data = await res.json() // fully typed
 ```
 
@@ -556,24 +545,15 @@ const app = factory.createApp()
 
 // Create middleware (Env type is inherited, no need to pass generics)
 const mw = factory.createMiddleware(async (c, next) => {
-    await next()
+  await next()
 })
 
 // Create handlers separately (preserves type inference)
-const handlers = factory.createHandlers(logger(), (c) => c.json({message: 'Hello'}))
+const handlers = factory.createHandlers(logger(), (c) => c.json({ message: 'Hello' }))
 app.get('/api', ...handlers)
 ```
 
 ---
-
-## Gotchas
-
-- **Cookie helpers read `c.req.raw.headers`.** `getCookie(c, 'name')` /
-  `setCookie(c, ...)` operate on the underlying `Request` (`c.req.raw`), not on
-  `c.req.header()`. When unit-testing middleware with a hand-mocked `Context`, you must provide `c.req.raw = { headers: new Headers({ Cookie: '...' }) }`, or `getCookie` throws on `undefined.headers`. `getCookie` returns `undefined`
-  (not `''`) when no `Cookie` header is present.
-- **`c.req.raw` is the real `Request`** — prefer `c.req.header()` / `c.req.query()`
-  for reads and reserve `c.req.raw` for things only the native object exposes.
 
 ## Best Practices
 
@@ -595,6 +575,5 @@ export default app
 
 // Node.js
 import { serve } from '@hono/node-server'
-
 serve(app)
 ```
