@@ -35,10 +35,8 @@ npm run db:migrate
 
 ### 5. Provide TLS certificates
 
-The app serves HTTPS only and requires a certificate/key at
-`developer-local-settings/conf/certs/<hostname>.pem` and `.key` (see
-[TLS certificates](#tls-certificates)). Place your production cert/key there, or,
-for local runs, generate self-signed ones with `scripts/create-certs.sh`.
+See [TLS certificates](#tls-certificates): place your production cert/key at the
+expected path, or generate local self-signed ones with `scripts/create-certs.sh`.
 
 ### 6. Deploy the app
 
