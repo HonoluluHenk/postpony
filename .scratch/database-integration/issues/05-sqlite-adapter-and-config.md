@@ -4,14 +4,14 @@
 
 **Blocked by:** 04 — Contract: remove old `app.sessions`.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `@libsql/client` installed in `package.json`
-- [ ] `SqliteSessionStore` class implements `SessionStore` using `createClient`
-- [ ] `migrate()` method runs `CREATE TABLE IF NOT EXISTS sessions (id TEXT PK, club_id TEXT, data TEXT)`
-- [ ] `get()` deserialises the JSON `data` column into a `RescheduleSession`
-- [ ] `save()` serialises the session to JSON and upserts via `ON CONFLICT(id) DO UPDATE`
-- [ ] Config entries `db-url` (default `file:./data/postpony.db`) and `db-auth-token` added
-- [ ] `src/index.ts` creates `SqliteSessionStore`, calls `migrate()`, passes to the factory
-- [ ] `npm run dev` — create a session, restart server, edit the session works (survived restart)
-- [ ] `npm run test` passes; `npm run lint` passes; `npm run e2e` passes
+- [x] `@libsql/client` installed in `package.json`
+- [x] `SqliteSessionStore` class implements `SessionStore` using `createClient`
+- [x] `migrate()` method runs `CREATE TABLE IF NOT EXISTS sessions (id TEXT PK, club_id TEXT, data TEXT)`
+- [x] `get()` deserialises the JSON `data` column into a `RescheduleSession`
+- [x] `save()` serialises the session to JSON and upserts via `ON CONFLICT(id) DO UPDATE`
+- [x] Config entries `db-url` (default `file:./data/postpony.db`) and `db-auth-token` added
+- [x] `src/index.ts` creates `SqliteSessionStore`, calls `migrate()`, passes to the factory
+- [x] `npm run dev` — create a session, restart server, edit the session works (survived restart)
+- [x] `npm run test` passes; `npm run lint` passes; `npm run e2e` passes

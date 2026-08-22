@@ -70,6 +70,9 @@ const config = convict({
 config.validate({allowed: 'strict'});
 
 const dbUrl = config.get('db-url');
+if (!dbUrl) {
+  throw Error('Missing required config: db-url');
+}
 if (!dbUrl.startsWith('file:') && !config.get('db-auth-token')) {
   throw Error('Missing required config: db-auth-token');
 }
