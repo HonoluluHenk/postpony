@@ -4,11 +4,11 @@
 
 **Blocked by:** 01 — Prefactor: SessionStore seam + migrate create flow.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `requireSessionAndToken` is async and reads via `await app.store.get(id)`
-- [ ] All callers of `requireSessionAndToken` correctly `await` it
-- [ ] `handleJoinRegisterPost` reads/writes via `app.store`
-- [ ] `handleJoinVotePost` reads/writes via `app.store`
-- [ ] Join-handler tests inject `MemorySessionStore` and await all handler calls
-- [ ] `npm run test` passes; `npm run lint` passes; `npm run e2e` passes
+- [x] `requireSessionAndToken` is async and reads via `await app.store.get(id)`
+- [x] All callers of `requireSessionAndToken` correctly `await` it
+- [x] `handleJoinRegisterPost` reads/writes via `app.store`
+- [x] `handleJoinVotePost` reads/writes via `app.store`
+- [x] Join-handler tests inject `MemorySessionStore` and await all handler calls
+- [x] `npm run test` passes; `npm run lint` passes; `npm run e2e` passes
