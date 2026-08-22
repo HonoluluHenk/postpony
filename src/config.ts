@@ -53,7 +53,7 @@ const config = convict({
   'db-url': {
     doc: 'SQLite database URL (libsql:// or file:).',
     format: String,
-    default: '',
+    default: 'file:./data/postpony.db',
     env: 'APP_DB_URL',
     arg: 'db-url',
   },
@@ -70,12 +70,8 @@ const config = convict({
 config.validate({allowed: 'strict'});
 
 const dbUrl = config.get('db-url');
-if (!dbUrl) {
-  throw Error('Missing required config: db-url');
-} else {
-  if (!dbUrl.startsWith('file:') && !config.get('db-auth-token')) {
-    throw Error('Missing required config: db-auth-token');
-  }
+if (!dbUrl.startsWith('file:') && !config.get('db-auth-token')) {
+  throw Error('Missing required config: db-auth-token');
 }
 
 if (config.get('use-fixtures') && !config.get('click-tt-fixtures-dir')) {

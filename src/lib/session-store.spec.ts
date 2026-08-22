@@ -175,7 +175,7 @@ describe('SqliteSessionStore', () => {
       .toBeUndefined();
   });
 
-  test('throws on corrupt session data', async () => {
+  test('treats corrupt session data (missing id/clubId) as absent', async () => {
     const url = tempDbUrl();
     const store = new SqliteSessionStore(url);
     await store.migrate();
@@ -186,8 +186,8 @@ describe('SqliteSessionStore', () => {
     });
 
     await expect(store.get('x'))
-      .rejects
-      .toThrow('Corrupt session data for id=x');
+      .resolves
+      .toBeUndefined();
   });
 });
 

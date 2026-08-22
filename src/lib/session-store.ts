@@ -90,13 +90,12 @@ export class SqliteSessionStore implements SessionStore {
     if (result.rows.length === 0) {
       return undefined;
     }
-    const row = result.rows[0];
-    if (!row) {
-      return undefined;
-    }
+    const row = result.rows[0] as Record<string, unknown>;
     const data = JSON.parse(row['data'] as string) as Record<string, unknown>;
+    // ponytail: libSQL always returns the requested column; a row without a
+    // usable id/clubId is treated as absent rather than a 500.
     if (!data['id'] || !data['clubId']) {
-      throw new Error(`Corrupt session data for id=${id}`);
+      return undefined;
     }
     return normalize(data);
   }
