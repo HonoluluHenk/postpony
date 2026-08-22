@@ -4,9 +4,9 @@
 
 **Blocked by:** 05 — SQLite adapter + config + production wiring.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `npm run db:migrate` script added (calls `migrate()` standalone)
-- [ ] Docs written at `.scratch/database-integration/turso-deployment.md` covering: install Turso CLI, `turso db create`, get URL + token, set env vars, deploy
-- [ ] `CONTEXT.md` updated: "in-memory today, Firestore per ADR-0007" → references Turso/SQLite
-- [ ] ADR-0007 updated to reflect actual decision (Turso instead of Firestore), or a new ADR superseding it
+- [x] `npm run db:migrate` script added (calls `migrate()` standalone)
+- [x] Docs written at `.scratch/database-integration/turso-deployment.md` covering: install Turso CLI, `turso db create`, get URL + token, set env vars, deploy
+- [x] `CONTEXT.md` updated: "in-memory today, Firestore per ADR-0007" → references Turso/SQLite
+- [x] ADR-0007 updated to reflect actual decision (Turso instead of Firestore), or a new ADR superseding it
