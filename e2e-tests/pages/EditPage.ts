@@ -57,6 +57,10 @@ export class EditPage {
     return this.page.getByText('Status:');
   }
 
+  get matchSummarySection(): Locator {
+    return this.page.getByRole('region', {name: 'Match'});
+  }
+
   get ownerPasswordAlert(): Locator {
     return this.page.getByRole('alert')
       .filter({hasText: 'Your Owner Password is'});

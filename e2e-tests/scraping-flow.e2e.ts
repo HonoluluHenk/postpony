@@ -120,6 +120,16 @@ test.describe('Scraping Flow', () => {
     await expect(editPage.status)
       .toContainText('Draft');
 
+    // 6b. The edit page shows the match summary and no longer offers scraping.
+    await expect(editPage.matchSummarySection)
+      .toBeVisible();
+    await expect(editPage.matchSummarySection)
+      .toContainText('Thun vs Ostermundigen');
+    await expect(editPage.matchSummarySection)
+      .toContainText('08/29/2026 04:00 pm');
+    await expect(page.getByRole('link', {name: 'Find your match (click-tt.ch)'}))
+      .toHaveCount(0);
+
     // 7. The proposed-date field defaults to the original match's date/time,
     // rendered in the locale's input tokens (en-US default in e2e).
     await expect(editPage.proposedDateTimeInput)

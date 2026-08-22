@@ -1,11 +1,17 @@
 import type { Locator, Page } from '@playwright/test';
+import { StartPage } from './StartPage';
 
 export class ScrapePage {
   constructor(private readonly page: Page) {
   }
 
+  // ponytail: the wizard is entered from the start page's "find your match"
+  // action (ticket 02); the direct /create/scrape URL still works.
   async goto(): Promise<ScrapePage> {
-    await this.page.goto('/create/scrape');
+    await this.page.goto('/');
+    await new StartPage(this.page)
+      .scrapeLink
+      .click();
     return this;
   }
 

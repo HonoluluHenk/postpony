@@ -36,12 +36,13 @@
   </header>
 
   <div id="scheduling-info" class="grid">
-    <div class="padding small-round surface-variant s12 m4">
-      <a class="button"
-         href="/create/scrape">
-        <%= it.t('scrape_start_wizard') %>
-      </a>
-    </div>
+    <section id="match-summary" class="padding small-round surface-variant s12 m4" aria-labelledby="match-summary-title">
+      <header>
+        <h3 id="match-summary-title"><%= it.t('match_summary_title') %></h3>
+      </header>
+      <p><%= it.session.homeTeam || '' %> vs <%= it.session.guestTeam || '' %></p>
+      <p><%= it.matchSummaryDateTime %></p>
+    </section>
 
     <section id="team-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
       <header>

@@ -33,6 +33,7 @@
   "language_selection": "Language selection",
   "loading": "Loading…",
   "main_actions": "Main actions",
+  "match_summary_title": "Match",
   "missing_param": "Missing required parameter: <%= it.name %>",
   "new_player_name": "New Player Name",
   "no_vote": "No vote",

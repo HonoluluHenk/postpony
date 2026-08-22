@@ -17,6 +17,10 @@ export class StartPage {
     return this.page.getByRole('link', {name: 'Create a new Postponement'});
   }
 
+  get scrapeLink(): Locator {
+    return this.page.getByRole('link', {name: 'Find your match (click-tt.ch)'});
+  }
+
   get editLink(): Locator {
     return this.page.getByRole('link', {name: 'Edit an existing Postponement'});
   }

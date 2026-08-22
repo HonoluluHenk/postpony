@@ -13,12 +13,15 @@ export const handleEditGet = async (app: App): Promise<Response> => {
   const isPartial = app.isPartial;
   const locale = app.locale;
 
+  const originalMatchDateTime = session.originalMatchDateTime
+    ? formatIsoToLocaleTokens(session.originalMatchDateTime, locale)
+    : '';
+
   const html = app.render('edit/id/edit.eta', {
     title: app.t('edit_postponement_title', {name: session.name}),
     session,
-    proposedDateTime: session.originalMatchDateTime
-                      ? formatIsoToLocaleTokens(session.originalMatchDateTime, locale)
-                      : '',
+    proposedDateTime: originalMatchDateTime,
+    matchSummaryDateTime: originalMatchDateTime,
     ownerPassword,
     invitationPassword: session.invitationPassword,
     isPartial,
