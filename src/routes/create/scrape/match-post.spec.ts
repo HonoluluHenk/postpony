@@ -99,7 +99,7 @@ describe('handleScrapeMatchPost change mode (re-scrape)', () => {
 
   test('replaces the rosters in place, preserving id, passwords, votes, and proposed dates', async () => {
     const session = aSession({
-      ownerPasswordHash: hashPassword(ownerPassword),
+      ownerPasswordHash: await hashPassword(ownerPassword),
       players: [aPlayer({id: 'old-p', name: 'Old Player'})],
       proposedDates: [aProposedDate()],
     });
@@ -126,7 +126,7 @@ describe('handleScrapeMatchPost change mode (re-scrape)', () => {
   });
 
   test('rejects a wrong owner password', async () => {
-    const session = aSession({ownerPasswordHash: hashPassword('real-pw')});
+    const session = aSession({ownerPasswordHash: await hashPassword('real-pw')});
     const app = createApp({body: {...MATCH, sessionId: session.id, ownerPassword: 'wrong'}});
     await app.store.save(session);
 

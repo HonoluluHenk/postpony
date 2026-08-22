@@ -37,8 +37,8 @@ function createApp(options: MockOptions = {}): App {
   return App.create(context, store);
 }
 
-function seedSession(overrides: Parameters<typeof aSession>[0] = {}): ReturnType<typeof aSession> {
-  return aSession({invitationPasswordHash: hashPassword(TOKEN), ...overrides});
+async function seedSession(overrides: Parameters<typeof aSession>[0] = {}): Promise<ReturnType<typeof aSession>> {
+  return aSession({invitationPasswordHash: await hashPassword(TOKEN), ...overrides});
 }
 
 describe('join handlers', () => {
@@ -53,7 +53,7 @@ describe('join handlers', () => {
     });
 
     test('throws when the token is missing', async () => {
-      const session = seedSession();
+      const session = await seedSession();
       const app = createApp({params: {id: session.id, team: 'home'}});
       await app.store.save(session);
 
@@ -63,7 +63,7 @@ describe('join handlers', () => {
     });
 
     test('throws when the token is wrong', async () => {
-      const session = seedSession();
+      const session = await seedSession();
       const app = createApp({params: {id: session.id, team: 'home'}, queries: {token: 'nope'}});
       await app.store.save(session);
 
@@ -73,7 +73,7 @@ describe('join handlers', () => {
     });
 
     test('throws when the team parameter is invalid', async () => {
-      const session = seedSession();
+      const session = await seedSession();
       const app = createApp({params: {id: session.id, team: 'spectators'}, queries: {token: TOKEN}});
       await app.store.save(session);
 
@@ -83,7 +83,7 @@ describe('join handlers', () => {
     });
 
     test('renders the join page for a valid token and team', async () => {
-      const session = seedSession({players: [aPlayer({name: 'Alice'})]});
+      const session = await seedSession({players: [aPlayer({name: 'Alice'})]});
       const app = createApp({params: {id: session.id, team: 'home'}, queries: {token: TOKEN}});
       await app.store.save(session);
 
@@ -96,7 +96,7 @@ describe('join handlers', () => {
 
   describe('handleJoinRegisterPost', () => {
     test('creates a new player for the given team and redirects to the vote step', async () => {
-      const session = seedSession();
+      const session = await seedSession();
       const app = createApp({
         params: {id: session.id, team: 'away'},
         queries: {token: TOKEN},
@@ -124,7 +124,7 @@ describe('join handlers', () => {
 
     test('selects an existing player by name without creating a duplicate', async () => {
       const existing = aPlayer({id: 'away-1', name: 'Bob', teamId: 'away'});
-      const session = seedSession({players: [existing]});
+      const session = await seedSession({players: [existing]});
       const app = createApp({
         params: {id: session.id, team: 'away'},
         queries: {token: TOKEN},
@@ -143,7 +143,7 @@ describe('join handlers', () => {
 
     test('selects an existing player by id', async () => {
       const existing = aPlayer({id: 'home-1', name: 'Carol', teamId: 'home'});
-      const session = seedSession({players: [existing]});
+      const session = await seedSession({players: [existing]});
       const app = createApp({
         params: {id: session.id, team: 'home'},
         queries: {token: TOKEN},
@@ -161,7 +161,7 @@ describe('join handlers', () => {
     });
 
     test('returns the join form with an inline error when neither a name nor a selection is provided', async () => {
-      const session = seedSession();
+      const session = await seedSession();
       const app = createApp({
         params: {id: session.id, team: 'home'},
         queries: {token: TOKEN},
@@ -183,7 +183,7 @@ describe('join handlers', () => {
     });
 
     test('blocks registration when the session is Confirmed and redirects to the confirmed view', async () => {
-      const session = seedSession({status: 'Confirmed'});
+      const session = await seedSession({status: 'Confirmed'});
       const app = createApp({
         params: {id: session.id, team: 'away'},
         queries: {token: TOKEN},
@@ -203,7 +203,7 @@ describe('join handlers', () => {
     });
 
     test('allows registration when the session is Draft (pre-proposal)', async () => {
-      const session = seedSession({status: 'Draft'});
+      const session = await seedSession({status: 'Draft'});
       const app = createApp({
         params: {id: session.id, team: 'away'},
         queries: {token: TOKEN},
@@ -221,7 +221,7 @@ describe('join handlers', () => {
     });
 
     test('throws when the token is wrong', async () => {
-      const session = seedSession();
+      const session = await seedSession();
       const app = createApp({
         params: {id: session.id, team: 'home'},
         queries: {token: 'nope'},
@@ -237,7 +237,7 @@ describe('join handlers', () => {
 
   describe('handleJoinVoteGet', () => {
     test('renders the vote step for an identified player', async () => {
-      const session = seedSession({
+      const session = await seedSession({
         players: [aPlayer()],
         proposedDates: [aProposedDate()],
       });
@@ -254,7 +254,7 @@ describe('join handlers', () => {
     });
 
     test('redirects to step 1 when the player is unknown', async () => {
-      const session = seedSession({proposedDates: [aProposedDate()]});
+      const session = await seedSession({proposedDates: [aProposedDate()]});
       const app = createApp({
         params: {id: session.id, team: 'home'},
         queries: {token: TOKEN, playerId: 'ghost'},
@@ -270,7 +270,7 @@ describe('join handlers', () => {
     });
 
     test('renders the pre-proposal empty-state hint for an away team with no votable dates', async () => {
-      const session = seedSession({
+      const session = await seedSession({
         status: 'Draft',
         players: [aPlayer({teamId: 'away'})],
         proposedDates: [aProposedDate({votableByOpponent: false})],
@@ -297,7 +297,7 @@ describe('join handlers', () => {
     });
 
     test('renders the confirmed-info view on the vote route when the session is Confirmed', async () => {
-      const session = seedSession({
+      const session = await seedSession({
         status: 'Confirmed',
         confirmedProposedDateId: 'proposed-date-1',
         reopenCount: 1,
@@ -330,7 +330,7 @@ describe('join handlers', () => {
     });
 
     test('renders the confirmed-info view on the join route when the session is Confirmed', async () => {
-      const session = seedSession({
+      const session = await seedSession({
         status: 'Confirmed',
         confirmedProposedDateId: 'proposed-date-1',
         proposedDates: [aProposedDate()],
@@ -359,7 +359,7 @@ describe('join handlers', () => {
 
   describe('handleJoinVotePost', () => {
     test('stores a new vote for each proposed date', async () => {
-      const session = seedSession({
+      const session = await seedSession({
         players: [aPlayer()],
         proposedDates: [aProposedDate()],
       });
@@ -386,7 +386,7 @@ describe('join handlers', () => {
     });
 
     test('updates an existing vote instead of duplicating it', async () => {
-      const session = seedSession({
+      const session = await seedSession({
         players: [aPlayer()],
         proposedDates: [aProposedDate()],
         votes: [aVote({participantId: 'player-1', proposedDateId: 'proposed-date-1', type: 'Yes'})],
@@ -408,7 +408,7 @@ describe('join handlers', () => {
     });
 
     test('does not change votes when the session is confirmed', async () => {
-      const session = seedSession({
+      const session = await seedSession({
         status: 'Confirmed',
         players: [aPlayer()],
         proposedDates: [aProposedDate()],

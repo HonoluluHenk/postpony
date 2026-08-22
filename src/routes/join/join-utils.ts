@@ -26,7 +26,7 @@ export async function requireSessionAndToken(app: App): Promise<JoinContext> {
   }
 
   const token = app.c.req.query('token') ?? '';
-  if (!token || !comparePassword(token, session.invitationPasswordHash)) {
+  if (!token || !await comparePassword(token, session.invitationPasswordHash)) {
     app.failure(app.t('join_invalid_token'), 403);
   }
 

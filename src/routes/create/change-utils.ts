@@ -37,7 +37,7 @@ export async function requireChangeSession(
   if (!session) {
     app.notFound(app.t('session_not_found'));
   }
-  if (!comparePassword(ownerPassword, session.ownerPasswordHash)) {
+  if (!await comparePassword(ownerPassword, session.ownerPasswordHash)) {
     app.failure(app.t('invalid_owner_password'), 403);
   }
   return session;

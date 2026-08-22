@@ -43,7 +43,7 @@ describe('handleCreateGet', () => {
 
     test('renders the change form prefilled with the session match details', async () => {
       const session = aSession({
-        ownerPasswordHash: hashPassword(ownerPassword),
+        ownerPasswordHash: await hashPassword(ownerPassword),
         homeTeam: 'Thun',
         guestTeam: 'Ostermundigen',
         originalMatchDateTime: '2026-08-29T16:00',
@@ -64,7 +64,7 @@ describe('handleCreateGet', () => {
     });
 
     test('rejects an invalid owner password', async () => {
-      const session = aSession({ownerPasswordHash: hashPassword('real-pw')});
+      const session = aSession({ownerPasswordHash: await hashPassword('real-pw')});
       const app = createApp({queries: {sessionId: session.id, ownerPassword: 'wrong'}});
       await app.store.save(session);
 

@@ -106,7 +106,7 @@ describe('handleCreatePost change mode', () => {
 
   test('mutates the session in place, preserving id, passwords, votes, proposed dates, and players', async () => {
     const session = aSession({
-      ownerPasswordHash: hashPassword(ownerPassword),
+      ownerPasswordHash: await hashPassword(ownerPassword),
       organizerTeam: 'away',
       players: [aPlayer({id: 'p1', name: 'Keep Me'})],
       proposedDates: [aProposedDate()],
@@ -145,7 +145,7 @@ describe('handleCreatePost change mode', () => {
   });
 
   test('rejects a wrong owner password', async () => {
-    const session = aSession({ownerPasswordHash: hashPassword('real-pw')});
+    const session = aSession({ownerPasswordHash: await hashPassword('real-pw')});
     const app = createApp({body: {...MATCH, sessionId: session.id, ownerPassword: 'wrong-pw'}});
     await app.store.save(session);
 
