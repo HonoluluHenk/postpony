@@ -1,5 +1,6 @@
 # Developer local settings
 developer-local-settings/
+/data/
 
 
 # Log files
