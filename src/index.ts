@@ -89,31 +89,35 @@ app.onError((err, c): Response => {
 
 const port = config.get('port');
 const hostname = config.get('hostname');
+const tlsEnabled = config.get('tls-enabled');
 
-const certPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.pem`);
-const keyPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.key`);
+let server: ReturnType<typeof serve>;
+const scheme = tlsEnabled ? 'https' : 'http';
+if (tlsEnabled) {
+  const certPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.pem`);
+  const keyPath = path.join(process.cwd(), `developer-local-settings/conf/certs/${hostname}.key`);
 
-if (!(existsSync(certPath) && existsSync(keyPath))) {
-  const missingFile = !existsSync(certPath) ? certPath : keyPath;
-  throw new Error(`SSL certificate file is missing: ${missingFile}. Run 'npm run certs' to generate certificates.`);
+  if (!(existsSync(certPath) && existsSync(keyPath))) {
+    const missingFile = !existsSync(certPath) ? certPath : keyPath;
+    throw new Error(`SSL certificate file is missing: ${missingFile}. Run 'npm run certs' to generate certificates.`);
+  }
+
+  server = serve({
+    hostname,
+    port,
+    fetch: app.fetch,
+    createServer: createHttpsServer,
+    serverOptions: {
+      key: readFileSync(keyPath),
+      cert: readFileSync(certPath),
+    },
+  });
+} else {
+  server = serve({hostname, port, fetch: app.fetch});
 }
 
-const serverOptions = {
-  hostname,
-  port,
-  fetch: app.fetch,
-  createServer: createHttpsServer,
-  serverOptions: {
-    key: readFileSync(keyPath),
-    cert: readFileSync(certPath),
-  },
-};
-
-// keep this console.log because the URL can be clicked int the IDE :)
-console.log(`Server is running on https://${hostname}:${port}`);
-logger.info({hostname, port}, 'Server started');
-
-const server = serve(serverOptions);
+console.log(`Server is running on ${scheme}://${hostname}:${port}`);
+logger.info({hostname, port, tls: tlsEnabled}, 'Server started');
 
 process.on('SIGTERM', () => {
   server.close(() => {
