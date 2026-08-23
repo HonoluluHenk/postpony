@@ -5,8 +5,11 @@ import { createServer as createHttpsServer } from 'node:https';
 import path from 'path';
 import config from './config';
 import { buildApp } from './build-app';
+import { loadDotEnv } from './config';
 import { logger } from './lib/logger';
 import { SqliteSessionStore } from './lib/session-store';
+
+await loadDotEnv();
 
 const dbUrl = config.get('db-url');
 const dbAuthToken = config.get('db-auth-token');

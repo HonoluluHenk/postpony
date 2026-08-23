@@ -4,11 +4,25 @@
 
 **Blocked by:** 01 — Extract `buildApp(sessionStore)` assembly seam; 03 — Migrate password hashing to Web Crypto PBKDF2 (drop `bcryptjs`); 04 — Precompile Eta templates to an in-memory map.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `worker.ts` builds the app with a Turso-backed `SessionStore` from env bindings and exports a `fetch` handler.
-- [ ] `wrangler.toml` wires the Worker entry, `Workers Assets` for `src/public`, config `vars`, and a Turso auth-token secret slot.
-- [ ] The `click-tt.ch` scraper's dev-only `node:fs` fixture reads are guarded so the Worker bundle has no runtime `fs` usage.
-- [ ] The Worker build / dry-run succeeds (no `nodejs_compat` required for crypto).
-- [ ] `npm run dev` and `npm run test` remain green.
-- [ ] No `wrangler deploy` is run and no secrets are published.
+- [x] `worker.ts` builds the app with a Turso-backed `SessionStore` from env bindings and exports a `fetch` handler.
+- [x] `wrangler.toml` wires the Worker entry, `Workers Assets` for `src/public`, config `vars`, and a Turso auth-token secret slot.
+- [x] The `click-tt.ch` scraper's dev-only `node:fs` fixture reads are guarded so the Worker bundle has no runtime `fs` usage.
+- [x] The Worker build / dry-run succeeds (no `nodejs_compat` required for crypto).
+- [x] `npm run dev` and `npm run test` remain green.
+- [x] No `wrangler deploy` is run and no secrets are published.
+
+## Notes
+
+- The Worker entry uses `@libsql/client/web` for Turso; `SqliteSessionStore` now
+  lazy-loads the client (web for `libsql://`, node for `file:`), keeping both
+  clients out of the Worker bundle via non-literal dynamic imports.
+- `config.ts` no longer statically imports `node:fs`/`node:path`/`node:process`;
+  `.env` loading moved to an async `loadDotEnv()` called from `src/index.ts`.
+- `logger.ts` loads `pino` only under Node; a console logger backs the export on
+  Workers (pino pulls in `node:stream`).
+- `nodejs_compat` is enabled solely because `convict` transitively pulls in
+  `yargs-parser` (static `require` of node builtins). Those builtins are never
+  called at runtime in the Worker; crypto stays on Web Crypto, so no
+  `nodejs_compat` is needed for crypto.

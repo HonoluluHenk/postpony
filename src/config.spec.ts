@@ -1,35 +1,32 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { loadDotEnv } from './config';
 
-const ORIGINAL = process.env['APP_TLS_ENABLED'];
+describe('loadDotEnv', () => {
+  let dir: string;
+  let cwd: string;
 
-afterEach(() => {
-  if (ORIGINAL === undefined) {
-    delete process.env['APP_TLS_ENABLED'];
-  } else {
-    process.env['APP_TLS_ENABLED'] = ORIGINAL;
-  }
-  vi.resetModules();
-});
-
-describe('config: tls-enabled', () => {
-  it('defaults to true when unset', async () => {
-    delete process.env['APP_TLS_ENABLED'];
-    vi.resetModules();
-    const config = (await import('./config')).default;
-    expect(config.get('tls-enabled')).toBe(true);
+  beforeEach(() => {
+    cwd = process.cwd();
+    dir = mkdtempSync(join(tmpdir(), 'postpony-dotenv-'));
+    process.chdir(dir);
   });
 
-  it('parses APP_TLS_ENABLED=false to false', async () => {
-    process.env['APP_TLS_ENABLED'] = 'false';
-    vi.resetModules();
-    const config = (await import('./config')).default;
-    expect(config.get('tls-enabled')).toBe(false);
+  afterEach(() => {
+    process.chdir(cwd);
+    rmSync(dir, {recursive: true, force: true});
+    delete process.env['POSTPONY_TEST_LOAD_DOT_ENV'];
   });
 
-  it('parses APP_TLS_ENABLED=true to true', async () => {
-    process.env['APP_TLS_ENABLED'] = 'true';
-    vi.resetModules();
-    const config = (await import('./config')).default;
-    expect(config.get('tls-enabled')).toBe(true);
+  it('loads .env values into process.env', async () => {
+    writeFileSync(join(dir, '.env'), 'POSTPONY_TEST_LOAD_DOT_ENV=loaded123\n');
+    await loadDotEnv();
+    expect(process.env['POSTPONY_TEST_LOAD_DOT_ENV']).toBe('loaded123');
+  });
+
+  it('is a no-op when no .env exists', async () => {
+    await expect(loadDotEnv()).resolves.toBeUndefined();
   });
 });

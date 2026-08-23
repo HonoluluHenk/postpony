@@ -1,12 +1,9 @@
 import convict from 'convict';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { loadEnvFile } from 'node:process';
 
-const envFile = resolve(process.cwd(), '.env');
-if (existsSync(envFile)) {
-  loadEnvFile(envFile);
-}
+// ponytail: .env loading is Node-only. It is kept out of the static import graph
+// (via a dynamic, non-literal import) so the Cloudflare Worker bundle never pulls
+// in node:fs / node:process. In the Worker, env vars arrive through bindings and
+// `loadDotEnv()` is never called.
 
 const config = convict({
   env: {
@@ -83,21 +80,48 @@ const config = convict({
 // Perform validation
 config.validate({allowed: 'strict'});
 
-const dbUrl = config.get('db-url');
-if (!dbUrl) {
-  throw Error('Missing required config: db-url');
-}
-if (!dbUrl.startsWith('file:') && !config.get('db-auth-token')) {
-  throw Error('Missing required config: db-auth-token');
+// ponytail: the required-config checks below read env-derived values. They are
+// guarded so the module also loads on runtimes without a global `process`
+// (Cloudflare Workers, where env arrives via bindings instead of process.env).
+const hasProcess = typeof process !== 'undefined';
+
+if (hasProcess) {
+  const dbUrl = config.get('db-url');
+  if (!dbUrl) {
+    throw Error('Missing required config: db-url');
+  }
+  if (!dbUrl.startsWith('file:') && !config.get('db-auth-token')) {
+    throw Error('Missing required config: db-auth-token');
+  }
+
+  if (config.get('use-fixtures') && !config.get('click-tt-fixtures-dir')) {
+    config.set('click-tt-fixtures-dir', './src/lib/__fixtures__');
+  }
+  if (config.get('click-tt-fixtures-dir') && !config.get('use-fixtures')) {
+    config.set('use-fixtures', true);
+  }
+  config.validate({allowed: 'strict'});
 }
 
-if (config.get('use-fixtures') && !config.get('click-tt-fixtures-dir')) {
-
-  config.set('click-tt-fixtures-dir', './src/lib/__fixtures__');
+/**
+ * Loads `.env` into `process.env` for local Node runs. Node-only — uses a
+ * dynamic, non-literal import so the Cloudflare Worker bundle never pulls in
+ * `node:fs` / `node:process`. Call from the Node entry point before building
+ * the app; the Worker never calls this.
+ */
+export async function loadDotEnv(): Promise<void> {
+  const fsMod = 'node:fs';
+  const pathMod = 'node:path';
+  const procMod = 'node:process';
+  const [fsNs, pathNs, procNs] = await Promise.all([
+    import(fsMod) as Promise<typeof import('node:fs')>,
+    import(pathMod) as Promise<typeof import('node:path')>,
+    import(procMod) as Promise<typeof import('node:process')>,
+  ]);
+  const envFile = pathNs.resolve(process.cwd(), '.env');
+  if (fsNs.existsSync(envFile)) {
+    procNs.loadEnvFile(envFile);
+  }
 }
-if (config.get('click-tt-fixtures-dir') && !config.get('use-fixtures')) {
-  config.set('use-fixtures', true);
-}
-config.validate({allowed: 'strict'});
 
 export default config;

@@ -17,13 +17,14 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "lib": [
       "ES2024"
     ]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "worker.ts"
   ],
   "exclude": [
     "node_modules",

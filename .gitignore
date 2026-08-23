@@ -26,6 +26,7 @@ out/
 ### Temp-Files and Output ###
 node_modules/
 /dist/
+/dist-worker/
 .env
 /playwright-report/
 /.playwright-mcp/

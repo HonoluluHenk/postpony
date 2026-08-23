@@ -11,11 +11,15 @@ function newApp(): TestApp {
 class RecordingStore implements SessionStore {
   getCalled = false;
 
-  async get(): Promise<undefined> {
+  get(): Promise<undefined> {
     this.getCalled = true;
-    return undefined;
+    return Promise.resolve(undefined);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function -- mock impl
+  async migrate(): Promise<void> {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function -- mock impl
   async save(): Promise<void> {}
 }
 

@@ -1,0 +1,31 @@
+name = "postpony"
+main = "worker.ts"
+compatibility_date = "2025-08-01"
+# Web Crypto (PBKDF2) is used for password hashing, so nodejs_compat is NOT
+# needed for crypto. We still enable it because `convict` (config) transitively
+# pulls in `yargs-parser`, which statically `require`s node builtins. Those are
+# never called at runtime in the Worker, but esbuild needs the shims to resolve
+# them at build time. node:fs is never bundled (see src/lib/click-tt-scraper.ts
+# and src/config.ts).
+compatibility_flags = ["nodejs_compat"]
+workers_dev = false
+send_metrics = false
+
+# Static assets (CSS, vendor) served by Workers Assets instead of the Node
+# serveStatic middleware (which is kept out of the Worker build).
+[assets]
+directory = "src/public"
+binding = "ASSETS"
+
+# Config values that are safe to commit. Secrets (the Turso auth token) are
+# provided via `wrangler secret put TURSO_DB_AUTH_TOKEN` and never stored here.
+[vars]
+APP_TEMPLATE_SOURCE = "memory"
+# Turso DB URL — wired as a text var. Replace with your instance URL, or set it
+# with `wrangler secret put TURSO_DB_URL` for a non-committed value.
+TURSO_DB_URL = "libsql://your-db.turso.io"
+
+# ponytail: the Turso auth token is a SECRET slot — supply it (never commit it)
+# with `wrangler secret put TURSO_DB_AUTH_TOKEN`. No secrets are published by
+# this scaffold.
+

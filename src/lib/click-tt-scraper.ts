@@ -1,8 +1,11 @@
 import { type HTMLElement, parse } from 'node-html-parser';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import config from '../config';
 import { ClickTTError } from './errors';
+
+// ponytail: fixture loading is dev/E2E-only and uses `node:fs`. The import is
+// dynamic with a non-literal specifier so the Cloudflare Worker bundle never
+// pulls in `node:fs` / `node:path` — this branch never runs on the Worker
+// (no fixtures dir configured there).
 
 export type ClickTTLanguage = 'English' | 'German' | 'French' | 'Italian';
 
@@ -109,7 +112,14 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
   // Offline/E2E mode: serve downloaded HTML fixtures instead of live requests.
   const fixturesDir = config.get('click-tt-fixtures-dir');
   if (fixturesDir) {
-    const html = readFileSync(join(fixturesDir, fixtureNameForUrl(url)), 'utf-8');
+    // ponytail: dynamic, non-literal import — keeps node:fs out of the Worker bundle.
+    const fsMod = 'node:fs';
+    const pathMod = 'node:path';
+    const [fsNs, pathNs] = await Promise.all([
+      import(fsMod) as Promise<typeof import('node:fs')>,
+      import(pathMod) as Promise<typeof import('node:path')>,
+    ]);
+    const html = fsNs.readFileSync(pathNs.join(fixturesDir, fixtureNameForUrl(url)), 'utf-8');
     return parse(html);
   }
   const res = await fetch(url, {

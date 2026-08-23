@@ -1,7 +1,9 @@
-import { createClient } from '@libsql/client';
+import type { Client } from '@libsql/client/web';
 import type { Postponement, PostponementStatus, ProposedDate } from './models';
 
 export interface SessionStore {
+  migrate(): Promise<void>;
+
   get(id: string): Promise<Postponement | undefined>;
 
   save(session: Postponement): Promise<void>;
@@ -56,6 +58,10 @@ export function normalize(data: Record<string, unknown>): Postponement {
 export class MemorySessionStore implements SessionStore {
   private readonly store = new Map<string, Postponement>();
 
+  async migrate(): Promise<void> {
+    // In-memory store needs no schema setup.
+  }
+
   get(id: string): Promise<Postponement | undefined> {
     const session = this.store.get(id);
     return Promise.resolve(
@@ -70,20 +76,51 @@ export class MemorySessionStore implements SessionStore {
 }
 
 export class SqliteSessionStore implements SessionStore {
-  private readonly client;
+  private client: Client | undefined;
+  private readonly url: string;
+  private readonly authToken: string | undefined;
 
   constructor(url: string, authToken?: string) {
-    this.client = createClient({url, authToken});
+    this.url = url;
+    this.authToken = authToken;
+  }
+
+  // ponytail: the libSQL client is loaded lazily. `file:` URLs use the Node
+  // client; `libsql://` (Turso) uses the web client which also runs on
+  // Cloudflare Workers. Non-literal specifiers keep both clients out of the
+  // Worker bundle — only the web branch is ever reached there.
+  private async getClient(): Promise<Client> {
+    if (this.client) {
+      return this.client;
+    }
+    let client: Client;
+    if (this.url.startsWith('file:')) {
+      // ponytail: node client is dev-only (file: URLs). Non-literal specifier
+      // keeps it out of the Cloudflare Worker bundle — this branch is never
+      // reached on the Worker (which uses libsql:// Turso URLs).
+      const nodeMod = '@libsql/client';
+      const mod = (await import(nodeMod)) as typeof import('@libsql/client');
+      client = mod.createClient({url: this.url, authToken: this.authToken});
+    } else {
+      // ponytail: the web client MUST be bundled into the Worker (literal
+      // specifier) so the Turso HTTP client actually ships with the deploy.
+      const mod = await import('@libsql/client/web');
+      client = mod.createClient({url: this.url, authToken: this.authToken});
+    }
+    this.client = client;
+    return client;
   }
 
   async migrate(): Promise<void> {
-    await this.client.execute(
+    const client = await this.getClient();
+    await client.execute(
       'CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, club_id TEXT NOT NULL, data TEXT NOT NULL)',
     );
   }
 
   async get(id: string): Promise<Postponement | undefined> {
-    const result = await this.client.execute({
+    const client = await this.getClient();
+    const result = await client.execute({
       sql: 'SELECT data FROM sessions WHERE id = ?',
       args: [id],
     });
@@ -101,7 +138,8 @@ export class SqliteSessionStore implements SessionStore {
   }
 
   async save(session: Postponement): Promise<void> {
-    await this.client.execute({
+    const client = await this.getClient();
+    await client.execute({
       sql: 'INSERT INTO sessions (id, club_id, data) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data',
       args: [session.id, session.clubId, JSON.stringify(session)],
     });
