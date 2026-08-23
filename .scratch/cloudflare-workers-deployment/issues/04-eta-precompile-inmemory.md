@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] A build step compiles all colocated `.eta` templates into an in-memory map artifact.
-- [ ] `App.render` selects the in-memory map on Workers and disk loading on Node.
-- [ ] No template source files are modified.
-- [ ] A test asserts `App.render` produces expected HTML via the in-memory map with no `node:fs` usage.
-- [ ] `npm run dev` still renders via disk loading.
+- [x] A build step compiles all colocated `.eta` templates into an in-memory map artifact.
+- [x] `App.render` selects the in-memory map on Workers and disk loading on Node.
+- [x] No template source files are modified.
+- [x] A test asserts `App.render` produces expected HTML via the in-memory map with no `node:fs` usage.
+- [x] `npm run dev` still renders via disk loading.

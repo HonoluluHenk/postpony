@@ -31,7 +31,7 @@ export default tseslint.config(
       },
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['*.config.ts', '*.config.js', 'scripts/run-migration.ts'],
+          allowDefaultProject: ['*.config.ts', '*.config.js', 'scripts/run-migration.ts', 'scripts/build-eta-templates.ts'],
         },
         tsconfigRootDir: import.meta.dirname,
       },
@@ -98,6 +98,12 @@ export default tseslint.config(
   },
   {
     files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
+    ...tseslint.configs.disableTypeChecked,
+  },
+  {
+    // Build/tooling scripts live outside the app tsconfig and are not part of
+    // the type-checked program; treat them like plain JavaScript.
+    files: ['scripts/**/*.ts'],
     ...tseslint.configs.disableTypeChecked,
   },
 );

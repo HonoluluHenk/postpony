@@ -1,10 +1,9 @@
-import { Eta } from 'eta';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import path from 'node:path';
 import config from './config';
 import { AppError, InternalError, StateError } from './lib/errors';
 import { MemorySessionStore, type SessionStore } from './lib/session-store';
+import { selectEta } from './lib/templates';
 import { Timestamp } from './lib/timestamp';
 import {
   type AppLocale,
@@ -15,8 +14,6 @@ import {
   LOCALE_KEY,
   type TranslationKeys,
 } from './locales';
-
-export const eta = new Eta({views: path.join(process.cwd(), 'src/routes')});
 
 export class App {
   readonly timestamp = new Timestamp();
@@ -48,7 +45,7 @@ export class App {
     const url = new URL(this.c.req.url);
     const baseUrl = config.get('base-url') || `${url.protocol}//${url.host}`;
 
-    return eta.render(template, {
+    return selectEta().render(template, {
       ...data,
       t: (key: TranslationKeys, params: Record<string, string>) => this.t(key, params),
       locale: this.locale,
