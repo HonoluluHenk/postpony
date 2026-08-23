@@ -4,8 +4,8 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] ADR-0006 is extended (or a new ADR added) covering Cloudflare Workers + Turso + Workers Assets.
-- [ ] The decision notes it supersedes the Dockerized-VPS primary for this deployment.
-- [ ] Data residency / GDPR note is updated to reflect the chosen region-agnostic, free-tier approach.
+- [x] ADR-0006 is extended (or a new ADR added) covering Cloudflare Workers + Turso + Workers Assets. (New ADR 0018 added.)
+- [x] The decision notes it supersedes the Dockerized-VPS primary for this deployment.
+- [x] Data residency / GDPR note is updated to reflect the chosen region-agnostic, free-tier approach.

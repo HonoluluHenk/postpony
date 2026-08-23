@@ -31,7 +31,7 @@ An earlier plan modelled Firestore sub-collections for `ProposedDate` and `Vote`
 
 * **Communication**: The system generates pre-formatted text (WhatsApp/Email templates) for the user to copy-paste into their own clients. Automated sending (Twilio/SendGrid) is considered out of scope for the MVP.
 * **Holiday API**: (Out of Scope)
-* **Hosting**: Priority on zero-cost infrastructure in Switzerland/EU. See [ADR 0006: Cloud Hosting & Deployment](adr/0006-cloud-hosting.md).
+* **Hosting**: Zero-cost infrastructure via Cloudflare Workers + Turso + Workers Assets. See [ADR 0018: Cloudflare Workers Deployment](adr/0018-cloudflare-workers-deployment.md) (supersedes [ADR 0006: Cloud Hosting & Deployment](adr/0006-cloud-hosting.md)).
 * **CI/CD Pipeline**: Automated deployments via **GitHub Actions** (see [ADR 0010](adr/0010-ci-cd-pipeline-selection.md)).
 
 ## 5. Security & Privacy
@@ -55,4 +55,4 @@ An earlier plan modelled Firestore sub-collections for `ProposedDate` and `Vote`
 
 1. **Select the Tech Stack**: (See [ADR 0003](adr/0003-core-tech-stack.md))
 2. **Define MVP Scope**: Which of the "suggestions" features are most critical for the first version?
-3. **Confirm Infrastructure**: Dockerized deployment via Coolify in Switzerland or EU.
+3. **Confirm Infrastructure**: Cloudflare Workers + Turso + Workers Assets deployment (see ADR 0018).
