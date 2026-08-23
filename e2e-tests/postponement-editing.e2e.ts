@@ -360,6 +360,75 @@ test.describe('Postponement Editing', () => {
     await checkA11y();
   });
 
+  test('should delete a proposed date after confirming in a dialog, removing its votes', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateList.getByRole('listitem'))
+      .toHaveCount(1);
+    await editPage.addProposedDate('2026-06-15T18:30');
+    await expect(editPage.proposedDateList.getByRole('listitem'))
+      .toHaveCount(2);
+
+    // A home-team voter casts a Yes on the first date and a No on the second
+    // (the vote form requires a vote on every proposed date).
+    const joinPage = new JoinPage(page);
+    await joinPage.goto(session.homeHref);
+    await joinPage.join('Alice');
+    await joinPage.castVote(0, 'Yes');
+    await joinPage.castVote(1, 'No');
+    await joinPage.submitVotes();
+
+    await editPage.goto(session.editUrl);
+    await expect(editPage.homeTallyTable()
+      .getByRole('row')
+      .nth(1)
+      .getByRole('cell')
+      .nth(1))
+      .toHaveText('1'); // yes
+
+    await editPage.deleteButton(0)
+      .click();
+
+    // The confirmation dialog appears before anything is deleted.
+    await expect(editPage.deleteDialog(0))
+      .toBeVisible();
+    await expect(editPage.proposedDateList.getByRole('listitem'))
+      .toHaveCount(2);
+
+    await editPage.deleteConfirmButton(0)
+      .click();
+
+    await expect(editPage.proposedDateList.getByRole('listitem'))
+      .toHaveCount(1);
+    await expect(editPage.deleteDialog(0))
+      .toHaveCount(0);
+    // The deleted date's tally is gone: only the surviving date remains.
+    await expect(editPage.homeTallyTable()
+      .getByRole('row'))
+      .toHaveCount(2);
+
+    await checkA11y();
+  });
+
+  test('should cancel deleting a proposed date, leaving the list untouched', async ({page}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateList.getByRole('listitem'))
+      .toHaveCount(1);
+
+    await editPage.deleteButton(0)
+      .click();
+    await expect(editPage.deleteDialog(0))
+      .toBeVisible();
+    await editPage.deleteCancelButton(0)
+      .click();
+
+    await expect(editPage.proposedDateList.getByRole('listitem'))
+      .toHaveCount(1);
+    await expect(editPage.deleteDialog(0))
+      .toHaveCount(0);
+  });
+
   test('change match details in place preserves the session id and its players', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addPlayer('Keep Me');
@@ -390,8 +459,6 @@ test.describe('Postponement Editing', () => {
       .toContain(`/edit/${originalId}`);
     await expect(editPage.heading)
       .toContainText('Home Team vs New Guest – 08/29/2026 04:00 pm');
-    await expect(editPage.matchSummarySection)
-      .toContainText('Home Team vs New Guest');
     await expect(editPage.playerItem('Keep Me'))
       .toBeVisible();
 

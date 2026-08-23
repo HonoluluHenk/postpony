@@ -1,6 +1,7 @@
 <%~ include('../../partials/error-container.eta', {globalError: it.globalError}) %>
+
 <p class="chip outline" id="status-chip" hx-swap-oob="true"><%= it.t('status_label', {status: it.status}) %></p>
-<section id="proposed-dates-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
+<section id="proposed-dates-management" class="padding small-round surface-variant s12 m6" aria-live="polite">
   <header>
     <h3 tabindex="-1"><%= it.t('proposed_dates_management') %></h3>
   </header>
@@ -15,22 +16,44 @@
     <ul id="proposed-date-list" class="list" aria-label="<%= it.t('proposed_dates_management') %>">
       <% it.proposedDates.forEach(function (proposedDate) { %>
         <li>
-          <i aria-hidden="true">event</i>
-          <div class="max"><%= proposedDate.display %></div>
-          <label class="switch">
-            <input type="checkbox"
-                   hx-post="/edit/<%= it.sessionId %>/proposed-date-visibility?proposedDateId=<%= proposedDate.id %>&votable=<%= !proposedDate.votableByOpponent %>"
-                   hx-target="#proposed-dates-management"
-                   <%= proposedDate.votableByOpponent ? 'checked' : '' %>>
-            <span><%= it.t('votable_by_opponent') %></span>
-          </label>
-          <% if (proposedDate.votableByOpponent) { %>
+          <div class="row items-center gap">
+            <i aria-hidden="true">event</i>
+            <div class="max"><%= proposedDate.display %></div>
+          </div>
+          <div class="row items-center gap wrap mt-2">
+            <label class="switch">
+              <input type="checkbox"
+                     hx-post="/edit/<%= it.sessionId %>/proposed-date-visibility?proposedDateId=<%= proposedDate.id %>&votable=<%= !proposedDate.votableByOpponent %>"
+                     hx-target="#proposed-dates-management"
+                     <%= proposedDate.votableByOpponent ? 'checked' : '' %>>
+              <span><%= it.t('votable_by_opponent') %></span>
+            </label>
+            <% if (proposedDate.votableByOpponent) { %>
+              <button type="button" class="button outline"
+                      hx-post="/edit/<%= it.sessionId %>/proposed-date-confirm?proposedDateId=<%= proposedDate.id %>"
+                      hx-target="#proposed-dates-management">
+                <%= it.t('confirm_date') %>
+              </button>
+            <% } %>
             <button type="button" class="button outline"
-                    hx-post="/edit/<%= it.sessionId %>/proposed-date-confirm?proposedDateId=<%= proposedDate.id %>"
-                    hx-target="#proposed-dates-management">
-              <%= it.t('confirm_date') %>
+                    data-open-dialog="delete-proposed-date-<%= proposedDate.id %>">
+              <i aria-hidden="true">delete</i>
+              <%= it.t('delete_proposed_date') %>
             </button>
-          <% } %>
+          </div>
+          <dialog id="delete-proposed-date-<%= proposedDate.id %>" class="padding small-round surface" aria-labelledby="delete-proposed-date-title-<%= proposedDate.id %>">
+            <h4 id="delete-proposed-date-title-<%= proposedDate.id %>"><%= it.t('delete_proposed_date_confirm_title') %></h4>
+            <p><%= it.t('delete_proposed_date_confirm_message', {date: proposedDate.display}) %></p>
+            <div class="row items-center gap">
+              <form method="dialog" hx-boost="false">
+                <button type="submit" class="button outline"><%= it.t('cancel') %></button>
+              </form>
+              <form hx-post="/edit/<%= it.sessionId %>/proposed-date-delete?proposedDateId=<%= proposedDate.id %>"
+                    hx-target="#proposed-dates-management">
+                <button type="submit" class="button"><%= it.t('delete_proposed_date') %></button>
+              </form>
+            </div>
+          </dialog>
         </li>
       <% }) %>
     </ul>

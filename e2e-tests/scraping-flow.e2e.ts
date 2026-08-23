@@ -120,12 +120,10 @@ test.describe('Scraping Flow', () => {
     await expect(editPage.status)
       .toContainText('Draft');
 
-    // 6b. The edit page shows the match summary and no longer offers scraping.
-    await expect(editPage.matchSummarySection)
-      .toBeVisible();
-    await expect(editPage.matchSummarySection)
+    // 6b. The page heading shows the match and no longer offers scraping.
+    await expect(editPage.heading)
       .toContainText('Thun vs Ostermundigen');
-    await expect(editPage.matchSummarySection)
+    await expect(editPage.heading)
       .toContainText('08/29/2026 04:00 pm');
     await expect(page.getByRole('link', {name: 'Find your match (click-tt.ch)'}))
       .toHaveCount(0);
@@ -260,7 +258,7 @@ test.describe('Scraping Flow', () => {
     expect(page.url())
       .toContain(`/edit/${originalId}`);
     editPage = new EditPage(page);
-    await expect(editPage.matchSummarySection)
+    await expect(editPage.heading)
       .toContainText('Thun vs Ostermundigen');
     await expect(page.getByText('Old Player'))
       .toHaveCount(0);

@@ -57,10 +57,6 @@ export class EditPage {
     return this.page.getByText('Status:');
   }
 
-  get matchSummarySection(): Locator {
-    return this.page.getByRole('region', {name: 'Match'});
-  }
-
   get changeMatchDetailsLink(): Locator {
     return this.page.getByRole('link', {name: 'Change match details'});
   }
@@ -191,6 +187,35 @@ export class EditPage {
     return this.proposedDateList.getByRole('listitem')
       .nth(dateIndex)
       .getByRole('button', {name: 'Confirm'});
+  }
+
+  deleteButton(dateIndex: number): Locator {
+    return this.proposedDateList.getByRole('listitem')
+      .nth(dateIndex)
+      .getByRole('button', {name: 'Delete'});
+  }
+
+  deleteDialog(dateIndex: number): Locator {
+    return this.proposedDateList.getByRole('listitem')
+      .nth(dateIndex)
+      .getByRole('dialog');
+  }
+
+  deleteConfirmButton(dateIndex: number): Locator {
+    return this.deleteDialog(dateIndex)
+      .getByRole('button', {name: 'Delete'});
+  }
+
+  deleteCancelButton(dateIndex: number): Locator {
+    return this.deleteDialog(dateIndex)
+      .getByRole('button', {name: 'Cancel'});
+  }
+
+  async deleteProposedDate(dateIndex: number): Promise<void> {
+    await this.deleteButton(dateIndex)
+      .click();
+    await this.deleteConfirmButton(dateIndex)
+      .click();
   }
 
   reopenButton(): Locator {

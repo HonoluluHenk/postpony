@@ -7,6 +7,7 @@ import { buildOwnTeamView } from './own-team-view';
 import { handleConfirmDatePost } from './confirm-date-post';
 import { handleEditPlayersPost } from './players-post';
 import { handleEditProposedDatesPost } from './proposed-dates-post';
+import { handleProposedDateDeletePost } from './proposed-date-delete-post';
 import { handleReopenPost } from './reopen-post';
 
 interface MockOptions {
@@ -358,6 +359,81 @@ describe('edit handlers', () => {
       await app.store.save(session);
 
       const response = await handleConfirmDatePost(app);
+
+      expect(response.status)
+        .toBe(302);
+      expect(response.headers.get('location'))
+        .toBe(`/edit/${session.id}?ownerPassword=`);
+    });
+  });
+
+  describe('handleProposedDateDeletePost', () => {
+    test('throws when the session does not exist', async () => {
+      const app = createApp({params: {id: 'missing'}});
+
+      await expect(handleProposedDateDeletePost(app))
+        .rejects
+        .toThrow('Session not found');
+    });
+
+    test('removes the date and its votes', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [
+          aProposedDate({id: 'pd-1'}),
+          aProposedDate({id: 'pd-2'}),
+        ],
+        votes: [aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
+      });
+      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
+      await app.store.save(session);
+
+      await handleProposedDateDeletePost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates.map((pd) => pd.id))
+        .toEqual(['pd-2']);
+      expect(stored?.votes)
+        .toHaveLength(0);
+    });
+
+    test('renders the partial with the remaining date-management controls when partial', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [
+          aProposedDate({id: 'pd-1', votableByOpponent: true}),
+          aProposedDate({id: 'pd-2', votableByOpponent: false}),
+        ],
+      });
+      const app = createApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const html = await (await handleProposedDateDeletePost(app)).text();
+
+      expect(html)
+        .toContain('<section id="proposed-dates-management"');
+      expect(html)
+        .not
+        .toContain('proposedDateId=pd-1');
+      expect(html)
+        .toContain('proposedDateId=pd-2');
+      expect(html)
+        .toContain('id="status-chip" hx-swap-oob="true"');
+    });
+
+    test('redirects to the edit page when not partial', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+      });
+      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
+      await app.store.save(session);
+
+      const response = await handleProposedDateDeletePost(app);
 
       expect(response.status)
         .toBe(302);

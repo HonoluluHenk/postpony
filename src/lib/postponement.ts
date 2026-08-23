@@ -238,6 +238,31 @@ export class PostponementRules {
   }
 
   /**
+   * Deletes a Proposed Date and cascade-deletes its Votes. A no-op for an unknown
+   * date id, so deleting twice or deleting a never-existing date leaves the session
+   * unchanged. Status is left untouched: the organizer decides what happens next.
+   * If the deleted date is the confirmed-history date (after a reopen), the dangling
+   * `confirmedProposedDateId` is cleared with it.
+   */
+  deleteProposedDate(
+    session: Postponement,
+    proposedDateId: string,
+  ): Postponement {
+    if (!session.proposedDates.some((pd) => pd.id === proposedDateId)) {
+      return session;
+    }
+    return {
+      ...session,
+      proposedDates: session.proposedDates.filter((pd) => pd.id !== proposedDateId),
+      votes: session.votes.filter((v) => v.proposedDateId !== proposedDateId),
+      confirmedProposedDateId:
+        session.confirmedProposedDateId === proposedDateId
+          ? undefined
+          : session.confirmedProposedDateId,
+    };
+  }
+
+  /**
    * Own-team completion per Proposed Date, keyed by date id. "Voted" counts team players
    * with a Vote on that date (any type); `total` is all team players — roster plus any
    * added names, joined or not. `nonVoters` lists the team players without a Vote on that

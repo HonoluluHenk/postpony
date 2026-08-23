@@ -162,6 +162,22 @@ function patchTimeSliderLabels() {
 }
 
 /**
+ * Opens a `<dialog>` from a `[data-open-dialog]` trigger. Delegated on
+ * `document`, so it survives HTMX swaps that re-render the proposed-date list
+ * (each item carries its own delete-confirmation dialog).
+ */
+function initDeleteDialogs() {
+  document.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-open-dialog]');
+    if (!trigger) return;
+    const dialog = document.getElementById(trigger.dataset.openDialog);
+    if (dialog && typeof dialog.showModal === 'function') {
+      dialog.showModal();
+    }
+  });
+}
+
+/**
  * Focuses a heading inside the swap target, or the error alert when validation fails.
  * Called from hx-on::after-request on forms that trigger partial swaps.
  * @param {string} targetSelector - CSS selector for the swap target element
@@ -200,6 +216,7 @@ window.addEventListener('load', () => {
   initLanguage();
   initHtmx(spinner);
   initClipboard();
+  initDeleteDialogs();
   initFocusManagement();
   initProposedDateTimePicker();
 });

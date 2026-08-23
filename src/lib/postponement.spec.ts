@@ -433,6 +433,68 @@ describe('postponement', () => {
     });
   });
 
+  describe('deleteProposedDate', () => {
+    test('removes the date and cascade-deletes its votes, keeping other dates and votes', () => {
+      const session = aSession({
+        proposedDates: [
+          aProposedDate({id: 'pd-1'}),
+          aProposedDate({id: 'pd-2'}),
+        ],
+        votes: [
+          aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'}),
+          aVote({proposedDateId: 'pd-1', participantId: 'player-2', type: 'No'}),
+          aVote({proposedDateId: 'pd-2', participantId: 'player-1', type: 'Maybe'}),
+        ],
+      });
+
+      const updated = new FakePostponementRules().deleteProposedDate(session, 'pd-1');
+
+      expect(updated.proposedDates.map((pd) => pd.id))
+        .toEqual(['pd-2']);
+      expect(updated.votes)
+        .toEqual([expect.objectContaining({proposedDateId: 'pd-2'})]);
+    });
+
+    test('is a no-op for an unknown date id', () => {
+      const session = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+        votes: [aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
+      });
+
+      const updated = new FakePostponementRules().deleteProposedDate(session, 'ghost');
+
+      expect(updated)
+        .toEqual(session);
+    });
+
+    test('clears a dangling confirmedProposedDateId when the confirmed-history date is deleted', () => {
+      const session = aSession({
+        status: 'Voting',
+        confirmedProposedDateId: 'pd-1',
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+      });
+
+      const updated = new FakePostponementRules().deleteProposedDate(session, 'pd-1');
+
+      expect(updated.confirmedProposedDateId)
+        .toBeUndefined();
+    });
+
+    test('leaves the status untouched when deleting the last proposed date', () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+      });
+
+      const updated = new FakePostponementRules().deleteProposedDate(session, 'pd-1');
+
+      expect(updated.status)
+        .toBe('Voting');
+      expect(updated.proposedDates)
+        .toHaveLength(0);
+    });
+  });
+
   describe('teamCompletion', () => {
     const homePlayers = [
       aPlayer({id: 'p1', name: 'Voter', teamId: 'home'}),
