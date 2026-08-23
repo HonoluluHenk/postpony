@@ -64,6 +64,13 @@ const config = convict({
     env: 'APP_DB_AUTH_TOKEN',
     arg: 'db-auth-token',
   },
+  'tls-enabled': {
+    doc: 'Whether the Node process terminates its own TLS. When false the app serves plain HTTP (suitable behind Cloudflare edge TLS or a reverse proxy).',
+    format: Boolean,
+    default: true,
+    env: 'APP_TLS_ENABLED',
+    arg: 'tls-enabled',
+  },
 });
 
 // Perform validation

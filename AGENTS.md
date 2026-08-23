@@ -36,7 +36,7 @@ For local development, copy `.env-template` to `.env` (git-ignored) and adjust t
 
 ## HTTPS & certificates
 
-The app only runs on HTTPS. Certs live at `developer-local-settings/conf/certs/<hostname>.pem` / `.key`. Generate them: `scripts/create-certs.sh` (requires `mkcert` from mise). URL: `https://game-scheduler.localhost:3000`
+The app terminates its own TLS by default (`APP_TLS_ENABLED=true`). Certs live at `developer-local-settings/conf/certs/<hostname>.pem` / `.key`. Generate them: `scripts/create-certs.sh` (requires `mkcert` from mise). URL: `https://game-scheduler.localhost:3000`. Set `APP_TLS_ENABLED=false` to serve plain HTTP (no certs needed) when running behind Cloudflare's edge TLS or any reverse proxy.
 
 ## Ponytail, lazy senior dev mode
 
