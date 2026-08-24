@@ -92,6 +92,12 @@ await voteForm.getByText('Yes', {exact: true})
     .click();
 ```
 
+**Vertical stacking:** `.radio` is `inline-flex` in BeerCSS, so radios in a `<fieldset>` render side-by-side. Use `.radio-group` on the fieldset to stack vertically (see `css-styling` skill). This matters for e2e selectors — the accessibility tree still exposes each `<fieldset>` as a `group` role, so `getByRole('group').nth(i)` works regardless of layout.
+
+### Dialog dismiss gotcha
+
+`<form method="dialog">` inside `<dialog>` caused layout and pointer-interception issues in tests. Cancel buttons should use `data-dismiss-dialog` on a `<button type="button">`, handled by `main.js` which calls `dialog.close()` on the nearest parent `<dialog>`. This avoids form-submission side effects and keeps the dialog's submit action on the actual action button only.
+
 ### Disambiguating headings
 
 The layout renders an `<h1>` brand/logo alongside page `<h2>`s, so
