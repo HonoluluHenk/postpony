@@ -83,5 +83,6 @@ export class JoinPage {
 
   async submitVotes(): Promise<void> {
     await this.submitVotesButton.click();
+    await this.page.waitForLoadState('load');
   }
 }

@@ -17,7 +17,7 @@ export default tseslint.config(
   eslint.configs.recommended,
   {
     name: 'app/typescript',
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     // Type-aware TypeScript rules must only apply to `.ts` files. Applying them
     // to `.js` files would surface TypeScript errors on plain JavaScript.
     extends: [
@@ -65,7 +65,7 @@ export default tseslint.config(
   {
     // Spec files rely on deliberately loosely-typed mocks (`any`), so the
     // strict type-aware "unsafe *" rules would only add noise here.
-    files: ['**/*.spec.ts'],
+    files: ['**/*.spec.ts', '**/*.spec.tsx'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',

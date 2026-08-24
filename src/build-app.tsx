@@ -8,8 +8,10 @@ import { languageMiddleware } from './lib/middleware/language';
 import type { SessionStore } from './lib/session-store';
 import createRouter from './routes/create/router';
 import editRouter from './routes/edit/router';
+import { ErrorPage } from './routes/error';
 import { handleIndexGet } from './routes/index-get';
 import joinRouter from './routes/join/router';
+import { ErrorContainer } from './routes/partials/error-container';
 
 type BuiltApp = ReturnType<typeof factory.createApp>;
 
@@ -58,10 +60,10 @@ export function buildApp(sessionStore: SessionStore): BuiltApp {
     }
 
     if (app.isPartial) {
-      return c.html(app.render('partials/error-container.eta', {globalError: message}), {status});
+      return c.html(app.render(<ErrorContainer globalError={message} isOob={true} />), {status});
     }
 
-    return c.html(app.render('error.eta', {title: 'Error', message, globalError: message}), {status});
+    return c.html(app.render(<ErrorPage {...app.view} message={message} globalError={message} />), {status});
   });
 
   return app;

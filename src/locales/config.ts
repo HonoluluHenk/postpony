@@ -73,13 +73,14 @@ export function inputFormat(locale: AppLocale): string {
   return `${dateFormat} ${timeFormat}`;
 }
 
+export interface LanguageOption {
+  code: AppLocale;
+  label: string;
+}
+
 /**
  * The options for the header language dropdown.
  */
-export function languageOptions(): {
-  code: AppLocale;
-  label: string
-}[]
-{
+export function languageOptions(): LanguageOption[] {
   return AppLocales.map((code) => ({code, label: localeConfigs[code].label}));
 }
