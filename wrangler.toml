@@ -20,7 +20,6 @@ binding = "ASSETS"
 # Config values that are safe to commit. Secrets (the Turso auth token) are
 # provided via `wrangler secret put TURSO_DB_AUTH_TOKEN` and never stored here.
 [vars]
-APP_TEMPLATE_SOURCE = "memory"
 # Turso DB URL — wired as a text var. Replace with your instance URL, or set it
 # with `wrangler secret put TURSO_DB_URL` for a non-committed value.
 TURSO_DB_URL = "libsql://your-db.turso.io"

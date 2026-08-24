@@ -10,8 +10,8 @@ describe('applyWorkerEnv', () => {
 
   it('merges vars into process.env without dropping existing values', () => {
     process.env['PRE_EXISTING'] = 'yes';
-    applyWorkerEnv({APP_TEMPLATE_SOURCE: 'memory'});
+    applyWorkerEnv({APP_DB_URL: 'libsql://example.turso.io'});
     expect(process.env['PRE_EXISTING']).toBe('yes');
-    expect(process.env['APP_TEMPLATE_SOURCE']).toBe('memory');
+    expect(process.env['APP_DB_URL']).toBe('libsql://example.turso.io');
   });
 });

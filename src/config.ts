@@ -68,13 +68,6 @@ const config = convict({
     env: 'APP_TLS_ENABLED',
     arg: 'tls-enabled',
   },
-  'template-source': {
-    doc: 'How Eta templates are loaded: "memory" (precompiled, no node:fs, for Cloudflare Workers), "disk" (on-disk, local dev), or "auto" (memory when no Node process, else disk).',
-    format: ['memory', 'disk', 'auto'],
-    default: 'auto',
-    env: 'APP_TEMPLATE_SOURCE',
-    arg: 'template-source',
-  },
 });
 
 // Perform validation

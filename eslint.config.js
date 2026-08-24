@@ -32,7 +32,7 @@ export default tseslint.config(
       },
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['*.config.ts', '*.config.js', 'scripts/run-migration.ts', 'scripts/build-eta-templates.ts'],
+          allowDefaultProject: ['*.config.ts', '*.config.js', 'scripts/run-migration.ts'],
         },
         tsconfigRootDir: import.meta.dirname,
       },

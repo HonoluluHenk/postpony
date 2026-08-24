@@ -14,7 +14,6 @@ export default defineConfig({
       external: [
         'hono',
         '@hono/node-server',
-        'eta',
         'valibot',
         'node:http',
         'node:path',

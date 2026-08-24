@@ -4,7 +4,6 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import config from './config';
 import { AppError, InternalError, StateError } from './lib/errors';
 import { MemorySessionStore, type SessionStore } from './lib/session-store';
-import { selectEta } from './lib/templates';
 import { Timestamp } from './lib/timestamp';
 import {
   type AppLocale,
@@ -67,20 +66,8 @@ export class App {
     return getTranslation(this.locale, key, params);
   }
 
-  render(component: JSX.Element): string;
-  render(template: string, data?: object): string;
-  render(templateOrComponent: string | JSX.Element, data: object = {}): string {
-    if (
-      typeof templateOrComponent === 'string' &&
-      !(templateOrComponent as unknown as { isEscaped?: boolean }).isEscaped
-    ) {
-      return selectEta().render(templateOrComponent, {
-        ...data,
-        ...this.view,
-      });
-    }
-
-    return (templateOrComponent as unknown as { toString(): string }).toString();
+  render(component: JSX.Element): string {
+    return (component as unknown as { toString(): string }).toString();
   }
 
   requireParam(name: string): string;

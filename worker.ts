@@ -34,7 +34,6 @@ export default {
     applyWorkerEnv({
       APP_DB_URL: env.TURSO_DB_URL,
       APP_DB_AUTH_TOKEN: env.TURSO_DB_AUTH_TOKEN || '',
-      APP_TEMPLATE_SOURCE: 'memory',
     });
     const application = await getApp(env);
     const response = await application.fetch(request);
