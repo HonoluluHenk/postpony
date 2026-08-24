@@ -1,18 +1,11 @@
 import type { App } from '../../app';
 import type { AppLocale } from '../../locales';
-import type { Player, Postponement, ProposedDate, Vote, VoteTallyItem } from '../../lib/models';
+import type { Player, Postponement, ProposedDate } from '../../lib/models';
 import { PostponementRules } from '../../lib/postponement';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
+import { ConfirmedInfoPage } from './confirmed-info';
 import type { Team } from './join-utils';
-
-interface VotePageDate extends VoteTallyItem {
-  currentVote: string;
-}
-
-export interface PlayerVoteRow {
-  playerName: string;
-  votes: (Vote['type'] | null)[];
-}
+import { VotePage, type PlayerVoteRow, type VotePageDate } from './vote';
 
 export interface VoteViewOptions {
   session: Postponement;
@@ -34,11 +27,14 @@ export function confirmedDateDisplay(session: Postponement, locale: AppLocale): 
 }
 
 export function renderConfirmedInfo(app: App, session: Postponement): Response {
-  const html = app.render('join/confirmed-info.eta', {
-    title: app.t('confirmed_date_title'),
-    confirmedDateDisplay: confirmedDateDisplay(session, app.locale),
-    reopenCount: session.reopenCount,
-  });
+  const html = app.render(
+    <ConfirmedInfoPage
+      {...app.view}
+      title={app.t('confirmed_date_title')}
+      confirmedDateDisplay={confirmedDateDisplay(session, app.locale)}
+      reopenCount={session.reopenCount}
+    />,
+  );
 
   return app.c.html(html);
 }
@@ -88,17 +84,20 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
     };
   });
 
-  const html = app.render('join/vote.eta', {
-    title: app.t('vote_title'),
-    sessionId: session.id,
-    team,
-    token,
-    playerId: player.id,
-    playerName: player.name,
-    proposedDates,
-    playerVoteRows,
-    updated,
-  });
+  const html = app.render(
+    <VotePage
+      {...app.view}
+      title={app.t('vote_title')}
+      sessionId={session.id}
+      team={team}
+      token={token}
+      playerId={player.id}
+      playerName={player.name}
+      proposedDates={proposedDates}
+      playerVoteRows={playerVoteRows}
+      updated={updated}
+    />,
+  );
 
   return app.c.html(html);
 }

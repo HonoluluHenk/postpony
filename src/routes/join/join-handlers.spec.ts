@@ -88,9 +88,22 @@ describe('join handlers', () => {
       await app.store.save(session);
 
       const response = await handleJoinGet(app);
+      const body = await response.text();
 
       expect(response.status)
         .toBe(200);
+      expect(body)
+        .toContain('Join the Postponement');
+      expect(body)
+        .toContain('Select your name');
+      expect(body)
+        .toContain('name="playerId" value="player-1"');
+      expect(body)
+        .toContain('Alice');
+      expect(body)
+        .toContain(`action="/join/${session.id}/home/register?token=${TOKEN}"`);
+      expect(body)
+        .toContain(`postpony-player-${session.id}-home`);
     });
   });
 

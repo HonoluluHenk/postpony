@@ -1,5 +1,6 @@
 import type { App } from '../../app';
 import { PostponementRules } from '../../lib/postponement';
+import { JoinPage } from './join';
 import { requireSessionAndToken, requireTeam } from './join-utils';
 
 export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
@@ -19,14 +20,17 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
 
   if (!player) {
     const players = session.players.filter((p) => p.teamId === team);
-    const html = app.render('join/join.eta', {
-      title: app.t('join_title'),
-      sessionId: id,
-      team,
-      token,
-      players,
-      error: app.t('join_select_required'),
-    });
+    const html = app.render(
+      <JoinPage
+        {...app.view}
+        title={app.t('join_title')}
+        sessionId={id}
+        team={team}
+        token={token}
+        players={players}
+        error={app.t('join_select_required')}
+      />,
+    );
     return app.c.html(html);
   }
 
