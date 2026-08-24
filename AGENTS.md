@@ -1,6 +1,6 @@
 # PostPony — Agent Guidelines
 
-A web app for postponing sports matches. SSR (Hono + Eta + HTMX), no SPA framework.
+A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framework.
 
 ### Clarifying Questions Policy
 
@@ -75,7 +75,7 @@ src/
   index.ts            — server entry, Hono app wiring, HTTPS server
   app.ts              — App class wrapping Hono Context (render, t, store, isPartial, requireParam, failure, notFound)
   config.ts           — convict config: APP_PORT, APP_HOSTNAME, APP_BASE_URL, APP_USE_FIXTURES, APP_CLICK_TT_FIXTURES_DIR, APP_DB_URL, APP_DB_AUTH_TOKEN
-  routes/             — per-feature routers (create/, edit/, join/) with *-get.ts / *-post.ts handlers and *.eta templates
+  routes/             — per-feature routers (create/, edit/, join/) with *-get.ts / *-post.ts handlers and .tsx JSX components
   lib/
     postponement.ts   — domain module: pure operations on Postponement, overridable newId()/now() seam
     models.ts         — Postponement, Player, ProposedDate, Vote interfaces
@@ -89,7 +89,7 @@ src/
 e2e-tests/
   pages/              — Page Object Model classes (StartPage, CreatePage, EditPage, JoinPage, ScrapePage)
   fixtures.ts         — Custom Playwright fixtures (checkA11y, makeAxeBuilder)
-docs/adr/             — 16 ADRs
+docs/adr/             — 19 ADRs
 ```
 
 ## Framework patterns
@@ -97,6 +97,7 @@ docs/adr/             — 16 ADRs
 - **Handlers**: `factory.createApp()` per router; wrap each handler with `handleAppRequest(fn)`.
 - **App class**: all handlers receive `App` (not raw Hono `Context`). Use `app.t()`, `app.render()`, `app.requireParam()`, `app.failure()`, `app.notFound()`, `app.isPartial`.
 - **HTMX**: default swap is `outerHTML`. Errors rendered via `hx-swap-oob="true"` into `#error-container` element. **Partial vs initial render gotcha**: any UI element rendered by an HTMX partial must also be present in the initial template — tests loading the page fresh (e.g. `/edit/:id`) hit the initial render, not the partial. Keep both in sync.
+- **Rendering**: `app.render(component)` takes a `JSX.Element` (not a template name). Components are `.tsx` functions with typed `interface` props. Use `pageLayout(view, content, title?)` from `src/routes/layouts/main.tsx` to branch on `view.isPartial` for full-page vs fragment rendering. Translation function (`t`) and `locale` are passed as props (see `ViewContext` in `src/app.ts`). See [ADR 0019](docs/adr/0019-jsx-templates.md).
 - **Locale**: `AppLocale = 'de-CH' | 'fr-CH' | 'it-CH' | 'en-US'` (default `de-CH`), resolved by `languageMiddleware` from `?lang=` → `lang` cookie → `Accept-Language` prefix mapping (`de*`→de-CH, `fr*`→fr-CH, `it*`→it-CH, `en*`→en-US). `src/locales/config.ts` is the single source of truth for input formats (`dd.MM.yyyy HH:mm` / `MM/dd/yyyy hh:mm aa`). fr-CH/it-CH reuse the English UI text until dedicated translations land (ADR-0016).
 - **Validation**: Valibot schemas → `mapValidationToErrors()` for UI.
 - **Error handling**: throw `AppError | StateError` in handlers; caught by `onError` in `src/index.ts`.

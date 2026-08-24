@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+**Superseded** by [ADR 0019](0019-jsx-templates.md).
 
 ## Context
 
@@ -38,3 +38,7 @@ We will use **Eta** as the primary templating engine.
 * Developers need to be familiar with EJS-style syntax.
 * We will leverage Eta's `include` and `layout` features to manage UI components and fragments for HTMX.
 * Templates will be stored as `.eta` files, colocated with their route handlers under `src/routes/` (shared layouts live in `src/routes/layouts/`).
+
+## Supersession
+
+This ADR is superseded by [ADR 0019](0019-jsx-templates.md), which records the migration from Eta to Hono JSX templates. The rationale, alternatives, and consequences of that decision live in the newer ADR.

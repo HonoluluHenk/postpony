@@ -4,7 +4,7 @@
 Proposed
 
 ## Context
-The project requires a TypeScript-based backend framework to provide Server-Side Rendering (SSR) for HTMX and Eta templates. The framework needs to be lightweight, easy to use, and have excellent TypeScript support. Candidates include Express, Fastify, and Hono.
+The project requires a TypeScript-based backend framework to provide Server-Side Rendering (SSR) for HTMX and JSX templates. The framework needs to be lightweight, easy to use, and have excellent TypeScript support. Candidates include Express, Fastify, and Hono.
 
 ## Decision
 We will use **Hono** as the primary backend framework.
@@ -27,5 +27,5 @@ We will use **Hono** as the primary backend framework.
 
 ## Consequences
 *   **Standardized Routing**: We will use Hono's standard routing and middleware patterns.
-*   **SSR Integration**: We will integrate the Eta templating engine with Hono to serve HTML pages and fragments.
+* **SSR Integration**: We use Hono's built-in JSX renderer (`hono/jsx`) for typed, component-based server-side rendering — see [ADR 0019](0019-jsx-templates.md).
 *   **Ecosystem**: While Hono's ecosystem is smaller than Express, it is rapidly growing and sufficient for the project's needs.

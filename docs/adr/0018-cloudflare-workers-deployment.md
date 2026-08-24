@@ -6,7 +6,7 @@ Accepted
 ## Context
 [ADR 0006](0006-cloud-hosting.md) prioritized a **Dockerized VPS via Coolify** (backed by Google Firestore) as the primary zero-cost deployment strategy, with Firebase Hosting & Functions as a serverless alternative. Both assumed a self-managed VPS or a Google-cloud data store.
 
-Tickets 01–05 actually built a different deployment path for PostPony: a shared `buildApp(sessionStore)` assembly seam, optional TLS termination (the app no longer needs to own its certificate), Web Crypto PBKDF2 password hashing (no `nodejs_compat` shim for crypto), in-memory Eta template compilation (no `node:fs` at runtime), and a Cloudflare Worker entry (`worker.ts`) with `wrangler.toml`. The durable session store is Turso / `@libsql/client` SQLite, as decided in [ADR 0014](0014-sqlite-session-store.md).
+Tickets 01–05 actually built a different deployment path for PostPony: a shared `buildApp(sessionStore)` assembly seam, optional TLS termination (the app no longer needs to own its certificate), Web Crypto PBKDF2 password hashing (no `nodejs_compat` shim for crypto), Hono JSX templates (no `node:fs` at runtime, no codegen), and a Cloudflare Worker entry (`worker.ts`) with `wrangler.toml`. The durable session store is Turso / `@libsql/client` SQLite, as decided in [ADR 0014](0014-sqlite-session-store.md).
 
 This ADR records the deployment strategy that was actually implemented and makes it the approved, zero-cost target for PostPony.
 
@@ -25,7 +25,7 @@ This **supersedes the Dockerized-Coolify-VPS primary** recorded in ADR-0006 for 
 - **True zero cost**: Cloudflare Workers free tier plus Turso's free tier cover PostPony's scale without always-on infrastructure.
 - **No cold-start penalty for our workload**: Requests are short-lived Hono request-response cycles (HTMX OOB swaps), which fit the Workers execution model; the "always-responsive VPS" concern from ADR-0006 does not apply to this traffic shape.
 - **Operational simplicity**: Workers Assets + a single Worker + Turso collapses what ADR-0006 split across VPS, Coolify, and Firestore into one managed platform.
-- **Seam alignment**: The `buildApp` seam (ticket 01), Web Crypto hashing (ticket 03), in-memory templates (ticket 04), and the Worker entry (ticket 05) were all built to be platform-portable, so the same code runs on Node and on Workers.
+- **Seam alignment**: The `buildApp` seam (ticket 01), Web Crypto hashing (ticket 03), JSX templates (ticket 04, see [ADR 0019](0019-jsx-templates.md)), and the Worker entry (ticket 05) were all built to be platform-portable, so the same code runs on Node and on Workers.
 - **GDPR / data residency**: Cloudflare terminates TLS and runs the Worker globally, but the only persisted user data is the `RescheduleSession` JSON blob, which lives in **Turso**. Turso lets the database be provisioned in an EU region (e.g. EU-west / Frankfurt), keeping personal player data (availability, votes) within the EU. This is a **region-agnostic, free-tier approach**: no Swiss/EU-only VPS is required, and residency is enforced at the data layer (Turso region) rather than at the compute layer.
 
 ## Consequences

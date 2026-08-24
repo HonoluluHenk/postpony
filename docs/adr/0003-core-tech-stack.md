@@ -15,7 +15,7 @@ The following technology stack is proposed:
 
 * **Frontend**: **HTMX** for dynamic UI components and interactions.
 * **Backend**: Server-side rendered (SSR) application using **TypeScript** (**Hono** - see [ADR 0009](0009-backend-framework-selection.md)).
-* **Templating**: Plain HTML with a simple templating engine (**Eta** - see [ADR 0008](0008-templating-engine-selection.md)).
+* **Templating**: Plain HTML with **Hono JSX** (`hono/jsx`) — see [ADR 0019](0019-jsx-templates.md).
 * **Styling**: Plain **CSS** (utilizing modern features like CSS Grid, Flexbox, and CSS Variables).
 * **Data Store**: **Google Firestore** (or Firebase Realtime Database) - a document store supporting real-time streaming.
 * **E2E Testing**: **Playwright** (see [ADR 0005](0005-e2e-testing-playwright.md)).
