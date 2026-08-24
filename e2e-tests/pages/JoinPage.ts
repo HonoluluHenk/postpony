@@ -67,6 +67,11 @@ export class JoinPage {
     await this.continueButton.click();
   }
 
+  async switchLanguage(locale: string): Promise<void> {
+    await this.page.locator('#language-select')
+      .selectOption(locale);
+  }
+
   async join(name: string): Promise<void> {
     await this.identify(name);
     await expect(this.voteHeading)

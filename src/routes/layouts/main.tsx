@@ -45,9 +45,9 @@ export function Layout(props: LayoutProps): JSX.Element {
                 </a>
                 <h1 class="max center-align">{props.title}</h1>
                 <nav class="row no-wrap shrink" aria-label={props.t('language_selection')}>
-                  <form method="get" hx-boost="false" class="no-margin" onchange="this.submit()">
+                  <form class="no-margin">
                     <label class="visually-hidden" for="language-select">{props.t('language_selection')}</label>
-                    <select id="language-select" name="lang" aria-label={props.t('language_selection')}>
+                    <select id="language-select" aria-label={props.t('language_selection')} onchange="const p=new URLSearchParams(window.location.search);p.set('lang',this.value);window.location.search=p.toString()">
                       {props.languageOptions.map((option) => (
                         <option value={option.code} selected={props.locale === option.code}>
                           {option.label}

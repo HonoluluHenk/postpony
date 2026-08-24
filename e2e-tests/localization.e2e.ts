@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { StartPage } from './pages';
+import { EditPage, JoinPage, StartPage } from './pages';
 
 test.describe('Localization', () => {
   test('should switch language via the header dropdown', async ({page, checkA11y}) => {
@@ -86,5 +86,29 @@ test.describe('Localization', () => {
       .toContainText('Willkommen bei PostPony');
 
     await checkA11y();
+  });
+
+  test('should preserve query parameters when switching language on join page', async ({page}) => {
+    const {session} = await EditPage.createSession(page);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+
+    // Verify the join page loaded successfully with token present
+    await expect(joinPage.heading)
+      .toBeVisible();
+
+    // Switch to German
+    await joinPage.switchLanguage('de-CH');
+
+    // Token must be preserved — page should still show the join form (not error page)
+    const germanHeading = page.getByRole('heading', {name: 'Der Verschiebung beitreten', level: 2});
+    await expect(germanHeading)
+      .toBeVisible();
+
+    // Switch back to English
+    await joinPage.switchLanguage('en-US');
+    await expect(joinPage.heading)
+      .toBeVisible();
   });
 });
