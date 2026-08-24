@@ -111,20 +111,6 @@ BeerCSS provides MD3-themed classes for nearly everything. Use them first; reach
 - `.button`, `.field`, `.label`, `.radio`, `.checkbox`, `.chip`, `.list`, `.table`, `.toast`, `.badge`, `.tabs`, `.tooltip`, `.slider`
 - Variants: `.fill`, `.border`, `.outline`, `.circle`, `.transparent`, `.error`, `.success`, `.primary`, `.surface-variant`
 
-#### Radio groups
-
-BeerCSS `.radio` is `display: inline-flex`, so multiple radios inside a `<fieldset>` render **side-by-side**. Use the app-defined `.radio-group` class (in `style.css`) to stack them vertically:
-
-```html
-<fieldset class="field border radio-group">
-  <legend>Select an option</legend>
-  <label class="radio"><input type="radio" name="choice" value="a" /><span>Option A</span></label>
-  <label class="radio"><input type="radio" name="choice" value="b" /><span>Option B</span></label>
-</fieldset>
-```
-
-`.radio-group` sets `flex-direction: column`, adds `gap`, and overrides `.field`'s fixed `height: 3rem` (meant for single-line inputs) to `height: auto`.
-
 ### Utilities
 
 - `.row`, `.grid`, `.no-wrap`, `.wrap`, `.center-align`, `.right-align`, `.white-text`, `.visually-hidden`, `.small-round`
