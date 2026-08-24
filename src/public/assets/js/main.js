@@ -169,10 +169,19 @@ function patchTimeSliderLabels() {
 function initDeleteDialogs() {
   document.addEventListener('click', (event) => {
     const trigger = event.target.closest('[data-open-dialog]');
-    if (!trigger) return;
-    const dialog = document.getElementById(trigger.dataset.openDialog);
-    if (dialog && typeof dialog.showModal === 'function') {
-      dialog.showModal();
+    if (trigger) {
+      const dialog = document.getElementById(trigger.dataset.openDialog);
+      if (dialog && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+        return;
+      }
+    }
+    const dismiss = event.target.closest('[data-dismiss-dialog]');
+    if (dismiss) {
+      const dialog = dismiss.closest('dialog');
+      if (dialog && typeof dialog.close === 'function') {
+        dialog.close();
+      }
     }
   });
 }

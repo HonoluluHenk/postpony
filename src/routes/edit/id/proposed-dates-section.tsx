@@ -93,9 +93,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                     </h4>
                     <p>{props.t('delete_proposed_date_confirm_message', {date: proposedDate.display})}</p>
                     <div class="row items-center gap">
-                      <form method="dialog" hx-boost="false">
-                        <button type="submit" class="button outline">{props.t('cancel')}</button>
-                      </form>
+                      <button type="button" class="button outline" data-dismiss-dialog>{props.t('cancel')}</button>
                       <form
                         hx-post={`/edit/${props.sessionId}/proposed-date-delete?proposedDateId=${proposedDate.id}`}
                         hx-target="#proposed-dates-management"

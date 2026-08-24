@@ -254,6 +254,17 @@
     background: var(--spinner-overlay);
   }
 
+  /* Radio groups: BeerCSS .radio is inline-flex, so radios in a fieldset
+     render side-by-side. Stack them vertically for readability and a11y
+     target size. Override .field's fixed height which is meant for inputs. */
+  .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+    height: auto;
+  }
+
   /* air-datepicker themed to the BeerCSS/Material palette (design layer beats vendor). */
   .air-datepicker {
     --adp-background-color: var(--surface);

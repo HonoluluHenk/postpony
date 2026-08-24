@@ -40,7 +40,7 @@ export function JoinPage(props: JoinPageProps): JSX.Element {
       >
         {props.players.length > 0 ? (
           <>
-            <fieldset class="field border">
+            <fieldset class="field border radio-group">
               <legend>{props.t('join_select_player')}</legend>
               {props.players.map((player) => (
                 <label class="radio" key={player.id}>
