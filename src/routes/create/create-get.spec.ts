@@ -36,6 +36,8 @@ describe('handleCreateGet', () => {
 
     expect(html).toContain('Create a New Postponement');
     expect(html).not.toContain('Save changes');
+    // A clean form carries no invalid/described-by wiring on the fields.
+    expect(html).not.toContain('aria-invalid="true"');
   });
 
   describe('change mode', () => {

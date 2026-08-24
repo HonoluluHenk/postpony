@@ -2,13 +2,14 @@ import type { App } from '../../app';
 import type { Postponement } from '../../lib/models';
 import { formatIsoToLocaleTokens } from '../../lib/temporal-utils';
 import { requireChangeSession } from './change-utils';
+import { CreatePage, type CreateFormValues } from './create';
 
 interface ChangeModeData {
   changeMode: true;
   sessionId: string;
   ownerPassword: string;
   session: Postponement;
-  values: {homeTeam: string; guestTeam: string; originalMatchDateTime: string};
+  values: CreateFormValues;
 }
 
 export async function handleCreateGet(app: App): Promise<Response> {
@@ -39,10 +40,14 @@ export async function handleCreateGet(app: App): Promise<Response> {
     })()
     : undefined;
 
-  const html = app.render('create/create.eta', {
-    title: changeMode ? app.t('change_match_details_title') : app.t('create_postponement_title'),
-    isPartial: app.isPartial,
-    ...data,
-  });
+  const html = app.render(
+    <CreatePage
+      {...app.view}
+      changeMode={data?.changeMode}
+      sessionId={data?.sessionId}
+      ownerPassword={data?.ownerPassword}
+      values={data?.values}
+    />,
+  );
   return app.c.html(html);
 }

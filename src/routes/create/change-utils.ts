@@ -18,6 +18,18 @@ export function changeQuerySuffix(
 }
 
 /**
+ * The change-mode context the scrape wizard step views share: mint mode when
+ * `changeMode` is false, otherwise the threaded `sessionId`/`ownerPassword`
+ * plus the pre-encoded query suffix for the drill-down links.
+ */
+export interface WizardChangeMode {
+  changeMode: boolean;
+  changeSuffix: string;
+  sessionId?: string;
+  ownerPassword?: string;
+}
+
+/**
  * Loads the session a change-mode request targets and verifies the owner
  * password before anything is mutated. Throws (via `app.failure`/`app.notFound`)
  * when the session is missing or the password does not match.

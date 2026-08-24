@@ -6,6 +6,12 @@ import { DEFAULT_CLUB_ID, type Postponement } from '../../lib/models';
 import { derivePostponementName } from '../../lib/postponement';
 import { parseLocaleDateTime } from '../../lib/temporal-utils';
 import { requireChangeSession } from './change-utils';
+import { CreatePage, type CreateFormValues } from './create';
+
+function formString(form: Record<string, unknown>, name: string): string {
+  const value = form[name];
+  return typeof value === 'string' ? value : '';
+}
 
 export async function handleCreatePost(app: App): Promise<Response> {
   const locale = app.locale;
@@ -23,24 +29,32 @@ export async function handleCreatePost(app: App): Promise<Response> {
     ),
   });
 
-  const values = await app.c.req.parseBody();
-  const validation = v.safeParse(CreateSchema, values);
+  const rawValues = await app.c.req.parseBody();
+  const validation = v.safeParse(CreateSchema, rawValues);
 
-  const sessionId = typeof values['sessionId'] === 'string' ? values['sessionId'] : undefined;
-  const ownerPassword = typeof values['ownerPassword'] === 'string' ? values['ownerPassword'] : undefined;
+  const sessionId = typeof rawValues['sessionId'] === 'string' ? rawValues['sessionId'] : undefined;
+  const ownerPassword = typeof rawValues['ownerPassword'] === 'string' ? rawValues['ownerPassword'] : undefined;
   const changeMode = !!sessionId;
 
   if (!validation.success) {
     const errors = mapValidationToErrors(validation);
+    const values: CreateFormValues = {
+      homeTeam: formString(rawValues, 'homeTeam'),
+      guestTeam: formString(rawValues, 'guestTeam'),
+      originalMatchDateTime: formString(rawValues, 'originalMatchDateTime'),
+    };
 
-    const html = app.render('create/create.eta', {
-      title: changeMode ? app.t('change_match_details_title') : app.t('create_postponement_title'),
-      isPartial: app.isPartial,
-      errors,
-      values,
-      globalError: errors.global,
-      ...(changeMode ? {changeMode: true, sessionId, ownerPassword} : {}),
-    });
+    const html = app.render(
+      <CreatePage
+        {...app.view}
+        errors={errors}
+        values={values}
+        globalError={errors.global}
+        changeMode={changeMode}
+        sessionId={sessionId}
+        ownerPassword={ownerPassword}
+      />,
+    );
     return app.c.html(html, {status: 400});
   }
 

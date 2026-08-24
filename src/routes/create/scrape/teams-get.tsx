@@ -1,6 +1,7 @@
 import type { App } from '../../../app';
 import { fetchTeams } from '../../../lib/click-tt-scraper';
 import { changeQuerySuffix } from '../change-utils';
+import { ScrapeTeamsPage } from './teams';
 
 export const handleScrapeTeamsGet = async (app: App): Promise<Response> => {
   const championship = app.c.req.query('championship');
@@ -19,18 +20,18 @@ export const handleScrapeTeamsGet = async (app: App): Promise<Response> => {
 
   const teams = await fetchTeams(championship, group);
 
-  const html = app.render('create/scrape/teams.eta', {
-    title: app.t('scrape_choose_team'),
-    isPartial: app.isPartial,
-    teams,
-    championship,
-    group,
-    leagueName,
-    groupName,
-    changeMode,
-    changeSuffix: changeQuerySuffix(sessionId, ownerPassword),
-    sessionId,
-    ownerPassword,
-  });
+  const html = app.render(
+    <ScrapeTeamsPage
+      {...app.view}
+      teams={teams}
+      championship={championship}
+      leagueName={leagueName}
+      groupName={groupName}
+      changeMode={changeMode}
+      changeSuffix={changeQuerySuffix(sessionId, ownerPassword)}
+      sessionId={sessionId}
+      ownerPassword={ownerPassword}
+    />,
+  );
   return app.c.html(html);
 };

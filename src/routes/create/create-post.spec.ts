@@ -79,6 +79,12 @@ describe('handleCreatePost', () => {
     expect(html).toContain('Home team is required');
     expect(html).toContain('Guest team is required');
     expect(html).toContain('error');
+    // Every offending field is wired with invalid state and described-by text.
+    for (const field of ['home-team', 'guest-team', 'original-match-date-time']) {
+      expect(html).toContain(`aria-invalid="true" aria-describedby="${field}-error"`);
+      expect(html).toContain(`<span id="${field}-error" class="error" role="alert">`);
+    }
+    expect(html).toContain('class="field label border fill invalid"');
   });
 
   test('returns 400 when the original match datetime is not parseable', async () => {
@@ -89,6 +95,10 @@ describe('handleCreatePost', () => {
     expect(response.status).toBe(400);
     const html = await response.text();
     expect(html).toContain('Please provide a valid date and time for the original match');
+    // Only the offending field carries invalid/described-by wiring.
+    expect(html).toContain('aria-invalid="true" aria-describedby="original-match-date-time-error"');
+    expect(html).not.toContain('aria-invalid="true" aria-describedby="home-team-error"');
+    expect(html).not.toContain('aria-invalid="true" aria-describedby="guest-team-error"');
   });
 
   test('redirects via HX-Redirect header for HTMX partial requests', async () => {
