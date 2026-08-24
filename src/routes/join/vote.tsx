@@ -57,7 +57,7 @@ export function VotePage(props: VotePageProps): JSX.Element {
             aria-label={props.t('vote_title')}
           >
             {props.proposedDates.map((pd) => (
-              <fieldset class="field border radio-group" key={pd.id}>
+              <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
                 <legend>{pd.display}</legend>
                 <label class="radio">
                   <input
