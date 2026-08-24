@@ -17,7 +17,7 @@ const MatchSchema = v.object({
   leagueName: v.optional(v.string(), ''),
   championship: v.optional(v.string(), ''),
   group: v.optional(v.string(), ''),
-  teamName: v.optional(v.string(), ''),
+  teamName: v.pipe(v.string(), v.minLength(1)),
   opponentTeamtable: v.optional(v.string(), ''),
 });
 

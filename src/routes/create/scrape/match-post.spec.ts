@@ -92,6 +92,22 @@ describe('handleScrapeMatchPost', () => {
       .rejects
       .toThrow('Missing required parameter: match');
   });
+
+  test('rejects when the organizer team name is absent instead of defaulting to away', async () => {
+    const app = createApp({body: {...MATCH}});
+
+    await expect(handleScrapeMatchPost(app))
+      .rejects
+      .toThrow('Missing required parameter: match');
+  });
+
+  test('rejects when the organizer team name is empty', async () => {
+    const app = createApp({body: {...MATCH, teamName: ''}});
+
+    await expect(handleScrapeMatchPost(app))
+      .rejects
+      .toThrow('Missing required parameter: match');
+  });
 });
 
 describe('handleScrapeMatchPost change mode (re-scrape)', () => {
@@ -127,7 +143,7 @@ describe('handleScrapeMatchPost change mode (re-scrape)', () => {
 
   test('rejects a wrong owner password', async () => {
     const session = aSession({ownerPasswordHash: await hashPassword('real-pw')});
-    const app = createApp({body: {...MATCH, sessionId: session.id, ownerPassword: 'wrong'}});
+    const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: session.id, ownerPassword: 'wrong'}});
     await app.store.save(session);
 
     await expect(handleScrapeMatchPost(app))
@@ -136,7 +152,7 @@ describe('handleScrapeMatchPost change mode (re-scrape)', () => {
   });
 
   test('throws when the session does not exist', async () => {
-    const app = createApp({body: {...MATCH, sessionId: 'missing', ownerPassword}});
+    const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: 'missing', ownerPassword}});
 
     await expect(handleScrapeMatchPost(app))
       .rejects
