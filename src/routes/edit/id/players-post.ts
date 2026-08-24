@@ -1,8 +1,9 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
+import type { Team } from '../../../lib/models';
 import { PostponementRules } from '../../../lib/postponement';
-import { buildOwnTeamView } from './own-team-view';
+import { renderTeamSection } from './team-section';
 
 const PlayerSchema = v.object({
   playerName: v.pipe(v.string(), v.minLength(1, 'Player name is required')),
@@ -23,14 +24,9 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
     const errors = mapValidationToErrors(validation);
 
     if (app.isPartial) {
-      const {organizerPlayers, ownTeamResults} = buildOwnTeamView(session, app.locale);
-      return app.c.html(app.render('edit/id/team-section.eta', {
-        sessionId: session.id,
-        players: session.players,
-        organizerPlayers,
-        ownTeamResults,
+      return app.c.html(renderTeamSection(app, session, {
         playerName: (values['playerName'] as string | undefined) ?? '',
-        teamId: (values['teamId'] as string | undefined) ?? 'home',
+        teamId: (values['teamId'] as Team | undefined) ?? 'home',
         error: errors.fields['playerName'],
         globalError: errors.global,
       }), {status: 400});
@@ -44,13 +40,7 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
   await app.store.save(updated);
 
   if (app.isPartial) {
-    const {organizerPlayers, ownTeamResults} = buildOwnTeamView(updated, app.locale);
-    return app.c.html(app.render('edit/id/team-section.eta', {
-      sessionId: updated.id,
-      players: updated.players,
-      organizerPlayers,
-      ownTeamResults,
-    }));
+    return app.c.html(renderTeamSection(app, updated));
   }
   return app.c.redirect(`/edit/${id}`);
 };

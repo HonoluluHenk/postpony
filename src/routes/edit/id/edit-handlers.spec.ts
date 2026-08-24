@@ -198,10 +198,13 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('id="error-container" hx-swap-oob="true"');
       expect(html)
-        .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+        .toContain('<section id="own-team-votes" hx-swap-oob="true" hidden="">');
       expect(html)
         .not
         .toContain('error padding white-text');
+      expect(html)
+        .not
+        .toContain('Your Team Votes');
     });
 
     test('players: renders the error-container and keeps the invalid input on failure', async () => {

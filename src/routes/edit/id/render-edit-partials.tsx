@@ -3,17 +3,12 @@ import type { AppLocale } from '../../../locales';
 import type { Postponement, ProposedDate, VoteTallyItem } from '../../../lib/models';
 import { PostponementRules, type VoteTally } from '../../../lib/postponement';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
-import { buildOwnTeamView, type OwnTeamView } from './own-team-view';
-
-export interface ProposedDateTallyItem extends VoteTallyItem {
-  votableByOpponent: boolean;
-}
-
-export type EditPartialsData = OwnTeamView & {
-  proposedDates: ProposedDateTallyItem[];
-  homeProposedDates: VoteTallyItem[];
-  awayProposedDates: VoteTallyItem[];
-};
+import { buildOwnTeamView } from './own-team-view';
+import {
+  ProposedDatesSectionPartial,
+  type EditPartialsData,
+  type ProposedDatesSectionPartialProps,
+} from './proposed-dates-section';
 
 function toVoteTallyItems(
   proposedDates: ProposedDate[],
@@ -43,7 +38,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
   const homeTallies = rules.tally(session, 'home');
   const awayTallies = rules.tally(session, 'away');
 
-  const proposedDates: ProposedDateTallyItem[] = session.proposedDates.map((pd) => {
+  const proposedDates: EditPartialsData['proposedDates'] = session.proposedDates.map((pd) => {
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {
       id: pd.id,
@@ -63,21 +58,38 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
   };
 }
 
+export interface EditPartialExtras {
+  proposedDateTime?: string;
+  error?: string;
+  globalError?: string;
+  success?: boolean;
+}
+
 /**
- * Renders the proposed-dates section partial plus its OOB companions (vote tally, own-team
- * votes). The partial set is shared by the proposed-dates, visibility, confirm, and reopen
- * post handlers so the edit view stays in sync after any of those mutations.
+ * Renders the proposed-dates section partial plus its OOB companions (status chip, vote
+ * tally, own-team votes, error container). The partial set is shared by the proposed-dates,
+ * visibility, confirm, and reopen post handlers so the edit view stays in sync after any of
+ * those mutations.
  */
 export function renderEditPartials(
   app: App,
   session: Postponement,
-  extra: Record<string, unknown> = {},
+  extra: EditPartialExtras = {},
 ): string {
-  return app.render('edit/id/proposed-dates-section.eta', {
+  const view = app.view;
+  const data = buildEditPartialsData(session, app.locale);
+  const props: ProposedDatesSectionPartialProps = {
+    ...data,
     sessionId: session.id,
     status: session.status,
     reopenCount: session.reopenCount,
-    ...buildEditPartialsData(session, app.locale),
-    ...extra,
-  });
+    t: view.t,
+    locale: view.locale,
+    inputFormat: view.inputFormat,
+    proposedDateTime: extra.proposedDateTime,
+    error: extra.error,
+    success: extra.success,
+    globalError: extra.globalError,
+  };
+  return app.render(<ProposedDatesSectionPartial {...props} />);
 }
