@@ -4,9 +4,9 @@
 
 **Blocked by:** 01 (Playwright screenshot config).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] In `start-page.e2e.ts`, add `await expect(page).toHaveScreenshot({ name: 'start', fullPage: true })` to the `accessibility landmarks check` test, after the existing `checkA11y()` call
-- [ ] Ensure `page` is available in the test's fixture destructuring (add if missing)
-- [ ] Generate the baseline PNG via `--update-snapshots`
-- [ ] Verify the test passes with `playwright test e2e-tests/start-page.e2e.ts`
+- [x] In `start-page.e2e.ts`, add `await expect(page).toHaveScreenshot('start.png', {fullPage: true})` to the `accessibility landmarks check` test, after the existing `checkA11y()` call
+- [x] Ensure `page` is available in the test's fixture destructuring (add if missing)
+- [x] Generate the baseline PNG via `--update-snapshots`
+- [x] Verify the test passes with `playwright test e2e-tests/start-page.e2e.ts`
