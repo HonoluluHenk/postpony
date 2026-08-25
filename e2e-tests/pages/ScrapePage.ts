@@ -47,9 +47,9 @@ export class ScrapePage {
     return this.page.getByRole('columnheader', {name: 'Actions'});
   }
 
-  createButton(teamName: string, rowFilter?: string): Locator {
-    const scope = rowFilter === undefined ? this.page : this.matchRow(rowFilter);
-    return scope.getByRole('button', {name: `Create as ${teamName}`});
+  selectButton(rowFilter: string): Locator {
+    return this.matchRow(rowFilter)
+      .getByRole('button', {name: 'Select'});
   }
 
   matchRowButtons(rowFilter: string): Locator {

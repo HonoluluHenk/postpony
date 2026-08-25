@@ -90,13 +90,14 @@ test.describe('Scraping Flow', () => {
     await expect(firstMatch)
       .toContainText('Ostermundigen');
 
-    // Each match row shows two create buttons, one per side, labelled with
-    // the respective team names.
+    // Every match row offers exactly one Select button (the header row has
+    // none): 14 match rows → 14 buttons. A reintroduced per-side button pair
+    // would double this count and fail loudly.
+    await expect(scrapePage.matchRows.getByRole('button'))
+      .toHaveCount(14);
     await expect(scrapePage.matchRowButtons('29.08.2026'))
-      .toHaveCount(2);
-    await expect(scrapePage.createButton('Thun', '29.08.2026'))
-      .toBeVisible();
-    await expect(scrapePage.createButton('Ostermundigen', '29.08.2026'))
+      .toHaveCount(1);
+    await expect(scrapePage.selectButton('29.08.2026'))
       .toBeVisible();
 
     const returnMatch = scrapePage.matchRow('14.01.2027');
@@ -105,11 +106,12 @@ test.describe('Scraping Flow', () => {
     await expect(returnMatch)
       .toContainText('Thun');
 
-    // 5. Create a postponement from the first match, claiming the guest side:
-    // Ostermundigen (the team picked in step 3) is the guest team against Thun.
+    // 5. Create a postponement from the first match via the single Select
+    // button: Ostermundigen (the team picked in step 3) is the guest team
+    // against Thun, so the organizer side is derived as 'away'.
     await Promise.all([
       page.waitForURL(/\/edit\/.+/),
-      scrapePage.createButton('Ostermundigen', '29.08.2026')
+      scrapePage.selectButton('29.08.2026')
         .click(),
     ]);
 
@@ -167,13 +169,13 @@ test.describe('Scraping Flow', () => {
     await expect(scrapePage.matchesHeading)
       .toBeVisible();
     await expect(scrapePage.matchRowButtons('14.01.2027'))
-      .toHaveCount(2);
+      .toHaveCount(1);
 
     // In the return match (14.01.2027) Ostermundigen is the home team, so
-    // claiming the Ostermundigen side maps to organizerTeam 'home'.
+    // selecting it maps to organizerTeam 'home'.
     await Promise.all([
       page.waitForURL(/\/edit\/.+/),
-      scrapePage.createButton('Ostermundigen', '14.01.2027')
+      scrapePage.selectButton('14.01.2027')
         .click(),
     ]);
 
@@ -241,7 +243,8 @@ test.describe('Scraping Flow', () => {
     await expect(scrapePage.heading)
       .toBeVisible();
 
-    // Drill down and pick the new match, claiming the guest side.
+    // Drill down and pick the new match via the single Select button,
+    // selecting the guest side.
     await scrapePage.pickLeague('MTTV 2026/27');
     await scrapePage.pickGroup('O40 1. Liga');
     await scrapePage.pickTeam('Ostermundigen');
@@ -249,7 +252,7 @@ test.describe('Scraping Flow', () => {
       .toBeVisible();
     await Promise.all([
       page.waitForURL(/\/edit\/.+/),
-      scrapePage.createButton('Ostermundigen', '29.08.2026')
+      scrapePage.selectButton('29.08.2026')
         .click(),
     ]);
 
