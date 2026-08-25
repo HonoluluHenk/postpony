@@ -11,6 +11,9 @@ export default tseslint.config(
       'playwright-report/**',
       'test-results/**',
       'node_modules/**',
+      // Git worktree checkouts contain their own config-file copies that would
+      // blow past the allowDefaultProject file cap below.
+      '.worktrees/**',
       'src/public/assets/vendor/**',
     ],
   },

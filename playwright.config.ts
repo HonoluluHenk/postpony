@@ -1,5 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// The ad-hoc ESLint/tsc project for this file lacks node types, so `process`
+// must be read through this typed helper (see the suppressions inside).
+function readEnv(name: string): string | undefined {
+  //@ts-expect-error playwright automatically includes node types
+  //eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+  return process.env[name];
+}
+
 // The e2e suite runs against its own dedicated server instance on a separate
 // port so it never reuses (and is never polluted by) a developer's
 // `npm run dev` server on the default port 3000. Playwright always starts this
@@ -7,8 +15,12 @@ import { defineConfig, devices } from '@playwright/test';
 // server-side click-tt.ch scraping is served from the deterministic local HTML
 // fixtures. This keeps every test independent and reproducible even when run
 // one-by-one (e.g. via the IDE) while a dev server is running.
+//
+// The server port is configurable via the E2E_APP_PORT env var (read from the
+// process environment, NOT from .env) so parallel agents can run e2e suites
+// concurrently on distinct ports. It defaults to 3001.
 const E2E_HOSTNAME = 'game-scheduler.localhost';
-const E2E_PORT = '3001';
+const E2E_PORT = readEnv('E2E_APP_PORT') ?? '3001';
 const E2E_BASE_URL = `https://${E2E_HOSTNAME}:${E2E_PORT}`;
 
 //noinspection JSUnusedGlobalSymbols
@@ -16,9 +28,7 @@ export default defineConfig({
   testDir: './e2e-tests',
   testMatch: '**/*.e2e.ts',
   fullyParallel: true,
-  //@ts-expect-error playwright automatically includes node types
-  //eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  forbidOnly: !!process.env.CI,
+  forbidOnly: !!readEnv('CI'),
   reporter: [['html', {open: 'never'}]],
   timeout: 10 * 1000,
   // No global timeout: the former 15s budget for the *entire* run was far too

@@ -19,20 +19,22 @@ A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framewo
 
 ## Quick reference
 
-| Command                   | What it does                                                                       |
-|---------------------------|------------------------------------------------------------------------------------|
-| `npm run dev`             | Dev server with fixtures on port 3000                                              |
-| `npm run dev:live`        | Dev server against live click-tt.ch                                                |
-| `npm run test`            | Vitest (coverage on, `@/` → `src/`)                                                |
-| `npm run lint`            | `tsc --noEmit` → `tsc -p tsconfig.e2e.json --noEmit` → `eslint . --max-warnings 0` |
-| `npm run lint:eslint:fix` | Auto-fix ESLint                                                                    |
-| `npm run e2e`             | Playwright (starts its own server on port 3001, never reuses dev server)           |
-| `npm run verify`          | lint → test → build → e2e (full CI gate)                                           |
-| `npm run build`           | Vite build (SSR) → `dist/`                                                         |
+| Command                   | What it does                                                                                 |
+|---------------------------|----------------------------------------------------------------------------------------------|
+| `npm run dev`             | Dev server with fixtures on port 3000                                                        |
+| `npm run dev:live`        | Dev server against live click-tt.ch                                                          |
+| `npm run test`            | Vitest (coverage on, `@/` → `src/`)                                                          |
+| `npm run lint`            | `tsc --noEmit` → `tsc -p tsconfig.e2e.json --noEmit` → `eslint . --max-warnings 0`           |
+| `npm run lint:eslint:fix` | Auto-fix ESLint                                                                              |
+| `npm run e2e`             | Playwright (starts its own server on `$E2E_APP_PORT`, default 3001, never reuses dev server) |
+| `npm run verify`          | lint → test → build → e2e (full CI gate)                                                     |
+| `npm run build`           | Vite build (SSR) → `dist/`                                                                   |
 
 ## Local configuration
 
 For local development, copy `.env-template` to `.env` (git-ignored) and adjust the values there. `src/config.ts` loads `.env` from the repo root at startup via native `process.loadEnvFile`; already-set env vars (shell/npm scripts) take precedence.
+
+The e2e test server port is configurable via `E2E_APP_PORT` (default 3001). It is read from the process environment by `playwright.config.ts`, not from `.env`. Parallel agents running e2e suites concurrently must each export a distinct value, e.g. `E2E_APP_PORT=3007 npm run e2e`.
 
 ## HTTPS & certificates
 

@@ -8,7 +8,7 @@ test.describe('Invitation Link', () => {
       .goto();
     const editPage = await createPage.create();
 
-    // baseURL in playwright.config.ts is https://game-scheduler.localhost:3001
+    // baseURL in playwright.config.ts is https://game-scheduler.localhost:<E2E_APP_PORT> (default 3001)
     if (!baseURL) {
       throw new Error('baseURL is not defined in the test context');
     }
