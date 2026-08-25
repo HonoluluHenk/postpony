@@ -84,7 +84,7 @@ test.describe('Start Page', () => {
       .toBe(404);
   });
 
-  test('accessibility landmarks check', async ({checkA11y}) => {
+  test('accessibility landmarks check', async ({page, checkA11y}) => {
     // 1. Check for main landmark
     await expect(startPage.main)
       .toBeVisible();
@@ -102,5 +102,6 @@ test.describe('Start Page', () => {
       .toBeVisible();
 
     await checkA11y();
+    await expect(page).toHaveScreenshot('start.png', {fullPage: true});
   });
 });
