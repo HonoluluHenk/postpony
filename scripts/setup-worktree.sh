@@ -54,8 +54,8 @@ APP_DB_AUTH_TOKEN=unused-for-file-urls
 APP_TLS_ENABLED=${TLS_ENABLED}
 # Dev server port for this worktree (derived from the branch, parallel-safe).
 APP_PORT=${APP_PORT}
-# E2E server port. Playwright reads it from the process environment, NOT from
-# .env — export it in the shell before 'npm run e2e' (see AGENTS.md).
+# E2E server port. Playwright loads .env itself (see playwright.config.ts), so
+# `npm run e2e` picks this up automatically; an exported shell value wins.
 E2E_APP_PORT=${E2E_APP_PORT}
 EOF
 
@@ -70,4 +70,4 @@ echo
 echo "Worktree configured for '${REF}'."
 echo "  app:  $([ "${QUICK}" == "true" ] && echo "http://localhost:${APP_PORT}" || echo "https://${APP_HOSTNAME}:${APP_PORT}")"
 echo "  db:   developer-local-settings/data/postpony-${SAFE_REF}.db"
-echo "  e2e:  export E2E_APP_PORT=${E2E_APP_PORT}   (before 'npm run e2e')"
+echo "  e2e:  E2E_APP_PORT=${E2E_APP_PORT}   (picked up automatically by 'npm run e2e')"

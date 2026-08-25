@@ -24,10 +24,9 @@ The main worktree's `.env`, `developer-local-settings/`, certs, and SQLite DB ar
    npm run dev
    ```
 
-3. For e2e, export the port in the shell first — Playwright reads `E2E_APP_PORT` from the process environment, not `.env`:
+3. Run e2e — Playwright loads `.env` itself, so the worktree's `E2E_APP_PORT` is picked up automatically:
 
    ```bash
-   export E2E_APP_PORT=<printed by the script>
    npm run e2e
    ```
 

@@ -35,7 +35,7 @@ A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framewo
 
 For local development, copy `.env-template` to `.env` (git-ignored) and adjust the values there. `src/config.ts` loads `.env` from the repo root at startup via native `process.loadEnvFile`; already-set env vars (shell/npm scripts) take precedence.
 
-The e2e test server port is configurable via `E2E_APP_PORT` (default 3001). It is read from the process environment by `playwright.config.ts`, not from `.env`. Parallel agents running e2e suites concurrently must each export a distinct value, e.g. `E2E_APP_PORT=3007 npm run e2e`.
+The e2e test server port is configurable via `E2E_APP_PORT` (default 3001). `playwright.config.ts` loads `.env` itself, so the per-worktree port written by `scripts/setup-worktree.sh` is picked up automatically; an exported shell value still wins, e.g. `E2E_APP_PORT=3007 npm run e2e`.
 
 ## HTTPS & certificates
 

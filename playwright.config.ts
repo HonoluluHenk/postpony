@@ -3,8 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 // Centralises env reads for this config file; keeps a single place to add
 // defaults or validation if needed later.
 function readEnv(name: string): string | undefined {
-  //@ts-expect-error playwright automatically includes node types
-  //eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
   return process.env[name];
 }
 
@@ -16,9 +15,17 @@ function readEnv(name: string): string | undefined {
 // fixtures. This keeps every test independent and reproducible even when run
 // one-by-one (e.g. via the IDE) while a dev server is running.
 //
-// The server port is configurable via the E2E_APP_PORT env var (read from the
-// process environment, NOT from .env) so parallel agents can run e2e suites
-// concurrently on distinct ports. It defaults to 3001.
+// The server port is configurable via the E2E_APP_PORT env var. It is read
+// from .env (loaded below; set per worktree by scripts/setup-worktree.sh) so
+// parallel agents get distinct ports on a bare `npm run e2e`. An exported
+// shell value still wins because loadEnvFile does not override existing
+// variables. It defaults to 3001.
+try {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+  process.loadEnvFile();
+} catch {
+  // No .env (fresh checkout) — fall back to defaults below.
+}
 const E2E_HOSTNAME = 'game-scheduler.localhost';
 const E2E_PORT = readEnv('E2E_APP_PORT') ?? '3001';
 const E2E_BASE_URL = `https://${E2E_HOSTNAME}:${E2E_PORT}`;
