@@ -3,6 +3,7 @@ import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../../app';
 import type { Postponement } from '../../../lib/models';
 import { pageLayout } from '../../layouts/main';
+import { inviteLinkLabels } from './invite-link-labels';
 import { OwnTeamVotes } from './own-team-votes';
 import { ProposedDatesSection, type EditPartialsData } from './proposed-dates-section';
 import { StatusChip } from './status-chip';
@@ -26,13 +27,14 @@ interface InviteLinksProps {
 function InviteLinks(props: InviteLinksProps): JSX.Element {
   const homeLink = `${props.baseUrl}/join/${props.session.id}/home?token=${props.session.invitationPassword}`;
   const awayLink = `${props.baseUrl}/join/${props.session.id}/away?token=${props.session.invitationPassword}`;
+  const labels = inviteLinkLabels(props.session, props.t);
 
   return (
     <div>
       <p>{props.t('invite_link_label')}</p>
       <ul class="list">
         <li class="row items-center gap wrap">
-          <a href={homeLink}>{props.t('invite_link_home_label')}</a>
+          <a href={homeLink}>{labels.home}</a>
           <button
             class="clipboard-btn"
             data-copy={homeLink}
@@ -43,7 +45,7 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
           </button>
         </li>
         <li class="row items-center gap wrap">
-          <a href={awayLink}>{props.t('invite_link_away_label')}</a>
+          <a href={awayLink}>{labels.away}</a>
           <button
             class="clipboard-btn"
             data-copy={awayLink}

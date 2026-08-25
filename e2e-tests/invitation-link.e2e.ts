@@ -8,7 +8,7 @@ test.describe('Invitation Link', () => {
       .goto();
     const editPage = await createPage.create();
 
-    // baseURL in playwright.config.ts is https://game-scheduler.localhost:3001
+    // baseURL in playwright.config.ts is https://game-scheduler.localhost:<E2E_APP_PORT> (default 3001)
     if (!baseURL) {
       throw new Error('baseURL is not defined in the test context');
     }
@@ -27,6 +27,13 @@ test.describe('Invitation Link', () => {
       .toMatch(new RegExp(`^${expectedBase}/join/.+/home\\?token=.+`));
     expect(awayHref)
       .toMatch(new RegExp(`^${expectedBase}/join/.+/away\\?token=.+`));
+
+    // 3. Labels follow the organizer perspective; the default session is created
+    //    from the home side with team names "Home Team" / "Guest Team".
+    await expect(editPage.homeInviteLink)
+      .toHaveText('My team invitation link (Home Team)');
+    await expect(editPage.awayInviteLink)
+      .toHaveText('Opponent team invitation link (Guest Team)');
 
     await checkA11y();
   });
