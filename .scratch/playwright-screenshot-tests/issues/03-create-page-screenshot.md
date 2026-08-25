@@ -1,13 +1,11 @@
 # 03: Create page screenshot
 
-**What to build:** A full-page screenshot test for the create page (empty form state), baselined and committed to git, so that visual regressions on the creation form are caught in CI.
+**What to build:** A full-page screenshot assertion on the empty create form, added to the existing `postponement-creation.e2e.ts` test, so that visual regressions on the creation form are caught in CI.
 
 **Blocked by:** 01 (Playwright screenshot config).
 
 **Status:** ready-for-agent
 
-- [ ] Create `e2e-tests/screenshots/create.e2e.ts` importing `test` and `expect` from the shared fixtures
-- [ ] Navigate to the create page via `CreatePage.goto()`
-- [ ] Assert a full-page screenshot matches the baseline using `toHaveScreenshot()`
-- [ ] Generate and commit the baseline PNG
-- [ ] Verify the test passes with `playwright test e2e-tests/screenshots/create.e2e.ts`
+- [ ] In `postponement-creation.e2e.ts`, add `await expect(page).toHaveScreenshot({ name: 'create', fullPage: true })` to the `should pass accessibility on create and edit pages` test, after the `checkA11y()` call on the create page (before any fields are filled)
+- [ ] Generate the baseline PNG via `--update-snapshots`
+- [ ] Verify the test passes with `playwright test e2e-tests/postponement-creation.e2e.ts`

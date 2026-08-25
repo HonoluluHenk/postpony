@@ -1,14 +1,11 @@
 # 05: Join page screenshot
 
-**What to build:** A full-page screenshot test for the join page (pre-identification form state), baselined and committed to git, so that visual regressions on the join/voting flow are caught in CI.
+**What to build:** A full-page screenshot assertion on the join form before player identification, added to the existing `join-voting.e2e.ts` test, so that visual regressions on the join/voting flow are caught in CI.
 
 **Blocked by:** 01 (Playwright screenshot config).
 
 **Status:** ready-for-agent
 
-- [ ] Create `e2e-tests/screenshots/join.e2e.ts` importing `test` and `expect` from the shared fixtures
-- [ ] Create a session with dates via `EditPage.createSession()` to obtain an invite link
-- [ ] Navigate to the join page via `JoinPage.goto()` using the home invite link
-- [ ] Assert a full-page screenshot matches the baseline using `toHaveScreenshot()`
-- [ ] Generate and commit the baseline PNG
-- [ ] Verify the test passes with `playwright test e2e-tests/screenshots/join.e2e.ts`
+- [ ] In `join-voting.e2e.ts`, add `await expect(page).toHaveScreenshot({ name: 'join', fullPage: true })` to the `join and vote steps are accessible` test, after the heading assertion and `checkA11y()` call (before `joinPage.join()`)
+- [ ] Generate the baseline PNG via `--update-snapshots`
+- [ ] Verify the test passes with `playwright test e2e-tests/join-voting.e2e.ts`
