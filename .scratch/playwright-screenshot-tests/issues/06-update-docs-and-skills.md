@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (Playwright screenshot config), 02–05 (screenshot tests themselves).
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## What to update
 
