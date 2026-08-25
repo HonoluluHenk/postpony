@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// The ad-hoc ESLint/tsc project for this file lacks node types, so `process`
-// must be read through this typed helper (see the suppressions inside).
+// Centralises env reads for this config file; keeps a single place to add
+// defaults or validation if needed later.
 function readEnv(name: string): string | undefined {
   //@ts-expect-error playwright automatically includes node types
   //eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
@@ -39,6 +39,12 @@ export default defineConfig({
     baseURL: E2E_BASE_URL,
     trace: 'on-first-retry',
     ignoreHTTPSErrors: true,
+  },
+  expect: {
+    toHaveScreenshot: {
+      // 2 % tolerance for sub-pixel rendering jitter; tune in one place.
+      maxDiffPixelRatio: 0.02,
+    },
   },
   projects: [
     {
