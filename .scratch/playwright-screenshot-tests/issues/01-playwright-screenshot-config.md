@@ -4,8 +4,8 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Add a `toHaveScreenshot` default configuration to `playwright.config.ts` with an appropriate `maxDiffPixelRatio` threshold
-- [ ] Ensure existing `npm run e2e` still passes with no regressions
-- [ ] Verify that `playwright test --update-snapshots` mode is not affected by the new defaults
+- [x] Add a `toHaveScreenshot` default configuration to `playwright.config.ts` with an appropriate `maxDiffPixelRatio` threshold
+- [x] Ensure existing `npm run e2e` still passes with no regressions
+- [x] Verify that `playwright test --update-snapshots` mode is not affected by the new defaults
