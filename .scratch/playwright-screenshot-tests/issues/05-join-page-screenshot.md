@@ -4,8 +4,8 @@
 
 **Blocked by:** 01 (Playwright screenshot config).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] In `join-voting.e2e.ts`, add `await expect(page).toHaveScreenshot({ name: 'join', fullPage: true })` to the `join and vote steps are accessible` test, after the heading assertion and `checkA11y()` call (before `joinPage.join()`)
-- [ ] Generate the baseline PNG via `--update-snapshots`
-- [ ] Verify the test passes with `playwright test e2e-tests/join-voting.e2e.ts`
+- [x] In `join-voting.e2e.ts`, add `await expect(page).toHaveScreenshot({ name: 'join', fullPage: true })` to the `join and vote steps are accessible` test, after the heading assertion and `checkA11y()` call (before `joinPage.join()`)
+- [x] Generate the baseline PNG via `--update-snapshots`
+- [x] Verify the test passes with `playwright test e2e-tests/join-voting.e2e.ts`
