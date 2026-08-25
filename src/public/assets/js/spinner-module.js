@@ -1,7 +1,31 @@
 /**
+ * @param {Element} el
+ * @returns {boolean} Whether the element is driven by HTMX (has any hx-* method attribute).
+ */
+export function isHtmxDriven(el) {
+  return el.hasAttribute('hx-get') || el.hasAttribute('hx-post') ||
+    el.hasAttribute('hx-put') || el.hasAttribute('hx-delete') ||
+    el.hasAttribute('hx-patch');
+}
+
+/**
+ * @param {Element} el - A submit button/form or a clicked link/button.
+ * @returns {boolean} Whether a spinner should be shown for this element.
+ */
+export function shouldShowSpinner(el) {
+  if (el.hasAttribute('data-no-spinner')) return false;
+  if (isHtmxDriven(el)) return false;
+  if (el.tagName === 'A') {
+    const href = el.getAttribute('href');
+    if (!href || href.startsWith('#') || el.getAttribute('target') === '_blank') return false;
+  }
+  return true;
+}
+
+/**
  * Spinner class to handle global loading overlay.
  */
-class Spinner {
+export class Spinner {
   /** @returns {HTMLElement | null} */
   get spinner() {
     return document.getElementById('global-spinner');
@@ -44,41 +68,16 @@ class Spinner {
   #initActionSpinner() {
     document.addEventListener('submit', (evt) => {
       const form = evt.target;
-      if (form && form.hasAttribute && form.hasAttribute('data-no-spinner')) {
-        return;
-      }
-      // HTMX form submissions are handled via htmx:beforeRequest.
-      if (form && (form.hasAttribute('hx-post') || form.hasAttribute('hx-get') ||
-        form.hasAttribute('hx-put') || form.hasAttribute('hx-delete') ||
-        form.hasAttribute('hx-patch'))) {
-        return;
-      }
+      if (!form || !form.hasAttribute) return;
+      if (!shouldShowSpinner(form)) return;
       this.show();
     });
 
     document.addEventListener('click', (evt) => {
       const target = evt.target.closest && evt.target.closest('a.button, button');
-      if (!target) {
-        return;
-      }
-      if (target.hasAttribute('data-no-spinner')) {
-        return;
-      }
-      // HTMX-driven elements are handled via htmx:beforeRequest.
-      if (target.hasAttribute('hx-get') || target.hasAttribute('hx-post') ||
-        target.hasAttribute('hx-put') || target.hasAttribute('hx-delete') ||
-        target.hasAttribute('hx-patch')) {
-        return;
-      }
-      // Skip pure in-page anchors and buttons that don't navigate/submit.
-      if (target.tagName === 'A') {
-        const href = target.getAttribute('href');
-        if (!href || href.startsWith('#') || target.getAttribute('target') === '_blank') {
-          return;
-        }
-        this.show();
-        return;
-      }
+      if (!target) return;
+      if (!shouldShowSpinner(target)) return;
+      this.show();
     });
 
     // Ensure the spinner is hidden when navigating back via browser cache.
@@ -88,11 +87,4 @@ class Spinner {
   init() {
     this.#initActionSpinner();
   }
-}
-
-// Initialize globally if needed, or export
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = Spinner;
-} else {
-  window.Spinner = Spinner;
 }

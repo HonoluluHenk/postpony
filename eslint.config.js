@@ -91,10 +91,8 @@ export default tseslint.config(
     languageOptions: {
       globals: {
         ...globals.browser,
-        ...globals.commonjs,
         htmx: 'readonly',
         ui: 'readonly',
-        Spinner: 'readonly',
         AirDatepicker: 'readonly',
         AirDatepickerLocale: 'readonly',
       },

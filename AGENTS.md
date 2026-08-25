@@ -124,6 +124,7 @@ docs/adr/             — 19 ADRs
 - **Heading ambiguity**: layout has `<h1>` brand + page `<h2>`s. Use `getByRole('heading', { name, level: 2 })`. Note: edit page uses the layout `<h1>` only (no duplicate `<h2>`), so its tests use `level: 1`.
 - **`<section>` must have a heading**: each `<section>` needs a heading (`<h1>`–`<h6>`) as first child. Layout wrappers use `<div>`. Don't nest `<section>` inside `<section>` unless the inner one is a true subsection.
 - **e2e type-checking**: `tsconfig.e2e.json` adds DOM lib; `npm run lint` validates e2e separately.
+- **Two Vitest projects**: one `unit` project (node environment, TypeScript specs) and one `browser` project (headless Chromium, client-side JS specs). One `vitest run` executes both; no separate npm script.
 - **Fixture builders**: `aSession()`, `aPlayer()`, etc. from `src/lib/__test-utils__/builders.ts`. Use deep-partial overrides. Inject via `await app.store.save(session)`.
 - **Builder drift**: `builders.spec.ts` asserts every required field — a model change must update builders in lockstep.
 - **Unit test mock Hono**: test files create a minimal context object and pass it to `App.create()`. See `edit-handlers.spec.ts` and `app-handler.spec.ts` for the pattern.

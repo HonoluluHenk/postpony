@@ -16,6 +16,7 @@ send_metrics = false
 [assets]
 directory = "src/public"
 binding = "ASSETS"
+assets_ignore = ["*.spec.js"]
 
 # Config values that are safe to commit. Secrets (the Turso auth token) are
 # provided via `wrangler secret put TURSO_DB_AUTH_TOKEN` and never stored here.

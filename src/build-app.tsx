@@ -23,6 +23,14 @@ export function buildApp(sessionStore: SessionStore): BuiltApp {
     c.set('sessionStore', sessionStore);
     await next();
   });
+  // ponytail: co-located client-side spec files live under the served asset root
+  // but must never be served to visitors. Upgrade: move specs out of src/public.
+  app.use('/assets/*', async (c, next) => {
+    if (c.req.path.includes('.spec.')) {
+      return c.notFound();
+    }
+    return next();
+  });
 
   app.get('/', handleAppRequest(handleIndexGet));
   app.route('/create', createRouter);
@@ -60,10 +68,10 @@ export function buildApp(sessionStore: SessionStore): BuiltApp {
     }
 
     if (app.isPartial) {
-      return c.html(app.render(<ErrorContainer globalError={message} isOob={true} />), {status});
+      return c.html(app.render(<ErrorContainer globalError={message} isOob={true}/>), {status});
     }
 
-    return c.html(app.render(<ErrorPage {...app.view} message={message} globalError={message} />), {status});
+    return c.html(app.render(<ErrorPage {...app.view} message={message} globalError={message}/>), {status});
   });
 
   return app;

@@ -78,6 +78,12 @@ test.describe('Start Page', () => {
     await checkA11y();
   });
 
+  test('client-side spec files are not fetchable', async ({page}) => {
+    const response = await page.request.get('/assets/js/spinner-module.spec.js');
+    expect(response.status())
+      .toBe(404);
+  });
+
   test('accessibility landmarks check', async ({checkA11y}) => {
     // 1. Check for main landmark
     await expect(startPage.main)
