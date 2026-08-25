@@ -39,6 +39,7 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(2);
 
     await checkA11y();
+    await expect(page).toHaveScreenshot('edit-with-dates.png', {fullPage: true});
   });
 
   test('should show vote tallies on the edit page', async ({page, checkA11y}) => {
@@ -106,6 +107,7 @@ test.describe('Postponement Editing', () => {
       .toHaveText('0');
 
     await checkA11y();
+    await expect(page).toHaveScreenshot('edit-with-votes.png', {fullPage: true});
   });
 
   test('should toggle away team voting visibility on proposed dates', async ({page, checkA11y}) => {
@@ -273,8 +275,9 @@ test.describe('Postponement Editing', () => {
     await checkA11y();
   });
 
-  test('should maintain accessibility on the editing interface', async ({checkA11y}) => {
+  test('should maintain accessibility on the editing interface', async ({page, checkA11y}) => {
     await checkA11y();
+    await expect(page).toHaveScreenshot('edit-empty.png', {fullPage: true});
   });
 
   test('maintains accessibility on the edit page with split tallies visible', async ({page, checkA11y}) => {
@@ -329,6 +332,7 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(0);
 
     await checkA11y();
+    await expect(page).toHaveScreenshot('edit-confirmed.png', {fullPage: true});
   });
 
   test('should reopen a confirmed postponement and start new dates non-votable', async ({page, checkA11y}) => {
