@@ -55,6 +55,7 @@ test.describe('Postponement Creation', () => {
     // Create page
     await startPage.createLink.click();
     await checkA11y();
+    await expect(page).toHaveScreenshot('create.png', {fullPage: true});
 
     // Submit and check Edit page
     const createPage = new CreatePage(page);
