@@ -71,15 +71,13 @@ export function ScrapeMatchesPage(props: ScrapeMatchesPageProps): JSX.Element {
                     <input type="hidden" name="leagueName" value={props.leagueName} />
                     <input type="hidden" name="championship" value={props.championship} />
                     <input type="hidden" name="group" value={props.group} />
+                    <input type="hidden" name="teamName" value={props.teamName} />
                     <input type="hidden" name="opponentTeamtable" value={m.opponentTeamtable} />
                     {props.players.map((player) => (
                       <input type="hidden" name="playerName" value={player.name} />
                     ))}
-                    <button type="submit" name="teamName" value={m.homeTeam} class="small">
-                      {props.t('scrape_create_as_home', {teamName: m.homeTeam})}
-                    </button>
-                    <button type="submit" name="teamName" value={m.guestTeam} class="small">
-                      {props.t('scrape_create_as_away', {teamName: m.guestTeam})}
+                    <button type="submit" class="small">
+                      {props.t('scrape_select')}
                     </button>
                   </form>
                 </td>

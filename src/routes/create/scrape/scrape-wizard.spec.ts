@@ -227,7 +227,7 @@ describe('scrape wizard GET handlers', () => {
   });
 
   describe('handleScrapeMatchesGet', () => {
-    test('lists the team matches with per-side create forms and opponent teamtables', async () => {
+    test('lists the team matches with one select form per match and opponent teamtables', async () => {
       const app = createApp({
         queries: {
           championship: 'MTTV 26/27',
@@ -250,8 +250,16 @@ describe('scrape wizard GET handlers', () => {
       // 14 match rows + 1 header row in the schedule table.
       expect((html.match(/<tr>/g) ?? []).length)
         .toBe(15);
-      expect((html.match(/<button type="submit" name="teamName"/g) ?? []).length)
-        .toBe(28);
+      // Exactly one submit button per match row (14 rows → 14 buttons),
+      // none carrying the team as a button value.
+      expect((html.match(/<button type="submit"/g) ?? []).length)
+        .toBe(14);
+      expect(html).not.toContain('<button type="submit" name="teamName"');
+      // The chosen team travels in every match form as a hidden field:
+      // 14 match rows, each carrying the picked team.
+      expect((html.match(/name="teamName"/g) ?? []).length)
+        .toBe(14);
+      expect(html).toContain('name="teamName" value="Ostermundigen"');
       // Thun (the 29.08.2026 opponent) resolves to the team-thun teamtable.
       expect(html).toContain('name="opponentTeamtable" value="1732195"');
       // The picked team's roster is threaded as playerName hidden inputs in
