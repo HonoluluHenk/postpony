@@ -236,6 +236,7 @@ test.describe('Join and Voting', () => {
     await expect(joinPage.heading)
       .toBeVisible();
     await checkA11y();
+    await expect(page).toHaveScreenshot('join.png', {fullPage: true});
 
     await joinPage.join('Dora');
     await checkA11y();
