@@ -28,6 +28,13 @@ test.describe('Invitation Link', () => {
     expect(awayHref)
       .toMatch(new RegExp(`^${expectedBase}/join/.+/away\\?token=.+`));
 
+    // 3. Labels follow the organizer perspective; the default session is created
+    //    from the home side with team names "Home Team" / "Guest Team".
+    await expect(editPage.homeInviteLink)
+      .toHaveText('My team invitation link (Home Team)');
+    await expect(editPage.awayInviteLink)
+      .toHaveText('Opponent team invitation link (Guest Team)');
+
     await checkA11y();
   });
 
