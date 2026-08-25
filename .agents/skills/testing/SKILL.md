@@ -125,6 +125,25 @@ e2e files are type-checked separately under `tsconfig.e2e.json`; a full
 - Judge per-file coverage from a **full** `npm run test` (v8/lcov/HTML report). The istanbul **text** reporter silently drops subdirectory groups that are fully covered in a single file (e.g. `src/lib/middleware/language.ts` at 100% vanished from the text table but shows in `coverage/lcov.info` and the HTML report). The `lcov` and `html` reporters are authoritative.
 - A `--coverage` run limited to one spec reports a misleading global percentage (coverage `all` semantics) — don't infer per-file coverage from it.
 
+## Screenshot (visual regression) tests
+
+Visual regression via `toHaveScreenshot()` guards against unintended UI/CSS drift.
+
+- **When to use**: adding or updating a visual regression assertion, or regenerating baselines after a deliberate visual change (CSS, BeerCSS, markup).
+- **Pattern**: insert the assertion at the right state checkpoint in an existing test, after all HTMX swaps and `checkA11y()` have settled:
+
+  ```ts
+  await checkA11y();
+  await expect(page).toHaveScreenshot('edit-with-dates.png', {fullPage: true});
+  ```
+
+- **Co-location**: assertions live in the existing behavioural test files (e.g. `postponement-editing.e2e.ts`), **not** in a separate `e2e-tests/screenshots/` directory.
+- **Config**: `maxDiffPixelRatio: 0.02` in `playwright.config.ts` under `expect.toHaveScreenshot` — tune the tolerance in one place.
+- **Baseline management**: `npx playwright test --update-snapshots` generates/regenerates baselines. They are written to `e2e-tests/<file>.e2e.ts-snapshots/*.png`, live alongside test results, and are committed to git.
+- **Naming convention**: `name` encodes page + state (e.g. `edit-empty`, `edit-with-dates`, `join`).
+- **Full-page**: always pass `fullPage: true` to capture below-fold layout.
+- **Update baselines after CSS/BeerCSS changes**: run `--update-snapshots`, visually verify the diff, then commit.
+
 ## Conventions
 
 - Place unit tests alongside the source as `*.spec.ts`; e2e tests live in

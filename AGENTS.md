@@ -27,6 +27,7 @@ A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framewo
 | `npm run lint`            | `tsc --noEmit` → `tsc -p tsconfig.e2e.json --noEmit` → `eslint . --max-warnings 0`           |
 | `npm run lint:eslint:fix` | Auto-fix ESLint                                                                              |
 | `npm run e2e`             | Playwright (starts its own server on `$E2E_APP_PORT`, default 3001, never reuses dev server) |
+| `npx playwright test --update-snapshots` | Regenerate committed screenshot baselines (visual regression; e2e server builds itself) |
 | `npm run verify`          | lint → test → build → e2e (full CI gate)                                                     |
 | `npm run build`           | Vite build (SSR) → `dist/`                                                                   |
 
@@ -128,6 +129,7 @@ docs/adr/             — 19 ADRs
 - **Fixture builders**: `aSession()`, `aPlayer()`, etc. from `src/lib/__test-utils__/builders.ts`. Use deep-partial overrides. Inject via `await app.store.save(session)`.
 - **Builder drift**: `builders.spec.ts` asserts every required field — a model change must update builders in lockstep.
 - **Unit test mock Hono**: test files create a minimal context object and pass it to `App.create()`. See `edit-handlers.spec.ts` and `app-handler.spec.ts` for the pattern.
+- **Screenshot tests**: visual regression assertions (`toHaveScreenshot(..., {fullPage: true})`) are co-located in existing `*.e2e.ts` files, baselines committed under `e2e-tests/*.ts-snapshots/`; tolerance `maxDiffPixelRatio: 0.02` in `playwright.config.ts`. See the `testing` skill.
 
 ## Skills (`.agents/skills/`)
 
