@@ -86,7 +86,7 @@ describe('handleScrapeMatchPost', () => {
   });
 
   test('throws when a required match field is missing', async () => {
-    const app = createApp({body: {...MATCH, date: ''}});
+    const app = createApp({body: {...MATCH, teamName: 'Thun', date: ''}});
 
     await expect(handleScrapeMatchPost(app))
       .rejects
@@ -98,7 +98,7 @@ describe('handleScrapeMatchPost', () => {
 
     await expect(handleScrapeMatchPost(app))
       .rejects
-      .toThrow('Missing required parameter: match');
+      .toThrow('Missing required parameter: teamName');
   });
 
   test('rejects when the organizer team name is empty', async () => {
@@ -106,7 +106,7 @@ describe('handleScrapeMatchPost', () => {
 
     await expect(handleScrapeMatchPost(app))
       .rejects
-      .toThrow('Missing required parameter: match');
+      .toThrow('Missing required parameter: teamName');
   });
 });
 

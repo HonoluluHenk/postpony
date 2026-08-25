@@ -8,9 +8,9 @@
 
 - [x] Handler schema requires the submitted team name as non-empty; absent name rejects with the standard missing-parameter error instead of defaulting to 'away'
 - [x] Chosen team listed as home side stores `organizerTeam: 'home'`; chosen team listed as guest side stores `'away'`
-- [x] Both derivations covered at the mock-App handler seam (prior art: existing match-create POST unit spec)
+- [x] Both derivations covered at the mock-App handler seam (prior art: existing match-create POST unit spec) — both derivation specs pre-date this ticket; verified still green after the schema change
 - [x] Missing-team-name rejection covered
-- [x] Change-mode spec still passes unchanged (rosters replaced, id/passwords/votes/proposed dates preserved)
+- [x] Change-mode spec still passes (rosters replaced, id/passwords/votes/proposed dates preserved) — three change-mode fixtures were edited to add a valid `teamName`; the asserted contract itself is unchanged
 
 ## Comments
 
@@ -18,3 +18,4 @@
 - Added specs: absent team name rejects, empty team name rejects. The two change-mode guard specs (wrong owner password, missing session) needed a valid `teamName` in their fixtures now that schema validation precedes those guards.
 - Lint clean; full suite 307 tests / 30 files green; coverage identical to baseline (global 87.0% stmts / 78.0% branch, match-post.ts 80.4%/69.2% — remaining gaps are pre-existing network-fetch, owner-password-missing, and HX-partial branches).
 - Not touched (other tickets): matches.tsx buttons, locale keys, page objects, e2e.
+- Code review follow-up: the missing-parameter failure now names `teamName` explicitly ("Missing required parameter: teamName") instead of the generic "match"; a dedicated pre-check distinguishes it from other schema failures. Rejection specs updated to assert the precise message.

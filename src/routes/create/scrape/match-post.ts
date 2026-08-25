@@ -37,6 +37,9 @@ function makePlayer(name: string, teamId: 'home' | 'away'): Player {
 
 export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   const body = await app.c.req.parseBody({all: true});
+  if (typeof body['teamName'] !== 'string' || body['teamName'].length === 0) {
+    app.failure(app.t('missing_param', {name: 'teamName'}));
+  }
   const validation = v.safeParse(MatchSchema, body);
   if (!validation.success) {
     app.failure(app.t('missing_param', {name: 'match'}));
