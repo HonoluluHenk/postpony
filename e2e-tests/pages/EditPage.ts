@@ -13,14 +13,24 @@ export class EditPage {
     return this;
   }
 
-  static async createSession(page: Page, dates?: string[]): Promise<{
+  static async createSession(
+    page: Page,
+    dates?: string[],
+    originalMatchDateTime?: string,
+  ): Promise<{
     session: SessionFixture;
     editPage: EditPage
   }>
   {
     const createPage = await new CreatePage(page)
       .goto();
-    const editPage = await createPage.create();
+    const lang = await page.locator('html')
+      .getAttribute('lang');
+    const editPage = await createPage.create(
+      originalMatchDateTime
+        ? {originalMatchDateTime: isoToLocaleTokens(lang, originalMatchDateTime)}
+        : {},
+    );
 
     for (const [i, dt] of (dates ?? []).entries()) {
       await editPage.addProposedDate(dt);
@@ -113,7 +123,58 @@ export class EditPage {
   }
 
   get proposedDateList(): Locator {
-    return this.page.getByRole('list', {name: 'Proposed Dates'});
+    // ponytail: the generator's <ol> also has aria-label "Generate Proposed
+    // Dates" which would collide with the fuzzy "Proposed Dates" substring
+    // match; scope to exact so the proposal list stays singular.
+    return this.page.getByRole('list', {name: 'Proposed Dates', exact: true});
+  }
+
+  get generateForm(): Locator {
+    // ponytail: filter by the hidden `generate=tuple` discriminator so the
+    // generator form never collides with the single-date form below it.
+    return this.page.locator('form').filter({
+      has: this.page.locator('input[name="generate"][value="tuple"]'),
+    });
+  }
+
+  generateWeekdaySelect(index: number): Locator {
+    return this.generateForm.locator(`select#weekday-${String(index)}`);
+  }
+
+  generateTimeInput(index: number): Locator {
+    return this.generateForm.locator(`input#time-${String(index)}`);
+  }
+
+  get addRowButton(): Locator {
+    return this.generateForm.locator('button[name="action"][value="grow"]');
+  }
+
+  removeRowButton(index: number): Locator {
+    return this.generateForm.locator(`button[formaction$="rowIndex=${String(index)}"]`);
+  }
+
+  get generateSubmitButton(): Locator {
+    // ponytail: "Generate" matches two buttons (the submit and a future nav
+    // breadcrumb) — scope to the generator form to disambiguate.
+    return this.generateForm.getByRole('button', {name: 'Generate', exact: true});
+  }
+
+  async generateProposedDates(rows: { weekday: number; time: string }[]): Promise<void> {
+    let rowCount = await this.generateForm.locator('select[name="weekday[]"]')
+      .count();
+    while (rowCount < rows.length) {
+      await this.addRowButton.click();
+      await this.generateWeekdaySelect(rowCount)
+        .waitFor({state: 'visible'});
+      rowCount++;
+    }
+    for (const [index, row] of rows.entries()) {
+      await this.generateWeekdaySelect(index)
+        .selectOption(String(row.weekday));
+      await this.generateTimeInput(index)
+        .fill(row.time);
+    }
+    await this.generateSubmitButton.click();
   }
 
   get homeInviteLink(): Locator {
