@@ -4,9 +4,13 @@ import type { AppLocale } from './config';
 
 export type TranslationKeys = keyof typeof en;
 
-// de-CH reuses the German UI text, en-US the English; fr-CH and it-CH fall
-// back to the English text until dedicated translations land (ADR-0016).
-export const translations: Record<AppLocale, Record<TranslationKeys, string>> = {
+// `weekdays_short` is a 7-entry array rather than a string scalar; everything
+// else is a plain template string. The union below keeps `TranslationKeys`
+// auto-derived from `en.json` while letting arrays live alongside the rest.
+// Array-valued keys are not meant to go through `getTranslation`/`app.t()` —
+// consumers (e.g. the weekday <select>) read `translations[locale].weekdays_short`
+// directly. `getTranslation` defensively stringifies via `String(...)`.
+export const translations: Record<AppLocale, Record<TranslationKeys, string | string[]>> = {
   'de-CH': de,
   'en-US': en,
   'fr-CH': en,

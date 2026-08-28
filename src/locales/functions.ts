@@ -9,7 +9,9 @@ export function isLocale(value: unknown): value is AppLocale {
 }
 
 export function getTranslation(locale: AppLocale, key: TranslationKeys, params: Record<string, string> = {}): string {
-  let template = translations[locale][key] || translations[defaultLocale][key] || key;
+  // Some keys (`weekdays_short`) are arrays on the underlying record; coerce
+  // safely so `String(["a","b"]) -> "a,b"` for callers that pass through `t()`.
+  let template = String(translations[locale][key] || translations[defaultLocale][key] || key);
   for (const [param, value] of Object.entries(params)) {
     template = template.replace(new RegExp(`<%=\\s*it\\.${param}\\s*%>`, 'g'), value);
   }

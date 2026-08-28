@@ -61,6 +61,14 @@
   "proposed_date_time_invalid": "Please provide a valid date and time",
   "proposed_date_time_label": "Proposed Date & Time",
   "proposed_date_time_picker_label": "Open calendar",
+  "proposed_dates_generate_section": "Generate Proposed Dates",
+  "proposed_dates_generate_help": "Generate multiple proposed dates from weekday + time patterns.",
+  "proposed_dates_generate_button": "Generate",
+  "proposed_dates_generate_added": "<%= it.count %> dates added",
+  "proposed_dates_generate_none": "No dates were added. Adjust the patterns and try again.",
+  "proposed_dates_generate_add_row": "Add weekday",
+  "proposed_dates_generate_remove_row": "Remove row",
+  "proposed_dates_generate_no_anchor": "No match anchor — using today as window start.",
   "proposed_dates_management": "Proposed Dates",
   "reopen": "Reopen",
   "reopened_count": "Reopened <%= it.count %> time(s)",
@@ -102,6 +110,15 @@
   "vote_yes": "Yes",
   "voted_column": "Voted",
   "voted_count": "<%= it.voted %>/<%= it.total %> voted",
+  "weekdays_short": [
+    "Mo",
+    "Tu",
+    "We",
+    "Th",
+    "Fr",
+    "Sa",
+    "Su"
+  ],
   "welcome": "Welcome to PostPony",
   "your_team_votes": "Your Team's Votes"
 }

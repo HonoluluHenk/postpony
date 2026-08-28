@@ -9,6 +9,7 @@ import {
   intersectRanges,
   parseClickTtDateTime,
   parseLocaleDateTime,
+  parseLocaleTimeOnly,
 } from './temporal-utils';
 
 describe('Temporal Utils', () => {
@@ -257,6 +258,87 @@ describe('Temporal Utils', () => {
     it('zero-pads day, month, hour and minute', () => {
       expect(formatIsoToLocaleTokens('2026-03-05T09:04:00', 'de-CH'))
         .toBe('05.03.2026 09:04');
+    });
+  });
+
+  describe('parseLocaleTimeOnly', () => {
+    it.each(['de-CH', 'fr-CH', 'it-CH'] as const)(
+      'parses a canonical %s 24h HH:mm input',
+      (locale) => {
+        expect(parseLocaleTimeOnly('20:00', locale)).toEqual({hour: 20, minute: 0});
+        expect(parseLocaleTimeOnly('08:05', locale)).toEqual({hour: 8, minute: 5});
+      },
+    );
+
+    it.each(['de-CH', 'fr-CH', 'it-CH'] as const)(
+      'tolerates missing leading zeros in %s',
+      (locale) => {
+        expect(parseLocaleTimeOnly('8:5', locale)).toEqual({hour: 8, minute: 5});
+      },
+    );
+
+    it.each(['de-CH', 'fr-CH', 'it-CH'] as const)(
+      'ignores trailing seconds in %s but rejects an am/pm marker',
+      (locale) => {
+        expect(parseLocaleTimeOnly('20:00:30', locale)).toEqual({hour: 20, minute: 0});
+        expect(parseLocaleTimeOnly('20:00 pm', locale)).toBeUndefined();
+      },
+    );
+
+    it.each(['de-CH', 'fr-CH', 'it-CH'] as const)(
+      'rejects an out-of-range hour in %s',
+      (locale) => {
+        expect(parseLocaleTimeOnly('25:00', locale)).toBeUndefined();
+      },
+    );
+
+    it.each(['de-CH', 'fr-CH', 'it-CH'] as const)(
+      'rejects an out-of-range minute in %s',
+      (locale) => {
+        expect(parseLocaleTimeOnly('12:99', locale)).toBeUndefined();
+      },
+    );
+
+    it('parses a canonical en-US 12h hh:mm aa input', () => {
+      expect(parseLocaleTimeOnly('08:00 pm', 'en-US')).toEqual({hour: 20, minute: 0});
+      expect(parseLocaleTimeOnly('08:00 am', 'en-US')).toEqual({hour: 8, minute: 0});
+    });
+
+    it('parses en-US 12 pm as noon and 12 am as midnight', () => {
+      expect(parseLocaleTimeOnly('12:00 pm', 'en-US')).toEqual({hour: 12, minute: 0});
+      expect(parseLocaleTimeOnly('12:00 am', 'en-US')).toEqual({hour: 0, minute: 0});
+    });
+
+    it('parses en-US am/pm case-insensitively and with no surrounding whitespace', () => {
+      expect(parseLocaleTimeOnly('8:00PM', 'en-US')).toEqual({hour: 20, minute: 0});
+      expect(parseLocaleTimeOnly('8:00AM', 'en-US')).toEqual({hour: 8, minute: 0});
+    });
+
+    it('ignores trailing seconds in en-US 12h', () => {
+      expect(parseLocaleTimeOnly('8:00:30 pm', 'en-US')).toEqual({hour: 20, minute: 0});
+    });
+
+    it('rejects en-US without an am/pm marker', () => {
+      expect(parseLocaleTimeOnly('08:00', 'en-US')).toBeUndefined();
+    });
+
+    it('rejects en-US hour of 0', () => {
+      expect(parseLocaleTimeOnly('0:00 am', 'en-US')).toBeUndefined();
+    });
+
+    it('rejects en-US out-of-range hour via 12h ("13:00 pm")', () => {
+      expect(parseLocaleTimeOnly('13:00 pm', 'en-US')).toBeUndefined();
+    });
+
+    it('rejects en-US hour above 12 regardless of marker', () => {
+      expect(parseLocaleTimeOnly('15:00 am', 'en-US')).toBeUndefined();
+    });
+
+    it('rejects empty or whitespace-only input', () => {
+      for (const locale of ['de-CH', 'fr-CH', 'it-CH', 'en-US'] as const) {
+        expect(parseLocaleTimeOnly('', locale)).toBeUndefined();
+        expect(parseLocaleTimeOnly('   ', locale)).toBeUndefined();
+      }
     });
   });
 });

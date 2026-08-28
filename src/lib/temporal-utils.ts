@@ -126,6 +126,65 @@ export function formatIsoToLocaleTokens(isoString: string, locale: AppLocale): s
 }
 
 /**
+ * Parses a user-typed time-of-day in the locale's input format into
+ * `{ hour, minute }`. Mirrors `parseLocaleDateTime`'s grammar but for the
+ * time portion only: 24h locales accept `HH:mm` (optional seconds are
+ * accepted and ignored), 12h locales require `hh:mm aa` with a
+ * case-insensitive `am`/`pm` marker. Missing `am`/`pm` in 12h locales and
+ * hour/minute out of range are both rejected. Returns undefined instead of
+ * throwing.
+ */
+export interface LocaleTime {
+  hour: number;
+  minute: number;
+}
+
+export function parseLocaleTimeOnly(value: string, locale: AppLocale): LocaleTime | undefined {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const config = localeConfig(locale);
+  const match = config.clock24
+                ? TIME_24H_PATTERN.exec(trimmed)
+                : TIME_12H_PATTERN.exec(trimmed);
+  if (!match) {
+    return undefined;
+  }
+  const [, hour = '', minute = '', marker] = match;
+  let hours = Number(hour);
+  const minutes = Number(minute);
+  if (!config.clock24) {
+    if (hours < 1 || hours > 12) {
+      return undefined;
+    }
+    const isPm = marker?.toLowerCase() === 'pm';
+    if (hours === 12) {
+      hours = isPm ? 12 : 0;
+    } else if (isPm) {
+      hours += 12;
+    }
+  }
+  // Round-trip through the strict ISO time representation so impossible
+  // values (hour ≥ 24, minute ≥ 60) are rejected without throwing — mirrors
+  // the existing `parseLocaleDateTime` strategy in this file.
+  const iso = `${pad2(hours)}:${pad2(minutes)}`;
+  try {
+    Temporal.PlainTime.from(iso);
+  }
+  catch {
+    return undefined;
+  }
+  return {hour: hours, minute: minutes};
+}
+
+// Matches `HH:mm` with optional trailing `:ss` (24h locales). Seconds are
+// parsed (named group exists) but ignored by `parseLocaleTimeOnly`.
+const TIME_24H_PATTERN = /^(\d{1,2}):(\d{1,2})(?::\d{1,2})?$/;
+// Matches `hh:mm aa` with optional `:ss` (12h en-US); the am/pm marker is required.
+const TIME_12H_PATTERN = /^(\d{1,2}):(\d{1,2})(?::\d{1,2})?\s*(am|pm)$/i;
+
+/**
  * Converts a click-tt.ch match's `date` (`dd.mm.yyyy`) and `time` (`HH:mm`,
  * possibly with trailing junk such as `"19:45 v"`) into a datetime-local value.
  * Returns undefined if either input doesn't match the expected shape.
