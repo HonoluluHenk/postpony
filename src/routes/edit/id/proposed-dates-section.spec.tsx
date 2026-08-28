@@ -101,6 +101,107 @@ describe('ProposedDatesSection component', () => {
   });
 });
 
+describe('ProposedDatesSection generator block', () => {
+  it('renders the generator block above the single-add form on initial render', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    const generatorIndex = html.indexOf('Generate Proposed Dates');
+    const singleAddIndex = html.indexOf('id="proposedDateTime"');
+    expect(generatorIndex).toBeGreaterThan(-1);
+    expect(singleAddIndex).toBeGreaterThan(-1);
+    expect(generatorIndex).toBeLessThan(singleAddIndex);
+  });
+
+  it('ships exactly one tuple row on initial render', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect((html.match(/name="weekday\[\]"/g) ?? []).length).toBe(1);
+    expect((html.match(/name="time\[\]"/g) ?? []).length).toBe(1);
+  });
+
+  it('posts with the generate=tuple discriminator and the row-add/row-remove intent', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), generateRows: 3}));
+
+    expect(html).toContain('name="generate" value="tuple"');
+    expect(html).toContain('name="action" value="grow"');
+    expect(html).toContain('name="action" value="remove"');
+    expect(html).toContain('formaction="/edit/session-1/proposed-dates?rowIndex=1"');
+    expect(html).toContain('formaction="/edit/session-1/proposed-dates?rowIndex=2"');
+  });
+
+  it('mirrors the single-date field placeholder and lang on each time input', () => {
+    const props = {...baseProps(), generateRows: 2, locale: 'de-CH' as const, inputFormat: 'dd.MM.yyyy HH:mm'};
+    const html = renderToString(ProposedDatesSection(props));
+
+    expect(html.match(/name="time\[\]"/g)?.length ?? 0).toBe(2);
+    expect(html.match(/placeholder="dd\.MM\.yyyy HH:mm"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(html.match(/lang="de-CH"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+  });
+
+  it('emits every weekday label inside the locale-aware weekday select', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html).toContain('<option value="1"');
+    expect(html).toContain('<option value="7"');
+    expect(html).toContain('>Mo</option>');
+    expect(html).toContain('>Su</option>');
+  });
+
+  it('greys out the Add weekday button when the cap of 14 is reached', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), generateRows: 14}));
+
+    expect(html).toContain('name="action" value="grow" disabled=""');
+    expect((html.match(/name="weekday\[\]"/g) ?? []).length).toBe(14);
+    expect((html.match(/name="action" value="remove"/g) ?? []).length).toBe(14);
+  });
+
+  it('keeps the lone row\'s remove button disabled so users cannot trim to zero', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html).toMatch(/name="action" value="remove"[^>]*disabled/);
+  });
+
+  it('enables the remove button once the form has 2+ tuple rows', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), generateRows: 2}));
+
+    const removeButtons = (html.match(/<button[^>]*name="action" value="remove"[^>]*>/g) ?? []);
+    expect(removeButtons.length).toBe(2);
+    for (const tag of removeButtons) {
+      expect(tag).not.toContain('disabled');
+    }
+  });
+
+  it('hides the generator block alongside the single-add form when Confirmed', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), status: 'Confirmed'}));
+
+    expect(html).not.toContain('Generate Proposed Dates');
+    expect(html).not.toContain('name="weekday[]"');
+    expect(html).not.toContain('name="time[]"');
+    expect(html).not.toContain('name="generate" value="tuple"');
+  });
+
+  it('renders the success toast with the localized count when n >= 1', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), generatorSuccessCount: 12}));
+
+    expect(html).toContain('class="toast success top mt-2"');
+    expect(html).toContain('12 dates added');
+  });
+
+  it('renders the inline zero-result message from the generatorError prop', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), generatorError: 'No dates were added. Adjust the patterns and try again.'}));
+
+    expect(html).toContain('class="error mt-2" role="alert"');
+    expect(html).toContain('No dates were added.');
+  });
+
+  it('clamps absurd row counts to the 14-row cap on render', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), generateRows: 999}));
+
+    expect((html.match(/name="weekday\[\]"/g) ?? []).length).toBe(14);
+    expect(html).toContain('name="action" value="grow" disabled=""');
+  });
+});
+
 describe('ProposedDatesSectionPartial', () => {
   it('renders the section with its out-of-band companions and no document preamble', () => {
     const html = renderToString(ProposedDatesSectionPartial({
