@@ -185,6 +185,15 @@ const TIME_24H_PATTERN = /^(\d{1,2}):(\d{1,2})(?::\d{1,2})?$/;
 const TIME_12H_PATTERN = /^(\d{1,2}):(\d{1,2})(?::\d{1,2})?\s*(am|pm)$/i;
 
 /**
+ * Today as a wall-clock `PlainDateTime` ISO string in `Europe/Zurich`. Spied
+ * on in tests so handler specs get a deterministic `todayIso` for the pure
+ * generator; production callers go straight through `Temporal.Now`.
+ */
+export function nowPlainDateTimeIso(): string {
+  return Temporal.Now.plainDateTimeISO('Europe/Zurich').toString();
+}
+
+/**
  * Converts a click-tt.ch match's `date` (`dd.mm.yyyy`) and `time` (`HH:mm`,
  * possibly with trailing junk such as `"19:45 v"`) into a datetime-local value.
  * Returns undefined if either input doesn't match the expected shape.

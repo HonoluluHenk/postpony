@@ -63,6 +63,9 @@ export interface EditPartialExtras {
   error?: string;
   globalError?: string;
   success?: boolean;
+  generateRows?: number;
+  generatorError?: string;
+  generatorSuccessCount?: number;
 }
 
 /**
@@ -89,6 +92,9 @@ export function renderEditPartials(
     proposedDateTime: extra.proposedDateTime,
     error: extra.error,
     success: extra.success,
+    generateRows: extra.generateRows,
+    generatorError: extra.generatorError,
+    generatorSuccessCount: extra.generatorSuccessCount,
     globalError: extra.globalError,
   };
   return app.render(<ProposedDatesSectionPartial {...props} />);
