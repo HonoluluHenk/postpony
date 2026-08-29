@@ -45,6 +45,10 @@ A Participant's `Yes` / `No` / `Maybe` on one Proposed Date. At most one Vote pe
 
 The edit-page interaction for proposing a weekly slate of candidate times in one step. It renders a fixed Monday–Sunday grid; for each day the organizer either enters a time (which produces a Proposed Date inside the planning window, anchored on the Match's `originalMatchDateTime`) or leaves the row empty (which is skipped). The weekdays are locked and cannot be added, removed, or re-labelled. _Avoid_: add-row/remove-row generator, free-form slate
 
+## Clash
+
+A scheduled game of the home or the away team whose start falls within a Proposed Date's range plus a two-hour buffer (`CLASH_BUFFER_HOURS` in `src/lib/clashes.ts`) on either side — the hall may be booked or a team double-booked. Computed purely by `computeClashes` from both teams' scraped click-tt schedules; the postponed Match itself is excluded. Results split per affected team (`home` / `away`), each Clash carrying the opponent's name and the ISO-normalized start — raw click-tt strings never enter the model. _Avoid_: conflict, collision, double-booking
+
 ## Status
 
 The lifecycle of a Postponement: `Draft → Voting → Confirmed`. `Draft` at creation, `Voting` from the first proposed-date add and again on reopen, `Confirmed` when the organizer locks a date. Reopen returns to `Voting` and increments `reopenCount`.

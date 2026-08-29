@@ -4,10 +4,10 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Given schedules and proposed dates, the clash sets per date are exactly right
-- [ ] Boundary coverage: game start exactly at the ±2h edge counts as a clash; just outside does not
-- [ ] Clashes are split per team; a game listed on both team pages appears on both sides
-- [ ] The postponed match (same date + home/guest names) is excluded
-- [ ] Multiple clashes on one date all appear; empty schedules yield an empty result
+- [x] Given schedules and proposed dates, the clash sets per date are exactly right
+- [x] Boundary coverage: game start exactly at the ±2h edge counts as a clash; just outside does not
+- [x] Clashes are split per team; a game listed on both team pages appears on both sides
+- [x] The postponed match (same date + home/guest names) is excluded
+- [x] Multiple clashes on one date all appear; empty schedules yield an empty result
