@@ -1,10 +1,12 @@
 import { Temporal } from '@js-temporal/polyfill';
 import { describe, expect, it, test } from 'vitest';
+import { weekdayLabels } from '../locales';
 import {
   DateTimeRange,
   doRangesOverlap,
   formatIsoToLocaleTokens,
   formatLocalizedDateTime,
+  formatProposedDateDisplay,
   intersectDateTimeRanges,
   intersectRanges,
   parseClickTtDateTime,
@@ -89,6 +91,16 @@ describe('Temporal Utils', () => {
       .toContain('10.05.2026');
     expect(formatted)
       .toContain('10:30');
+  });
+
+  test('formatProposedDateDisplay prefixes the locale short-weekday label', () => {
+    const iso = '2026-05-10T10:30:00';
+    const dt = Temporal.PlainDateTime.from(iso);
+    const weekday = weekdayLabels['en-US'][dt.dayOfWeek - 1];
+    expect(formatProposedDateDisplay(iso, 'en-US'))
+      .toBe(`${weekday}, ${formatLocalizedDateTime(dt, 'en-US')}`);
+    expect(formatProposedDateDisplay(iso, 'de-CH'))
+      .toBe(`${weekdayLabels['de-CH'][dt.dayOfWeek - 1]}, ${formatLocalizedDateTime(dt, 'de-CH')}`);
   });
 
   test('parseClickTtDateTime should convert a well-formed date and time', () => {

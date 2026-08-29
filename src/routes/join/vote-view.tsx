@@ -2,7 +2,7 @@ import type { App } from '../../app';
 import type { AppLocale } from '../../locales';
 import type { Player, Postponement, ProposedDate } from '../../lib/models';
 import { PostponementRules } from '../../lib/postponement';
-import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
+import { formatProposedDateDisplay } from '../../lib/temporal-utils';
 import { ConfirmedInfoPage } from './confirmed-info';
 import type { Team } from './join-utils';
 import { VotePage, type PlayerVoteRow, type VotePageDate } from './vote';
@@ -22,7 +22,7 @@ export function visibleDatesForTeam(session: Postponement, team: Team): Proposed
 export function confirmedDateDisplay(session: Postponement, locale: AppLocale): string | undefined {
   const confirmed = session.proposedDates.find((pd) => pd.id === session.confirmedProposedDateId);
   return confirmed
-         ? formatLocalizedDateTime(parseIsoToPlainDateTime(confirmed.dateTimeRange.start), locale)
+         ? formatProposedDateDisplay(confirmed.dateTimeRange.start, locale)
          : undefined;
 }
 
@@ -76,7 +76,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {
       id: pd.id,
-      display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
+      display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
       currentVote: current?.type ?? '',
       yes: counts.yes,
       maybe: counts.maybe,

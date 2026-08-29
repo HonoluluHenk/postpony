@@ -35,7 +35,7 @@ test.describe('Postponement Editing', () => {
 
     // Add another proposed date
     await editPage.addProposedDate('2026-03-12T18:30');
-    await expect(editPage.proposedDateList.getByRole('listitem'))
+    await expect(editPage.proposedDateRows)
       .toHaveCount(2);
 
     await checkA11y();
@@ -114,8 +114,7 @@ test.describe('Postponement Editing', () => {
     const editPage = new EditPage(page);
     // Add a proposed date
     await editPage.addProposedDate('2026-03-05T20:00');
-    await expect(page.locator('#proposed-date-list')
-      .getByRole('listitem'))
+    await expect(page.locator('#proposed-date-list tbody tr'))
       .toHaveCount(1);
 
     // Toggle it on
@@ -308,7 +307,7 @@ test.describe('Postponement Editing', () => {
   test('should confirm a proposed date, lock the session, and show the reopen control', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
-    await expect(editPage.proposedDateList.getByRole('listitem'))
+    await expect(editPage.proposedDateRows)
       .toHaveCount(1);
 
     // No confirm control until the date is proposed to the opponent.
@@ -355,7 +354,7 @@ test.describe('Postponement Editing', () => {
 
     // A new date added after the reopen starts non-votable until flipped.
     await editPage.addProposedDate('2026-06-15T18:30');
-    await expect(editPage.proposedDateList.getByRole('listitem'))
+    await expect(editPage.proposedDateRows)
       .toHaveCount(2);
     await expect(editPage.votableCheckbox(1))
       .not
@@ -367,10 +366,10 @@ test.describe('Postponement Editing', () => {
   test('should delete a proposed date after confirming in a dialog, removing its votes', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
-    await expect(editPage.proposedDateList.getByRole('listitem'))
+    await expect(editPage.proposedDateRows)
       .toHaveCount(1);
     await editPage.addProposedDate('2026-06-15T18:30');
-    await expect(editPage.proposedDateList.getByRole('listitem'))
+    await expect(editPage.proposedDateRows)
       .toHaveCount(2);
 
     // A home-team voter casts a Yes on the first date and a No on the second
@@ -396,13 +395,13 @@ test.describe('Postponement Editing', () => {
     // The confirmation dialog appears before anything is deleted.
     await expect(editPage.deleteDialog(0))
       .toBeVisible();
-    await expect(editPage.proposedDateList.getByRole('listitem'))
+    await expect(editPage.proposedDateRows)
       .toHaveCount(2);
 
     await editPage.deleteConfirmButton(0)
       .click();
 
-    await expect(editPage.proposedDateList.getByRole('listitem'))
+    await expect(editPage.proposedDateRows)
       .toHaveCount(1);
     await expect(editPage.deleteDialog(0))
       .toHaveCount(0);
@@ -417,7 +416,7 @@ test.describe('Postponement Editing', () => {
   test('should cancel deleting a proposed date, leaving the list untouched', async ({page}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
-    await expect(editPage.proposedDateList.getByRole('listitem'))
+    await expect(editPage.proposedDateRows)
       .toHaveCount(1);
 
     await editPage.deleteButton(0)
@@ -427,7 +426,7 @@ test.describe('Postponement Editing', () => {
     await editPage.deleteCancelButton(0)
       .click();
 
-    await expect(editPage.proposedDateList.getByRole('listitem'))
+    await expect(editPage.proposedDateRows)
       .toHaveCount(1);
     await expect(editPage.deleteDialog(0))
       .toHaveCount(0);

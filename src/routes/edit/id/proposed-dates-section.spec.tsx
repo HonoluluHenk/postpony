@@ -14,11 +14,11 @@ function baseProps(): ProposedDatesSectionProps {
     status: 'Voting',
     reopenCount: 0,
     proposedDates: [
-      { id: 'pd-1', display: '10.10.2026 19:00', votableByOpponent: true, yes: 0, maybe: 0, no: 0 },
-      { id: 'pd-2', display: '12.10.2026 20:00', votableByOpponent: false, yes: 0, maybe: 0, no: 0 },
+      {id: 'pd-1', display: '10.10.2026 19:00', votableByOpponent: true, yes: 0, maybe: 0, no: 0},
+      {id: 'pd-2', display: '12.10.2026 20:00', votableByOpponent: false, yes: 0, maybe: 0, no: 0},
     ],
     homeProposedDates: [
-      { id: 'pd-1', display: '10.10.2026 19:00', yes: 1, maybe: 0, no: 0 },
+      {id: 'pd-1', display: '10.10.2026 19:00', yes: 1, maybe: 0, no: 0},
     ],
     awayProposedDates: [],
     organizerPlayers: [],
@@ -33,55 +33,126 @@ function renderToString(node: unknown): string {
   if (node === null || node === undefined) {
     return '';
   }
-  return (node as { toString(): string }).toString();
+  return (node as {
+    toString(): string
+  }).toString();
 }
 
 describe('ProposedDatesSection component', () => {
   it('hides the add-date form and list when the status is Confirmed and offers reopen', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), status: 'Confirmed'}));
 
-    expect(html).toContain('hx-post="/edit/session-1/reopen"');
-    expect(html).toContain('>Reopen</button>');
-    expect(html).not.toContain('id="proposed-date-list"');
-    expect(html).not.toContain('id="proposedDateTime"');
-    expect(html).not.toContain('hx-post="/edit/session-1/proposed-dates"');
+    expect(html)
+      .toContain('hx-post="/edit/session-1/reopen"');
+    expect(html)
+      .toContain('>Reopen</button>');
+    expect(html)
+      .not
+      .toContain('id="proposed-date-list"');
+    expect(html)
+      .not
+      .toContain('id="proposedDateTime"');
+    expect(html)
+      .not
+      .toContain('hx-post="/edit/session-1/proposed-dates"');
   });
 
   it('shows the add-date form when the status is open', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
-    expect(html).not.toContain('hx-post="/edit/session-1/reopen"');
-    expect(html).toContain('id="proposed-date-list"');
-    expect(html).toContain('hx-post="/edit/session-1/proposed-dates"');
-    expect(html).toContain('id="proposedDateTime"');
+    expect(html)
+      .not
+      .toContain('hx-post="/edit/session-1/reopen"');
+    expect(html)
+      .toContain('id="proposed-date-list"');
+    expect(html)
+      .toContain('hx-post="/edit/session-1/proposed-dates"');
+    expect(html)
+      .toContain('id="proposedDateTime"');
   });
 
   it('renders the reopen-count chip once the reopen count is non-zero', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), reopenCount: 2}));
 
-    expect(html).toContain('Reopened 2 time(s)');
+    expect(html)
+      .toContain('Reopened 2 time(s)');
   });
 
   it('checks the opponent-votable toggle only for dates that are votable', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
-    expect(html).toContain('checked=""');
-    expect(html).toContain('hx-post="/edit/session-1/proposed-date-visibility?proposedDateId=pd-1&amp;votable=false"');
-    expect(html).toContain('hx-post="/edit/session-1/proposed-date-visibility?proposedDateId=pd-2&amp;votable=true"');
+    expect(html)
+      .toContain('checked=""');
+    expect(html)
+      .toContain('hx-post="/edit/session-1/proposed-date-visibility?proposedDateId=pd-1&amp;votable=false"');
+    expect(html)
+      .toContain('hx-post="/edit/session-1/proposed-date-visibility?proposedDateId=pd-2&amp;votable=true"');
+  });
+
+  it('renders the proposed dates as a scrollable table with column headings', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    // The table is a real table at every width (no responsive card-stacking):
+    // wrapped in a `.scroll` pan container and carrying no `data-label`s (the
+    // marker the global stacking rule keys on).
+    expect(html)
+      .toContain('<div class="scroll">');
+    expect(html)
+      .toContain('<table id="proposed-date-list">');
+    expect(html)
+      .toContain('<caption class="visually-hidden">Proposed Dates</caption>');
+    expect(html)
+      .toContain('<th scope="col">Proposed Date &amp; Time</th>');
+    expect(html)
+      .toContain('<th scope="col">Votable</th>');
+    expect(html)
+      .toContain('<th scope="col">Actions</th>');
+    expect(html)
+      .not
+      .toContain('data-label=');
+  });
+
+  it('keeps the votable switch and delete button label-less but a11y-named', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    // The switch span is empty (icon-only) and the delete button has no text.
+    expect((html.match(/<span><\/span>/g) ?? []))
+      .toHaveLength(2);
+    expect(html)
+      .not
+      .toContain('>Votable</span>');
+    expect(html)
+      .not
+      .toContain('<i aria-hidden="true">delete</i>\n                      Delete');
+    // The accessible name and the hover tooltip carry the full labels.
+    expect((html.match(/aria-label="Allow opponent to vote"/g) ?? []))
+      .toHaveLength(2);
+    expect((html.match(/title="Allow opponent to vote"/g) ?? []))
+      .toHaveLength(2);
+    expect((html.match(/aria-label="Delete"/g) ?? []))
+      .toHaveLength(2);
+    expect((html.match(/title="Delete"/g) ?? []))
+      .toHaveLength(2);
   });
 
   it('offers a confirm control only for opponent-votable dates', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
-    expect(html).toContain('proposed-date-confirm?proposedDateId=pd-1');
-    expect(html).not.toContain('proposed-date-confirm?proposedDateId=pd-2');
+    expect(html)
+      .toContain('proposed-date-confirm?proposedDateId=pd-1');
+    expect(html)
+      .not
+      .toContain('proposed-date-confirm?proposedDateId=pd-2');
   });
 
   it('collapses the proposed-date list when there are no dates', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), proposedDates: []}));
 
-    expect(html).not.toContain('id="proposed-date-list"');
-    expect(html).toContain('hx-post="/edit/session-1/proposed-dates"');
+    expect(html)
+      .not
+      .toContain('id="proposed-date-list"');
+    expect(html)
+      .toContain('hx-post="/edit/session-1/proposed-dates"');
   });
 
   it('marks the date input invalid and keeps the raw value when an error is present', () => {
@@ -91,13 +162,21 @@ describe('ProposedDatesSection component', () => {
       error: 'Invalid date',
     }));
 
-    expect(html).toContain('class="field label border fill max invalid"');
-    expect(html).toContain('value="not-a-date"');
-    expect(html).toContain('aria-invalid="true"');
-    expect(html).toContain('aria-describedby="proposedDateTime-error"');
-    expect(html).toContain('id="proposedDateTime-error"');
-    expect(html).toContain('>Invalid date</span>');
-    expect(html).not.toContain(' required=""');
+    expect(html)
+      .toContain('class="field label border fill max invalid"');
+    expect(html)
+      .toContain('value="not-a-date"');
+    expect(html)
+      .toContain('aria-invalid="true"');
+    expect(html)
+      .toContain('aria-describedby="proposedDateTime-error"');
+    expect(html)
+      .toContain('id="proposedDateTime-error"');
+    expect(html)
+      .toContain('>Invalid date</span>');
+    expect(html)
+      .not
+      .toContain(' required=""');
   });
 });
 
@@ -107,56 +186,77 @@ describe('ProposedDatesSection generator block', () => {
 
     const generatorIndex = html.indexOf('Generate Proposed Dates');
     const singleAddIndex = html.indexOf('id="proposedDateTime"');
-    expect(generatorIndex).toBeGreaterThan(-1);
-    expect(singleAddIndex).toBeGreaterThan(-1);
-    expect(generatorIndex).toBeLessThan(singleAddIndex);
+    expect(generatorIndex)
+      .toBeGreaterThan(-1);
+    expect(singleAddIndex)
+      .toBeGreaterThan(-1);
+    expect(generatorIndex)
+      .toBeLessThan(singleAddIndex);
   });
 
   it('renders exactly seven fixed rows, one empty time input per weekday, Monday to Sunday', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
-    expect((html.match(/name="time\[\]"/g) ?? [])).toHaveLength(7);
-    expect(html.match(/name="weekday\[\]"/g)).toBeNull();
+    expect((html.match(/name="time\[\]"/g) ?? []))
+      .toHaveLength(7);
+    expect(html.match(/name="weekday\[\]"/g))
+      .toBeNull();
     const weekdayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
     weekdayLabels.forEach((label, index) => {
-      expect(html).toContain(`<label for="time-${index}">${label}</label>`);
+      expect(html)
+        .toContain(`<label for="time-${index}">${label}</label>`);
     });
   });
 
   it('ships no add/remove row controls', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), times: ['', '', '', '', '', '', '']}));
 
-    expect(html).not.toContain('name="action"');
-    expect(html).not.toContain('value="grow"');
-    expect(html).not.toContain('value="remove"');
-    expect(html).not.toContain('formaction');
+    expect(html)
+      .not
+      .toContain('name="action"');
+    expect(html)
+      .not
+      .toContain('value="grow"');
+    expect(html)
+      .not
+      .toContain('value="remove"');
+    expect(html)
+      .not
+      .toContain('formaction');
   });
 
   it('starts every time input empty on initial render', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
     const timeInputs = (html.match(/<input[^>]*name="time\[\]"[^>]*>/g) ?? []);
-    expect(timeInputs).toHaveLength(7);
+    expect(timeInputs)
+      .toHaveLength(7);
     for (const tag of timeInputs) {
-      expect(tag).not.toContain('value=');
+      expect(tag)
+        .not
+        .toContain('value=');
     }
   });
 
   it('round-trips submitted times through each row on re-render', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), times: ['8:00 pm', '', '9:00 pm']}));
 
-    expect(html).toContain('value="8:00 pm"');
-    expect(html).toContain('value="9:00 pm"');
+    expect(html)
+      .toContain('value="8:00 pm"');
+    expect(html)
+      .toContain('value="9:00 pm"');
   });
 
   it('uses the 24-hour HH:mm placeholder and de-CH lang per row for de-CH', () => {
     const props = {...baseProps(), locale: 'de-CH' as const, inputFormat: 'dd.MM.yyyy HH:mm'};
     const html = renderToString(ProposedDatesSection(props));
 
-    expect((html.match(/placeholder="HH:mm"/g) ?? [])).toHaveLength(7);
+    expect((html.match(/placeholder="HH:mm"/g) ?? []))
+      .toHaveLength(7);
     // ponytail: scope the lang check to the generator's time inputs so the
     // single-add field's `lang` (also de-CH) doesn't inflate the count.
-    expect((html.match(/<input[^>]*name="time\[\]"[^>]*lang="de-CH"/g) ?? [])).toHaveLength(7);
+    expect((html.match(/<input[^>]*name="time\[\]"[^>]*lang="de-CH"/g) ?? []))
+      .toHaveLength(7);
     // ponytail: time input takes the locale's timeFormat only (HH:mm / hh:mm aa) —
     // not the full datetime placeholder, so the user knows they enter a time.
     expect(html.match(/<input[^>]*name="time\[\]"[^>]*placeholder="dd\.MM\.yyyy[^"]*"/g))
@@ -166,8 +266,10 @@ describe('ProposedDatesSection generator block', () => {
   it('uses the hh:mm aa placeholder and en-US lang per row for en-US', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), locale: 'en-US' as const}));
 
-    expect((html.match(/placeholder="hh:mm aa"/g) ?? [])).toHaveLength(7);
-    expect((html.match(/<input[^>]*name="time\[\]"[^>]*lang="en-US"/g) ?? [])).toHaveLength(7);
+    expect((html.match(/placeholder="hh:mm aa"/g) ?? []))
+      .toHaveLength(7);
+    expect((html.match(/<input[^>]*name="time\[\]"[^>]*lang="en-US"/g) ?? []))
+      .toHaveLength(7);
     expect(html.match(/<input[^>]*name="time\[\]"[^>]*placeholder="MM\/dd\/yyyy[^"]*"/g))
       .toBeNull();
   });
@@ -178,9 +280,11 @@ describe('ProposedDatesSection generator block', () => {
 
     const weekdayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
     weekdayLabels.forEach((label, index) => {
-      expect(html).toContain(`<label for="time-${index}">${label}</label>`);
+      expect(html)
+        .toContain(`<label for="time-${index}">${label}</label>`);
     });
-    expect((html.match(/<label for="time-\d+">Uhrzeit<\/label>/g) ?? [])).toHaveLength(7);
+    expect((html.match(/<label for="time-\d+">Uhrzeit<\/label>/g) ?? []))
+      .toHaveLength(7);
   });
 
   it('marks the offending row invalid with an inline error and preserves the other rows', () => {
@@ -190,43 +294,72 @@ describe('ProposedDatesSection generator block', () => {
       generatorInvalidRow: 1,
     }));
 
-    expect(html).toMatch(/id="time-1"[^>]*aria-invalid="true"/);
-    expect(html).toMatch(/id="time-1"[^>]*aria-describedby="time-1-error"/);
-    expect(html).toContain('id="time-1-error"');
-    expect(html).toContain('>Please provide a valid date and time</span>');
-    expect(html).toContain('value="8:00 pm"');
-    expect(html).toContain('value="9:00 pm"');
-    expect(html).not.toMatch(/id="time-0"[^>]*aria-invalid/);
-    expect(html).not.toMatch(/id="time-2"[^>]*aria-invalid/);
+    expect(html)
+      .toMatch(/id="time-1"[^>]*aria-invalid="true"/);
+    expect(html)
+      .toMatch(/id="time-1"[^>]*aria-describedby="time-1-error"/);
+    expect(html)
+      .toContain('id="time-1-error"');
+    expect(html)
+      .toContain('>Please provide a valid date and time</span>');
+    expect(html)
+      .toContain('value="8:00 pm"');
+    expect(html)
+      .toContain('value="9:00 pm"');
+    expect(html)
+      .not
+      .toMatch(/id="time-0"[^>]*aria-invalid/);
+    expect(html)
+      .not
+      .toMatch(/id="time-2"[^>]*aria-invalid/);
   });
 
   it('hides the generator block alongside the single-add form when Confirmed', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), status: 'Confirmed'}));
 
-    expect(html).not.toContain('Generate Proposed Dates');
-    expect(html).not.toContain('name="time[]"');
-    expect(html).not.toContain('name="generate" value="tuple"');
-    expect(html).not.toContain('id="proposedDateTime"');
+    expect(html)
+      .not
+      .toContain('Generate Proposed Dates');
+    expect(html)
+      .not
+      .toContain('name="time[]"');
+    expect(html)
+      .not
+      .toContain('name="generate" value="tuple"');
+    expect(html)
+      .not
+      .toContain('id="proposedDateTime"');
   });
 
   it('renders the success toast with the localized count when n >= 1', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), generatorSuccessCount: 12}));
 
-    expect(html).toContain('class="toast success top mt-2"');
-    expect(html).toContain('12 dates added');
+    expect(html)
+      .toContain('class="toast success top mt-2"');
+    expect(html)
+      .toContain('12 dates added');
   });
 
   it('renders the inline zero-result message from the generatorError prop', () => {
-    const html = renderToString(ProposedDatesSection({...baseProps(), generatorError: 'No dates were added. Adjust the patterns and try again.'}));
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      generatorError: 'No dates were added. Adjust the patterns and try again.',
+    }));
 
-    expect(html).toContain('class="error mt-2" role="alert"');
-    expect(html).toContain('No dates were added.');
+    expect(html)
+      .toContain('class="error mt-2" role="alert"');
+    expect(html)
+      .toContain('No dates were added.');
   });
 
   it('renders the no-anchor fallback warning as an inline message', () => {
-    const html = renderToString(ProposedDatesSection({...baseProps(), generatorError: 'No match anchor — using today as window start.'}));
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      generatorError: 'No match anchor — using today as window start.',
+    }));
 
-    expect(html).toContain('No match anchor — using today as window start.');
+    expect(html)
+      .toContain('No match anchor — using today as window start.');
   });
 });
 
@@ -246,13 +379,22 @@ describe('ProposedDatesSectionPartial', () => {
       ],
     }));
 
-    expect(html).toContain('id="error-container" hx-swap-oob="true"');
-    expect(html).toContain('<p class="chip outline" id="status-chip" hx-swap-oob="true">');
-    expect(html).toContain('id="proposed-dates-management"');
-    expect(html).toContain('id="vote-tally-section" hx-swap-oob="true"');
-    expect(html).toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
-    expect(html).not.toContain('<!DOCTYPE html>');
-    expect(html).not.toContain('<html');
+    expect(html)
+      .toContain('id="error-container" hx-swap-oob="true"');
+    expect(html)
+      .toContain('<p class="chip outline" id="status-chip" hx-swap-oob="true">');
+    expect(html)
+      .toContain('id="proposed-dates-management"');
+    expect(html)
+      .toContain('id="vote-tally-section" hx-swap-oob="true"');
+    expect(html)
+      .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+    expect(html)
+      .not
+      .toContain('<!DOCTYPE html>');
+    expect(html)
+      .not
+      .toContain('<html');
   });
 
   it('surfaces the global error inside the out-of-band error container', () => {
@@ -261,7 +403,9 @@ describe('ProposedDatesSectionPartial', () => {
       globalError: 'Something went wrong',
     }));
 
-    expect(html).toContain('error padding white-text');
-    expect(html).toContain('Something went wrong');
+    expect(html)
+      .toContain('error padding white-text');
+    expect(html)
+      .toContain('Something went wrong');
   });
 });

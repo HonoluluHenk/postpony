@@ -2,7 +2,7 @@ import type { App } from '../../../app';
 import type { AppLocale } from '../../../locales';
 import type { Postponement, ProposedDate, VoteTallyItem } from '../../../lib/models';
 import { PostponementRules, type VoteTally } from '../../../lib/postponement';
-import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
+import { formatProposedDateDisplay } from '../../../lib/temporal-utils';
 import { buildOwnTeamView } from './own-team-view';
 import {
   ProposedDatesSectionPartial,
@@ -19,7 +19,7 @@ function toVoteTallyItems(
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {
       id: pd.id,
-      display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
+      display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
       yes: counts.yes,
       no: counts.no,
       maybe: counts.maybe,
@@ -42,7 +42,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {
       id: pd.id,
-      display: formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
+      display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
       votableByOpponent: pd.votableByOpponent,
       yes: counts.yes,
       no: counts.no,

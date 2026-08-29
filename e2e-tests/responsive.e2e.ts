@@ -65,8 +65,12 @@ test.describe('Responsive Layout', () => {
     await expect(editPage.awayCopyButton())
       .toBeEnabled();
 
-    // A proposed-date row's "away team votable" switch stays fully visible
-    // and reachable on a phone even with a date present.
+    // The proposed-dates table stays a real table on phones (no card-stacking):
+    // its thead keeps a static position and the `.scroll` wrapper pans
+    // sideways, so the "away team votable" switch stays reachable.
+    await expect(editPage.proposedDateList.locator('thead'))
+      .not
+      .toHaveCSS('position', 'absolute');
     await expectFullyInViewport(editPage.votableByOpponentToggle(0));
   });
 

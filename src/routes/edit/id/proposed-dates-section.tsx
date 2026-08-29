@@ -1,10 +1,10 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
+import type { PostponementStatus, VoteTallyItem } from '../../../lib/models';
 import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
-import type { PostponementStatus, VoteTallyItem } from '../../../lib/models';
 import { ErrorContainer } from '../../partials/error-container';
-import { OwnTeamVotes } from './own-team-votes';
 import type { OwnTeamView } from './own-team-view';
+import { OwnTeamVotes } from './own-team-votes';
 import { StatusChip } from './status-chip';
 import { VoteTallySection } from './vote-tally-section';
 
@@ -71,9 +71,9 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
           return (
             <li key={weekday} class="row items-center gap mt-2">
               {/* ponytail: the weekday text doubles as the input's label (its
-                  `for` points at the time input), so the accessible name of each
-                  time input is "Mo Time", "Tu Time", ... — association without a
-                  separate invisible label. */}
+               `for` points at the time input), so the accessible name of each
+               time input is "Mo Time", "Tu Time", ... — association without a
+               separate invisible label. */}
               <label for={`time-${index}`}>{weekday}</label>
               <div class={`field label border fill max${invalid ? ' invalid' : ''}`}>
                 <input
@@ -118,7 +118,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
   const confirmed = props.status === 'Confirmed';
 
   return (
-    <section id="proposed-dates-management" class="padding small-round surface-variant s12 m6" aria-live="polite">
+    <section id="proposed-dates-management" class="padding small-round surface-variant s12 m8" aria-live="polite">
       <header>
         <h3 tabindex={-1}>{props.t('proposed_dates_management')}</h3>
       </header>
@@ -130,125 +130,148 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
           <button type="submit">{props.t('reopen')}</button>
         </form>
       ) : (
-        <>
-          {props.proposedDates.length > 0 ? (
-            <ul id="proposed-date-list" class="list" aria-label={props.t('proposed_dates_management')}>
-              {props.proposedDates.map((proposedDate) => (
-                <li key={proposedDate.id}>
-                  <div class="row items-center gap">
-                    <i aria-hidden="true">event</i>
-                    <div class="max">{proposedDate.display}</div>
-                  </div>
-                  <div class="row items-center gap wrap mt-2">
-                    <label class="switch">
-                      <input
-                        type="checkbox"
-                        hx-post={`/edit/${props.sessionId}/proposed-date-visibility?proposedDateId=${proposedDate.id}&votable=${!proposedDate.votableByOpponent}`}
-                        hx-target="#proposed-dates-management"
-                        checked={proposedDate.votableByOpponent}
-                      />
-                      <span>{props.t('votable_by_opponent')}</span>
-                    </label>
-                    {proposedDate.votableByOpponent ? (
-                      <button
-                        type="button"
-                        class="button outline"
-                        hx-post={`/edit/${props.sessionId}/proposed-date-confirm?proposedDateId=${proposedDate.id}`}
-                        hx-target="#proposed-dates-management"
-                      >
-                        {props.t('confirm_date')}
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      class="button outline"
-                      data-open-dialog={`delete-proposed-date-${proposedDate.id}`}
-                    >
-                      <i aria-hidden="true">delete</i>
-                      {props.t('delete_proposed_date')}
-                    </button>
-                  </div>
-                  <dialog
-                    id={`delete-proposed-date-${proposedDate.id}`}
-                    class="padding small-round surface"
-                    aria-labelledby={`delete-proposed-date-title-${proposedDate.id}`}
-                  >
-                    <h4 id={`delete-proposed-date-title-${proposedDate.id}`}>
-                      {props.t('delete_proposed_date_confirm_title')}
-                    </h4>
-                    <p>{props.t('delete_proposed_date_confirm_message', {date: proposedDate.display})}</p>
-                    <div class="row items-center gap">
-                      <button type="button" class="button outline" data-dismiss-dialog>{props.t('cancel')}</button>
-                      <form
-                        hx-post={`/edit/${props.sessionId}/proposed-date-delete?proposedDateId=${proposedDate.id}`}
-                        hx-target="#proposed-dates-management"
-                      >
-                        <button type="submit" class="button">{props.t('delete_proposed_date')}</button>
-                      </form>
-                    </div>
-                  </dialog>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          <GenerateForm
-            sessionId={props.sessionId}
-            t={props.t}
-            locale={props.locale}
-            times={props.times}
-            invalidRow={props.generatorInvalidRow}
-            error={props.generatorError}
-            successCount={props.generatorSuccessCount}
-          />
-          <form
-            hx-post={`/edit/${props.sessionId}/proposed-dates`}
-            hx-target="#proposed-dates-management"
-            class="mt-4"
-            {...{['hx-on::after-request']: "focusAfterSwap('#proposed-dates-management')"}}
-          >
-            <div class="row items-center gap">
-              <div class={`field label border fill max${props.error ? ' invalid' : ''}`}>
-                <input
-                  type="text"
-                  id="proposedDateTime"
-                  name="proposedDateTime"
-                  value={props.proposedDateTime ?? ''}
-                  required={!props.error}
-                  aria-invalid={props.error ? 'true' : undefined}
-                  aria-describedby={props.error ? 'proposedDateTime-error' : undefined}
-                  placeholder={props.inputFormat}
-                  lang={props.locale}
-                  autocomplete="off"
-                />
-                <label for="proposedDateTime">{props.t('proposed_date_time_label')}</label>
-                {props.error ? (
-                  <span id="proposedDateTime-error" class="error" role="alert">{props.error}</span>
-                ) : null}
-              </div>
-              <button
-                type="button"
-                id="proposedDateTimePicker"
-                class="button"
-                aria-label={props.t('proposed_date_time_picker_label')}
-                title={props.t('proposed_date_time_picker_label')}
-              >
-                <i aria-hidden="true">calendar_today</i>
-              </button>
-            </div>
-            <div class="right-align">
-              <button type="submit">{props.t('add_proposed_date')}</button>
-            </div>
-          </form>
-          {props.success ? (
-            <div class="toast success top" role="alert">
-              <i aria-hidden="true">check_circle</i>
-              <div class="max">
-                <p>{props.t('proposed_date_added')}</p>
-              </div>
-            </div>
-          ) : null}
-        </>
-      )}
+         <>
+           {props.proposedDates.length > 0 ? (
+             <div class="scroll">
+               <table id="proposed-date-list">
+                 <caption class="visually-hidden">{props.t('proposed_dates_management')}</caption>
+                 <thead>
+                 <tr>
+                   <th scope="col">{props.t('proposed_date_time_label')}</th>
+                   <th scope="col">{props.t('votable_short')}</th>
+                   <th scope="col">{props.t('actions')}</th>
+                 </tr>
+                 </thead>
+                 <tbody>
+                 {props.proposedDates.map((proposedDate) => (
+                   <tr key={proposedDate.id}>
+                     <th scope="row">
+                       <div class="row items-center gap">
+                         <i aria-hidden="true">event</i>
+                         <div class="max">{proposedDate.display}</div>
+                       </div>
+                     </th>
+                     <td>
+                       <label
+                         class="switch"
+                         title={props.t('votable_by_opponent')}
+                       >
+                         <input
+                           type="checkbox"
+                           hx-post={`/edit/${props.sessionId}/proposed-date-visibility?proposedDateId=${proposedDate.id}&votable=${!proposedDate.votableByOpponent}`}
+                           hx-target="#proposed-dates-management"
+                           checked={proposedDate.votableByOpponent}
+                           aria-label={props.t('votable_by_opponent')}
+                         />
+                         <span></span>
+                       </label>
+                     </td>
+                     <td>
+                       <div class="row items-center gap">
+                         {proposedDate.votableByOpponent ? (
+                           <button
+                             type="button"
+                             class="button outline"
+                             hx-post={`/edit/${props.sessionId}/proposed-date-confirm?proposedDateId=${proposedDate.id}`}
+                             hx-target="#proposed-dates-management"
+                           >
+                             {props.t('confirm_date')}
+                           </button>
+                         ) : null}
+                         <button
+                           type="button"
+                           class="button outline"
+                           data-open-dialog={`delete-proposed-date-${proposedDate.id}`}
+                           aria-label={props.t('delete_proposed_date')}
+                           title={props.t('delete_proposed_date')}
+                         >
+                           <i aria-hidden="true">delete</i>
+                         </button>
+                       </div>
+                       <dialog
+                         id={`delete-proposed-date-${proposedDate.id}`}
+                         class="padding small-round surface"
+                         aria-labelledby={`delete-proposed-date-title-${proposedDate.id}`}
+                       >
+                         <h4 id={`delete-proposed-date-title-${proposedDate.id}`}>
+                           {props.t('delete_proposed_date_confirm_title')}
+                         </h4>
+                         <p>{props.t('delete_proposed_date_confirm_message', {date: proposedDate.display})}</p>
+                         <div class="row items-center gap">
+                           <button type="button" class="button outline" data-dismiss-dialog>{props.t('cancel')}</button>
+                           <form
+                             hx-post={`/edit/${props.sessionId}/proposed-date-delete?proposedDateId=${proposedDate.id}`}
+                             hx-target="#proposed-dates-management"
+                           >
+                             <button type="submit" class="button">{props.t('delete_proposed_date')}</button>
+                           </form>
+                         </div>
+                       </dialog>
+                     </td>
+                   </tr>
+                 ))}
+                 </tbody>
+               </table>
+             </div>
+           ) : null}
+           <GenerateForm
+             sessionId={props.sessionId}
+             t={props.t}
+             locale={props.locale}
+             times={props.times}
+             invalidRow={props.generatorInvalidRow}
+             error={props.generatorError}
+             successCount={props.generatorSuccessCount}
+           />
+           <form
+             hx-post={`/edit/${props.sessionId}/proposed-dates`}
+             hx-target="#proposed-dates-management"
+             class="mt-4"
+             {...{['hx-on::after-request']: 'focusAfterSwap(\'#proposed-dates-management\')'}}
+           >
+             <div class="row items-center gap">
+               <div class={`field label border fill max${props.error ? ' invalid' : ''}`}>
+                 <input
+                   type="text"
+                   id="proposedDateTime"
+                   name="proposedDateTime"
+                   value={props.proposedDateTime ?? ''}
+                   required={!props.error}
+                   aria-invalid={props.error ? 'true' : undefined}
+                   aria-describedby={props.error ? 'proposedDateTime-error' : undefined}
+                   placeholder={props.inputFormat}
+                   lang={props.locale}
+                   autocomplete="off"
+                 />
+                 <label for="proposedDateTime">{props.t('proposed_date_time_label')}</label>
+                 {props.error ? (
+                   <span id="proposedDateTime-error" class="error" role="alert">{props.error}</span>
+                 ) : null}
+               </div>
+               <button
+                 type="button"
+                 id="proposedDateTimePicker"
+                 class="button"
+                 aria-label={props.t('proposed_date_time_picker_label')}
+                 title={props.t('proposed_date_time_picker_label')}
+               >
+                 <i aria-hidden="true">calendar_today</i>
+               </button>
+             </div>
+             <div class="right-align">
+               <button type="submit">{props.t('add_proposed_date')}</button>
+             </div>
+           </form>
+           {props.success ? (
+             <div class="toast success top" role="alert">
+               <i aria-hidden="true">check_circle</i>
+               <div class="max">
+                 <p>{props.t('proposed_date_added')}</p>
+               </div>
+             </div>
+           ) : null}
+         </>
+       )}
     </section>
   );
 }
@@ -260,8 +283,8 @@ export interface ProposedDatesSectionPartialProps extends ProposedDatesSectionPr
 export function ProposedDatesSectionPartial(props: ProposedDatesSectionPartialProps): JSX.Element {
   return (
     <>
-      <ErrorContainer globalError={props.globalError} isOob={true} />
-      <StatusChip status={props.status} t={props.t} oob={true} />
+      <ErrorContainer globalError={props.globalError} isOob={true}/>
+      <StatusChip status={props.status} t={props.t} oob={true}/>
       <ProposedDatesSection {...props} />
       <VoteTallySection
         homeProposedDates={props.homeProposedDates}

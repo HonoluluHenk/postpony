@@ -34,7 +34,7 @@ export class EditPage {
 
     for (const [i, dt] of (dates ?? []).entries()) {
       await editPage.addProposedDate(dt);
-      await expect(editPage.proposedDateList.getByRole('listitem'))
+      await expect(editPage.proposedDateRows)
         .toHaveCount(i + 1);
     }
 
@@ -125,8 +125,16 @@ export class EditPage {
   get proposedDateList(): Locator {
     // ponytail: the generator's <ol> also has aria-label "Generate Proposed
     // Dates" which would collide with the fuzzy "Proposed Dates" substring
-    // match; scope to exact so the proposal list stays singular.
-    return this.page.getByRole('list', {name: 'Proposed Dates', exact: true});
+    // match; scope to exact so the proposal table stays singular.
+    return this.page.getByRole('table', {name: 'Proposed Dates'});
+  }
+
+  // The proposal table's data rows (its `<tbody>`), excluding the header row
+  // — the index space every per-date control (toggle, confirm, delete) uses.
+  get proposedDateRows(): Locator {
+    return this.proposedDateList.getByRole('rowgroup')
+      .last()
+      .getByRole('row');
   }
 
   get generateForm(): Locator {
@@ -137,11 +145,11 @@ export class EditPage {
     });
   }
 
-  // ponytail: the <li> also carries button labels ("Allow opponent to vote",
-  // "Delete") inside its textContent, so the test reads the datetime display
-  // from the <li>'s `.max` div to get a parseable "Sep 30, 2026, 7:30 PM".
+  // ponytail: the row also carries the icon and switch aria-labels inside its
+  // textContent, so the test reads the datetime display from the row's `.max`
+  // div to get a parseable "Mo, Sep 30, 2026, 7:30 PM".
   async proposedDateDisplays(): Promise<string[]> {
-    return this.proposedDateList.getByRole('listitem')
+    return this.proposedDateRows
       .locator('.max')
       .allTextContents();
   }
@@ -208,9 +216,13 @@ export class EditPage {
   }
 
   votableByOpponentToggle(dateIndex: number): Locator {
-    // ponytail: beer.css hides native checkboxes; toggle via label text
-    return this.page.getByText('Allow opponent to vote')
-      .nth(dateIndex);
+    // ponytail: the switch is icon-only inside the "Votable" column (full
+    // label only in aria-label/title), so locate the row's switch structurally
+    // instead of by text. beer.css hides the native checkbox (opacity:0), so
+    // the clickable/visible target is the label.
+    return this.proposedDateRows
+      .nth(dateIndex)
+      .locator('label.switch');
   }
 
   async addProposedDate(dt: string): Promise<void> {
@@ -221,31 +233,33 @@ export class EditPage {
   }
 
   async toggleVotableByOpponent(dateIndex: number): Promise<void> {
-    // ponytail: beer.css hides native checkboxes; toggle via label text
+    // ponytail: beer.css hides native checkboxes; toggle via the switch label
     await this.votableByOpponentToggle(dateIndex)
       .click();
   }
 
   votableCheckbox(dateIndex: number): Locator {
-    return this.proposedDateList.getByRole('listitem')
+    return this.proposedDateRows
       .nth(dateIndex)
       .locator('input[type="checkbox"]');
   }
 
   confirmButton(dateIndex: number): Locator {
-    return this.proposedDateList.getByRole('listitem')
+    return this.proposedDateRows
       .nth(dateIndex)
       .getByRole('button', {name: 'Confirm'});
   }
 
   deleteButton(dateIndex: number): Locator {
-    return this.proposedDateList.getByRole('listitem')
+    // ponytail: the delete action is icon-only, so its accessible name comes
+    // from aria-label rather than visible text.
+    return this.proposedDateRows
       .nth(dateIndex)
       .getByRole('button', {name: 'Delete'});
   }
 
   deleteDialog(dateIndex: number): Locator {
-    return this.proposedDateList.getByRole('listitem')
+    return this.proposedDateRows
       .nth(dateIndex)
       .getByRole('dialog');
   }

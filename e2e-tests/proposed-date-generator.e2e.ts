@@ -17,11 +17,23 @@ const TUPLES = [
   {weekday: 3, time: '07:30 pm'}, // Wednesday 19:30 in en-US
 ] as const;
 
-const expectedByWeekday = new Map<number, {hour: number; minute: number}>(
-  TUPLES.map(({weekday, time}): [number, {hour: number; minute: number}] => [weekday, hourMinute(time)]),
+const expectedByWeekday = new Map<number, {
+  hour: number;
+  minute: number
+}>(
+  TUPLES.map(({weekday, time}): [
+    number, {
+      hour: number;
+      minute: number
+    }
+  ] => [weekday, hourMinute(time)]),
 );
 
-function hourMinute(ampmTime: string): {hour: number; minute: number} {
+function hourMinute(ampmTime: string): {
+  hour: number;
+  minute: number
+}
+{
   const match = /^(\d{1,2}):(\d{2}) (am|pm)$/i.exec(ampmTime);
   if (match === null) {
     throw new Error(`generator test times must be 'hh:mm am/pm', got '${ampmTime}'`);
@@ -34,11 +46,18 @@ function hourMinute(ampmTime: string): {hour: number; minute: number} {
 }
 
 // ISO weekday (1=Mon .. 7=Sun) derived from a parsed Date. The display text
-// carries no weekday word, so it has to come from the date; the filled times
-// (19:30 / 20:00) sit far enough from midnight that the parse's implicit local
-// timezone cannot roll the weekday over.
+// prefixes the short weekday label ("Mo, " …), but the assertion needs the
+// date itself to stay ground truth; the filled times (19:30 / 20:00) sit far
+// enough from midnight that the parse's implicit local timezone cannot roll
+// the weekday over.
 function isoWeekday(date: Date): number {
   return ((date.getDay() + 6) % 7) + 1;
+}
+
+// Strips the weekday-label prefix ("Mo, ", "Tu, ", …) the Proposed Date
+// display now carries, leaving a date-only string `Date` can parse.
+function stripWeekdayPrefix(displayText: string): string {
+  return displayText.replace(/^[A-Za-z]{2}, /, '');
 }
 
 test.describe('Proposed Date Generator', () => {
@@ -88,7 +107,7 @@ test.describe('Proposed Date Generator', () => {
       // Generated dates appear in the regular #proposed-date-list. The toast
       // count must match the visible list count exactly so a regression that
       // drops datetimes on the floor (or duplicates them) fails this test.
-      const items = editPage.proposedDateList.getByRole('listitem');
+      const items = editPage.proposedDateRows;
       await expect(items)
         .toHaveCount(addedCount);
 
@@ -112,10 +131,12 @@ test.describe('Proposed Date Generator', () => {
       expect(dateTexts)
         .toHaveLength(addedCount);
       for (const dateText of dateTexts) {
-        // Node's en-US rendering is "Sep 30, 2026, 7:30 PM" (older ICU: "… at
-        // 7:30 PM"), so normalise the separator before parsing the date-only
-        // text; trailing button labels never reach this string.
-        const date = new Date(dateText.replace(' at ', ', '));
+        // Node's en-US rendering is "Tu, Sep 30, 2026, 7:30 PM" (older ICU:
+        // "… at 7:30 PM"), so drop the weekday prefix and normalise the
+        // separator before parsing the date-only text; trailing button labels
+        // never reach this string.
+        const date = new Date(stripWeekdayPrefix(dateText)
+          .replace(' at ', ', '));
         expect(Number.isNaN(date.getTime()))
           .toBe(false);
         const expected = expectedByWeekday.get(isoWeekday(date));
@@ -129,9 +150,12 @@ test.describe('Proposed Date Generator', () => {
       }
       // The two filled weekdays are the ONLY weekdays present — the blank rows
       // produced no Proposed Dates.
-      expect([...new Set(
-        dateTexts.map((t) => isoWeekday(new Date(t.replace(' at ', ', ')))),
-      )].sort((a, b) => a - b))
+      expect([
+        ...new Set(
+          dateTexts.map((t) => isoWeekday(new Date(stripWeekdayPrefix(t)
+            .replace(' at ', ', ')))),
+        ),
+      ].sort((a, b) => a - b))
         .toEqual([...expectedByWeekday.keys()].sort((a, b) => a - b));
 
       // Status flips Draft → Voting once a date is on the list.

@@ -1,4 +1,5 @@
 {
+  "actions": "Aktionen",
   "add_player": "Spieler hinzufügen",
   "add_proposed_date": "Termin vorschlagen",
   "app_title": "PostPony",
@@ -97,6 +98,7 @@
   "status_label": "Status: <%= it.status %>",
   "tagline": "Spiele verschieben – so schnell und einfach wie der Pony-Express.",
   "votable_by_opponent": "Gegner abstimmen lassen",
+  "votable_short": "Abstimmbar",
   "vote_maybe": "Vielleicht",
   "vote_no": "Nein",
   "vote_no_dates": "Es wurden noch keine Termine vorgeschlagen. Der Organisator entscheidet noch, welche Termine vorgeschlagen werden.",

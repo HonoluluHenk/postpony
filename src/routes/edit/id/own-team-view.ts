@@ -1,7 +1,7 @@
 import type { AppLocale } from '../../../locales';
 import type { Player, Postponement } from '../../../lib/models';
 import { PostponementRules, type OwnTeamDateResults } from '../../../lib/postponement';
-import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
+import { formatProposedDateDisplay } from '../../../lib/temporal-utils';
 
 export interface OwnTeamView {
   organizerPlayers: Player[];
@@ -20,7 +20,7 @@ export function buildOwnTeamView(session: Postponement, locale: AppLocale): OwnT
   const displayByDateId = new Map(
     session.proposedDates.map((pd) => [
       pd.id,
-      formatLocalizedDateTime(parseIsoToPlainDateTime(pd.dateTimeRange.start), locale),
+      formatProposedDateDisplay(pd.dateTimeRange.start, locale),
     ]),
   );
   const ownTeamResults = rules.ownTeamResults(session, session.organizerTeam).map((result) => ({

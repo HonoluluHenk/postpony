@@ -1,6 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill';
 import type { AppLocale } from '../locales';
-import { defaultLocale, localeConfig } from '../locales';
+import { defaultLocale, localeConfig, weekdayLabels } from '../locales';
 import ComparisonResult = Temporal.ComparisonResult;
 
 /**
@@ -38,6 +38,19 @@ export function formatLocalizedDateTime(
   },
 ): string {
   return dateTime.toLocaleString(localeConfig(locale).intlTag, options);
+}
+
+/**
+ * Formats a Proposed Date's ISO start into the app-wide date display: the short
+ * weekday label (from `weekdayLabels`, the same vocabulary as the generator
+ * grid) followed by the locale's medium date + short time. Every on-screen
+ * rendering of a Proposed Date goes through this so the weekday prefix stays
+ * consistent across the edit list, the tallies, and the join page.
+ */
+export function formatProposedDateDisplay(isoStart: string, locale: AppLocale = defaultLocale): string {
+  const dateTime = parseIsoToPlainDateTime(isoStart);
+  const weekday = weekdayLabels[locale][dateTime.dayOfWeek - 1] ?? '';
+  return `${weekday}, ${formatLocalizedDateTime(dateTime, locale)}`;
 }
 
 /**

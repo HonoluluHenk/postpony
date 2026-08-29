@@ -128,6 +128,30 @@
     flex-wrap: wrap;
   }
 
+  /* Icon-only BeerCSS switch inside the proposed-dates table: the track and
+     knob are absolute pseudo-elements drawn to the LEFT of the (empty) label's
+     box, and they need a positioned ancestor a table cell doesn't provide.
+     Pin the switch to itself and push its box 3.25rem right (BeerCSS's track
+     width) so the visual lands inside the cell instead of on the date. */
+  #proposed-date-list .switch {
+    position: relative;
+    margin-inline-start: 3.25rem;
+  }
+
+  /* The proposed-dates table is a real table at every width: it never stacks
+     into labelled cards and its rows never wrap. It sizes to its content (so
+     the long "Proposed Date & Time" column cannot absorb card slack); when
+     that content is wider than the card — small screens — the surrounding
+     `.scroll` wrapper pans sideways instead of clipping. */
+  #proposed-date-list {
+    width: fit-content;
+  }
+
+  #proposed-date-list th,
+  #proposed-date-list td {
+    white-space: nowrap;
+  }
+
   /* Below 600px the header row may wrap so the page title drops onto its
      own line instead of being clipped between the logo and the language
      buttons. At 600px and wider it stays a single row. */
