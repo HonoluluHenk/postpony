@@ -19,23 +19,22 @@ A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framewo
 
 ## Quick reference
 
-| Command                   | What it does                                                                                 |
-|---------------------------|----------------------------------------------------------------------------------------------|
-| `npm run dev`             | Dev server with fixtures on port 3000                                                        |
-| `npm run dev:live`        | Dev server against live click-tt.ch                                                          |
-| `npm run test`            | Vitest (coverage on, `@/` → `src/`)                                                          |
-| `npm run lint`            | `tsc --noEmit` → `tsc -p tsconfig.e2e.json --noEmit` → `eslint . --max-warnings 0`           |
-| `npm run lint:eslint:fix` | Auto-fix ESLint                                                                              |
-| `npm run e2e`             | Playwright (starts its own server on `$E2E_APP_PORT`, default 3001, never reuses dev server) |
-| `npx playwright test --update-snapshots` | Regenerate committed screenshot baselines (visual regression; e2e server builds itself) |
-| `npm run verify`          | lint → test → build → e2e (full CI gate)                                                     |
-| `npm run build`           | Vite build (SSR) → `dist/`                                                                   |
+| Command            | What it does                                                                       |
+|--------------------|------------------------------------------------------------------------------------|
+| `npm run dev`      | Dev server with fixtures on port 3000                                              |
+| `npm run dev:live` | Dev server against live click-tt.ch                                                |
+| `npm run test`     | Vitest (coverage on, `@/` → `src/`)                                                |
+| `npm run lint`     | `tsc --noEmit` → `tsc -p tsconfig.e2e.json --noEmit` → `eslint . --max-warnings 0` |
+| `npm run e2e`      | Playwright (starts its own server on `$E2E_APP_PORT`, default 3001)                |
+| `npm run verify`   | lint → test → build → e2e (full CI gate)                                           |
+
+Full script catalog, watch loops, and gotchas: the `npm-scripts` skill.
 
 ## Local configuration
 
 For local development, copy `.env-template` to `.env` (git-ignored) and adjust the values there. `src/config.ts` loads `.env` from the repo root at startup via native `process.loadEnvFile`; already-set env vars (shell/npm scripts) take precedence.
 
-The e2e test server port is configurable via `E2E_APP_PORT` (default 3001). `playwright.config.ts` loads `.env` itself, so the per-worktree port written by `scripts/setup-worktree.sh` is picked up automatically; an exported shell value still wins, e.g. `E2E_APP_PORT=3007 npm run e2e`.
+The e2e test server port is `E2E_APP_PORT` (default 3001); `playwright.config.ts` loads `.env` itself, so an exported shell value wins (e.g. `E2E_APP_PORT=3007 npm run e2e`). Parallel worktrees: see the `setup-worktree` skill.
 
 ## HTTPS & certificates
 
@@ -99,9 +98,9 @@ docs/adr/             — 19 ADRs
 
 - **Handlers**: `factory.createApp()` per router; wrap each handler with `handleAppRequest(fn)`.
 - **App class**: all handlers receive `App` (not raw Hono `Context`). Use `app.t()`, `app.render()`, `app.requireParam()`, `app.failure()`, `app.notFound()`, `app.isPartial`.
-- **HTMX**: default swap is `outerHTML`. Errors rendered via `hx-swap-oob="true"` into `#error-container` element. **Partial vs initial render gotcha**: any UI element rendered by an HTMX partial must also be present in the initial template — tests loading the page fresh (e.g. `/edit/:id`) hit the initial render, not the partial. Keep both in sync.
+- **HTMX**: default swap is `outerHTML`; errors render via `hx-swap-oob="true"` into `#error-container`. **Partial vs initial render**: any UI element an HTMX partial renders must also exist in the initial template (tests hit the initial render, not the partial). See the `route-handlers` skill.
 - **Rendering**: `app.render(component)` takes a `JSX.Element` (not a template name). Components are `.tsx` functions with typed `interface` props. Use `pageLayout(view, content, title?)` from `src/routes/layouts/main.tsx` to branch on `view.isPartial` for full-page vs fragment rendering. Translation function (`t`) and `locale` are passed as props (see `ViewContext` in `src/app.ts`). See [ADR 0019](docs/adr/0019-jsx-templates.md).
-- **Locale**: `AppLocale = 'de-CH' | 'fr-CH' | 'it-CH' | 'en-US'` (default `de-CH`), resolved by `languageMiddleware` from `?lang=` → `lang` cookie → `Accept-Language` prefix mapping (`de*`→de-CH, `fr*`→fr-CH, `it*`→it-CH, `en*`→en-US). `src/locales/config.ts` is the single source of truth for input formats (`dd.MM.yyyy HH:mm` / `MM/dd/yyyy hh:mm aa`). fr-CH/it-CH reuse the English UI text until dedicated translations land (ADR-0016).
+- **Locale**: `AppLocale = 'de-CH' | 'fr-CH' | 'it-CH' | 'en-US'` (default `de-CH`), resolved by `languageMiddleware` from `?lang=` → `lang` cookie → `Accept-Language` prefix mapping. fr-CH/it-CH reuse the English UI text (ADR-0016). Input formats and resolution order: see the `localization` skill.
 - **Validation**: Valibot schemas → `mapValidationToErrors()` for UI.
 - **Error handling**: throw `AppError | StateError` in handlers; caught by `onError` in `src/index.ts`.
 - **Sessions**: `SessionStore` seam (`src/lib/session-store.ts`) with `MemorySessionStore` (tests) and `SqliteSessionStore` (dev/prod). Access via `app.store.get()` / `app.store.save()`. Upgrade path: Turso/SQLite (ADR-0014).
@@ -118,23 +117,12 @@ docs/adr/             — 19 ADRs
 - `explicit-function-return-type` enforced (except IIFEs and const arrow assertions).
 - `function` declarations preferred; lambdas only as parameters.
 
-## Testing gotchas
+## Testing
 
-- **Page Objects**: e2e tests use Page Object classes from `e2e-tests/pages/`. Instantiate manually in each test: `const editPage = new EditPage(page);`. All selectors live inside page objects — tests call methods like `editPage.addProposedDate('2026-03-05T20:00')` or access locators like `editPage.status`. Cross-page workflows use `EditPage.createSession(page, name, dates?)` (replaces the old `createSession` helper).
-- **beer.css hides native radios/checkboxes** — toggle via label text, not `.check()` on the role.
-- **Heading ambiguity**: layout has `<h1>` brand + page `<h2>`s. Use `getByRole('heading', { name, level: 2 })`. Note: edit page uses the layout `<h1>` only (no duplicate `<h2>`), so its tests use `level: 1`.
-- **`<section>` must have a heading**: each `<section>` needs a heading (`<h1>`–`<h6>`) as first child. Layout wrappers use `<div>`. Don't nest `<section>` inside `<section>` unless the inner one is a true subsection.
-- **e2e type-checking**: `tsconfig.e2e.json` adds DOM lib; `npm run lint` validates e2e separately.
-- **Two Vitest projects**: one `unit` project (node environment, TypeScript specs) and one `browser` project (headless Chromium, client-side JS specs). One `vitest run` executes both; no separate npm script.
-- **Fixture builders**: `aSession()`, `aPlayer()`, etc. from `src/lib/__test-utils__/builders.ts`. Use deep-partial overrides. Inject via `await app.store.save(session)`.
-- **Builder drift**: `builders.spec.ts` asserts every required field — a model change must update builders in lockstep.
-- **Unit test mock Hono**: test files create a minimal context object and pass it to `App.create()`. See `edit-handlers.spec.ts` and `app-handler.spec.ts` for the pattern.
-- **Prefer `.toMatchObject` over map-projections**: assert model arrays as `.toMatchObject([{name, teamId}])` directly, not `.map(p => ({...}))` + `.toEqual`. `toMatchObject` enforces array length (verified), preserving the `.toHaveLength(N)` exact-count contract while asserting only the fields you care about; drop the now-redundant individual field checks it subsumes. Keep `.toEqual` for builders drift tests (exhaustive every-field), pure primitive arrays, and reference arrays.
-- **Screenshot tests**: visual regression assertions (`toHaveScreenshot(..., {fullPage: true})`) are co-located in existing `*.e2e.ts` files, baselines committed under `e2e-tests/*.ts-snapshots/`; tolerance `maxDiffPixelRatio: 0.02` in `playwright.config.ts`. See the `testing` skill.
+Unit and e2e conventions live in the `testing` skill: Page Objects and `createSession`, beer.css radio/checkbox toggling, heading levels, fixture builders, `toMatchObject` vs `toEqual`, a11y via `checkA11y`, screenshot baselines. Facts not covered there:
 
-## Skills (`.agents/skills/`)
-
-Loadable via the `skill` tool: `route-handlers`, `testing`, `localization`, `css-styling`, `hono`, `htmx`, `npm-scripts`, `accessibility-a11y`, `tool-installation`, `update-test-fixtures`.
+- **Two Vitest projects** run under one `vitest run`: `unit` (node environment, TypeScript specs) and `browser` (headless Chromium, client-side JS specs). No separate npm script.
+- **`<section>` must have a heading** (`<h1>`–`<h6>`) as first child; layout wrappers use `<div>`. Don't nest `<section>` inside `<section>` unless the inner one is a true subsection.
 
 ## Security model
 
@@ -149,10 +137,6 @@ Issues live as markdown files under `.scratch/<feature>/` in this repo. See `doc
 ### Triage labels
 
 The five canonical triage roles, each label equal to its name. See `docs/agents/triage-labels.md`.
-
-### CSS & Design system
-
-Single-file, self-documenting: `design-tokens.css` at `src/public/assets/css/`. See the `css-styling` skill for the full token catalog and conventions.
 
 ### Domain docs
 

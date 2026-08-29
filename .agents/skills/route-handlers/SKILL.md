@@ -5,7 +5,7 @@ description: How route handlers, routers, and the App wrapper work in this proje
 
 # PostPony Route Handlers
 
-This skill documents the project-specific conventions layered on top of Hono. For generic Hono API questions use the `hono` skill; for HTMX behaviour use the
+This skill documents the project-specific conventions layered on top of Hono. For HTMX behaviour use the
 `htmx` skill.
 
 ## When to Use This Skill

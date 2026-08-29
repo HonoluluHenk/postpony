@@ -48,10 +48,9 @@ Use this skill whenever you need to:
 
 ### Tests
 
-- Unit tests use **Vitest** and are colocated with the source as `*.spec.ts`
-  (e.g. `src/app-handler.spec.ts`, `src/lib/temporal-utils.spec.ts`). Run them with `npm test` (one shot) or `npm run dev:test` (watch).
-- E2E tests use **Playwright** in `e2e-tests/` with the `*.e2e.ts` suffix. Run them with `npm run e2e`. For interactive debugging use
-  `npm run playwright:ui`.
+- Unit tests use **Vitest** — run them with `npm test` (one shot) or `npm run dev:test` (watch).
+- E2E tests use **Playwright** — run them with `npm run e2e`; for interactive debugging use
+  `npm run playwright:ui`. Placement and conventions: see the `testing` skill.
 - A11y checks are wired into Playwright via the `checkA11y` fixture in
   `e2e-tests/fixtures.ts` — no separate script is needed.
 
@@ -93,8 +92,7 @@ itself fans out to `lint:source` + `lint:e2e`). Treat any failure as blocking �
 - `npm test` runs Vitest **once**. Use `npm run dev:test` for watch mode.
 - `npm run e2e` requires Playwright browsers; if they are missing run
   `npx playwright install` once.
-- HTTPS in dev requires local certs — generate them with
-  `scripts/create-certs.sh` (stored under `developer-local-settings/`).
+- HTTPS in dev requires local certs — see AGENTS.md "HTTPS & certificates".
 - Local config comes from a `.env` file at the repo root (loaded by
   `src/config.ts` at startup). On a fresh checkout, copy `.env-template` to
   `.env` and adjust the values — `.env` is git-ignored, `.env-template` is tracked and is the source of truth for which variables exist.

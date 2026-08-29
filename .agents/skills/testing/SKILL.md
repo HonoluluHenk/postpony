@@ -47,7 +47,7 @@ expect((await app.store.get(session.id))?.players[0]?.name)
     .toBe('Alice');
 ```
 
-- Copy the `createApp` / `MockOptions` helper from `edit-handlers.spec.ts`; it creates a `MemorySessionStore`, mocks `param`, `query`, `header`, `parseBody`, `html`, and `redirect`, and returns `'en-US'` (or `'de-CH'`) for `LOCALE_KEY` so `app.t(...)` resolves real strings. If the handler/middleware reads cookies, the mock must also provide `req.raw: {headers: new Headers(...)}` — Hono's `getCookie` reads `c.req.raw.headers`, not `c.req.header()` (see the `hono` skill).
+- Copy the `createApp` / `MockOptions` helper from `edit-handlers.spec.ts`; it creates a `MemorySessionStore`, mocks `param`, `query`, `header`, `parseBody`, `html`, and `redirect`, and returns `'en-US'` (or `'de-CH'`) for `LOCALE_KEY` so `app.t(...)` resolves real strings. If the handler/middleware reads cookies, the mock must also provide `req.raw: {headers: new Headers(...)}` — Hono's `getCookie` reads `c.req.raw.headers`, not `c.req.header()`.
 - Assert error paths with `.rejects.toThrow(...)` — handlers signal failures by throwing `AppError`/`StateError` via `app.failure`/`app.notFound`.
 - Each test gets its own `MemorySessionStore` instance (injected via `App.create(context, store)`), so tests are fully isolated from one another.
 
@@ -119,7 +119,7 @@ The layout renders an `<h1>` brand/logo alongside page `<h2>`s, so
 
 ### HTMX partial vs initial render
 
-The initial `/edit/:id` page renders `edit.eta` directly. Any UI element added via HTMX partial (e.g. the "Allow away team to vote" toggle switch in `proposed-dates-section.eta`) must also be rendered in the initial template — tests that load the page fresh hit the initial render, not the partial. Keep both in sync.
+Any UI element rendered by an HTMX partial must also be rendered in the initial template — tests that load the page fresh hit the initial render, not the partial. Full rule and examples: see the `route-handlers` skill.
 
 ### Semantic HTML
 
@@ -169,5 +169,4 @@ Visual regression via `toHaveScreenshot()` guards against unintended UI/CSS drif
 - Place unit tests alongside the source as `*.spec.ts`; e2e tests live in
   `e2e-tests/` as `*.e2e.ts`.
 - Put everything possible inside a top-level `describe`.
-- Coverage must stay **>= 80%** (branch, statement, line, functions).
 - Never weaken assertions, skip, or disable tests to make a run pass.
