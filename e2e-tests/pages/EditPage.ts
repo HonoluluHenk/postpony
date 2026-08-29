@@ -137,6 +137,15 @@ export class EditPage {
     });
   }
 
+  // ponytail: the <li> also carries button labels ("Allow opponent to vote",
+  // "Delete") inside its textContent, so the test reads the datetime display
+  // from the <li>'s `.max` div to get a parseable "Sep 30, 2026, 7:30 PM".
+  async proposedDateDisplays(): Promise<string[]> {
+    return this.proposedDateList.getByRole('listitem')
+      .locator('.max')
+      .allTextContents();
+  }
+
   generateTimeInput(index: number): Locator {
     return this.generateForm.locator(`input#time-${String(index)}`);
   }
