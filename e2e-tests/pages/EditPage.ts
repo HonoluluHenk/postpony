@@ -137,20 +137,8 @@ export class EditPage {
     });
   }
 
-  generateWeekdaySelect(index: number): Locator {
-    return this.generateForm.locator(`select#weekday-${String(index)}`);
-  }
-
   generateTimeInput(index: number): Locator {
     return this.generateForm.locator(`input#time-${String(index)}`);
-  }
-
-  get addRowButton(): Locator {
-    return this.generateForm.locator('button[name="action"][value="grow"]');
-  }
-
-  removeRowButton(index: number): Locator {
-    return this.generateForm.locator(`button[formaction$="rowIndex=${String(index)}"]`);
   }
 
   get generateSubmitButton(): Locator {
@@ -160,18 +148,9 @@ export class EditPage {
   }
 
   async generateProposedDates(rows: { weekday: number; time: string }[]): Promise<void> {
-    let rowCount = await this.generateForm.locator('select[name="weekday[]"]')
-      .count();
-    while (rowCount < rows.length) {
-      await this.addRowButton.click();
-      await this.generateWeekdaySelect(rowCount)
-        .waitFor({state: 'visible'});
-      rowCount++;
-    }
-    for (const [index, row] of rows.entries()) {
-      await this.generateWeekdaySelect(index)
-        .selectOption(String(row.weekday));
-      await this.generateTimeInput(index)
+    // Fixed Monday-Sunday grid: weekday N maps to row index N-1.
+    for (const row of rows) {
+      await this.generateTimeInput(row.weekday - 1)
         .fill(row.time);
     }
     await this.generateSubmitButton.click();

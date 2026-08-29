@@ -18,10 +18,7 @@ const NEW_STRING_KEYS = [
   'proposed_dates_generate_button',
   'proposed_dates_generate_added',
   'proposed_dates_generate_none',
-  'proposed_dates_generate_add_row',
-  'proposed_dates_generate_remove_row',
   'proposed_dates_generate_no_anchor',
-  'proposed_dates_generate_weekday_label',
   'proposed_dates_generate_time_label',
 ] as const satisfies readonly TranslationKeys[];
 
@@ -34,6 +31,13 @@ describe('translations registry', () => {
         expect(translations['en-US'][key])
           .toEqual(expect.any(String));
       }
+    });
+
+    it('rewords the generate help to describe the fill-to-generate grid', () => {
+      expect(translations['en-US'].proposed_dates_generate_help)
+        .toBe('Fill in the time you want on each day; days without a time are skipped.');
+      expect(translations['de-CH'].proposed_dates_generate_help)
+        .toBe('Tragen Sie die gewünschte Uhrzeit pro Tag ein; Tage ohne Uhrzeit werden übersprungen.');
     });
   });
 

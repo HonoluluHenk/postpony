@@ -112,109 +112,101 @@ describe('ProposedDatesSection generator block', () => {
     expect(generatorIndex).toBeLessThan(singleAddIndex);
   });
 
-  it('ships exactly one tuple row on initial render', () => {
+  it('renders exactly seven fixed rows, one empty time input per weekday, Monday to Sunday', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
-    expect((html.match(/name="weekday\[\]"/g) ?? []).length).toBe(1);
-    expect((html.match(/name="time\[\]"/g) ?? []).length).toBe(1);
+    expect((html.match(/name="time\[\]"/g) ?? [])).toHaveLength(7);
+    expect(html.match(/name="weekday\[\]"/g)).toBeNull();
+    const weekdayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+    weekdayLabels.forEach((label, index) => {
+      expect(html).toContain(`<label for="time-${index}">${label}</label>`);
+    });
   });
 
-  it('posts with the generate=tuple discriminator and the row-add/row-remove intent', () => {
-    const html = renderToString(ProposedDatesSection({...baseProps(), generateRows: 3}));
+  it('ships no add/remove row controls', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), times: ['', '', '', '', '', '', '']}));
 
-    expect(html).toContain('name="generate" value="tuple"');
-    expect(html).toContain('name="action" value="grow"');
-    expect(html).toContain('name="action" value="remove"');
-    expect(html).toContain('formaction="/edit/session-1/proposed-dates?rowIndex=1"');
-    expect(html).toContain('formaction="/edit/session-1/proposed-dates?rowIndex=2"');
+    expect(html).not.toContain('name="action"');
+    expect(html).not.toContain('value="grow"');
+    expect(html).not.toContain('value="remove"');
+    expect(html).not.toContain('formaction');
   });
 
-  it('uses the locale\'s time-only placeholder on each time input', () => {
-    const props = {...baseProps(), generateRows: 2, locale: 'de-CH' as const, inputFormat: 'dd.MM.yyyy HH:mm'};
+  it('starts every time input empty on initial render', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    const timeInputs = (html.match(/<input[^>]*name="time\[\]"[^>]*>/g) ?? []);
+    expect(timeInputs).toHaveLength(7);
+    for (const tag of timeInputs) {
+      expect(tag).not.toContain('value=');
+    }
+  });
+
+  it('round-trips submitted times through each row on re-render', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), times: ['8:00 pm', '', '9:00 pm']}));
+
+    expect(html).toContain('value="8:00 pm"');
+    expect(html).toContain('value="9:00 pm"');
+  });
+
+  it('uses the 24-hour HH:mm placeholder and de-CH lang per row for de-CH', () => {
+    const props = {...baseProps(), locale: 'de-CH' as const, inputFormat: 'dd.MM.yyyy HH:mm'};
     const html = renderToString(ProposedDatesSection(props));
 
-    expect(html.match(/name="time\[\]"/g)?.length ?? 0).toBe(2);
+    expect((html.match(/placeholder="HH:mm"/g) ?? [])).toHaveLength(7);
+    // ponytail: scope the lang check to the generator's time inputs so the
+    // single-add field's `lang` (also de-CH) doesn't inflate the count.
+    expect((html.match(/<input[^>]*name="time\[\]"[^>]*lang="de-CH"/g) ?? [])).toHaveLength(7);
     // ponytail: time input takes the locale's timeFormat only (HH:mm / hh:mm aa) —
     // not the full datetime placeholder, so the user knows they enter a time.
-    expect(html.match(/placeholder="HH:mm"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
-    expect(html.match(/<input[^>]*name="time\[\]"[^>]*placeholder="dd\.MM\.yyyy[^"]*"/g)?.length ?? 0).toBe(0);
-    expect(html.match(/lang="de-CH"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(html.match(/<input[^>]*name="time\[\]"[^>]*placeholder="dd\.MM\.yyyy[^"]*"/g))
+      .toBeNull();
   });
 
-  it('uses hh:mm aa placeholder for en-US on the time input', () => {
-    const props = {
-      ...baseProps(),
-      generateRows: 1,
-      locale: 'en-US' as const,
-      inputFormat: 'MM/dd/yyyy hh:mm aa',
-    };
-    const html = renderToString(ProposedDatesSection(props));
+  it('uses the hh:mm aa placeholder and en-US lang per row for en-US', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), locale: 'en-US' as const}));
 
-    expect(html.match(/placeholder="hh:mm aa"/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
-    // No `name="time[]"` input should carry the full datetime placeholder — the
-    // single-add field legitimately uses the full placeholder because it asks
-    // for date+time; this assertion scopes to the generator block specifically.
-    expect(html.match(/<input[^>]*name="time\[\]"[^>]*placeholder="MM\/dd\/yyyy[^"]*"/g)?.length ?? 0).toBe(0);
+    expect((html.match(/placeholder="hh:mm aa"/g) ?? [])).toHaveLength(7);
+    expect((html.match(/<input[^>]*name="time\[\]"[^>]*lang="en-US"/g) ?? [])).toHaveLength(7);
+    expect(html.match(/<input[^>]*name="time\[\]"[^>]*placeholder="MM\/dd\/yyyy[^"]*"/g))
+      .toBeNull();
   });
 
-  it('labels each generator row\'s weekday and time inputs with the locale\'s field labels', () => {
+  it('labels each row with the locale weekday and the time field label', () => {
     const tDe = (key: any, params?: any): string => getTranslation('de-CH', key, params);
-    const props = {...baseProps(), t: tDe, generateRows: 2, locale: 'de-CH' as const};
-    const html = renderToString(ProposedDatesSection(props));
+    const html = renderToString(ProposedDatesSection({...baseProps(), t: tDe, locale: 'de-CH' as const}));
 
-    const weekdayLabels = (html.match(/<label[^>]*for="weekday-\d+"[^>]*>[^<]+<\/label>/g) ?? []);
-    const timeLabels = (html.match(/<label[^>]*for="time-\d+"[^>]*>[^<]+<\/label>/g) ?? []);
-    expect(weekdayLabels.length).toBe(2);
-    expect(timeLabels.length).toBe(2);
-    for (const tag of weekdayLabels) {
-      expect(tag).toContain('Wochentag');
-      expect(tag).not.toContain('Generate Proposed Dates');
-    }
-    for (const tag of timeLabels) {
-      expect(tag).toContain('Uhrzeit');
-    }
+    const weekdayLabels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    weekdayLabels.forEach((label, index) => {
+      expect(html).toContain(`<label for="time-${index}">${label}</label>`);
+    });
+    expect((html.match(/<label for="time-\d+">Uhrzeit<\/label>/g) ?? [])).toHaveLength(7);
   });
 
-  it('emits every weekday label inside the locale-aware weekday select', () => {
-    const html = renderToString(ProposedDatesSection(baseProps()));
+  it('marks the offending row invalid with an inline error and preserves the other rows', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      times: ['8:00 pm', 'not-a-time', '9:00 pm'],
+      generatorInvalidRow: 1,
+    }));
 
-    expect(html).toContain('<option value="1"');
-    expect(html).toContain('<option value="7"');
-    expect(html).toContain('>Mo</option>');
-    expect(html).toContain('>Su</option>');
-  });
-
-  it('greys out the Add weekday button when the cap of 14 is reached', () => {
-    const html = renderToString(ProposedDatesSection({...baseProps(), generateRows: 14}));
-
-    expect(html).toContain('name="action" value="grow" disabled=""');
-    expect((html.match(/name="weekday\[\]"/g) ?? []).length).toBe(14);
-    expect((html.match(/name="action" value="remove"/g) ?? []).length).toBe(14);
-  });
-
-  it('keeps the lone row\'s remove button disabled so users cannot trim to zero', () => {
-    const html = renderToString(ProposedDatesSection(baseProps()));
-
-    expect(html).toMatch(/name="action" value="remove"[^>]*disabled/);
-  });
-
-  it('enables the remove button once the form has 2+ tuple rows', () => {
-    const html = renderToString(ProposedDatesSection({...baseProps(), generateRows: 2}));
-
-    const removeButtons = (html.match(/<button[^>]*name="action" value="remove"[^>]*>/g) ?? []);
-    expect(removeButtons.length).toBe(2);
-    for (const tag of removeButtons) {
-      expect(tag).not.toContain('disabled');
-    }
+    expect(html).toMatch(/id="time-1"[^>]*aria-invalid="true"/);
+    expect(html).toMatch(/id="time-1"[^>]*aria-describedby="time-1-error"/);
+    expect(html).toContain('id="time-1-error"');
+    expect(html).toContain('>Please provide a valid date and time</span>');
+    expect(html).toContain('value="8:00 pm"');
+    expect(html).toContain('value="9:00 pm"');
+    expect(html).not.toMatch(/id="time-0"[^>]*aria-invalid/);
+    expect(html).not.toMatch(/id="time-2"[^>]*aria-invalid/);
   });
 
   it('hides the generator block alongside the single-add form when Confirmed', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), status: 'Confirmed'}));
 
     expect(html).not.toContain('Generate Proposed Dates');
-    expect(html).not.toContain('name="weekday[]"');
     expect(html).not.toContain('name="time[]"');
     expect(html).not.toContain('name="generate" value="tuple"');
+    expect(html).not.toContain('id="proposedDateTime"');
   });
 
   it('renders the success toast with the localized count when n >= 1', () => {
@@ -231,11 +223,10 @@ describe('ProposedDatesSection generator block', () => {
     expect(html).toContain('No dates were added.');
   });
 
-  it('clamps absurd row counts to the 14-row cap on render', () => {
-    const html = renderToString(ProposedDatesSection({...baseProps(), generateRows: 999}));
+  it('renders the no-anchor fallback warning as an inline message', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), generatorError: 'No match anchor — using today as window start.'}));
 
-    expect((html.match(/name="weekday\[\]"/g) ?? []).length).toBe(14);
-    expect(html).toContain('name="action" value="grow" disabled=""');
+    expect(html).toContain('No match anchor — using today as window start.');
   });
 });
 

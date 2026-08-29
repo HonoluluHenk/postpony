@@ -200,7 +200,6 @@ describe('edit handlers', () => {
         headers: {'HX-Request': 'true'},
         body: {
           generate: 'tuple',
-          'weekday[]': ['1'],
           'time[]': ['8:00 pm'],
         },
       });
@@ -226,19 +225,105 @@ describe('edit handlers', () => {
         .toContain('id="proposed-dates-management"');
       expect(html)
         .toContain(`>${expected.added.length} dates added<`);
+      // US 14: the submitted time survives the success re-render.
+      expect(html)
+        .toContain('value="8:00 pm"');
     });
 
-    test('tuple branch zero-result path: no store write, renders the inline empty-result message', async () => {
+    test('tuple branch: empty rows are skipped at the parse boundary', async () => {
       const session = aSession({
-        originalMatchDateTime: '2020-01-01T16:00',
+        originalMatchDateTime: '2026-09-02T16:00',
+        proposedDates: [],
+        status: 'Draft',
       });
       const app = createApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
           generate: 'tuple',
-          'weekday[]': ['1'],
-          'time[]': ['8:00 pm'],
+          'time[]': ['8:00 pm', '', '9:00 pm'],
+        },
+      });
+      await app.store.save(session);
+
+      // time[0] -> weekday 1 (Mon), time[2] -> weekday 3 (Wed); time[1] is empty.
+      const expected = generateProposedDates({
+        anchorIso: '2026-09-02T16:00',
+        todayIso: FIXED_TODAY_ISO,
+        tuples: [
+          {weekday: 1, hour: 20, minute: 0},
+          {weekday: 3, hour: 21, minute: 0},
+        ],
+        existingStarts: [],
+      });
+      expect(expected.added.length)
+        .toBeGreaterThan(0);
+
+      const html = await (await handleEditProposedDatesPost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates.map((d) => d.dateTimeRange.start))
+        .toEqual(expected.added);
+      expect(html)
+        .toContain(`>${expected.added.length} dates added<`);
+      expect(html)
+        .toContain('value="8:00 pm"');
+      expect(html)
+        .toContain('value="9:00 pm"');
+    });
+
+    test('tuple branch: a row with a bad time returns 400 with a per-row error and preserves the other rows', async () => {
+      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
+      const app = createApp({
+        params: {id: session.id},
+        headers: {'HX-Request': 'true'},
+        body: {
+          generate: 'tuple',
+          'time[]': ['8:00 pm', 'not-a-time', '9:00 pm'],
+        },
+      });
+      await app.store.save(session);
+
+      const response = await handleEditProposedDatesPost(app);
+      const html = await response.text();
+
+      expect(response.status)
+        .toBe(400);
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+      expect(stored?.originalMatchDateTime)
+        .toBe('2026-09-02T16:00');
+      // Row 1 is the offending row: marked invalid, linked to its inline error.
+      expect(html)
+        .toMatch(/id="time-1"[^>]*aria-invalid="true"/);
+      expect(html)
+        .toMatch(/id="time-1"[^>]*aria-describedby="time-1-error"/);
+      expect(html)
+        .toContain('id="time-1-error"');
+      expect(html)
+        .toContain('>Please provide a valid date and time</span>');
+      // The other rows' submitted values round-trip through the partial.
+      expect(html)
+        .toContain('value="8:00 pm"');
+      expect(html)
+        .toContain('value="9:00 pm"');
+      expect(html)
+        .not
+        .toMatch(/id="time-0"[^>]*aria-invalid/);
+      expect(html)
+        .not
+        .toMatch(/id="time-2"[^>]*aria-invalid/);
+    });
+
+    test('tuple branch all-empty submit: no store write and the inline empty-result message', async () => {
+      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
+      const app = createApp({
+        params: {id: session.id},
+        headers: {'HX-Request': 'true'},
+        body: {
+          generate: 'tuple',
+          'time[]': ['', '', '', '', '', '', ''],
         },
       });
       await app.store.save(session);
@@ -258,45 +343,14 @@ describe('edit handlers', () => {
         .toContain('dates added<');
     });
 
-    test('tuple branch row-level invalid time: surfaces structured error and does not touch the store', async () => {
+    test('tuple branch over-cap POST: 15 times are rejected at the handler seam rather than truncated', async () => {
       const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
-        params: {id: session.id},
-        headers: {'HX-Request': 'true'},
-        body: {
-          generate: 'tuple',
-          'weekday[]': ['1', '3'],
-          'time[]': ['8:00 pm', 'not-a-time'],
-        },
-      });
-      await app.store.save(session);
-
-      const response = await handleEditProposedDatesPost(app);
-      const html = await response.text();
-
-      expect(response.status)
-        .toBe(400);
-      const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates)
-        .toHaveLength(0);
-      expect(stored?.originalMatchDateTime)
-        .toBe('2026-09-02T16:00');
-      expect(html)
-        .toContain('Please provide a valid date and time');
-      expect(html)
-        .toContain('id="proposed-dates-management"');
-    });
-
-    test('tuple branch over-cap POST: 15 rows are rejected at the handler seam rather than truncated', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const weekdays = Array.from({length: 15}, (_, i): string => String(((i % 7) + 1)));
       const times = Array.from({length: 15}, (): string => '8:00 pm');
       const app = createApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
           generate: 'tuple',
-          'weekday[]': weekdays,
           'time[]': times,
         },
       });
@@ -324,7 +378,6 @@ describe('edit handlers', () => {
         headers: {'HX-Request': 'true'},
         body: {
           generate: 'tuple',
-          'weekday[]': ['1'],
           'time[]': ['8:00 pm'],
         },
       });
@@ -352,14 +405,15 @@ describe('edit handlers', () => {
         .toContain(`>${expected.added.length} dates added<`);
     });
 
-    test('grow sub-action: does not touch the store and re-renders the form at the larger row count', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
+    test('tuple branch zero-result path: no store write, renders the inline empty-result message', async () => {
+      const session = aSession({
+        originalMatchDateTime: '2020-01-01T16:00',
+      });
       const app = createApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
-          action: 'grow',
-          'weekday[]': ['1'],
+          generate: 'tuple',
           'time[]': ['8:00 pm'],
         },
       });
@@ -369,65 +423,24 @@ describe('edit handlers', () => {
       const html = await (await handleEditProposedDatesPost(app)).text();
       const after = await app.store.get(session.id);
 
-      expect(after)
-        .toEqual(before);
+      expect(before)
+        .toEqual(after);
       expect(after?.proposedDates)
         .toHaveLength(0);
-      expect((html.match(/name="weekday\[\]"/g) ?? []).length)
-        .toBe(2);
+      expect(html)
+        .toContain('No dates were added');
+      expect(html)
+        .not
+        .toContain('dates added<');
     });
 
-    test('remove sub-action: does not touch the store and re-renders the form at the smaller row count', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
-        params: {id: session.id},
-        queries: {rowIndex: '1'},
-        headers: {'HX-Request': 'true'},
-        body: {
-          action: 'remove',
-          'weekday[]': ['1', '3'],
-          'time[]': ['8:00 pm', '8:00 pm'],
-        },
-      });
-      await app.store.save(session);
-
-      const before = await app.store.get(session.id);
-      const html = await (await handleEditProposedDatesPost(app)).text();
-      const after = await app.store.get(session.id);
-
-      expect(after)
-        .toEqual(before);
-      expect((html.match(/name="weekday\[\]"/g) ?? []).length)
-        .toBe(1);
-    });
-
-    test('remove sub-action never trims the form below a single row', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
-        params: {id: session.id},
-        headers: {'HX-Request': 'true'},
-        body: {
-          action: 'remove',
-          'weekday[]': ['1'],
-          'time[]': ['8:00 pm'],
-        },
-      });
-      await app.store.save(session);
-
-      const html = await (await handleEditProposedDatesPost(app)).text();
-
-      expect((html.match(/name="weekday\[\]"/g) ?? []).length)
-        .toBe(1);
-    });
-
-    test('tuple branch with no rows: renders the inline empty-result message without writing to the store', async () => {
+    test('tuple branch with an empty time[] array: inline empty-result message, no store write', async () => {
       const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
       const app = createApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
           generate: 'tuple',
-          'weekday[]': [],
           'time[]': [],
         },
       });
@@ -448,7 +461,6 @@ describe('edit handlers', () => {
         params: {id: session.id},
         body: {
           generate: 'tuple',
-          'weekday[]': ['1'],
           'time[]': ['8:00 pm'],
         },
       });
@@ -473,34 +485,12 @@ describe('edit handlers', () => {
         .toEqual(expected.added);
     });
 
-    test('non-partial grow action: redirects with no store change', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
-        params: {id: session.id},
-        body: {
-          action: 'grow',
-          'weekday[]': ['1'],
-          'time[]': ['8:00 pm'],
-        },
-      });
-      await app.store.save(session);
-
-      const response = await handleEditProposedDatesPost(app);
-
-      expect(response.status)
-        .toBe(302);
-      const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates)
-        .toHaveLength(0);
-    });
-
     test('non-partial row-level invalid time: redirects rather than rendering html', async () => {
       const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
       const app = createApp({
         params: {id: session.id},
         body: {
           generate: 'tuple',
-          'weekday[]': ['1'],
           'time[]': ['not-a-time'],
         },
       });
@@ -515,15 +505,13 @@ describe('edit handlers', () => {
         .toHaveLength(0);
     });
 
-    test('non-partial over-cap POST: redirects with the over-cap rejection', async () => {
+    test('non-partial over-cap POST: redirects rather than rendering html', async () => {
       const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const weekdays = Array.from({length: 16}, (_, i): string => String(((i % 7) + 1)));
       const times = Array.from({length: 16}, (): string => '8:00 pm');
       const app = createApp({
         params: {id: session.id},
         body: {
           generate: 'tuple',
-          'weekday[]': weekdays,
           'time[]': times,
         },
       });
@@ -536,31 +524,6 @@ describe('edit handlers', () => {
       const stored = await app.store.get(session.id);
       expect(stored?.proposedDates)
         .toHaveLength(0);
-    });
-
-    test('tuple branch with mismatched-weekday-and-time-array lengths: 400 with structured error', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
-        params: {id: session.id},
-        headers: {'HX-Request': 'true'},
-        body: {
-          generate: 'tuple',
-          'weekday[]': ['1', '3'],
-          'time[]': ['8:00 pm'],
-        },
-      });
-      await app.store.save(session);
-
-      const response = await handleEditProposedDatesPost(app);
-      const html = await response.text();
-
-      expect(response.status)
-        .toBe(400);
-      const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates)
-        .toHaveLength(0);
-      expect(html)
-        .toContain('Please provide a valid date and time');
     });
 
     test('tuple branch with existing proposedDates: dedupes against existingStarts and adds the survivors', async () => {
@@ -579,7 +542,6 @@ describe('edit handlers', () => {
         headers: {'HX-Request': 'true'},
         body: {
           generate: 'tuple',
-          'weekday[]': ['1'],
           'time[]': ['8:00 pm'],
         },
       });
@@ -601,49 +563,6 @@ describe('edit handlers', () => {
         .toBe('pd-existing');
     });
 
-    test('row-action with an unknown sub-action value: throws 400', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
-        params: {id: session.id},
-        body: {
-          action: 'bogus',
-          'weekday[]': ['1'],
-          'time[]': ['8:00 pm'],
-        },
-      });
-      await app.store.save(session);
-
-      await expect(handleEditProposedDatesPost(app))
-        .rejects
-        .toThrow('Please provide a valid date and time');
-    });
-
-    test('TupleSchema validation failure (missing discriminator): renders an error and does not touch the store', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
-        params: {id: session.id},
-        headers: {'HX-Request': 'true'},
-        body: {
-          'weekday[]': ['1'],
-          'time[]': ['8:00 pm'],
-        },
-      });
-      await app.store.save(session);
-
-      const response = await handleEditProposedDatesPost(app);
-      const html = await response.text();
-
-      expect(response.status)
-        .toBe(400);
-      const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates)
-        .toHaveLength(0);
-      expect(html)
-        .toContain('Please provide a valid date and time');
-      expect((html.match(/name="weekday\[\]"/g) ?? []).length)
-        .toBe(1);
-    });
-
     test('tuple submit with a mismatched-bound-shape payload: 400 error (overrides default single-date fallthrough)', async () => {
       const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
       const app = createApp({
@@ -651,7 +570,7 @@ describe('edit handlers', () => {
         headers: {'HX-Request': 'true'},
         body: {
           generate: 'tuple',
-          // deliberately omit 'weekday[]' / 'time[]'
+          // deliberately omit 'time[]'
         },
       });
       await app.store.save(session);
@@ -666,27 +585,6 @@ describe('edit handlers', () => {
         .toHaveLength(0);
       expect(html)
         .toContain('Please provide a valid date and time');
-    });
-
-    test('tuple submit with malformed weekday value (out-of-range 8): 400 with structured error', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
-        params: {id: session.id},
-        headers: {'HX-Request': 'true'},
-        body: {
-          generate: 'tuple',
-          'weekday[]': ['8'],
-          'time[]': ['8:00 pm'],
-        },
-      });
-      await app.store.save(session);
-
-      const response = await handleEditProposedDatesPost(app);
-      expect(response.status)
-        .toBe(400);
-      const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates)
-        .toHaveLength(0);
     });
 
     test('rogue POST combining tuple branch and proposedDateTime: rejected with 400, no store write', async () => {
@@ -696,7 +594,6 @@ describe('edit handlers', () => {
         headers: {'HX-Request': 'true'},
         body: {
           generate: 'tuple',
-          'weekday[]': ['1', '3'],
           'time[]': ['8:00 pm', '9:00 pm'],
           proposedDateTime: '09/05/2025 08:00 pm',
         },
@@ -716,82 +613,6 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('Please provide a valid date and time');
     });
-
-    test('cap of 14 distinct tuples: all 14 tuples are processed and the cap is not enforced on count emitted', async () => {
-      const session = aSession({
-        originalMatchDateTime: '2026-09-02T16:00',
-        status: 'Draft',
-      });
-      const weekdays = ['1', '3', '5', '1', '3', '5', '1', '3', '5', '1', '3', '5', '1', '3'];
-      const times = [
-        '07:00 am', '07:30 am', '08:00 am',
-        '08:30 am', '09:00 am', '09:30 am',
-        '10:00 am', '10:30 am', '11:00 am',
-        '11:30 am', '12:00 pm', '12:30 pm',
-        '01:00 pm', '01:30 pm',
-      ];
-      const tuples = [
-        {weekday: 1, hour: 7, minute: 0},
-        {weekday: 3, hour: 7, minute: 30},
-        {weekday: 5, hour: 8, minute: 0},
-        {weekday: 1, hour: 8, minute: 30},
-        {weekday: 3, hour: 9, minute: 0},
-        {weekday: 5, hour: 9, minute: 30},
-        {weekday: 1, hour: 10, minute: 0},
-        {weekday: 3, hour: 10, minute: 30},
-        {weekday: 5, hour: 11, minute: 0},
-        {weekday: 1, hour: 11, minute: 30},
-        {weekday: 3, hour: 12, minute: 0},
-        {weekday: 5, hour: 12, minute: 30},
-        {weekday: 1, hour: 13, minute: 0},
-        {weekday: 3, hour: 13, minute: 30},
-      ];
-      const app = createApp({
-        params: {id: session.id},
-        headers: {'HX-Request': 'true'},
-        body: {
-          generate: 'tuple',
-          'weekday[]': weekdays,
-          'time[]': times,
-        },
-      });
-      await app.store.save(session);
-
-      const expected = generateProposedDates({
-        anchorIso: '2026-09-02T16:00',
-        todayIso: FIXED_TODAY_ISO,
-        tuples,
-        existingStarts: [],
-      });
-      expect(expected.added.length)
-        .toBeGreaterThanOrEqual(14);
-
-      await handleEditProposedDatesPost(app);
-
-      const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates.map((d) => d.dateTimeRange.start))
-        .toEqual(expected.added);
-      expect(stored?.proposedDates.length)
-        .toBeGreaterThanOrEqual(14);
-    });
-
-    test('row-action failure path with unknown sub-action non-partial: also throws 400', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
-        params: {id: session.id},
-        headers: {'HX-Request': 'true'},
-        body: {
-          action: 'bogus',
-          'weekday[]': ['1'],
-          'time[]': ['8:00 pm'],
-        },
-      });
-      await app.store.save(session);
-
-      await expect(handleEditProposedDatesPost(app))
-        .rejects
-        .toThrow('Please provide a valid date and time');
-    });
   });
 
   test('non-partial tuple submit with malformed body: redirects rather than rendering html', async () => {
@@ -800,7 +621,7 @@ describe('edit handlers', () => {
       params: {id: session.id},
       body: {
         generate: 'tuple',
-        // deliberately omit 'weekday[]' / 'time[]'
+        // deliberately omit 'time[]'
       },
     });
     await app.store.save(session);

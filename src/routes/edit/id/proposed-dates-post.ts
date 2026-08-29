@@ -17,59 +17,29 @@ function redirectAfterEdit(app: App, session: Postponement): Response {
   return app.c.redirect(`/edit/${session.id}?ownerPassword=${ownerQuery(app)}`);
 }
 
-function asStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value.filter((entry): entry is string => typeof entry === 'string');
-  }
-  if (typeof value === 'string') {
-    return [value];
-  }
-  return [];
-}
-
-function normalizeRowCount(value: unknown): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    return 1;
-  }
-  const floored = Math.floor(parsed);
-  if (floored < 1) {
-    return 1;
-  }
-  return Math.min(floored, MAX_TUPLES);
-}
-
-function readTupleRows(values: Record<string, unknown>): {
-  weekdays: string[];
-  times: string[];
-} {
-  return {
-    weekdays: asStringArray(values['weekday[]']),
-    times: asStringArray(values['time[]']),
-  };
-}
-
 interface ParsedTuples {
   tuples: ProposedDateTuple[];
   invalidRowIndex: number | undefined;
 }
 
-function parseTupleRows(weekdays: string[], times: string[], locale: App['locale']): ParsedTuples {
-  // ponytail: caller guarantees equal lengths upstream; this loop trusts that and
-  // only validates each row's content. Trust+guard layout keeps the function a
-  // pure elementwise mapper.
+/**
+ * Maps the submitted `time[]` values to (weekday, hour, minute) tuples. The
+ * weekday is always the row index + 1 in the fixed Monday–Sunday grid — the
+ * server never trusts a client-supplied weekday. An empty string is skipped at
+ * this parse boundary; a non-empty string that fails the locale grammar marks
+ * that row's index as invalid.
+ */
+function parseTupleTimes(times: readonly string[], locale: App['locale']): ParsedTuples {
   const tuples: ProposedDateTuple[] = [];
-  for (const [index, rawWeekday] of weekdays.entries()) {
-    const weekday = Number(rawWeekday);
-    if (!Number.isInteger(weekday) || weekday < 1 || weekday > 7) {
+  for (const [index, rawTime] of times.entries()) {
+    if (rawTime.trim().length === 0) {
+      continue;
+    }
+    const parsed = parseLocaleTimeOnly(rawTime, locale);
+    if (parsed === undefined) {
       return {tuples: [], invalidRowIndex: index};
     }
-    const rawTime = times[index] ?? '';
-    const parsedTime = parseLocaleTimeOnly(rawTime, locale);
-    if (parsedTime === undefined) {
-      return {tuples: [], invalidRowIndex: index};
-    }
-    tuples.push({weekday, hour: parsedTime.hour, minute: parsedTime.minute});
+    tuples.push({weekday: index + 1, hour: parsed.hour, minute: parsed.minute});
   }
   return {tuples, invalidRowIndex: undefined};
 }
@@ -77,7 +47,6 @@ function parseTupleRows(weekdays: string[], times: string[], locale: App['locale
 interface SingleDateOutput {proposedDateTime: string}
 interface TupleOutput {
   generate: typeof TUPLE_DISCRIMINATOR;
-  'weekday[]': string[];
   'time[]': string[];
   proposedDateTime?: never;
 }
@@ -85,12 +54,11 @@ interface TupleOutput {
 function buildTupleSchema(app: App): v.BaseSchema<unknown, TupleOutput, v.BaseIssue<unknown>> {
   return v.object({
     generate: v.literal(TUPLE_DISCRIMINATOR, app.t('proposed_date_time_invalid')),
-    'weekday[]': v.array(v.string()),
     'time[]': v.array(v.string()),
     // ponytail: rogue POST combining the generator branch with the single-date
     // field is explicitly rejected. The schema encodes it via the `never`
-    // output type and the strict object parser — passing `proposedDateTime`
-    // makes the parse fail before any persistence happens.
+    // output type — passing `proposedDateTime` makes the parse fail before
+    // any persistence happens.
     proposedDateTime: v.optional(v.never(app.t('proposed_date_time_invalid'))),
   });
 }
@@ -105,11 +73,6 @@ function buildSingleDateSchema(app: App): v.BaseSchema<unknown, SingleDateOutput
   });
 }
 
-const RowActionSchema = v.union([
-  v.object({action: v.literal('grow')}),
-  v.object({action: v.literal('remove')}),
-]);
-
 export const handleEditProposedDatesPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
   const session = await app.store.get(id);
@@ -119,18 +82,6 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
 
   const locale = app.locale;
   const values = await app.c.req.parseBody({all: true}) as Record<string, unknown>;
-
-  if (typeof values['action'] === 'string') {
-    const actionValidation = v.safeParse(RowActionSchema, values);
-    if (!actionValidation.success) {
-      app.failure(app.t('proposed_date_time_invalid'), 400);
-    }
-    const rowCount = readTupleRows(values).weekdays.length || 1;
-    const requestedRows = values['action'] === 'grow'
-      ? Math.min(rowCount + 1, MAX_TUPLES)
-      : Math.max(rowCount - 1, 1);
-    return renderPartial(app, session, {generateRows: requestedRows});
-  }
 
   if (values['generate'] === TUPLE_DISCRIMINATOR) {
     return handleTupleSubmit(app, session, locale, values);
@@ -149,41 +100,38 @@ async function handleTupleSubmit(
   if (!validation.success) {
     const errors = mapValidationToErrors(validation);
     if (app.isPartial) {
-      const {weekdays} = readTupleRows(values);
-      const requestedRows = normalizeRowCount(weekdays.length || 1);
       return app.c.html(renderEditPartials(app, session, {
-        generateRows: requestedRows,
         generatorError: errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
       }), {status: 400});
     }
     return redirectAfterEdit(app, session);
   }
 
-  const {weekdays, times} = readTupleRows(values);
-  if (Math.max(weekdays.length, times.length) > MAX_TUPLES
-    || weekdays.length !== times.length) {
+  const times = validation.output['time[]'];
+  if (times.length > MAX_TUPLES) {
+    // ponytail: the fixed 7-row form can never exceed MAX_TUPLES; this is a
+    // security guard against a hand-crafted oversized time[] array.
     if (app.isPartial) {
       return app.c.html(renderEditPartials(app, session, {
-        generateRows: normalizeRowCount(weekdays.length || 1),
         generatorError: app.t('proposed_date_time_invalid'),
       }), {status: 400});
     }
     return redirectAfterEdit(app, session);
   }
 
-  const parsed = parseTupleRows(weekdays, times, locale);
+  const parsed = parseTupleTimes(times, locale);
   if (parsed.invalidRowIndex !== undefined) {
     if (app.isPartial) {
       return app.c.html(renderEditPartials(app, session, {
-        generateRows: normalizeRowCount(weekdays.length || 1),
-        generatorError: app.t('proposed_date_time_invalid'),
+        times,
+        generatorInvalidRow: parsed.invalidRowIndex,
       }), {status: 400});
     }
     return redirectAfterEdit(app, session);
   }
 
   if (parsed.tuples.length === 0) {
-    return renderPartial(app, session, {generatorError: app.t('proposed_dates_generate_none')});
+    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none')});
   }
 
   const generated = generateProposedDates({
@@ -194,7 +142,7 @@ async function handleTupleSubmit(
   });
 
   if (generated.added.length === 0) {
-    return renderPartial(app, session, {generatorError: app.t('proposed_dates_generate_none')});
+    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none')});
   }
 
   const rules = new PostponementRules();
@@ -204,8 +152,8 @@ async function handleTupleSubmit(
   }
   await app.store.save(updated);
 
-  const extras: {generatorSuccessCount: number; generateRows: number; generatorError?: string} = {
-    generateRows: normalizeRowCount(weekdays.length || 1),
+  const extras: {times: string[]; generatorSuccessCount: number; generatorError?: string} = {
+    times,
     generatorSuccessCount: generated.added.length,
   };
   if (generated.usedFallbackWindow) {
@@ -251,7 +199,7 @@ async function handleSingleSubmit(
 }
 
 interface GeneratorRenderExtras {
-  generateRows?: number;
+  times?: string[];
   generatorError?: string;
   generatorSuccessCount?: number;
 }

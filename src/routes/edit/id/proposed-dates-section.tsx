@@ -1,7 +1,6 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
-import { MAX_TUPLES } from '../../../lib/proposed-dates-generator';
 import type { PostponementStatus, VoteTallyItem } from '../../../lib/models';
 import { ErrorContainer } from '../../partials/error-container';
 import { OwnTeamVotes } from './own-team-votes';
@@ -29,36 +28,31 @@ export interface ProposedDatesSectionProps extends EditPartialsData {
   proposedDateTime?: string;
   error?: string;
   success?: boolean;
-  generateRows?: number;
+  times?: readonly string[];
+  generatorInvalidRow?: number;
   generatorError?: string;
   generatorSuccessCount?: number;
-}
-
-function clampRows(rows: number | undefined): number {
-  if (typeof rows !== 'number' || !Number.isFinite(rows)) {
-    return 1;
-  }
-  return Math.max(1, Math.min(Math.floor(rows), MAX_TUPLES));
 }
 
 interface GenerateFormProps {
   sessionId: string;
   t: TranslateFn;
   locale: AppLocale;
-  weekdays: readonly string[];
-  rows: number;
+  times?: readonly string[];
+  invalidRow?: number;
   error?: string;
   successCount?: number;
 }
 
 function GenerateForm(props: GenerateFormProps): JSX.Element {
-  const {sessionId, t, locale, weekdays, rows} = props;
-  const capped = clampRows(rows);
-  const rowAction = '/edit/'.concat(sessionId, '/proposed-dates');
+  const {sessionId, t, locale, times} = props;
+  const rowAction = `/edit/${sessionId}/proposed-dates`;
   const headingId = 'generate-tuple-heading';
   const timeFormat = localeConfig(locale).timeFormat;
-  const weekdayLabel = t('proposed_dates_generate_weekday_label');
   const timeLabel = t('proposed_dates_generate_time_label');
+  const submitted = times ?? [];
+  // ponytail: the fixed Monday–Sunday grid is the preset; each row's time input
+  // is empty unless the organizer's latest submit round-trips a value for it.
   return (
     <form
       hx-post={rowAction}
@@ -70,53 +64,39 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
       <p>{t('proposed_dates_generate_help')}</p>
       <input type="hidden" name="generate" value="tuple"/>
       <ol class="list no-margin" aria-label={t('proposed_dates_generate_section')}>
-        {Array.from({length: capped}, (_, index) => (
-          <li key={index} class="row items-center gap mt-2">
-            <div class="field label border">
-              <select id={`weekday-${index}`} name="weekday[]">
-                {weekdays.map((label, wIndex) => (
-                  <option key={wIndex + 1} value={wIndex + 1} selected={wIndex === 0}>{label}</option>
-                ))}
-              </select>
-              <label for={`weekday-${index}`}>{weekdayLabel}</label>
-            </div>
-            <div class="field label border fill max">
-              <input
-                id={`time-${index}`}
-                type="text"
-                name="time[]"
-                placeholder={timeFormat}
-                lang={locale}
-                autocomplete="off"
-                aria-invalid={props.error ? 'true' : undefined}
-              />
-              <label for={`time-${index}`}>{timeLabel}</label>
-            </div>
-            <button
-              type="submit"
-              name="action"
-              value="remove"
-              formaction={`${rowAction}?rowIndex=${String(index)}`}
-              disabled={capped === 1}
-              aria-label={t('proposed_dates_generate_remove_row')}
-              class="button outline"
-            >
-              <i aria-hidden="true">close</i>
-              {t('proposed_dates_generate_remove_row')}
-            </button>
-          </li>
-        ))}
+        {weekdayLabels[locale].map((weekday, index) => {
+          const invalid = props.invalidRow === index;
+          const rawValue = submitted[index];
+          const value = rawValue !== undefined && rawValue.length > 0 ? rawValue : undefined;
+          return (
+            <li key={weekday} class="row items-center gap mt-2">
+              {/* ponytail: the weekday text doubles as the input's label (its
+                  `for` points at the time input), so the accessible name of each
+                  time input is "Mo Time", "Tu Time", ... — association without a
+                  separate invisible label. */}
+              <label for={`time-${index}`}>{weekday}</label>
+              <div class={`field label border fill max${invalid ? ' invalid' : ''}`}>
+                <input
+                  id={`time-${index}`}
+                  type="text"
+                  name="time[]"
+                  placeholder={timeFormat}
+                  lang={locale}
+                  autocomplete="off"
+                  value={value}
+                  aria-invalid={invalid ? 'true' : undefined}
+                  aria-describedby={invalid ? `time-${index}-error` : undefined}
+                />
+                <label for={`time-${index}`}>{timeLabel}</label>
+                {invalid ? (
+                  <span id={`time-${index}-error`} class="error" role="alert">{t('proposed_date_time_invalid')}</span>
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
       </ol>
       <div class="row items-center gap mt-4">
-        <button
-          type="submit"
-          name="action"
-          value="grow"
-          disabled={capped >= MAX_TUPLES}
-          class="button outline"
-        >
-          {t('proposed_dates_generate_add_row')}
-        </button>
         <button type="submit">{t('proposed_dates_generate_button')}</button>
       </div>
       {props.error ? (
@@ -136,7 +116,6 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
 
 export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Element {
   const confirmed = props.status === 'Confirmed';
-  const weekdays = weekdayLabels[props.locale];
 
   return (
     <section id="proposed-dates-management" class="padding small-round surface-variant s12 m6" aria-live="polite">
@@ -216,8 +195,8 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
             sessionId={props.sessionId}
             t={props.t}
             locale={props.locale}
-            weekdays={weekdays}
-            rows={clampRows(props.generateRows)}
+            times={props.times}
+            invalidRow={props.generatorInvalidRow}
             error={props.generatorError}
             successCount={props.generatorSuccessCount}
           />

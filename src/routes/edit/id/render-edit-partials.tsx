@@ -63,7 +63,8 @@ export interface EditPartialExtras {
   error?: string;
   globalError?: string;
   success?: boolean;
-  generateRows?: number;
+  times?: readonly string[];
+  generatorInvalidRow?: number;
   generatorError?: string;
   generatorSuccessCount?: number;
 }
@@ -92,7 +93,8 @@ export function renderEditPartials(
     proposedDateTime: extra.proposedDateTime,
     error: extra.error,
     success: extra.success,
-    generateRows: extra.generateRows,
+    times: extra.times,
+    generatorInvalidRow: extra.generatorInvalidRow,
     generatorError: extra.generatorError,
     generatorSuccessCount: extra.generatorSuccessCount,
     globalError: extra.globalError,
