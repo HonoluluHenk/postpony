@@ -129,6 +129,7 @@ docs/adr/             — 19 ADRs
 - **Fixture builders**: `aSession()`, `aPlayer()`, etc. from `src/lib/__test-utils__/builders.ts`. Use deep-partial overrides. Inject via `await app.store.save(session)`.
 - **Builder drift**: `builders.spec.ts` asserts every required field — a model change must update builders in lockstep.
 - **Unit test mock Hono**: test files create a minimal context object and pass it to `App.create()`. See `edit-handlers.spec.ts` and `app-handler.spec.ts` for the pattern.
+- **Prefer `.toMatchObject` over map-projections**: assert model arrays as `.toMatchObject([{name, teamId}])` directly, not `.map(p => ({...}))` + `.toEqual`. `toMatchObject` enforces array length (verified), preserving the `.toHaveLength(N)` exact-count contract while asserting only the fields you care about; drop the now-redundant individual field checks it subsumes. Keep `.toEqual` for builders drift tests (exhaustive every-field), pure primitive arrays, and reference arrays.
 - **Screenshot tests**: visual regression assertions (`toHaveScreenshot(..., {fullPage: true})`) are co-located in existing `*.e2e.ts` files, baselines committed under `e2e-tests/*.ts-snapshots/`; tolerance `maxDiffPixelRatio: 0.02` in `playwright.config.ts`. See the `testing` skill.
 
 ## Skills (`.agents/skills/`)

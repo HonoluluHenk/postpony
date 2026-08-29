@@ -51,17 +51,37 @@ expect((await app.store.get(session.id))?.players[0]?.name)
 - Assert error paths with `.rejects.toThrow(...)` — handlers signal failures by throwing `AppError`/`StateError` via `app.failure`/`app.notFound`.
 - Each test gets its own `MemorySessionStore` instance (injected via `App.create(context, store)`), so tests are fully isolated from one another.
 
+## Assertion style: `toMatchObject` vs `toEqual`
+
+When asserting multiple fields of model objects (players, votes, proposedDates), prefer `.toMatchObject` directly on the array over a `.map()` projection + `.toEqual`:
+
+```ts
+expect(stored?.players)
+    .toMatchObject([{name: 'Alice', teamId: 'away'}]);
+```
+
+not
+
+```ts
+expect(stored?.players.map((p) => ({name: p.name, teamId: p.teamId})))
+    .toEqual([{name: 'Alice', teamId: 'away'}]);
+```
+
+- **`toMatchObject` enforces array length** (verified: `[1,2,3].toMatchObject([1,2])` fails), so it preserves the exact-count contract of `.toHaveLength(N)` while asserting only the fields you care about. Drop the adjacent individual field checks the `toMatchObject` now covers (`.toBe(name)`, `.toBe(teamId)`).
+- **Keep `.toEqual` for**: builders drift tests (`builders.spec.ts` asserts every required field exhaustively), pure primitive arrays (e.g. arrays of ISO datetime strings), and reference arrays (`.toEqual([ref1, ref2])` where the elements are already-built entities).
+- **`expect.objectContaining` / `expect.arrayContaining`** are the asymmetric variants, used inside `.toEqual` for partial matching where full-array exact-length semantics aren't wanted (see `click-tt-scraper.spec.ts`).
+
 ## Page Object Model
 
 All Playwright tests use Page Object classes from `e2e-tests/pages/`:
 
-| Class        | Page                     | Key methods / locators                                                                                                                                                  |
-|--------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `StartPage`  | `/`                      | `goto()`, `createLink`, `editLink`, `switchLanguage(locale)` (via the header `<select>`), `spinner`, `main`, `banner`, `contentinfo`                                    |
-| `CreatePage` | `/create`                | `goto()`, `nameInput`, `submitButton`, `create(name)` → `EditPage`                                                                                                      |
-| `EditPage`   | `/edit/:id`              | `addPlayer(name)`, `addProposedDate(dt)`, `toggleVotableByOpponent(index)`, `homeTallySection()`, `awayTallySection()`, `status`, `ownerPassword` |
-| `JoinPage`   | `/join/:id/:team?token=` | `goto(href)`, `join(name)`, `castVote(index, vote)`, `submitVotes()`, `voteForm`, `teamResultsSection()`, `teamResultsTable()`, `tallyTable()`, `voteRadio(vote)`                                                   |
-| `ScrapePage` | `/create/scrape`         | `goto()`, `pickLeague(name)`, `pickGroup(name)`, `pickTeam(name)`, `clickBack()`, `matchRow(filter)`                                                                    |
+| Class        | Page                     | Key methods / locators                                                                                                                                            |
+|--------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `StartPage`  | `/`                      | `goto()`, `createLink`, `editLink`, `switchLanguage(locale)` (via the header `<select>`), `spinner`, `main`, `banner`, `contentinfo`                              |
+| `CreatePage` | `/create`                | `goto()`, `nameInput`, `submitButton`, `create(name)` → `EditPage`                                                                                                |
+| `EditPage`   | `/edit/:id`              | `addPlayer(name)`, `addProposedDate(dt)`, `toggleVotableByOpponent(index)`, `homeTallySection()`, `awayTallySection()`, `status`, `ownerPassword`                 |
+| `JoinPage`   | `/join/:id/:team?token=` | `goto(href)`, `join(name)`, `castVote(index, vote)`, `submitVotes()`, `voteForm`, `teamResultsSection()`, `teamResultsTable()`, `tallyTable()`, `voteRadio(vote)` |
+| `ScrapePage` | `/create/scrape`         | `goto()`, `pickLeague(name)`, `pickGroup(name)`, `pickTeam(name)`, `clickBack()`, `matchRow(filter)`                                                              |
 
 **Cross-page workflows** use `EditPage.createSession(page, name?, dates?)` — a static factory that navigates `/ → /create → /edit/:id`, returns `{session, editPage}`.
 
