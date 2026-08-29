@@ -1352,6 +1352,25 @@ describe('edit handlers', () => {
         .not
         .toContain('showing the previous results');
     });
+
+    test('first check fails: no snapshot existed, so no "previous results" notice renders', async () => {
+      const session = aSession({
+        homeTeam: 'Home Team',
+        guestTeam: 'Guest Team',
+        homeTeamIdentity: identities.home,
+        guestTeamIdentity: identities.away,
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+      });
+      mockFetchMatches.mockRejectedValue(new ClickTTError('click-tt is down'));
+      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      await app.store.save(session);
+
+      const html = await (await handleRefreshClashesPost(app)).text();
+
+      expect(html)
+        .not
+        .toContain('showing the previous results');
+    });
   });
 
   describe('buildOwnTeamView', () => {

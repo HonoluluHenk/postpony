@@ -14,9 +14,10 @@ export const handleRefreshClashesPost = async (app: App): Promise<Response> => {
   await app.store.save(refreshed);
 
   if (app.isPartial) {
-    const clashCheckable =
-      session.homeTeamIdentity !== undefined && session.guestTeamIdentity !== undefined;
-    const html = renderEditPartials(app, refreshed, clashCheckable && clashes === undefined
+    // Only claim "showing the previous results" when a previous snapshot
+    // actually exists; a first check that fails renders the plain nothing state.
+    const hadSnapshot = session.proposedDates.some((pd) => pd.clashes !== undefined);
+    const html = renderEditPartials(app, refreshed, clashes === undefined && hadSnapshot
       ? {refreshError: true}
       : {});
     return app.c.html(html);
