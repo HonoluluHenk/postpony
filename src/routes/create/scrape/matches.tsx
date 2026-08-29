@@ -15,6 +15,7 @@ export interface ScrapeMatchesPageProps extends ViewContext, WizardChangeMode {
   leagueName: string;
   groupName: string;
   teamName: string;
+  teamtable: string;
   championship: string;
   group: string;
 }
@@ -72,6 +73,7 @@ export function ScrapeMatchesPage(props: ScrapeMatchesPageProps): JSX.Element {
                     <input type="hidden" name="championship" value={props.championship} />
                     <input type="hidden" name="group" value={props.group} />
                     <input type="hidden" name="teamName" value={props.teamName} />
+                    <input type="hidden" name="teamtable" value={props.teamtable} />
                     <input type="hidden" name="opponentTeamtable" value={m.opponentTeamtable} />
                     {props.players.map((player) => (
                       <input type="hidden" name="playerName" value={player.name} />

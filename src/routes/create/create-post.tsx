@@ -79,6 +79,8 @@ export async function handleCreatePost(app: App): Promise<Response> {
       originalMatchDateTime,
       // The match was entered by hand; the scrape-only provenance no longer applies.
       metadata: undefined,
+      homeTeamIdentity: undefined,
+      guestTeamIdentity: undefined,
     };
     await app.store.save(updated);
 

@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A scrape-created Postponement stores both teams' `(championship, group, teamtable)` as typed fields
-- [ ] A hand-entered Postponement stores no identity fields
-- [ ] Sessions without the identity fields load and render unchanged (backwards compatible)
-- [ ] Unit coverage for the creation paths and the builder fixtures
+- [x] A scrape-created Postponement stores both teams' `(championship, group, teamtable)` as typed fields
+- [x] A hand-entered Postponement stores no identity fields
+- [x] Sessions without the identity fields load and render unchanged (backwards compatible)
+- [x] Unit coverage for the creation paths and the builder fixtures

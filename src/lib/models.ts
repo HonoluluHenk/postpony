@@ -8,6 +8,13 @@ export type Team = 'home' | 'away';
 
 export type PostponementStatus = 'Draft' | 'Voting' | 'Confirmed';
 
+/** click-tt identity of a team; the scraper addresses teams by this triple (ADR-0022). */
+export interface ClickTtTeamIdentity {
+  championship: string;
+  group: string;
+  teamtable: string;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -25,6 +32,8 @@ export interface Postponement {
   name: string;
   homeTeam?: string;
   guestTeam?: string;
+  homeTeamIdentity?: ClickTtTeamIdentity;
+  guestTeamIdentity?: ClickTtTeamIdentity;
   ownerPasswordHash: string;
   invitationPasswordHash: string;
   invitationPassword: string;

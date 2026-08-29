@@ -41,6 +41,9 @@ export function aVote(overrides: DeepPartial<Vote> = {}): Vote {
 }
 
 export function aSession(overrides: DeepPartial<Postponement> = {}): Postponement {
+  // ponytail: cast needed because DeepPartial of nested objects (e.g.
+  // ClickTtTeamIdentity) is not assignable to the full type; the merge output
+  // is trusted as the overrides are already typed.
   return merge({
     id: 'test-session',
     clubId: 'test-club',
@@ -57,5 +60,5 @@ export function aSession(overrides: DeepPartial<Postponement> = {}): Postponemen
     proposedDates: [],
     votes: [],
     createdAt: '2025-01-01T00:00:00.000Z',
-  }, overrides);
+  }, overrides) as Postponement;
 }

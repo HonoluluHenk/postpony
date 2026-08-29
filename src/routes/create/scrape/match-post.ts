@@ -2,7 +2,7 @@ import * as v from 'valibot';
 import type { App } from '../../../app';
 import { fetchPlayers } from '../../../lib/click-tt-scraper';
 import { generateId, generateRandomPassword, hashPassword } from '../../../lib/crypto-utils';
-import { DEFAULT_CLUB_ID, type Player, type Postponement } from '../../../lib/models';
+import { DEFAULT_CLUB_ID, type ClickTtTeamIdentity, type Player, type Postponement } from '../../../lib/models';
 import { derivePostponementName } from '../../../lib/postponement';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
 import { requireChangeSession } from '../change-utils';
@@ -18,6 +18,7 @@ const MatchSchema = v.object({
   championship: v.optional(v.string(), ''),
   group: v.optional(v.string(), ''),
   teamName: v.pipe(v.string(), v.minLength(1)),
+  teamtable: v.optional(v.string(), ''),
   opponentTeamtable: v.optional(v.string(), ''),
 });
 
@@ -65,6 +66,16 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     }
   }
 
+  // Both teams' click-tt identities captured at the source (ADR-0022); an
+  // absent teamtable (e.g. opponent not resolvable in the group) leaves no identity.
+  function teamIdentity(teamtable: string): ClickTtTeamIdentity | undefined {
+    return teamtable ? {championship: m.championship, group: m.group, teamtable} : undefined;
+  }
+  const homeTeamIdentity =
+    selectedTeamId === 'home' ? teamIdentity(m.teamtable) : teamIdentity(m.opponentTeamtable);
+  const guestTeamIdentity =
+    selectedTeamId === 'home' ? teamIdentity(m.opponentTeamtable) : teamIdentity(m.teamtable);
+
   const metadata = {
     source: 'click-tt.ch',
     league: m.leagueName,
@@ -93,6 +104,8 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
       guestTeam: m.guestTeam,
       originalMatchDateTime,
       organizerTeam: selectedTeamId,
+      homeTeamIdentity,
+      guestTeamIdentity,
       players,
       metadata,
     };
@@ -112,6 +125,8 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
       invitationPassword,
       status: 'Draft',
       organizerTeam: selectedTeamId,
+      homeTeamIdentity,
+      guestTeamIdentity,
       reopenCount: 0,
       players,
       proposedDates: [],

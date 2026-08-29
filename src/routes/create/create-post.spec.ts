@@ -59,6 +59,9 @@ describe('handleCreatePost', () => {
     expect(stored?.organizerTeam).toBe('home');
     expect(stored?.reopenCount).toBe(0);
     expect(stored?.id).toBeDefined();
+    // A hand-entered match carries no click-tt identity (ADR-0022).
+    expect(stored?.homeTeamIdentity).toBeUndefined();
+    expect(stored?.guestTeamIdentity).toBeUndefined();
     expect(stored?.ownerPasswordHash).toBeDefined();
     expect(stored?.invitationPasswordHash).toBeDefined();
     expect(stored?.invitationPassword).toBeDefined();
@@ -122,6 +125,8 @@ describe('handleCreatePost change mode', () => {
       proposedDates: [aProposedDate()],
       votes: [aVote()],
       metadata: {source: 'click-tt.ch', league: 'Old League'},
+      homeTeamIdentity: {championship: 'Old', group: 'Old', teamtable: 'old-1'},
+      guestTeamIdentity: {championship: 'Old', group: 'Old', teamtable: 'old-2'},
     });
     const app = createApp({body: {...MATCH, sessionId: session.id, ownerPassword}});
     await app.store.save(session);
@@ -148,6 +153,9 @@ describe('handleCreatePost change mode', () => {
     expect(stored?.votes).toEqual(session.votes);
     // The scrape-only provenance no longer applies to a hand-entered match.
     expect(stored?.metadata).toBeUndefined();
+    // Nor do the click-tt team identities (ADR-0022).
+    expect(stored?.homeTeamIdentity).toBeUndefined();
+    expect(stored?.guestTeamIdentity).toBeUndefined();
 
     // No new session is minted.
     const storeMap = (app.store as MemorySessionStore as any).store as Map<string, unknown>;
