@@ -115,6 +115,7 @@ export function EditPage(props: EditPageProps): JSX.Element {
             proposedDates={props.proposedDates}
             homeProposedDates={props.homeProposedDates}
             awayProposedDates={props.awayProposedDates}
+            clashCheckable={props.clashCheckable}
             organizerPlayers={props.organizerPlayers}
             ownTeamResults={props.ownTeamResults}
             t={props.t}

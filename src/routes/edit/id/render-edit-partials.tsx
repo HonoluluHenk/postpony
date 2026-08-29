@@ -47,6 +47,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
       yes: counts.yes,
       no: counts.no,
       maybe: counts.maybe,
+      clashes: pd.clashes,
     };
   });
 
@@ -54,6 +55,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
     proposedDates,
     homeProposedDates: toVoteTallyItems(session.proposedDates, homeTallies, locale),
     awayProposedDates: toVoteTallyItems(session.proposedDates, awayTallies, locale),
+    clashCheckable: session.homeTeamIdentity !== undefined && session.guestTeamIdentity !== undefined,
     ...buildOwnTeamView(session, locale),
   };
 }

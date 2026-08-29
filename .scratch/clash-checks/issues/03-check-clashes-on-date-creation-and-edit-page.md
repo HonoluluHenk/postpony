@@ -4,10 +4,10 @@
 
 **Blocked by:** 01, 02
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Single-add and generator paths both fetch once per team, compute, persist, and save
-- [ ] Edit page rows render clash lines, "checked, no clashes", "not checked", and failure-nothing states correctly
-- [ ] A failed scrape never blocks the date being added or the page rendering
-- [ ] Hand-entered matches show "not checked" and never trigger a fetch
-- [ ] Sessions without clash data render unchanged
+- [x] Single-add and generator paths both fetch once per team, compute, persist, and save
+- [x] Edit page rows render clash lines, "checked, no clashes", "not checked", and failure-nothing states correctly
+- [x] A failed scrape never blocks the date being added or the page rendering
+- [x] Hand-entered matches show "not checked" and never trigger a fetch
+- [x] Sessions without clash data render unchanged

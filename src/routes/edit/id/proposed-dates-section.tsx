@@ -1,7 +1,9 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
+import type { DateClashes } from '../../../lib/clashes';
 import type { PostponementStatus, VoteTallyItem } from '../../../lib/models';
+import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 import { ErrorContainer } from '../../partials/error-container';
 import { OwnTeamVotes } from './own-team-votes';
 import type { OwnTeamView } from './own-team-view';
@@ -10,12 +12,14 @@ import { VoteTallySection } from './vote-tally-section';
 
 export interface ProposedDateTallyItem extends VoteTallyItem {
   votableByOpponent: boolean;
+  clashes?: DateClashes;
 }
 
 export type EditPartialsData = OwnTeamView & {
   proposedDates: ProposedDateTallyItem[];
   homeProposedDates: VoteTallyItem[];
   awayProposedDates: VoteTallyItem[];
+  clashCheckable: boolean;
 };
 
 export interface ProposedDatesSectionProps extends EditPartialsData {
@@ -42,6 +46,33 @@ interface GenerateFormProps {
   invalidRow?: number;
   error?: string;
   successCount?: number;
+}
+
+function clashTime(start: string, locale: AppLocale): string {
+  return formatLocalizedDateTime(parseIsoToPlainDateTime(start), locale, {timeStyle: 'short'});
+}
+
+function ClashInfo(props: {clashes?: DateClashes; clashCheckable: boolean; t: TranslateFn; locale: AppLocale}): JSX.Element {
+  const {clashes, clashCheckable, t, locale} = props;
+  if (clashes === undefined) {
+    // ponytail: a Postponement without team identities can never be checked
+    // (hand-entered match); one with identities but no clash data means the
+    // last check failed — render nothing, matching "checked" silence.
+    return clashCheckable ? <></> : <p class="chip outline mt-2">{t('clash_check_not_checked')}</p>;
+  }
+  const homeLines = clashes.home.map((clash) =>
+    t('clash_line_home', {time: clashTime(clash.start, locale), opponent: clash.opponent}));
+  const awayLines = clashes.away.map((clash) =>
+    t('clash_line_away', {time: clashTime(clash.start, locale), opponent: clash.opponent}));
+  if (homeLines.length === 0 && awayLines.length === 0) {
+    return <p class="chip outline mt-2">{t('clash_check_clean')}</p>;
+  }
+  return (
+    <>
+      {homeLines.map((line) => <p class="chip outline mt-2">{line}</p>)}
+      {awayLines.map((line) => <p class="chip outline mt-2">{line}</p>)}
+    </>
+  );
 }
 
 function GenerateForm(props: GenerateFormProps): JSX.Element {
@@ -139,6 +170,12 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                     <i aria-hidden="true">event</i>
                     <div class="max">{proposedDate.display}</div>
                   </div>
+                  <ClashInfo
+                    clashes={proposedDate.clashes}
+                    clashCheckable={props.clashCheckable}
+                    t={props.t}
+                    locale={props.locale}
+                  />
                   <div class="row items-center gap wrap mt-2">
                     <label class="switch">
                       <input

@@ -19,6 +19,9 @@ export function aPlayer(overrides: DeepPartial<Player> = {}): Player {
 }
 
 export function aProposedDate(overrides: DeepPartial<ProposedDate> = {}): ProposedDate {
+  // ponytail: cast needed because DeepPartial of nested objects (e.g.
+  // DateClashes) is not assignable to the full type; the merge output is
+  // trusted as the overrides are already typed.
   return merge({
     id: 'proposed-date-1',
     sessionId: 'test-session',
@@ -28,7 +31,7 @@ export function aProposedDate(overrides: DeepPartial<ProposedDate> = {}): Propos
     },
     proposerId: 'player-1',
     votableByOpponent: false,
-  }, overrides);
+  }, overrides) as ProposedDate;
 }
 
 export function aVote(overrides: DeepPartial<Vote> = {}): Vote {

@@ -1,5 +1,7 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
+import { computeClashes, type ClashesByProposedDate } from '../../../lib/clashes';
+import { fetchMatches } from '../../../lib/click-tt-scraper';
 import { MAX_TUPLES, generateProposedDates, type ProposedDateTuple } from '../../../lib/proposed-dates-generator';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import { PostponementRules } from '../../../lib/postponement';
@@ -90,6 +92,54 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
   return handleSingleSubmit(app, session, id, locale, values);
 };
 
+/**
+ * Scrapes both teams' click-tt schedules once and computes the Clashes of every
+ * Proposed Date in the session. Returns undefined when the session has no team
+ * identities (hand-entered match) or when either scrape fails — the caller then
+ * saves the dates clash-free and the page renders without clash info.
+ */
+async function computeClashesForSession(session: Postponement): Promise<ClashesByProposedDate | undefined> {
+  const homeIdentity = session.homeTeamIdentity;
+  const guestIdentity = session.guestTeamIdentity;
+  if (!homeIdentity || !guestIdentity) {
+    return undefined;
+  }
+  try {
+    const [homeSchedule, awaySchedule] = await Promise.all([
+      fetchMatches(homeIdentity.championship, homeIdentity.group, homeIdentity.teamtable),
+      fetchMatches(guestIdentity.championship, guestIdentity.group, guestIdentity.teamtable),
+    ]);
+    return computeClashes(
+      session.proposedDates,
+      homeSchedule,
+      awaySchedule,
+      {
+        start: session.originalMatchDateTime,
+        homeTeam: session.homeTeam,
+        guestTeam: session.guestTeam,
+      },
+    );
+  } catch {
+    // ponytail: a failed scrape never blocks adding dates — the dates are saved
+    // without clash data and render without clash lines.
+    return undefined;
+  }
+}
+
+function attachClashes(session: Postponement, clashes: ClashesByProposedDate): Postponement {
+  return {
+    ...session,
+    proposedDates: session.proposedDates.map((pd) => ({...pd, clashes: clashes[pd.id]})),
+  };
+}
+
+async function saveWithClashCheck(app: App, session: Postponement): Promise<Postponement> {
+  const clashes = await computeClashesForSession(session);
+  const withClashes = clashes === undefined ? session : attachClashes(session, clashes);
+  await app.store.save(withClashes);
+  return withClashes;
+}
+
 async function handleTupleSubmit(
   app: App,
   session: Postponement,
@@ -150,7 +200,7 @@ async function handleTupleSubmit(
   for (const startIso of generated.added) {
     updated = rules.proposeDate(updated, startIso, 'owner').session;
   }
-  await app.store.save(updated);
+  updated = await saveWithClashCheck(app, updated);
 
   const extras: {times: string[]; generatorSuccessCount: number; generatorError?: string} = {
     times,
@@ -189,8 +239,10 @@ async function handleSingleSubmit(
   // ponytail: the schema's `check` predicate already guarantees `parsed` is defined.
   // Use ?-chained parse so the lint ban on non-null assertions stays clean.
   const parsedOrFail = parsed ?? app.failure(app.t('proposed_date_time_invalid'));
-  const updated = new PostponementRules().proposeDate(session, parsedOrFail.toString(), 'owner').session;
-  await app.store.save(updated);
+  const updated = await saveWithClashCheck(
+    app,
+    new PostponementRules().proposeDate(session, parsedOrFail.toString(), 'owner').session,
+  );
 
   if (app.isPartial) {
     return app.c.html(renderEditPartials(app, updated, {success: true}));

@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../../lib/__test-utils__/builders';
+import { fetchMatches } from '../../../lib/click-tt-scraper';
+import { ClickTTError } from '../../../lib/errors';
 import { generateProposedDates } from '../../../lib/proposed-dates-generator';
+import type { Postponement } from '../../../lib/models';
 import { MemorySessionStore } from '../../../lib/session-store';
 import * as temporalUtils from '../../../lib/temporal-utils';
 import { LOCALE_KEY } from '../../../locales';
@@ -11,6 +14,12 @@ import { handleEditPlayersPost } from './players-post';
 import { handleProposedDateDeletePost } from './proposed-date-delete-post';
 import { handleEditProposedDatesPost } from './proposed-dates-post';
 import { handleReopenPost } from './reopen-post';
+
+vi.mock('../../../lib/click-tt-scraper', () => ({
+  fetchMatches: vi.fn(),
+}));
+
+const mockFetchMatches = vi.mocked(fetchMatches);
 
 interface MockOptions {
   params?: Record<string, string>;
@@ -45,6 +54,7 @@ describe('edit handlers', () => {
   beforeEach(() => {
     vi.spyOn(temporalUtils, 'nowPlainDateTimeIso')
       .mockReturnValue(FIXED_TODAY_ISO);
+    mockFetchMatches.mockReset();
   });
 
   afterEach(() => {
@@ -612,6 +622,180 @@ describe('edit handlers', () => {
         .toBe('Draft');
       expect(html)
         .toContain('Please provide a valid date and time');
+    });
+
+    describe('schedule clash check', () => {
+      const identities = {
+        home: {championship: 'MTTV 26/27', group: '219397', teamtable: '1732195'},
+        away: {championship: 'MTTV 26/27', group: '219397', teamtable: '1732193'},
+      };
+
+      function clashSession(): Postponement {
+        return aSession({
+          homeTeam: 'Home Team',
+          guestTeam: 'Guest Team',
+          homeTeamIdentity: identities.home,
+          guestTeamIdentity: identities.away,
+        });
+      }
+
+      test('single add: fetches each team\'s schedule once, attaches the clash data, saves once, and renders the clash line', async () => {
+        const session = clashSession();
+        mockFetchMatches.mockResolvedValue([
+          {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
+        ]);
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm'},
+        });
+        await app.store.save(session);
+        const saveSpy = vi.spyOn(app.store, 'save');
+
+        const html = await (await handleEditProposedDatesPost(app)).text();
+
+        expect(mockFetchMatches)
+          .toHaveBeenCalledTimes(2);
+        expect(mockFetchMatches)
+          .toHaveBeenCalledWith('MTTV 26/27', '219397', '1732195');
+        expect(mockFetchMatches)
+          .toHaveBeenCalledWith('MTTV 26/27', '219397', '1732193');
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates[0]?.clashes)
+          .toEqual({
+            home: [{opponent: 'Guest Team', start: '2025-09-01T19:00'}],
+            away: [{opponent: 'Home Team', start: '2025-09-01T19:00'}],
+          });
+        expect(saveSpy)
+          .toHaveBeenCalledTimes(1);
+        expect(html)
+          .toContain('Home: 7:00 PM vs Guest Team');
+        expect(html)
+          .toContain('Away: 7:00 PM vs Home Team');
+      });
+
+      test('generator run: fetches once per team, attaches the clash data to every added date, and saves once', async () => {
+        const session = clashSession();
+        session.originalMatchDateTime = '2026-09-02T16:00';
+        session.proposedDates = [];
+        session.status = 'Draft';
+        const expected = generateProposedDates({
+          anchorIso: '2026-09-02T16:00',
+          todayIso: FIXED_TODAY_ISO,
+          tuples: [{weekday: 1, hour: 20, minute: 0}],
+          existingStarts: [],
+        });
+        expect(expected.added.length)
+          .toBeGreaterThan(0);
+        const addedStart = expected.added[0];
+        if (addedStart === undefined) {
+          throw new Error('generator produced no dates');
+        }
+        mockFetchMatches.mockResolvedValue(expected.added.map((start) => {
+          const [gameYear, gameMonth, gameDay] = start.split('T')[0]?.split('-') ?? [];
+          const gameStartTime = start.split('T')[1]?.slice(0, 5);
+          return {
+            day: 'Mo',
+            date: `${gameDay}.${gameMonth}.${gameYear}`,
+            time: gameStartTime ?? '',
+            homeTeam: 'Home Team',
+            guestTeam: 'Guest Team',
+          };
+        }));
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm']},
+        });
+        await app.store.save(session);
+        const saveSpy = vi.spyOn(app.store, 'save');
+
+        await handleEditProposedDatesPost(app);
+
+        expect(mockFetchMatches)
+          .toHaveBeenCalledTimes(2);
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates.map((pd) => pd.clashes))
+          .toEqual(expected.added.map((start) => ({
+            home: [{opponent: 'Guest Team', start}],
+            away: [{opponent: 'Home Team', start}],
+          })));
+        expect(saveSpy)
+          .toHaveBeenCalledTimes(1);
+      });
+
+      test('single add: a failed scrape leaves the date clash-free but still saves and renders', async () => {
+        const session = clashSession();
+        mockFetchMatches.mockRejectedValue(new ClickTTError('click-tt is down'));
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm'},
+        });
+        await app.store.save(session);
+        const saveSpy = vi.spyOn(app.store, 'save');
+
+        const html = await (await handleEditProposedDatesPost(app)).text();
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(1);
+        expect(stored?.proposedDates[0]?.clashes)
+          .toBeUndefined();
+        expect(saveSpy)
+          .toHaveBeenCalledTimes(1);
+        expect(html)
+          .toContain('id="proposed-dates-management"');
+        expect(html)
+          .not
+          .toContain('Not checked');
+      });
+
+      test('generator run: a failed scrape still saves the generated dates without clash data', async () => {
+        const session = clashSession();
+        session.originalMatchDateTime = '2026-09-02T16:00';
+        session.proposedDates = [];
+        session.status = 'Draft';
+        mockFetchMatches.mockRejectedValue(new Error('network down'));
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm']},
+        });
+        await app.store.save(session);
+        const saveSpy = vi.spyOn(app.store, 'save');
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates.length)
+          .toBeGreaterThan(0);
+        expect(stored?.proposedDates.every((pd) => pd.clashes === undefined))
+          .toBe(true);
+        expect(saveSpy)
+          .toHaveBeenCalledTimes(1);
+      });
+
+      test('hand-entered session: never fetches and renders the "not checked" hint', async () => {
+        const session = aSession();
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm'},
+        });
+        await app.store.save(session);
+
+        const html = await (await handleEditProposedDatesPost(app)).text();
+
+        expect(mockFetchMatches)
+          .not
+          .toHaveBeenCalled();
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates[0]?.clashes)
+          .toBeUndefined();
+        expect(html)
+          .toContain('Not checked');
+      });
     });
   });
 

@@ -1,3 +1,4 @@
+import type { DateClashes } from './clashes';
 import { DateTimeRange } from './temporal-utils';
 
 // ponytail: placeholder until multi-tenancy (ADR-0001) is implemented;
@@ -58,6 +59,8 @@ export interface ProposedDate {
   };
   proposerId: string;
   votableByOpponent: boolean;
+  /** per-team schedule Clashes from the last check that ran on this date; absent when never checked or the scrape failed. */
+  clashes?: DateClashes;
 }
 
 export interface Vote {
