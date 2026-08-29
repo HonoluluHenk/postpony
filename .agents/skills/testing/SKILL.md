@@ -142,6 +142,7 @@ e2e files are type-checked separately under `tsconfig.e2e.json`; a full
 
 ### Coverage report gotcha
 
+- The coverage gate is **>= 80% for all metrics** (statements, branches, functions, lines) on a full `npm run test`. When a change drops a metric below the gate, close the gap with tests for the changed code before committing — not by chasing unrelated legacy files.
 - Judge per-file coverage from a **full** `npm run test` (v8/lcov/HTML report). The istanbul **text** reporter silently drops subdirectory groups that are fully covered in a single file (e.g. `src/lib/middleware/language.ts` at 100% vanished from the text table but shows in `coverage/lcov.info` and the HTML report). The `lcov` and `html` reporters are authoritative.
 - A `--coverage` run limited to one spec reports a misleading global percentage (coverage `all` semantics) — don't infer per-file coverage from it.
 

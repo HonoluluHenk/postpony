@@ -15,8 +15,12 @@ export const handleConfirmDatePost = async (app: App): Promise<Response> => {
     await app.store.save(updated);
   }
 
+  const confirmedDate = updated.proposedDates.find((pd) => pd.id === updated.confirmedProposedDateId);
+  const clashes = confirmedDate?.clashes;
+  const hasClashes = clashes !== undefined && (clashes.home.length > 0 || clashes.away.length > 0);
+
   if (app.isPartial) {
-    const html = renderEditPartials(app, updated);
+    const html = renderEditPartials(app, updated, hasClashes ? {confirmClashWarning: true} : {});
     return app.c.html(html);
   }
   return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);

@@ -23,6 +23,7 @@ function baseProps(): ProposedDatesSectionProps {
     awayProposedDates: [],
     organizerPlayers: [],
     ownTeamResults: [],
+    clashCheckable: false,
     t,
     locale: 'en-US',
     inputFormat: 'MM/dd/yyyy hh:mm aa',
@@ -177,6 +178,145 @@ describe('ProposedDatesSection component', () => {
     expect(html)
       .not
       .toContain(' required=""');
+  });
+});
+
+describe('ProposedDatesSection clash info', () => {
+  it('renders one line per affected team with the localized time and opponent', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      clashCheckable: true,
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: '10.10.2026 19:00',
+          votableByOpponent: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          clashes: {
+            home: [{opponent: 'Thun', start: '2026-10-10T17:00'}],
+            away: [{opponent: 'Burgdorf', start: '2026-10-10T21:30'}],
+          },
+        },
+      ],
+    }));
+
+    expect(html).toContain('Home: 5:00 PM vs Thun');
+    expect(html).toContain('Away: 9:30 PM vs Burgdorf');
+  });
+
+  it('renders the 24-hour localized time for de-CH', () => {
+    const tDe = (key: any, params?: any): string => getTranslation('de-CH', key, params);
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      t: tDe,
+      locale: 'de-CH' as const,
+      clashCheckable: true,
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: '10.10.2026 19:00',
+          votableByOpponent: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          clashes: {home: [{opponent: 'Thun', start: '2026-10-10T17:00'}], away: []},
+        },
+      ],
+    }));
+
+    expect(html).toContain('Heim: 17:00 gegen Thun');
+  });
+
+  it('renders "checked, no clashes" when a check ran clean', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      clashCheckable: true,
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: '10.10.2026 19:00',
+          votableByOpponent: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          clashes: {home: [], away: []},
+        },
+      ],
+    }));
+
+    expect(html).toContain('Schedule checked, no clashes');
+  });
+
+  it('renders "not checked" for a hand-entered match without team identities', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html).toContain('Not checked');
+  });
+
+  it('renders nothing when the check failed (identities exist, no clash data)', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      clashCheckable: true,
+    }));
+
+    expect(html).not.toContain('Not checked');
+    expect(html).not.toContain('Schedule checked, no clashes');
+    expect(html).not.toContain('vs ');
+  });
+
+  it('offers the refresh action only for clash-checkable postponements', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html).not.toContain('refresh-clashes');
+    expect(html).not.toContain('Refresh schedule check');
+  });
+
+  it('offers the refresh action for a clash-checkable postponement', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), clashCheckable: true}));
+
+    expect(html).toContain('hx-post="/edit/session-1/refresh-clashes"');
+    expect(html).toContain('hx-target="#proposed-dates-management"');
+    expect(html).toContain('>Refresh schedule check</button>');
+    expect(html).not.toContain('showing the previous results');
+  });
+
+  it('renders the refresh failure notice when a refresh failed', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      clashCheckable: true,
+      refreshError: true,
+    }));
+
+    expect(html).toContain('Couldn&#39;t refresh the schedule check — showing the previous results.');
+  });
+
+  it('hides the refresh action when the session is Confirmed', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      status: 'Confirmed',
+      clashCheckable: true,
+    }));
+
+    expect(html).not.toContain('refresh-clashes');
+  });
+
+  it('renders the confirm clash warning when the flag is set', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      status: 'Confirmed',
+      confirmClashWarning: true,
+    }));
+
+    expect(html).toContain('A scheduled game clashes with this date.');
+    expect(html).toContain('role="alert"');
+  });
+
+  it('renders no confirm clash warning by default', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), status: 'Confirmed'}));
+
+    expect(html).not.toContain('A scheduled game clashes with this date.');
   });
 });
 

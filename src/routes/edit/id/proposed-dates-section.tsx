@@ -1,7 +1,9 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
-import type { PostponementStatus, VoteTallyItem } from '../../../lib/models';
 import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
+import type { DateClashes } from '../../../lib/clashes';
+import type { PostponementStatus, VoteTallyItem } from '../../../lib/models';
+import { ClashInfo } from '../../partials/clash-info';
 import { ErrorContainer } from '../../partials/error-container';
 import type { OwnTeamView } from './own-team-view';
 import { OwnTeamVotes } from './own-team-votes';
@@ -10,12 +12,14 @@ import { VoteTallySection } from './vote-tally-section';
 
 export interface ProposedDateTallyItem extends VoteTallyItem {
   votableByOpponent: boolean;
+  clashes?: DateClashes;
 }
 
 export type EditPartialsData = OwnTeamView & {
   proposedDates: ProposedDateTallyItem[];
   homeProposedDates: VoteTallyItem[];
   awayProposedDates: VoteTallyItem[];
+  clashCheckable: boolean;
 };
 
 export interface ProposedDatesSectionProps extends EditPartialsData {
@@ -32,6 +36,8 @@ export interface ProposedDatesSectionProps extends EditPartialsData {
   generatorInvalidRow?: number;
   generatorError?: string;
   generatorSuccessCount?: number;
+  refreshError?: boolean;
+  confirmClashWarning?: boolean;
 }
 
 interface GenerateFormProps {
@@ -125,12 +131,31 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
       {props.reopenCount > 0 ? (
         <p class="chip outline">{props.t('reopened_count', {count: String(props.reopenCount)})}</p>
       ) : null}
+      {props.confirmClashWarning ? (
+        <p class="error mt-2" role="alert">{props.t('clash_check_confirm_warning')}</p>
+      ) : null}
       {confirmed ? (
         <form hx-post={`/edit/${props.sessionId}/reopen`} hx-target="#proposed-dates-management" class="mt-4">
           <button type="submit">{props.t('reopen')}</button>
         </form>
       ) : (
          <>
+           {props.clashCheckable ? (
+             <div class="row items-center gap mt-2">
+               <button
+                 type="button"
+                 class="button outline"
+                 hx-post={`/edit/${props.sessionId}/refresh-clashes`}
+                 hx-target="#proposed-dates-management"
+               >
+                 <i aria-hidden="true">refresh</i>
+                 {props.t('clash_check_refresh')}
+               </button>
+             </div>
+           ) : null}
+           {props.refreshError ? (
+             <p class="error mt-2" role="alert">{props.t('clash_check_refresh_failed')}</p>
+           ) : null}
            {props.proposedDates.length > 0 ? (
              <div class="scroll">
                <table id="proposed-date-list">
@@ -150,6 +175,12 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                          <i aria-hidden="true">event</i>
                          <div class="max">{proposedDate.display}</div>
                        </div>
+                       <ClashInfo
+                         clashes={proposedDate.clashes}
+                         clashCheckable={props.clashCheckable}
+                         t={props.t}
+                         locale={props.locale}
+                       />
                      </th>
                      <td>
                        <label

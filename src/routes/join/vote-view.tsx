@@ -81,6 +81,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
       yes: counts.yes,
       maybe: counts.maybe,
       no: counts.no,
+      clashes: pd.clashes,
     };
   });
 
@@ -95,6 +96,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
       playerName={player.name}
       proposedDates={proposedDates}
       playerVoteRows={playerVoteRows}
+      clashCheckable={session.homeTeamIdentity !== undefined && session.guestTeamIdentity !== undefined}
       updated={updated}
     />,
   );

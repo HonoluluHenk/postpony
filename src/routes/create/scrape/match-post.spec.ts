@@ -6,6 +6,10 @@ import { LOCALE_KEY } from '../../../locales';
 import { MemorySessionStore } from '../../../lib/session-store';
 import { handleScrapeMatchPost } from './match-post';
 
+vi.mock('../../../lib/click-tt-scraper', () => ({
+  fetchPlayers: vi.fn(() => []),
+}));
+
 interface MockOptions {
   headers?: Record<string, string>;
   body?: Record<string, unknown>;
@@ -112,6 +116,43 @@ describe('handleScrapeMatchPost', () => {
       .rejects
       .toThrow('Missing required parameter: teamName');
   });
+
+  test('stores both teams\' click-tt identities when the organizer claims the home side', async () => {
+    const app = createApp({
+      body: {...MATCH, teamName: 'Thun', teamtable: 'tt-own', opponentTeamtable: 'tt-opp'},
+    });
+
+    const stored = await storedSession(app);
+
+    expect(stored?.homeTeamIdentity)
+      .toEqual({championship: 'MTTV 26/27', group: '219397', teamtable: 'tt-own'});
+    expect(stored?.guestTeamIdentity)
+      .toEqual({championship: 'MTTV 26/27', group: '219397', teamtable: 'tt-opp'});
+  });
+
+  test('swaps the identities when the organizer claims the guest side', async () => {
+    const app = createApp({
+      body: {...MATCH, teamName: 'Ostermundigen', teamtable: 'tt-own', opponentTeamtable: 'tt-opp'},
+    });
+
+    const stored = await storedSession(app);
+
+    expect(stored?.homeTeamIdentity?.teamtable)
+      .toBe('tt-opp');
+    expect(stored?.guestTeamIdentity?.teamtable)
+      .toBe('tt-own');
+  });
+
+  test('stores no identities when no teamtables are submitted', async () => {
+    const app = createApp({body: {...MATCH, teamName: 'Thun', teamtable: ''}});
+
+    const stored = await storedSession(app);
+
+    expect(stored?.homeTeamIdentity)
+      .toBeUndefined();
+    expect(stored?.guestTeamIdentity)
+      .toBeUndefined();
+  });
 });
 
 describe('handleScrapeMatchPost change mode (re-scrape)', () => {
@@ -143,6 +184,36 @@ describe('handleScrapeMatchPost change mode (re-scrape)', () => {
     expect(stored?.ownerPasswordHash).toBe(session.ownerPasswordHash);
     expect(stored?.proposedDates).toEqual(session.proposedDates);
     expect(stored?.votes).toEqual(session.votes);
+    // A session without identity fields stays without them (backwards compatible).
+    expect(stored?.homeTeamIdentity).toBeUndefined();
+    expect(stored?.guestTeamIdentity).toBeUndefined();
+  });
+
+  test('re-scrape replaces the stored team identities', async () => {
+    const session = aSession({
+      ownerPasswordHash: await hashPassword(ownerPassword),
+      homeTeamIdentity: {championship: 'Old', group: 'Old', teamtable: 'old-1'},
+      guestTeamIdentity: {championship: 'Old', group: 'Old', teamtable: 'old-2'},
+    });
+    const app = createApp({
+      body: {
+        ...MATCH,
+        teamName: 'Thun',
+        sessionId: session.id,
+        ownerPassword,
+        teamtable: 'tt-own',
+        opponentTeamtable: 'tt-opp',
+      },
+    });
+    await app.store.save(session);
+
+    await handleScrapeMatchPost(app);
+
+    const stored = await app.store.get(session.id);
+    expect(stored?.homeTeamIdentity)
+      .toEqual({championship: 'MTTV 26/27', group: '219397', teamtable: 'tt-own'});
+    expect(stored?.guestTeamIdentity)
+      .toEqual({championship: 'MTTV 26/27', group: '219397', teamtable: 'tt-opp'});
   });
 
   test('rejects a wrong owner password', async () => {

@@ -47,6 +47,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
       yes: counts.yes,
       no: counts.no,
       maybe: counts.maybe,
+      clashes: pd.clashes,
     };
   });
 
@@ -54,6 +55,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
     proposedDates,
     homeProposedDates: toVoteTallyItems(session.proposedDates, homeTallies, locale),
     awayProposedDates: toVoteTallyItems(session.proposedDates, awayTallies, locale),
+    clashCheckable: session.homeTeamIdentity !== undefined && session.guestTeamIdentity !== undefined,
     ...buildOwnTeamView(session, locale),
   };
 }
@@ -67,6 +69,8 @@ export interface EditPartialExtras {
   generatorInvalidRow?: number;
   generatorError?: string;
   generatorSuccessCount?: number;
+  refreshError?: boolean;
+  confirmClashWarning?: boolean;
 }
 
 /**
@@ -97,6 +101,8 @@ export function renderEditPartials(
     generatorInvalidRow: extra.generatorInvalidRow,
     generatorError: extra.generatorError,
     generatorSuccessCount: extra.generatorSuccessCount,
+    refreshError: extra.refreshError,
+    confirmClashWarning: extra.confirmClashWarning,
     globalError: extra.globalError,
   };
   return app.render(<ProposedDatesSectionPartial {...props} />);

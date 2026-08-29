@@ -4,8 +4,8 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Each Proposed Date on the vote page shows its stored clash lines and states
-- [ ] Voting (Yes/Maybe/No) is unaffected by the presence or absence of clash data
-- [ ] A11y checks pass on the updated vote page
+- [x] Each Proposed Date on the vote page shows its stored clash lines and states
+- [x] Voting (Yes/Maybe/No) is unaffected by the presence or absence of clash data
+- [x] A11y checks pass on the updated vote page

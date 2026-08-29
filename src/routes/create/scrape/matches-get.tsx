@@ -47,6 +47,7 @@ export const handleScrapeMatchesGet = async (app: App): Promise<Response> => {
       leagueName={leagueName}
       groupName={groupName}
       teamName={teamName}
+      teamtable={teamtable}
       championship={championship}
       group={group}
       changeMode={changeMode}

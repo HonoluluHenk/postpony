@@ -1,3 +1,4 @@
+import type { DateClashes } from './clashes';
 import { DateTimeRange } from './temporal-utils';
 
 // ponytail: placeholder until multi-tenancy (ADR-0001) is implemented;
@@ -7,6 +8,13 @@ export const DEFAULT_CLUB_ID = 'default-club';
 export type Team = 'home' | 'away';
 
 export type PostponementStatus = 'Draft' | 'Voting' | 'Confirmed';
+
+/** click-tt identity of a team; the scraper addresses teams by this triple (ADR-0022). */
+export interface ClickTtTeamIdentity {
+  championship: string;
+  group: string;
+  teamtable: string;
+}
 
 export interface Player {
   id: string;
@@ -25,6 +33,8 @@ export interface Postponement {
   name: string;
   homeTeam?: string;
   guestTeam?: string;
+  homeTeamIdentity?: ClickTtTeamIdentity;
+  guestTeamIdentity?: ClickTtTeamIdentity;
   ownerPasswordHash: string;
   invitationPasswordHash: string;
   invitationPassword: string;
@@ -49,6 +59,8 @@ export interface ProposedDate {
   };
   proposerId: string;
   votableByOpponent: boolean;
+  /** per-team schedule Clashes from the last check that ran on this date; absent when never checked or the scrape failed. */
+  clashes?: DateClashes;
 }
 
 export interface Vote {

@@ -4,9 +4,9 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Refresh re-fetches both schedules, recomputes all Clashes, and updates the stored snapshot
-- [ ] The refreshed rows render immediately
-- [ ] A failed refresh keeps the previous snapshot and degrades gracefully
-- [ ] No refresh action is offered for hand-entered matches
+- [x] Refresh re-fetches both schedules, recomputes all Clashes, and updates the stored snapshot
+- [x] The refreshed rows render immediately
+- [x] A failed refresh keeps the previous snapshot and degrades gracefully
+- [x] No refresh action is offered for hand-entered matches
