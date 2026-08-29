@@ -37,6 +37,10 @@ A Player taking part in a Postponement — joined via the invitation link and ab
 
 A candidate new date/time for the postponed Match, proposed by the owner. Carries a `dateTimeRange` and a `votableByOpponent` flag — a pure access toggle deciding whether the opponent may vote on it, flipped by the organizer.
 
+## Clash
+
+A scheduled Match of the home or guest team whose start falls within a Proposed Date's `dateTimeRange` plus a two-hour buffer on either side, found by checking both teams' click-tt schedules when dates are proposed. The postponed Match itself is excluded — the game being rescheduled is not a Clash. _Avoid_: conflict, collision, double booking
+
 ## Vote
 
 A Participant's `Yes` / `No` / `Maybe` on one Proposed Date. At most one Vote per Participant per Proposed Date; re-voting updates the existing Vote.
