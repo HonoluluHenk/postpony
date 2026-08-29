@@ -36,6 +36,7 @@ export interface ProposedDatesSectionProps extends EditPartialsData {
   generatorInvalidRow?: number;
   generatorError?: string;
   generatorSuccessCount?: number;
+  refreshError?: boolean;
 }
 
 interface GenerateFormProps {
@@ -162,6 +163,22 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
         </form>
       ) : (
         <>
+          {props.clashCheckable ? (
+            <div class="row items-center gap mt-2">
+              <button
+                type="button"
+                class="button outline"
+                hx-post={`/edit/${props.sessionId}/refresh-clashes`}
+                hx-target="#proposed-dates-management"
+              >
+                <i aria-hidden="true">refresh</i>
+                {props.t('clash_check_refresh')}
+              </button>
+            </div>
+          ) : null}
+          {props.refreshError ? (
+            <p class="error mt-2" role="alert">{props.t('clash_check_refresh_failed')}</p>
+          ) : null}
           {props.proposedDates.length > 0 ? (
             <ul id="proposed-date-list" class="list" aria-label={props.t('proposed_dates_management')}>
               {props.proposedDates.map((proposedDate) => (

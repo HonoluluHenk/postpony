@@ -10,6 +10,8 @@
   "change_via_scrape": "Spiel stattdessen auf click-tt.ch suchen",
   "clash_check_clean": "Spielplan geprüft, keine Überschneidungen",
   "clash_check_not_checked": "Nicht geprüft",
+  "clash_check_refresh": "Spielplanprüfung aktualisieren",
+  "clash_check_refresh_failed": "Spielplanprüfung konnte nicht aktualisiert werden — die vorherigen Ergebnisse werden angezeigt.",
   "clash_line_away": "Gast: <%= it.time %> gegen <%= it.opponent %>",
   "clash_line_home": "Heim: <%= it.time %> gegen <%= it.opponent %>",
   "confirm_date": "Bestätigen",

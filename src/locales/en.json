@@ -10,6 +10,8 @@
   "change_via_scrape": "Find the match on click-tt.ch instead",
   "clash_check_clean": "Schedule checked, no clashes",
   "clash_check_not_checked": "Not checked",
+  "clash_check_refresh": "Refresh schedule check",
+  "clash_check_refresh_failed": "Couldn't refresh the schedule check — showing the previous results.",
   "clash_line_away": "Away: <%= it.time %> vs <%= it.opponent %>",
   "clash_line_home": "Home: <%= it.time %> vs <%= it.opponent %>",
   "confirm_date": "Confirm",

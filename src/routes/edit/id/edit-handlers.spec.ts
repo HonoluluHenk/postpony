@@ -13,6 +13,7 @@ import { buildOwnTeamView } from './own-team-view';
 import { handleEditPlayersPost } from './players-post';
 import { handleProposedDateDeletePost } from './proposed-date-delete-post';
 import { handleEditProposedDatesPost } from './proposed-dates-post';
+import { handleRefreshClashesPost } from './refresh-clashes-post';
 import { handleReopenPost } from './reopen-post';
 
 vi.mock('../../../lib/click-tt-scraper', () => ({
@@ -1164,6 +1165,105 @@ describe('edit handlers', () => {
         .toBe(302);
       expect(response.headers.get('location'))
         .toBe(`/edit/${session.id}?ownerPassword=`);
+    });
+  });
+
+  describe('handleRefreshClashesPost', () => {
+    const identities = {
+      home: {championship: 'MTTV 26/27', group: '219397', teamtable: '1732195'},
+      away: {championship: 'MTTV 26/27', group: '219397', teamtable: '1732193'},
+    };
+
+    function checkedSession(): Postponement {
+      return aSession({
+        homeTeam: 'Home Team',
+        guestTeam: 'Guest Team',
+        homeTeamIdentity: identities.home,
+        guestTeamIdentity: identities.away,
+        proposedDates: [
+          aProposedDate({
+            id: 'pd-1',
+            clashes: {home: [{opponent: 'Old Opp', start: '2025-09-01T08:00'}], away: []},
+          }),
+        ],
+      });
+    }
+
+    test('throws when the session does not exist', async () => {
+      const app = createApp({params: {id: 'missing'}});
+
+      await expect(handleRefreshClashesPost(app))
+        .rejects
+        .toThrow('Session not found');
+    });
+
+    test('re-fetches both schedules, recomputes all clashes, replaces the stored snapshot, and saves once', async () => {
+      const session = checkedSession();
+      mockFetchMatches.mockResolvedValue([
+        {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
+      ]);
+      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      await app.store.save(session);
+      const saveSpy = vi.spyOn(app.store, 'save');
+
+      const html = await (await handleRefreshClashesPost(app)).text();
+
+      expect(mockFetchMatches)
+        .toHaveBeenCalledTimes(2);
+      expect(mockFetchMatches)
+        .toHaveBeenCalledWith('MTTV 26/27', '219397', '1732195');
+      expect(mockFetchMatches)
+        .toHaveBeenCalledWith('MTTV 26/27', '219397', '1732193');
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates[0]?.clashes)
+        .toEqual({
+          home: [{opponent: 'Guest Team', start: '2025-09-01T19:00'}],
+          away: [{opponent: 'Home Team', start: '2025-09-01T19:00'}],
+        });
+      expect(saveSpy)
+        .toHaveBeenCalledTimes(1);
+      // The refreshed rows render immediately, without a failure notice.
+      expect(html)
+        .toContain('Home: 7:00 PM vs Guest Team');
+      expect(html)
+        .not
+        .toContain('showing the previous results');
+    });
+
+    test('a failed refresh keeps the previous snapshot, saves once, and renders the failure notice', async () => {
+      const session = checkedSession();
+      mockFetchMatches.mockRejectedValue(new ClickTTError('click-tt is down'));
+      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      await app.store.save(session);
+      const saveSpy = vi.spyOn(app.store, 'save');
+
+      const html = await (await handleRefreshClashesPost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates[0]?.clashes)
+        .toEqual({home: [{opponent: 'Old Opp', start: '2025-09-01T08:00'}], away: []});
+      expect(saveSpy)
+        .toHaveBeenCalledTimes(1);
+      // The stale snapshot still renders, and the owner sees the failure notice.
+      expect(html)
+        .toContain('Home: 8:00 AM vs Old Opp');
+      expect(html)
+        .toContain('showing the previous results');
+    });
+
+    test('hand-entered session: never fetches and renders no failure notice', async () => {
+      const session = aSession({proposedDates: [aProposedDate()]});
+      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      await app.store.save(session);
+
+      const html = await (await handleRefreshClashesPost(app)).text();
+
+      expect(mockFetchMatches)
+        .not
+        .toHaveBeenCalled();
+      expect(html)
+        .not
+        .toContain('showing the previous results');
     });
   });
 

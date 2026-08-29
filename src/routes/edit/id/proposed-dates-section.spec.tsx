@@ -186,6 +186,42 @@ describe('ProposedDatesSection clash info', () => {
     expect(html).not.toContain('Schedule checked, no clashes');
     expect(html).not.toContain('vs ');
   });
+
+  it('offers the refresh action only for clash-checkable postponements', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html).not.toContain('refresh-clashes');
+    expect(html).not.toContain('Refresh schedule check');
+  });
+
+  it('offers the refresh action for a clash-checkable postponement', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), clashCheckable: true}));
+
+    expect(html).toContain('hx-post="/edit/session-1/refresh-clashes"');
+    expect(html).toContain('hx-target="#proposed-dates-management"');
+    expect(html).toContain('>Refresh schedule check</button>');
+    expect(html).not.toContain('showing the previous results');
+  });
+
+  it('renders the refresh failure notice when a refresh failed', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      clashCheckable: true,
+      refreshError: true,
+    }));
+
+    expect(html).toContain('Couldn&#39;t refresh the schedule check — showing the previous results.');
+  });
+
+  it('hides the refresh action when the session is Confirmed', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      status: 'Confirmed',
+      clashCheckable: true,
+    }));
+
+    expect(html).not.toContain('refresh-clashes');
+  });
 });
 
 describe('ProposedDatesSection generator block', () => {

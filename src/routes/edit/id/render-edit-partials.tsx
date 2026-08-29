@@ -69,6 +69,7 @@ export interface EditPartialExtras {
   generatorInvalidRow?: number;
   generatorError?: string;
   generatorSuccessCount?: number;
+  refreshError?: boolean;
 }
 
 /**
@@ -99,6 +100,7 @@ export function renderEditPartials(
     generatorInvalidRow: extra.generatorInvalidRow,
     generatorError: extra.generatorError,
     generatorSuccessCount: extra.generatorSuccessCount,
+    refreshError: extra.refreshError,
     globalError: extra.globalError,
   };
   return app.render(<ProposedDatesSectionPartial {...props} />);

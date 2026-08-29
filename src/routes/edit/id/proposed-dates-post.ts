@@ -96,9 +96,10 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
  * Scrapes both teams' click-tt schedules once and computes the Clashes of every
  * Proposed Date in the session. Returns undefined when the session has no team
  * identities (hand-entered match) or when either scrape fails — the caller then
- * saves the dates clash-free and the page renders without clash info.
+ * saves the dates clash-free and the page renders without clash info. Shared by
+ * the add paths and the manual refresh handler so one code path drives both.
  */
-async function computeClashesForSession(session: Postponement): Promise<ClashesByProposedDate | undefined> {
+export async function computeClashesForSession(session: Postponement): Promise<ClashesByProposedDate | undefined> {
   const homeIdentity = session.homeTeamIdentity;
   const guestIdentity = session.guestTeamIdentity;
   if (!homeIdentity || !guestIdentity) {
@@ -121,12 +122,13 @@ async function computeClashesForSession(session: Postponement): Promise<ClashesB
     );
   } catch {
     // ponytail: a failed scrape never blocks adding dates — the dates are saved
-    // without clash data and render without clash lines.
+    // without clash data and render without clash lines. On manual refresh the
+    // caller keeps the previous snapshot instead.
     return undefined;
   }
 }
 
-function attachClashes(session: Postponement, clashes: ClashesByProposedDate): Postponement {
+export function attachClashes(session: Postponement, clashes: ClashesByProposedDate): Postponement {
   return {
     ...session,
     proposedDates: session.proposedDates.map((pd) => ({...pd, clashes: clashes[pd.id]})),
