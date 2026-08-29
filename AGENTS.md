@@ -128,6 +128,10 @@ Unit and e2e conventions live in the `testing` skill: Page Objects and `createSe
 
 Dual-password: owner password (edit access) + invitation password (join access, passed as `?token=`). No traditional login. See ADR-0002.
 
+## Skills tooling
+
+Third-party skills in `.agents/skills/` are installed with the `skills.sh` CLI (`npx skills`) and pinned in the committed `skills-lock.json`; project-authored skills there are not in the lock.
+
 ## Agent skills
 
 ### Issue tracker
