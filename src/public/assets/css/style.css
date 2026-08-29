@@ -313,4 +313,14 @@
   .air-datepicker-time--row:first-child {
     margin-bottom: 24px;
   }
+
+  /* BeerCSS floating-label fields: hide placeholder when empty & unfocused
+     so it doesn't overlap the label. Shows when typing or focused. */
+  .field.label input:not(:focus):placeholder-shown {
+    color: transparent;
+  }
+
+  .field.label input:not(:focus):placeholder-shown::placeholder {
+    color: transparent;
+  }
 }
