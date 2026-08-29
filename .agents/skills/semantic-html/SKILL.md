@@ -1,18 +1,18 @@
 ---
 name: semantic-html
 description: >-
-  Enforces accessible structure in HTML — semantic element choice, nesting,
-  heading hierarchy, landmarks, form labeling, links, keyboard interaction,
-  focus management, and ARIA.  Use when the user writes, reviews, or refactors
-  HTML for accessibility; chooses between `section`, `article`, `aside`, `nav`,
-  `div` and other elements; checks heading or landmark structure; reviews form
-  labels, field grouping, or error associations; audits keyboard accessibility
-  or focus order; writes alt text or table captions; applies or reviews ARIA
-  roles, states, and properties; or debugs screen-reader or accessibility-tree
-  output.
+    Enforces accessible structure in HTML — semantic element choice, nesting,
+    heading hierarchy, landmarks, form labeling, links, keyboard interaction,
+    focus management, and ARIA.  Use when the user writes, reviews, or refactors
+    HTML for accessibility; chooses between `section`, `article`, `aside`, `nav`,
+    `div` and other elements; checks heading or landmark structure; reviews form
+    labels, field grouping, or error associations; audits keyboard accessibility
+    or focus order; writes alt text or table captions; applies or reviews ARIA
+    roles, states, and properties; or debugs screen-reader or accessibility-tree
+    output.
 metadata:
-  category: Frontend & Accessibility
-  tags: html,semantics,accessibility,a11y,aria,wcag,landmarks,forms,keyboard,svg,tables
+    category: Frontend & Accessibility
+    tags: html,semantics,accessibility,a11y,aria,wcag,landmarks,forms,keyboard,svg,tables
 ---
 
 # Semantic HTML
