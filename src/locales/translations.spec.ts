@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { getTranslation } from './functions';
 import { defaultLocale, translations, type TranslationKeys } from './constants';
 import { AppLocales, type AppLocale } from './config';
+import { weekdayLabels } from './weekdays';
 
 /**
  * Tied to Issue 02 acceptance criteria:
- * - Auto-derived `TranslationKeys` still resolves when the array-valued
- *   `weekdays_short` key is present.
+ * - Auto-derived `TranslationKeys` still resolves when new generator keys land.
  * - fr-CH / it-CH inherit English strings per ADR-0016; the fallback is
  *   observable through `getTranslation` and `translations[locale]`.
  * - `count`-parameter interpolation works for `proposed_dates_generate_added`
@@ -21,6 +21,8 @@ const NEW_STRING_KEYS = [
   'proposed_dates_generate_add_row',
   'proposed_dates_generate_remove_row',
   'proposed_dates_generate_no_anchor',
+  'proposed_dates_generate_weekday_label',
+  'proposed_dates_generate_time_label',
 ] as const satisfies readonly TranslationKeys[];
 
 describe('translations registry', () => {
@@ -33,17 +35,20 @@ describe('translations registry', () => {
           .toEqual(expect.any(String));
       }
     });
+  });
 
-    it('exposes weekdays_short as a 7-entry array derived from en.json', () => {
-      const labels = translations['en-US'].weekdays_short;
-      expect(Array.isArray(labels)).toBe(true);
-      expect(labels).toHaveLength(7);
-      expect(labels).toEqual(['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']);
+  describe('weekdayLabels', () => {
+    it('exposes a 7-entry English array indexed Monday-first', () => {
+      expect(weekdayLabels['en-US']).toEqual(['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']);
     });
 
-    it('exposes weekdays_short as a 7-entry German array in de-CH', () => {
-      const labels = translations['de-CH'].weekdays_short;
-      expect(labels).toEqual(['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']);
+    it('exposes a 7-entry German array in de-CH', () => {
+      expect(weekdayLabels['de-CH']).toEqual(['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']);
+    });
+
+    it('returns the English weekdayLabels for fr-CH and it-CH', () => {
+      expect(weekdayLabels['fr-CH']).toBe(weekdayLabels['en-US']);
+      expect(weekdayLabels['it-CH']).toBe(weekdayLabels['en-US']);
     });
   });
 
@@ -59,19 +64,12 @@ describe('translations registry', () => {
         expect(getTranslation(locale, key)).toBe(translations['en-US'][key]);
       }
     });
-
-    it('returns the English weekdays_short for fr-CH and it-CH', () => {
-      expect(translations['fr-CH'].weekdays_short).toBe(translations['en-US'].weekdays_short);
-      expect(translations['it-CH'].weekdays_short).toBe(translations['en-US'].weekdays_short);
-    });
   });
 
   describe('count-parameter interpolation', () => {
     it.each(AppLocales)('interpolates count into proposed_dates_generate_added for %s', (locale) => {
-      // de-CH has a dedicated German template, fallback locales share English.
       const template = translations[locale === 'de-CH' ? 'de-CH' : 'en-US'].proposed_dates_generate_added;
-      expect(typeof template).toBe('string');
-      const expected = (template as string).replace('<%= it.count %>', '12');
+      const expected = template.replace('<%= it.count %>', '12');
       expect(getTranslation(locale, 'proposed_dates_generate_added', {count: '12'})).toBe(expected);
     });
 
@@ -94,7 +92,7 @@ describe('translations registry', () => {
       for (const key of NEW_STRING_KEYS) {
         expect(record[key]).toBeTruthy();
       }
-      expect(record.weekdays_short).toHaveLength(7);
+      expect(weekdayLabels[locale]).toHaveLength(7);
     });
   });
 });

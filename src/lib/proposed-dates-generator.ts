@@ -1,6 +1,11 @@
 import { Temporal } from '@js-temporal/polyfill';
 
-const MAX_TUPLES = 14;
+/** Maximum number of (weekday, hh, mm) tuples processed per call. Exported so
+ *  the handler and the section re-use one cap value rather than mirror a
+ *  literal. The server's enforcement is the security-relevant check; this is
+ *  the spec-aligned contract. */
+export const MAX_TUPLES = 14;
+
 const BACKWARD_WEEKS = 8;
 const FORWARD_WEEKS = 4;
 

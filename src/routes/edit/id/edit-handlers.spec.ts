@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../../lib/__test-utils__/builders';
 import { generateProposedDates } from '../../../lib/proposed-dates-generator';
@@ -40,13 +40,15 @@ function createApp(options: MockOptions = {}): App {
 
 const FIXED_TODAY_ISO = '2026-08-25T08:00';
 
-const nowSpy = vi.spyOn(temporalUtils, 'nowPlainDateTimeIso').mockReturnValue(FIXED_TODAY_ISO);
-
-afterEach(() => {
-  nowSpy.mockClear();
-});
-
 describe('edit handlers', () => {
+
+  beforeEach(() => {
+    vi.spyOn(temporalUtils, 'nowPlainDateTimeIso').mockReturnValue(FIXED_TODAY_ISO);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   describe('handleEditPlayersPost', () => {
     test('throws when the session does not exist', async () => {
@@ -621,6 +623,85 @@ describe('edit handlers', () => {
       expect(response.status).toBe(400);
       const stored = await app.store.get(session.id);
       expect(stored?.proposedDates).toHaveLength(0);
+    });
+
+    test('rogue POST combining tuple branch and proposedDateTime: rejected with 400, no store write', async () => {
+      const session = aSession({originalMatchDateTime: '2026-09-02T16:00', status: 'Draft'});
+      const app = createApp({
+        params: {id: session.id},
+        headers: {'HX-Request': 'true'},
+        body: {
+          generate: 'tuple',
+          'weekday[]': ['1', '3'],
+          'time[]': ['8:00 pm', '9:00 pm'],
+          proposedDateTime: '09/05/2025 08:00 pm',
+        },
+      });
+      await app.store.save(session);
+
+      const response = await handleEditProposedDatesPost(app);
+      const html = await response.text();
+
+      expect(response.status).toBe(400);
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates).toHaveLength(0);
+      expect(stored?.status).toBe('Draft');
+      expect(html).toContain('Please provide a valid date and time');
+    });
+
+    test('cap of 14 distinct tuples: all 14 tuples are processed and the cap is not enforced on count emitted', async () => {
+      const session = aSession({
+        originalMatchDateTime: '2026-09-02T16:00',
+        status: 'Draft',
+      });
+      const weekdays = ['1', '3', '5', '1', '3', '5', '1', '3', '5', '1', '3', '5', '1', '3'];
+      const times = [
+        '07:00 am', '07:30 am', '08:00 am',
+        '08:30 am', '09:00 am', '09:30 am',
+        '10:00 am', '10:30 am', '11:00 am',
+        '11:30 am', '12:00 pm', '12:30 pm',
+        '01:00 pm', '01:30 pm',
+      ];
+      const tuples = [
+        {weekday: 1, hour: 7, minute: 0},
+        {weekday: 3, hour: 7, minute: 30},
+        {weekday: 5, hour: 8, minute: 0},
+        {weekday: 1, hour: 8, minute: 30},
+        {weekday: 3, hour: 9, minute: 0},
+        {weekday: 5, hour: 9, minute: 30},
+        {weekday: 1, hour: 10, minute: 0},
+        {weekday: 3, hour: 10, minute: 30},
+        {weekday: 5, hour: 11, minute: 0},
+        {weekday: 1, hour: 11, minute: 30},
+        {weekday: 3, hour: 12, minute: 0},
+        {weekday: 5, hour: 12, minute: 30},
+        {weekday: 1, hour: 13, minute: 0},
+        {weekday: 3, hour: 13, minute: 30},
+      ];
+      const app = createApp({
+        params: {id: session.id},
+        headers: {'HX-Request': 'true'},
+        body: {
+          generate: 'tuple',
+          'weekday[]': weekdays,
+          'time[]': times,
+        },
+      });
+      await app.store.save(session);
+
+      const expected = generateProposedDates({
+        anchorIso: '2026-09-02T16:00',
+        todayIso: FIXED_TODAY_ISO,
+        tuples,
+        existingStarts: [],
+      });
+      expect(expected.added.length).toBeGreaterThanOrEqual(14);
+
+      await handleEditProposedDatesPost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates).toHaveLength(expected.added.length);
+      expect(stored?.proposedDates.length).toBeGreaterThanOrEqual(14);
     });
 
     test('row-action failure path with unknown sub-action non-partial: also throws 400', async () => {

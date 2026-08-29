@@ -1,6 +1,7 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { AppLocale, TranslateFn } from '../../../locales';
-import { translations } from '../../../locales/constants';
+import { localeConfig, weekdayLabels } from '../../../locales';
+import { MAX_TUPLES } from '../../../lib/proposed-dates-generator';
 import type { PostponementStatus, VoteTallyItem } from '../../../lib/models';
 import { ErrorContainer } from '../../partials/error-container';
 import { OwnTeamVotes } from './own-team-votes';
@@ -33,11 +34,6 @@ export interface ProposedDatesSectionProps extends EditPartialsData {
   generatorSuccessCount?: number;
 }
 
-// ponytail: cap of 14 matches the pure generator's MAX_TUPLES. The server
-// re-renders the form after every grow/remove so these client clamps are UX
-// hints only; Issue 04 enforces the cap server-side.
-const MAX_TUPLES = 14;
-
 function clampRows(rows: number | undefined): number {
   if (typeof rows !== 'number' || !Number.isFinite(rows)) {
     return 1;
@@ -49,7 +45,6 @@ interface GenerateFormProps {
   sessionId: string;
   t: TranslateFn;
   locale: AppLocale;
-  inputFormat: string;
   weekdays: readonly string[];
   rows: number;
   error?: string;
@@ -57,10 +52,13 @@ interface GenerateFormProps {
 }
 
 function GenerateForm(props: GenerateFormProps): JSX.Element {
-  const {sessionId, t, locale, inputFormat, weekdays, rows} = props;
+  const {sessionId, t, locale, weekdays, rows} = props;
   const capped = clampRows(rows);
   const rowAction = '/edit/'.concat(sessionId, '/proposed-dates');
   const headingId = 'generate-tuple-heading';
+  const timeFormat = localeConfig(locale).timeFormat;
+  const weekdayLabel = t('proposed_dates_generate_weekday_label');
+  const timeLabel = t('proposed_dates_generate_time_label');
   return (
     <form
       hx-post={rowAction}
@@ -80,19 +78,19 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
                   <option key={wIndex + 1} value={wIndex + 1} selected={wIndex === 0}>{label}</option>
                 ))}
               </select>
-              <label for={`weekday-${index}`}>{t('proposed_dates_generate_section')}</label>
+              <label for={`weekday-${index}`}>{weekdayLabel}</label>
             </div>
             <div class="field label border fill max">
               <input
                 id={`time-${index}`}
                 type="text"
                 name="time[]"
-                placeholder={inputFormat}
+                placeholder={timeFormat}
                 lang={locale}
                 autocomplete="off"
                 aria-invalid={props.error ? 'true' : undefined}
               />
-              <label for={`time-${index}`}>{inputFormat}</label>
+              <label for={`time-${index}`}>{timeLabel}</label>
             </div>
             <button
               type="submit"
@@ -136,14 +134,9 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
   );
 }
 
-function weekdayLabels(locale: AppLocale): readonly string[] {
-  const labels = translations[locale].weekdays_short;
-  return Array.isArray(labels) ? labels : [];
-}
-
 export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Element {
   const confirmed = props.status === 'Confirmed';
-  const weekdays = weekdayLabels(props.locale);
+  const weekdays = weekdayLabels[props.locale];
 
   return (
     <section id="proposed-dates-management" class="padding small-round surface-variant s12 m6" aria-live="polite">
@@ -223,7 +216,6 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
             sessionId={props.sessionId}
             t={props.t}
             locale={props.locale}
-            inputFormat={props.inputFormat}
             weekdays={weekdays}
             rows={clampRows(props.generateRows)}
             error={props.generatorError}

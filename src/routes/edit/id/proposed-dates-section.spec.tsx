@@ -129,13 +129,50 @@ describe('ProposedDatesSection generator block', () => {
     expect(html).toContain('formaction="/edit/session-1/proposed-dates?rowIndex=2"');
   });
 
-  it('mirrors the single-date field placeholder and lang on each time input', () => {
+  it('uses the locale\'s time-only placeholder on each time input', () => {
     const props = {...baseProps(), generateRows: 2, locale: 'de-CH' as const, inputFormat: 'dd.MM.yyyy HH:mm'};
     const html = renderToString(ProposedDatesSection(props));
 
     expect(html.match(/name="time\[\]"/g)?.length ?? 0).toBe(2);
-    expect(html.match(/placeholder="dd\.MM\.yyyy HH:mm"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    // ponytail: time input takes the locale's timeFormat only (HH:mm / hh:mm aa) —
+    // not the full datetime placeholder, so the user knows they enter a time.
+    expect(html.match(/placeholder="HH:mm"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(html.match(/<input[^>]*name="time\[\]"[^>]*placeholder="dd\.MM\.yyyy[^"]*"/g)?.length ?? 0).toBe(0);
     expect(html.match(/lang="de-CH"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+  });
+
+  it('uses hh:mm aa placeholder for en-US on the time input', () => {
+    const props = {
+      ...baseProps(),
+      generateRows: 1,
+      locale: 'en-US' as const,
+      inputFormat: 'MM/dd/yyyy hh:mm aa',
+    };
+    const html = renderToString(ProposedDatesSection(props));
+
+    expect(html.match(/placeholder="hh:mm aa"/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
+    // No `name="time[]"` input should carry the full datetime placeholder — the
+    // single-add field legitimately uses the full placeholder because it asks
+    // for date+time; this assertion scopes to the generator block specifically.
+    expect(html.match(/<input[^>]*name="time\[\]"[^>]*placeholder="MM\/dd\/yyyy[^"]*"/g)?.length ?? 0).toBe(0);
+  });
+
+  it('labels each generator row\'s weekday and time inputs with the locale\'s field labels', () => {
+    const tDe = (key: any, params?: any): string => getTranslation('de-CH', key, params);
+    const props = {...baseProps(), t: tDe, generateRows: 2, locale: 'de-CH' as const};
+    const html = renderToString(ProposedDatesSection(props));
+
+    const weekdayLabels = (html.match(/<label[^>]*for="weekday-\d+"[^>]*>[^<]+<\/label>/g) ?? []);
+    const timeLabels = (html.match(/<label[^>]*for="time-\d+"[^>]*>[^<]+<\/label>/g) ?? []);
+    expect(weekdayLabels.length).toBe(2);
+    expect(timeLabels.length).toBe(2);
+    for (const tag of weekdayLabels) {
+      expect(tag).toContain('Wochentag');
+      expect(tag).not.toContain('Generate Proposed Dates');
+    }
+    for (const tag of timeLabels) {
+      expect(tag).toContain('Uhrzeit');
+    }
   });
 
   it('emits every weekday label inside the locale-aware weekday select', () => {

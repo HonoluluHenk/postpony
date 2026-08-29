@@ -1,18 +1,21 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
-import { generateProposedDates, type ProposedDateTuple } from '../../../lib/proposed-dates-generator';
+import { MAX_TUPLES, generateProposedDates, type ProposedDateTuple } from '../../../lib/proposed-dates-generator';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import { PostponementRules } from '../../../lib/postponement';
 import { nowPlainDateTimeIso, parseLocaleDateTime, parseLocaleTimeOnly } from '../../../lib/temporal-utils';
-import { renderEditPartials } from './render-edit-partials';
 import type { Postponement } from '../../../lib/models';
+import { renderEditPartials } from './render-edit-partials';
 
-// ponytail: MAX_TUPLES is mirrored here because the server is the security-relevant
-// cap; the generator inherits the same constant from pure code. Single source of
-// truth would be nicer, but inlining the literal keeps the seam between
-// validation, renderContext count, and the pure module explicit and greppable.
-const MAX_TUPLES = 14;
 const TUPLE_DISCRIMINATOR = 'tuple';
+
+function ownerQuery(app: App): string {
+  return app.c.req.query('ownerPassword') ?? '';
+}
+
+function redirectAfterEdit(app: App, session: Postponement): Response {
+  return app.c.redirect(`/edit/${session.id}?ownerPassword=${ownerQuery(app)}`);
+}
 
 function asStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -72,13 +75,23 @@ function parseTupleRows(weekdays: string[], times: string[], locale: App['locale
 }
 
 interface SingleDateOutput {proposedDateTime: string}
-interface TupleOutput {generate: typeof TUPLE_DISCRIMINATOR; 'weekday[]': string[]; 'time[]': string[]}
+interface TupleOutput {
+  generate: typeof TUPLE_DISCRIMINATOR;
+  'weekday[]': string[];
+  'time[]': string[];
+  proposedDateTime?: never;
+}
 
 function buildTupleSchema(app: App): v.BaseSchema<unknown, TupleOutput, v.BaseIssue<unknown>> {
   return v.object({
     generate: v.literal(TUPLE_DISCRIMINATOR, app.t('proposed_date_time_invalid')),
     'weekday[]': v.array(v.string()),
     'time[]': v.array(v.string()),
+    // ponytail: rogue POST combining the generator branch with the single-date
+    // field is explicitly rejected. The schema encodes it via the `never`
+    // output type and the strict object parser — passing `proposedDateTime`
+    // makes the parse fail before any persistence happens.
+    proposedDateTime: v.optional(v.never(app.t('proposed_date_time_invalid'))),
   });
 }
 
@@ -143,7 +156,7 @@ async function handleTupleSubmit(
         generatorError: errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
       }), {status: 400});
     }
-    return app.c.redirect(`/edit/${session.id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
+    return redirectAfterEdit(app, session);
   }
 
   const {weekdays, times} = readTupleRows(values);
@@ -155,7 +168,7 @@ async function handleTupleSubmit(
         generatorError: app.t('proposed_date_time_invalid'),
       }), {status: 400});
     }
-    return app.c.redirect(`/edit/${session.id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
+    return redirectAfterEdit(app, session);
   }
 
   const parsed = parseTupleRows(weekdays, times, locale);
@@ -166,7 +179,7 @@ async function handleTupleSubmit(
         generatorError: app.t('proposed_date_time_invalid'),
       }), {status: 400});
     }
-    return app.c.redirect(`/edit/${session.id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
+    return redirectAfterEdit(app, session);
   }
 
   if (parsed.tuples.length === 0) {
@@ -220,7 +233,7 @@ async function handleSingleSubmit(
         globalError: errors.global,
       }), {status: 400});
     }
-    return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
+    return app.c.redirect(`/edit/${id}?ownerPassword=${ownerQuery(app)}`);
   }
 
   const proposedDateTime = validation.output.proposedDateTime;
