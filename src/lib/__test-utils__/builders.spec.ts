@@ -103,11 +103,23 @@ describe('builders', () => {
         proposedDates: [aProposedDate()],
       });
       expect(session.players)
-        .toHaveLength(2);
-      expect(session.players[1]?.id)
-        .toBe('player-2');
+        .toMatchObject([
+          {id: 'player-1', name: 'Test Player', teamId: 'home'},
+          {id: 'player-2', name: 'Test Player', teamId: 'home'},
+        ]);
       expect(session.proposedDates)
-        .toHaveLength(1);
+        .toMatchObject([
+          {
+            id: 'proposed-date-1',
+            sessionId: 'test-session',
+            dateTimeRange: {
+              start: '2025-09-01T20:00:00',
+              end: '2025-09-01T22:00:00',
+            },
+            proposerId: 'player-1',
+            votableByOpponent: false,
+          },
+        ]);
     });
   });
 

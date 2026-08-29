@@ -1,8 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import {
-  generateProposedDates,
-  type ProposedDateTuple,
-} from './proposed-dates-generator';
+import { generateProposedDates, type ProposedDateTuple } from './proposed-dates-generator';
 
 /**
  * Pure-module spec: assert every branch of the planning-window walker covered
@@ -30,15 +27,18 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(result.usedFallbackWindow).toBe(false);
-      expect(result.skipped).toBe(0);
-      expect(result.added).toEqual([
-        '2026-08-31T20:00',
-        '2026-09-07T20:00',
-        '2026-09-14T20:00',
-        '2026-09-21T20:00',
-        '2026-09-28T20:00',
-      ]);
+      expect(result.usedFallbackWindow)
+        .toBe(false);
+      expect(result.skipped)
+        .toBe(0);
+      expect(result.added)
+        .toEqual([
+          '2026-08-31T20:00',
+          '2026-09-07T20:00',
+          '2026-09-14T20:00',
+          '2026-09-21T20:00',
+          '2026-09-28T20:00',
+        ]);
     });
 
     test('uses anchor - 8w when it is later than today', () => {
@@ -52,10 +52,26 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(result.added[0]).toBe('2026-11-02T20:00');
+      expect(result.added[0])
+        .toBe('2026-11-02T20:00');
       // upper = Mon 2027-01-25T16:00; last candidate ≤ upper is Mon 1/18T20:00 (Mon 1/25T20:00 > upper).
-      expect(result.added.at(-1)).toBe('2027-01-18T20:00');
-      expect(result.added).toHaveLength(12);
+      expect(result.added.at(-1))
+        .toBe('2027-01-18T20:00');
+      expect(result.added)
+        .toEqual([
+          '2026-11-02T20:00',
+          '2026-11-09T20:00',
+          '2026-11-16T20:00',
+          '2026-11-23T20:00',
+          '2026-11-30T20:00',
+          '2026-12-07T20:00',
+          '2026-12-14T20:00',
+          '2026-12-21T20:00',
+          '2026-12-28T20:00',
+          '2027-01-04T20:00',
+          '2027-01-11T20:00',
+          '2027-01-18T20:00',
+        ]);
     });
 
     test('inclusive: a candidate exactly at the upper bound is included', () => {
@@ -68,7 +84,8 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(result.added).toContain('2027-01-25T20:00');
+      expect(result.added)
+        .toContain('2027-01-25T20:00');
     });
   });
 
@@ -84,17 +101,21 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(result.added).not.toContain('2026-08-24T20:00');
-      expect(result.added).toEqual([
-        '2026-08-31T20:00',
-        '2026-09-07T20:00',
-        '2026-09-14T20:00',
-        '2026-09-21T20:00',
-        '2026-09-28T20:00',
-        '2026-10-05T20:00',
-      ]);
+      expect(result.added)
+        .not
+        .toContain('2026-08-24T20:00');
+      expect(result.added)
+        .toEqual([
+          '2026-08-31T20:00',
+          '2026-09-07T20:00',
+          '2026-09-14T20:00',
+          '2026-09-21T20:00',
+          '2026-09-28T20:00',
+          '2026-10-05T20:00',
+        ]);
       // Past candidates don't count toward `skipped` — only dedupe does.
-      expect(result.skipped).toBe(0);
+      expect(result.skipped)
+        .toBe(0);
     });
 
     test('drops all candidates when the upper bound has already elapsed (anchor in past)', () => {
@@ -105,9 +126,12 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(result.added).toEqual([]);
-      expect(result.skipped).toBe(0);
-      expect(result.usedFallbackWindow).toBe(false);
+      expect(result.added)
+        .toEqual([]);
+      expect(result.skipped)
+        .toBe(0);
+      expect(result.usedFallbackWindow)
+        .toBe(false);
     });
   });
 
@@ -124,9 +148,19 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(result.added).toHaveLength(10);
-      expect(result.added.filter((iso) => iso.endsWith('T20:00'))).toHaveLength(5);
-      expect(result.added.filter((iso) => iso.endsWith('T14:00'))).toHaveLength(5);
+      expect(result.added)
+        .toEqual([
+          '2026-08-31T20:00',
+          '2026-09-07T20:00',
+          '2026-09-14T20:00',
+          '2026-09-21T20:00',
+          '2026-09-28T20:00',
+          '2026-08-31T14:00',
+          '2026-09-07T14:00',
+          '2026-09-14T14:00',
+          '2026-09-21T14:00',
+          '2026-09-28T14:00',
+        ]);
     });
 
     test('different weekdays each contribute their own dates', () => {
@@ -141,7 +175,19 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(result.added).toHaveLength(10);
+      expect(result.added)
+        .toEqual([
+          '2026-08-31T20:00',
+          '2026-09-07T20:00',
+          '2026-09-14T20:00',
+          '2026-09-21T20:00',
+          '2026-09-28T20:00',
+          '2026-08-26T20:00',
+          '2026-09-02T20:00',
+          '2026-09-09T20:00',
+          '2026-09-16T20:00',
+          '2026-09-23T20:00',
+        ]);
     });
   });
 
@@ -154,14 +200,18 @@ describe('generateProposedDates', () => {
         existingStarts: ['2026-09-07T20:00:00'],
       });
 
-      expect(result.added).not.toContain('2026-09-07T20:00');
-      expect(result.added).toEqual([
-        '2026-08-31T20:00',
-        '2026-09-14T20:00',
-        '2026-09-21T20:00',
-        '2026-09-28T20:00',
-      ]);
-      expect(result.skipped).toBe(1);
+      expect(result.added)
+        .not
+        .toContain('2026-09-07T20:00');
+      expect(result.added)
+        .toEqual([
+          '2026-08-31T20:00',
+          '2026-09-14T20:00',
+          '2026-09-21T20:00',
+          '2026-09-28T20:00',
+        ]);
+      expect(result.skipped)
+        .toBe(1);
     });
 
     test('matches existingStarts at minute precision regardless of seconds in input format', () => {
@@ -173,8 +223,11 @@ describe('generateProposedDates', () => {
         existingStarts: ['2026-09-07T20:00', '2026-09-07T20:00:00'],
       });
 
-      expect(result.skipped).toBe(1);
-      expect(result.added).not.toContain('2026-09-07T20:00');
+      expect(result.skipped)
+        .toBe(1);
+      expect(result.added)
+        .not
+        .toContain('2026-09-07T20:00');
     });
   });
 
@@ -201,8 +254,10 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(truncated.added).toEqual(expected.added);
-      expect(truncated.added.every((iso) => Number(iso.slice(11, 13)) < 14)).toBe(true);
+      expect(truncated.added)
+        .toEqual(expected.added);
+      expect(truncated.added.every((iso) => Number(iso.slice(11, 13)) < 14))
+        .toBe(true);
     });
   });
 
@@ -218,14 +273,17 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(result.usedFallbackWindow).toBe(true);
-      expect(result.skipped).toBe(0);
-      expect(result.added).toEqual([
-        '2026-08-31T20:00',
-        '2026-09-07T20:00',
-        '2026-09-14T20:00',
-        '2026-09-21T20:00',
-      ]);
+      expect(result.usedFallbackWindow)
+        .toBe(true);
+      expect(result.skipped)
+        .toBe(0);
+      expect(result.added)
+        .toEqual([
+          '2026-08-31T20:00',
+          '2026-09-07T20:00',
+          '2026-09-14T20:00',
+          '2026-09-21T20:00',
+        ]);
     });
   });
 
@@ -244,8 +302,16 @@ describe('generateProposedDates', () => {
       });
 
       // 5 Wednesdays (8/26, 9/2, 9/9, 9/16, 9/23) — Wed 9/30T20:00 > upper.
-      expect(result.added).toHaveLength(5);
-      expect(result.added.every((iso) => iso.endsWith('T20:00'))).toBe(true);
+      expect(result.added)
+        .toEqual([
+          '2026-08-26T20:00',
+          '2026-09-02T20:00',
+          '2026-09-09T20:00',
+          '2026-09-16T20:00',
+          '2026-09-23T20:00',
+        ]);
+      expect(result.added.every((iso) => iso.endsWith('T20:00')))
+        .toBe(true);
     });
 
     test('out-of-range minute is silently filtered and does not crash the loop', () => {
@@ -256,8 +322,10 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(result.added).toEqual([]);
-      expect(result.skipped).toBe(0);
+      expect(result.added)
+        .toEqual([]);
+      expect(result.skipped)
+        .toBe(0);
     });
 
     test('does not throw on a Sun 02:30 candidate (PlainDateTime is timezone-naive)', () => {
@@ -269,7 +337,9 @@ describe('generateProposedDates', () => {
         todayIso: '2026-03-29T10:00',
         tuples: [{weekday: 7, hour: 2, minute: 30}],
         existingStarts: [],
-      })).not.toThrow();
+      }))
+        .not
+        .toThrow();
     });
   });
 
@@ -282,7 +352,8 @@ describe('generateProposedDates', () => {
         existingStarts: [],
       });
 
-      expect(result).toEqual({added: [], skipped: 0, usedFallbackWindow: false});
+      expect(result)
+        .toEqual({added: [], skipped: 0, usedFallbackWindow: false});
     });
   });
 

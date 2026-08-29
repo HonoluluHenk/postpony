@@ -74,7 +74,7 @@ describe('postponement', () => {
       expect(player?.teamId)
         .toBe('away');
       expect(session.players)
-        .toHaveLength(1);
+        .toMatchObject([{id: 'id-1', name: 'Alice', teamId: 'away'}]);
     });
 
     test('matches an existing player by name case-insensitively without duplicating', () => {
@@ -85,7 +85,7 @@ describe('postponement', () => {
       expect(player)
         .toBe(before.players[0]);
       expect(session.players)
-        .toHaveLength(1);
+        .toMatchObject([{id: 'away-1', name: 'Bob', teamId: 'away'}]);
     });
 
     test('matches an existing player by id', () => {
@@ -141,12 +141,12 @@ describe('postponement', () => {
         proposedDates: [aProposedDate()],
       });
 
-      const {session} = new FakePostponementRules().proposeDate(before, '2025-09-02T20:00', 'owner');
+      const {session, proposedDate} = new FakePostponementRules().proposeDate(before, '2025-09-02T20:00', 'owner');
 
       expect(session.status)
         .toBe('Voting');
       expect(session.proposedDates)
-        .toHaveLength(2);
+        .toEqual([before.proposedDates[0], proposedDate]);
     });
   });
 
@@ -157,9 +157,7 @@ describe('postponement', () => {
       const session = new FakePostponementRules().castVote(before, 'proposed-date-1', 'player-1', 'Yes');
 
       expect(session.votes)
-        .toHaveLength(1);
-      expect(session.votes[0])
-        .toMatchObject({proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'Yes'});
+        .toMatchObject([{id: 'id-1', proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'Yes'}]);
     });
 
     test('updates an existing vote instead of duplicating it', () => {
@@ -170,9 +168,7 @@ describe('postponement', () => {
       const session = new FakePostponementRules().castVote(before, 'proposed-date-1', 'player-1', 'No');
 
       expect(session.votes)
-        .toHaveLength(1);
-      expect(session.votes[0]?.type)
-        .toBe('No');
+        .toMatchObject([{id: 'vote-1', proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'No'}]);
     });
 
     test('updates one vote while leaving other participants untouched', () => {
@@ -186,11 +182,10 @@ describe('postponement', () => {
       const session = new FakePostponementRules().castVote(before, 'pd-1', 'a', 'No');
 
       expect(session.votes)
-        .toHaveLength(2);
-      expect(session.votes.find((v) => v.participantId === 'a')?.type)
-        .toBe('No');
-      expect(session.votes.find((v) => v.participantId === 'b')?.type)
-        .toBe('Yes');
+        .toMatchObject([
+          {id: 'v1', proposedDateId: 'pd-1', participantId: 'a', type: 'No'},
+          {id: 'v2', proposedDateId: 'pd-1', participantId: 'b', type: 'Yes'},
+        ]);
     });
 
     test('does not mutate the input session votes', () => {
@@ -570,29 +565,28 @@ describe('postponement', () => {
       const results = new FakePostponementRules().ownTeamResults(session, 'home');
 
       expect(results)
-        .toHaveLength(2);
-      expect(results[0])
-        .toEqual({
-          dateId: 'pd-1',
-          votes: [
-            {playerId: 'p1', playerName: 'Voter', vote: 'Yes'},
-            {playerId: 'p2', playerName: 'SitsOut', vote: null},
-          ],
-          voted: 1,
-          total: 2,
-          nonVoters: [{playerId: 'p2', playerName: 'SitsOut', joined: false}],
-        });
-      expect(results[1])
-        .toEqual({
-          dateId: 'pd-2',
-          votes: [
-            {playerId: 'p1', playerName: 'Voter', vote: 'Maybe'},
-            {playerId: 'p2', playerName: 'SitsOut', vote: null},
-          ],
-          voted: 1,
-          total: 2,
-          nonVoters: [{playerId: 'p2', playerName: 'SitsOut', joined: false}],
-        });
+        .toMatchObject([
+          {
+            dateId: 'pd-1',
+            votes: [
+              {playerId: 'p1', playerName: 'Voter', vote: 'Yes'},
+              {playerId: 'p2', playerName: 'SitsOut', vote: null},
+            ],
+            voted: 1,
+            total: 2,
+            nonVoters: [{playerId: 'p2', playerName: 'SitsOut', joined: false}],
+          },
+          {
+            dateId: 'pd-2',
+            votes: [
+              {playerId: 'p1', playerName: 'Voter', vote: 'Maybe'},
+              {playerId: 'p2', playerName: 'SitsOut', vote: null},
+            ],
+            voted: 1,
+            total: 2,
+            nonVoters: [{playerId: 'p2', playerName: 'SitsOut', joined: false}],
+          },
+        ]);
     });
 
     test('uses every team player as the denominator even when no one voted', () => {

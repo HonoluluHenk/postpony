@@ -121,11 +121,7 @@ describe('join handlers', () => {
 
       const stored = await app.store.get(session.id);
       expect(stored?.players)
-        .toHaveLength(1);
-      expect(stored?.players[0]?.name)
-        .toBe('Alice');
-      expect(stored?.players[0]?.teamId)
-        .toBe('away');
+        .toMatchObject([{name: 'Alice', teamId: 'away'}]);
       expect(response.status)
         .toBe(302);
       const location = response.headers.get('Location') ?? '';
@@ -149,7 +145,7 @@ describe('join handlers', () => {
 
       const stored = await app.store.get(session.id);
       expect(stored?.players)
-        .toHaveLength(1);
+        .toMatchObject([{id: 'away-1', name: 'Bob', teamId: 'away'}]);
       expect(response.headers.get('Location') ?? '')
         .toContain('playerId=away-1');
     });
@@ -168,7 +164,7 @@ describe('join handlers', () => {
 
       const stored = await app.store.get(session.id);
       expect(stored?.players)
-        .toHaveLength(1);
+        .toMatchObject([{id: 'home-1', name: 'Carol', teamId: 'home'}]);
       expect(response.headers.get('Location') ?? '')
         .toContain('playerId=home-1');
     });
@@ -228,7 +224,7 @@ describe('join handlers', () => {
 
       const stored = await app.store.get(session.id);
       expect(stored?.players)
-        .toHaveLength(1);
+        .toMatchObject([{name: 'Alice', teamId: 'away'}]);
       expect(response.status)
         .toBe(302);
     });
@@ -387,13 +383,7 @@ describe('join handlers', () => {
 
       const stored = await app.store.get(session.id);
       expect(stored?.votes)
-        .toHaveLength(1);
-      expect(stored?.votes[0]?.type)
-        .toBe('Yes');
-      expect(stored?.votes[0]?.proposedDateId)
-        .toBe('proposed-date-1');
-      expect(stored?.votes[0]?.participantId)
-        .toBe('player-1');
+        .toMatchObject([{proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'Yes'}]);
       expect(response.status)
         .toBe(200);
     });
@@ -415,9 +405,7 @@ describe('join handlers', () => {
 
       const stored = await app.store.get(session.id);
       expect(stored?.votes)
-        .toHaveLength(1);
-      expect(stored?.votes[0]?.type)
-        .toBe('No');
+        .toMatchObject([{proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'No'}]);
     });
 
     test('does not change votes when the session is confirmed', async () => {
@@ -438,9 +426,7 @@ describe('join handlers', () => {
 
       const stored = await app.store.get(session.id);
       expect(stored?.votes)
-        .toHaveLength(1);
-      expect(stored?.votes[0]?.type)
-        .toBe('Yes');
+        .toMatchObject([{proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'Yes'}]);
       expect(response.status)
         .toBe(200);
       expect(await response.text())

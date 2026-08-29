@@ -67,9 +67,11 @@ describe('handleScrapeMatchPost', () => {
     expect(stored?.name)
       .toBe('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
     expect(stored?.players)
-      .toHaveLength(3);
-    expect(stored?.players.every((p) => p.teamId === 'home'))
-      .toBe(true);
+      .toMatchObject([
+        {name: 'Linder, Christoph', teamId: 'home'},
+        {name: 'Schmid, Oliver', teamId: 'home'},
+        {name: 'Milcu, Sasha', teamId: 'home'},
+      ]);
   });
 
   test('stores organizerTeam "away" when the organizer claims the guest side', async () => {
@@ -80,9 +82,11 @@ describe('handleScrapeMatchPost', () => {
     expect(stored?.organizerTeam)
       .toBe('away');
     expect(stored?.players)
-      .toHaveLength(3);
-    expect(stored?.players.every((p) => p.teamId === 'away'))
-      .toBe(true);
+      .toMatchObject([
+        {name: 'Linder, Christoph', teamId: 'away'},
+        {name: 'Schmid, Oliver', teamId: 'away'},
+        {name: 'Milcu, Sasha', teamId: 'away'},
+      ]);
   });
 
   test('throws when a required match field is missing', async () => {

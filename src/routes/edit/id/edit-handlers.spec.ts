@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../../lib/__test-utils__/builders';
 import { generateProposedDates } from '../../../lib/proposed-dates-generator';
-import { LOCALE_KEY } from '../../../locales';
 import { MemorySessionStore } from '../../../lib/session-store';
 import * as temporalUtils from '../../../lib/temporal-utils';
-import { buildOwnTeamView } from './own-team-view';
+import { LOCALE_KEY } from '../../../locales';
 import { handleConfirmDatePost } from './confirm-date-post';
+import { buildOwnTeamView } from './own-team-view';
 import { handleEditPlayersPost } from './players-post';
-import { handleEditProposedDatesPost } from './proposed-dates-post';
 import { handleProposedDateDeletePost } from './proposed-date-delete-post';
+import { handleEditProposedDatesPost } from './proposed-dates-post';
 import { handleReopenPost } from './reopen-post';
 
 interface MockOptions {
@@ -43,7 +43,8 @@ const FIXED_TODAY_ISO = '2026-08-25T08:00';
 describe('edit handlers', () => {
 
   beforeEach(() => {
-    vi.spyOn(temporalUtils, 'nowPlainDateTimeIso').mockReturnValue(FIXED_TODAY_ISO);
+    vi.spyOn(temporalUtils, 'nowPlainDateTimeIso')
+      .mockReturnValue(FIXED_TODAY_ISO);
   });
 
   afterEach(() => {
@@ -83,8 +84,8 @@ describe('edit handlers', () => {
       await handleEditPlayersPost(app);
 
       const stored = await app.store.get(session.id);
-      expect(stored?.players)
-        .toHaveLength(2);
+      expect(stored?.players.map((p) => p.name))
+        .toEqual(['Test Player', 'Bob']);
       expect(stored?.players[1]?.name)
         .toBe('Bob');
     });
@@ -156,8 +157,8 @@ describe('edit handlers', () => {
       await handleEditProposedDatesPost(app);
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates)
-        .toHaveLength(2);
+      expect(stored?.proposedDates.map((d) => d.dateTimeRange.start))
+        .toEqual(['2025-09-01T20:00:00', '2025-09-02T18:30:00']);
     });
 
     test('moves a Draft session to Voting when the first date is added', async () => {
@@ -211,15 +212,20 @@ describe('edit handlers', () => {
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
       });
-      expect(expected.added.length).toBeGreaterThan(0);
+      expect(expected.added.length)
+        .toBeGreaterThan(0);
 
       const html = await (await handleEditProposedDatesPost(app)).text();
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(expected.added.length);
-      expect(stored?.status).toBe('Voting');
-      expect(html).toContain('id="proposed-dates-management"');
-      expect(html).toContain(`>${expected.added.length} dates added<`);
+      expect(stored?.proposedDates.map((d) => d.dateTimeRange.start))
+        .toEqual(expected.added);
+      expect(stored?.status)
+        .toBe('Voting');
+      expect(html)
+        .toContain('id="proposed-dates-management"');
+      expect(html)
+        .toContain(`>${expected.added.length} dates added<`);
     });
 
     test('tuple branch zero-result path: no store write, renders the inline empty-result message', async () => {
@@ -241,10 +247,15 @@ describe('edit handlers', () => {
       const html = await (await handleEditProposedDatesPost(app)).text();
       const after = await app.store.get(session.id);
 
-      expect(before).toEqual(after);
-      expect(after?.proposedDates).toHaveLength(0);
-      expect(html).toContain('No dates were added');
-      expect(html).not.toContain('dates added<');
+      expect(before)
+        .toEqual(after);
+      expect(after?.proposedDates)
+        .toHaveLength(0);
+      expect(html)
+        .toContain('No dates were added');
+      expect(html)
+        .not
+        .toContain('dates added<');
     });
 
     test('tuple branch row-level invalid time: surfaces structured error and does not touch the store', async () => {
@@ -263,12 +274,17 @@ describe('edit handlers', () => {
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
 
-      expect(response.status).toBe(400);
+      expect(response.status)
+        .toBe(400);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
-      expect(stored?.originalMatchDateTime).toBe('2026-09-02T16:00');
-      expect(html).toContain('Please provide a valid date and time');
-      expect(html).toContain('id="proposed-dates-management"');
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+      expect(stored?.originalMatchDateTime)
+        .toBe('2026-09-02T16:00');
+      expect(html)
+        .toContain('Please provide a valid date and time');
+      expect(html)
+        .toContain('id="proposed-dates-management"');
     });
 
     test('tuple branch over-cap POST: 15 rows are rejected at the handler seam rather than truncated', async () => {
@@ -289,10 +305,13 @@ describe('edit handlers', () => {
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
 
-      expect(response.status).toBe(400);
+      expect(response.status)
+        .toBe(400);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
-      expect(html).toContain('Please provide a valid date and time');
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+      expect(html)
+        .toContain('Please provide a valid date and time');
     });
 
     test('tuple branch anchor missing: success toast plus the no_anchor fallback warning', async () => {
@@ -317,15 +336,20 @@ describe('edit handlers', () => {
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
       });
-      expect(expected.usedFallbackWindow).toBe(true);
-      expect(expected.added.length).toBeGreaterThan(0);
+      expect(expected.usedFallbackWindow)
+        .toBe(true);
+      expect(expected.added.length)
+        .toBeGreaterThan(0);
 
       const html = await (await handleEditProposedDatesPost(app)).text();
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(expected.added.length);
-      expect(html).toContain('No match anchor');
-      expect(html).toContain(`>${expected.added.length} dates added<`);
+      expect(stored?.proposedDates.map((d) => d.dateTimeRange.start))
+        .toEqual(expected.added);
+      expect(html)
+        .toContain('No match anchor');
+      expect(html)
+        .toContain(`>${expected.added.length} dates added<`);
     });
 
     test('grow sub-action: does not touch the store and re-renders the form at the larger row count', async () => {
@@ -345,9 +369,12 @@ describe('edit handlers', () => {
       const html = await (await handleEditProposedDatesPost(app)).text();
       const after = await app.store.get(session.id);
 
-      expect(after).toEqual(before);
-      expect(after?.proposedDates).toHaveLength(0);
-      expect((html.match(/name="weekday\[\]"/g) ?? []).length).toBe(2);
+      expect(after)
+        .toEqual(before);
+      expect(after?.proposedDates)
+        .toHaveLength(0);
+      expect((html.match(/name="weekday\[\]"/g) ?? []).length)
+        .toBe(2);
     });
 
     test('remove sub-action: does not touch the store and re-renders the form at the smaller row count', async () => {
@@ -368,8 +395,10 @@ describe('edit handlers', () => {
       const html = await (await handleEditProposedDatesPost(app)).text();
       const after = await app.store.get(session.id);
 
-      expect(after).toEqual(before);
-      expect((html.match(/name="weekday\[\]"/g) ?? []).length).toBe(1);
+      expect(after)
+        .toEqual(before);
+      expect((html.match(/name="weekday\[\]"/g) ?? []).length)
+        .toBe(1);
     });
 
     test('remove sub-action never trims the form below a single row', async () => {
@@ -387,7 +416,8 @@ describe('edit handlers', () => {
 
       const html = await (await handleEditProposedDatesPost(app)).text();
 
-      expect((html.match(/name="weekday\[\]"/g) ?? []).length).toBe(1);
+      expect((html.match(/name="weekday\[\]"/g) ?? []).length)
+        .toBe(1);
     });
 
     test('tuple branch with no rows: renders the inline empty-result message without writing to the store', async () => {
@@ -406,8 +436,10 @@ describe('edit handlers', () => {
       const html = await (await handleEditProposedDatesPost(app)).text();
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
-      expect(html).toContain('No dates were added');
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+      expect(html)
+        .toContain('No dates were added');
     });
 
     test('non-partial tuple submit: redirects to the edit page rather than rendering html', async () => {
@@ -424,10 +456,21 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
 
-      expect(response.status).toBe(302);
-      expect(response.headers.get('location')).toBe(`/edit/${session.id}`);
+      expect(response.status)
+        .toBe(302);
+      expect(response.headers.get('location'))
+        .toBe(`/edit/${session.id}`);
+      const expected = generateProposedDates({
+        anchorIso: '2026-09-02T16:00',
+        todayIso: FIXED_TODAY_ISO,
+        tuples: [{weekday: 1, hour: 20, minute: 0}],
+        existingStarts: [],
+      });
+      expect(expected.added.length)
+        .toBeGreaterThan(0);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates.length).toBeGreaterThan(0);
+      expect(stored?.proposedDates.map((d) => d.dateTimeRange.start))
+        .toEqual(expected.added);
     });
 
     test('non-partial grow action: redirects with no store change', async () => {
@@ -444,9 +487,11 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
 
-      expect(response.status).toBe(302);
+      expect(response.status)
+        .toBe(302);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
     });
 
     test('non-partial row-level invalid time: redirects rather than rendering html', async () => {
@@ -463,9 +508,11 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
 
-      expect(response.status).toBe(302);
+      expect(response.status)
+        .toBe(302);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
     });
 
     test('non-partial over-cap POST: redirects with the over-cap rejection', async () => {
@@ -484,9 +531,11 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
 
-      expect(response.status).toBe(302);
+      expect(response.status)
+        .toBe(302);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
     });
 
     test('tuple branch with mismatched-weekday-and-time-array lengths: 400 with structured error', async () => {
@@ -505,10 +554,13 @@ describe('edit handlers', () => {
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
 
-      expect(response.status).toBe(400);
+      expect(response.status)
+        .toBe(400);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
-      expect(html).toContain('Please provide a valid date and time');
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+      expect(html)
+        .toContain('Please provide a valid date and time');
     });
 
     test('tuple branch with existing proposedDates: dedupes against existingStarts and adds the survivors', async () => {
@@ -543,8 +595,10 @@ describe('edit handlers', () => {
       await handleEditProposedDatesPost(app);
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(1 + expected.added.length);
-      expect(stored?.proposedDates[0]?.id).toBe('pd-existing');
+      expect(stored?.proposedDates.map((d) => d.dateTimeRange.start))
+        .toEqual([existingDateIso, ...expected.added]);
+      expect(stored?.proposedDates[0]?.id)
+        .toBe('pd-existing');
     });
 
     test('row-action with an unknown sub-action value: throws 400', async () => {
@@ -560,7 +614,8 @@ describe('edit handlers', () => {
       await app.store.save(session);
 
       await expect(handleEditProposedDatesPost(app))
-        .rejects.toThrow('Please provide a valid date and time');
+        .rejects
+        .toThrow('Please provide a valid date and time');
     });
 
     test('TupleSchema validation failure (missing discriminator): renders an error and does not touch the store', async () => {
@@ -578,11 +633,15 @@ describe('edit handlers', () => {
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
 
-      expect(response.status).toBe(400);
+      expect(response.status)
+        .toBe(400);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
-      expect(html).toContain('Please provide a valid date and time');
-      expect((html.match(/name="weekday\[\]"/g) ?? []).length).toBe(1);
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+      expect(html)
+        .toContain('Please provide a valid date and time');
+      expect((html.match(/name="weekday\[\]"/g) ?? []).length)
+        .toBe(1);
     });
 
     test('tuple submit with a mismatched-bound-shape payload: 400 error (overrides default single-date fallthrough)', async () => {
@@ -600,10 +659,13 @@ describe('edit handlers', () => {
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
 
-      expect(response.status).toBe(400);
+      expect(response.status)
+        .toBe(400);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
-      expect(html).toContain('Please provide a valid date and time');
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+      expect(html)
+        .toContain('Please provide a valid date and time');
     });
 
     test('tuple submit with malformed weekday value (out-of-range 8): 400 with structured error', async () => {
@@ -620,9 +682,11 @@ describe('edit handlers', () => {
       await app.store.save(session);
 
       const response = await handleEditProposedDatesPost(app);
-      expect(response.status).toBe(400);
+      expect(response.status)
+        .toBe(400);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
     });
 
     test('rogue POST combining tuple branch and proposedDateTime: rejected with 400, no store write', async () => {
@@ -642,11 +706,15 @@ describe('edit handlers', () => {
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
 
-      expect(response.status).toBe(400);
+      expect(response.status)
+        .toBe(400);
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(0);
-      expect(stored?.status).toBe('Draft');
-      expect(html).toContain('Please provide a valid date and time');
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+      expect(stored?.status)
+        .toBe('Draft');
+      expect(html)
+        .toContain('Please provide a valid date and time');
     });
 
     test('cap of 14 distinct tuples: all 14 tuples are processed and the cap is not enforced on count emitted', async () => {
@@ -695,13 +763,16 @@ describe('edit handlers', () => {
         tuples,
         existingStarts: [],
       });
-      expect(expected.added.length).toBeGreaterThanOrEqual(14);
+      expect(expected.added.length)
+        .toBeGreaterThanOrEqual(14);
 
       await handleEditProposedDatesPost(app);
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates).toHaveLength(expected.added.length);
-      expect(stored?.proposedDates.length).toBeGreaterThanOrEqual(14);
+      expect(stored?.proposedDates.map((d) => d.dateTimeRange.start))
+        .toEqual(expected.added);
+      expect(stored?.proposedDates.length)
+        .toBeGreaterThanOrEqual(14);
     });
 
     test('row-action failure path with unknown sub-action non-partial: also throws 400', async () => {
@@ -718,7 +789,8 @@ describe('edit handlers', () => {
       await app.store.save(session);
 
       await expect(handleEditProposedDatesPost(app))
-        .rejects.toThrow('Please provide a valid date and time');
+        .rejects
+        .toThrow('Please provide a valid date and time');
     });
   });
 
@@ -735,9 +807,11 @@ describe('edit handlers', () => {
 
     const response = await handleEditProposedDatesPost(app);
 
-    expect(response.status).toBe(302);
+    expect(response.status)
+      .toBe(302);
     const stored = await app.store.get(session.id);
-    expect(stored?.proposedDates).toHaveLength(0);
+    expect(stored?.proposedDates)
+      .toHaveLength(0);
   });
 
   describe('partial (HX-Request) fragment rendering', () => {
@@ -1154,8 +1228,8 @@ describe('edit handlers', () => {
 
       const view = buildOwnTeamView(session, 'en-US');
 
-      expect(view.organizerPlayers)
-        .toHaveLength(1);
+      expect(view.organizerPlayers.map((p) => p.name))
+        .toEqual(['Voter']);
       expect(view.ownTeamResults)
         .toEqual([]);
     });

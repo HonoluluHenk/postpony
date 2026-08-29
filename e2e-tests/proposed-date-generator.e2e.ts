@@ -15,71 +15,86 @@ const TUPLES = [
 ] as const;
 
 test.describe('Proposed Date Generator', () => {
-  test('generates the matching datetimes, dedupes re-submissions, and keeps deletion in sync', async ({page, checkA11y}) => {
-    await EditPage.createSession(page, undefined, ANCHOR);
-    const editPage = new EditPage(page);
+  test('generates the matching datetimes, dedupes re-submissions, and keeps deletion in sync',
+    async ({
+             page,
+             checkA11y,
+           }) => {
+      await EditPage.createSession(page, undefined, ANCHOR);
+      const editPage = new EditPage(page);
 
-    await expect(editPage.status)
-      .toContainText('Draft');
+      await expect(editPage.status)
+        .toContainText('Draft');
 
-    // Open generator form: a11y green before any submission so regressions in
-    // the new section surface first.
-    await checkA11y();
+      // Open generator form: a11y green before any submission so regressions in
+      // the new section surface first.
+      await checkA11y();
 
-    await editPage.generateProposedDates([...TUPLES]);
+      await editPage.generateProposedDates([...TUPLES]);
 
-    // Success toast carries the localized, server-computed count. Reading the
-    // number from the rendered text grounds the subsequent list assertions in
-    // the same value the handler actually emitted — "Added by user" rather
-    // than "any number > 0".
-    const successToast = page.getByRole('alert')
-      .filter({hasText: /\d+ dates? added/});
-    await expect(successToast)
-      .toBeVisible();
-    const toastText = (await successToast.textContent()) ?? '';
-    const toastMatch = toastText.match(/(\d+) dates? added/);
-    expect(toastMatch).not.toBeNull();
-    const addedCount = Number(toastMatch![1]);
-    expect(Number.isInteger(addedCount)).toBe(true);
-    expect(addedCount).toBeGreaterThan(0);
+      // Success toast carries the localized, server-computed count. Reading the
+      // number from the rendered text grounds the subsequent list assertions in
+      // the same value the handler actually emitted — "Added by user" rather
+      // than "any number > 0".
+      const successToast = page.getByRole('alert')
+        .filter({hasText: /\d+ dates? added/});
+      await expect(successToast)
+        .toBeVisible();
+      const toastText = (await successToast.textContent()) ?? '';
+      const toastMatch = /(\d+) dates? added/.exec(toastText);
+      expect(toastMatch)
+        .not
+        .toBeNull();
+      const addedCount = Number(toastMatch?.[1]);
+      expect(Number.isInteger(addedCount))
+        .toBe(true);
+      expect(addedCount)
+        .toBeGreaterThan(0);
 
-    // Generated dates appear in the regular #proposed-date-list. The toast
-    // count must match the visible list count exactly so a regression that
-    // drops datetimes on the floor (or duplicates them) fails this test.
-    const items = editPage.proposedDateList.getByRole('listitem');
-    await expect(items).toHaveCount(addedCount);
+      // Generated dates appear in the regular #proposed-date-list. The toast
+      // count must match the visible list count exactly so a regression that
+      // drops datetimes on the floor (or duplicates them) fails this test.
+      const items = editPage.proposedDateList.getByRole('listitem');
+      await expect(items)
+        .toHaveCount(addedCount);
 
-    const displays = await items.allTextContents();
-    expect(displays).toHaveLength(addedCount);
-    // Each row must render an actual datetime in the en-US locale shape —
-    // not just whatever's left over from another element.
-    for (const text of displays) {
-      expect(text).toMatch(/\d{1,2}:\d{2}\s*(AM|PM)/i);
-    }
-    // Two equal proposals would surface as duplicate text — fail loudly.
-    expect(new Set(displays).size).toBe(displays.length);
+      const displays = await items.allTextContents();
+      expect(displays)
+        .toHaveLength(addedCount);
+      // Each row must render an actual datetime in the en-US locale shape —
+      // not just whatever's left over from another element.
+      for (const text of displays) {
+        expect(text)
+          .toMatch(/\d{1,2}:\d{2}\s*(AM|PM)/i);
+      }
+      // Two equal proposals would surface as duplicate text — fail loudly.
+      expect(new Set(displays).size)
+        .toBe(displays.length);
 
-    // Status flips Draft → Voting once a date is on the list.
-    await expect(editPage.status)
-      .toContainText('Voting');
+      // Status flips Draft → Voting once a date is on the list.
+      await expect(editPage.status)
+        .toContainText('Voting');
 
-    await checkA11y();
+      await checkA11y();
 
-    // Re-submitting the same tuples dedupes against existingStarts: no DB
-    // write, list unchanged, inline empty-result message rendered, no toast.
-    await editPage.generateProposedDates([...TUPLES]);
-    await expect(page.getByText('No dates were added.'))
-      .toBeVisible();
-    await expect(successToast)
-      .toHaveCount(0);
-    await expect(items).toHaveCount(addedCount);
-    const displaysAfter = await items.allTextContents();
-    expect(displaysAfter).toEqual(displays);
+      // Re-submitting the same tuples dedupes against existingStarts: no DB
+      // write, list unchanged, inline empty-result message rendered, no toast.
+      await editPage.generateProposedDates([...TUPLES]);
+      await expect(page.getByText('No dates were added.'))
+        .toBeVisible();
+      await expect(successToast)
+        .toHaveCount(0);
+      await expect(items)
+        .toHaveCount(addedCount);
+      const displaysAfter = await items.allTextContents();
+      expect(displaysAfter)
+        .toEqual(displays);
 
-    // Generated Proposed Dates still flow through the existing deletion
-    // buttons + confirm dialog — covering issue 03's "no regression on
-    // existing list controls" expectation.
-    await editPage.deleteProposedDate(0);
-    await expect(items).toHaveCount(addedCount - 1);
-  });
+      // Generated Proposed Dates still flow through the existing deletion
+      // buttons + confirm dialog — covering issue 03's "no regression on
+      // existing list controls" expectation.
+      await editPage.deleteProposedDate(0);
+      await expect(items)
+        .toHaveCount(addedCount - 1);
+    });
 });
