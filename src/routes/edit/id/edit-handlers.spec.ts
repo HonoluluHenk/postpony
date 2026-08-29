@@ -969,6 +969,93 @@ describe('edit handlers', () => {
         .toBe('pd-1');
     });
 
+    test('confirming a clashing date renders the inline warning and moves to Confirmed', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [
+          aProposedDate({
+            id: 'pd-1',
+            votableByOpponent: true,
+            clashes: {home: [{opponent: 'Thun', start: '2025-09-01T18:00'}], away: []},
+          }),
+        ],
+      });
+      const app = createApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const html = await (await handleConfirmDatePost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Confirmed');
+      expect(stored?.confirmedProposedDateId)
+        .toBe('pd-1');
+      expect(html)
+        .toContain('A scheduled game clashes with this date.');
+    });
+
+    test('confirming a clash-free date renders no warning', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [
+          aProposedDate({
+            id: 'pd-1',
+            votableByOpponent: true,
+            clashes: {home: [], away: []},
+          }),
+        ],
+      });
+      const app = createApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const html = await (await handleConfirmDatePost(app)).text();
+
+      expect(html)
+        .not
+        .toContain('A scheduled game clashes with this date.');
+    });
+
+    test('judges the warning from the date found via confirmedProposedDateId, not the query', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [
+          aProposedDate({
+            id: 'pd-clashing',
+            votableByOpponent: true,
+            clashes: {home: [{opponent: 'Thun', start: '2025-09-01T18:00'}], away: []},
+          }),
+          aProposedDate({
+            id: 'pd-clean',
+            votableByOpponent: true,
+            clashes: {home: [], away: []},
+          }),
+        ],
+      });
+      const app = createApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-clean'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const html = await (await handleConfirmDatePost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.confirmedProposedDateId)
+        .toBe('pd-clean');
+      expect(html)
+        .not
+        .toContain('A scheduled game clashes with this date.');
+    });
+
     test('renders the partial with the reopen control and no confirm control when partial', async () => {
       const session = aSession({
         status: 'Voting',

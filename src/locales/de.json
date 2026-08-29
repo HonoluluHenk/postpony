@@ -9,6 +9,7 @@
   "change_match_details_title": "Spieldaten ändern",
   "change_via_scrape": "Spiel stattdessen auf click-tt.ch suchen",
   "clash_check_clean": "Spielplan geprüft, keine Überschneidungen",
+  "clash_check_confirm_warning": "Ein geplantes Spiel überschneidet sich mit diesem Datum.",
   "clash_check_not_checked": "Nicht geprüft",
   "clash_check_refresh": "Spielplanprüfung aktualisieren",
   "clash_check_refresh_failed": "Spielplanprüfung konnte nicht aktualisiert werden — die vorherigen Ergebnisse werden angezeigt.",

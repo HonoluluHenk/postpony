@@ -4,8 +4,8 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Confirming a clashing date shows an inline warning
-- [ ] Confirmation still succeeds and the Postponement moves to Confirmed
-- [ ] Confirming a clash-free date shows no warning
+- [x] Confirming a clashing date shows an inline warning
+- [x] Confirmation still succeeds and the Postponement moves to Confirmed
+- [x] Confirming a clash-free date shows no warning

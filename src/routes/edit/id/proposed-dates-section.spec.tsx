@@ -222,6 +222,23 @@ describe('ProposedDatesSection clash info', () => {
 
     expect(html).not.toContain('refresh-clashes');
   });
+
+  it('renders the confirm clash warning when the flag is set', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      status: 'Confirmed',
+      confirmClashWarning: true,
+    }));
+
+    expect(html).toContain('A scheduled game clashes with this date.');
+    expect(html).toContain('role="alert"');
+  });
+
+  it('renders no confirm clash warning by default', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), status: 'Confirmed'}));
+
+    expect(html).not.toContain('A scheduled game clashes with this date.');
+  });
 });
 
 describe('ProposedDatesSection generator block', () => {

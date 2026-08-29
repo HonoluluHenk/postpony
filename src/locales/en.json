@@ -9,6 +9,7 @@
   "change_match_details_title": "Change Match Details",
   "change_via_scrape": "Find the match on click-tt.ch instead",
   "clash_check_clean": "Schedule checked, no clashes",
+  "clash_check_confirm_warning": "A scheduled game clashes with this date.",
   "clash_check_not_checked": "Not checked",
   "clash_check_refresh": "Refresh schedule check",
   "clash_check_refresh_failed": "Couldn't refresh the schedule check — showing the previous results.",
