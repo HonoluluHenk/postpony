@@ -1,13 +1,17 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../app';
+import type { DateClashes } from '../../lib/clashes';
 import type { Vote, VoteTallyItem } from '../../lib/models';
+import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
+import type { AppLocale, TranslateFn } from '../../locales';
 import { pageLayout } from '../layouts/main';
 import { VotePlayerResults } from '../partials/vote-player-results';
 import type { Team } from './join-utils';
 
 export interface VotePageDate extends VoteTallyItem {
   currentVote: string;
+  clashes?: DateClashes;
 }
 
 export interface PlayerVoteRow {
@@ -24,8 +28,39 @@ export interface VotePageProps extends ViewContext {
   playerName: string;
   proposedDates: readonly VotePageDate[];
   playerVoteRows: readonly PlayerVoteRow[];
+  clashCheckable: boolean;
   updated?: boolean;
   globalError?: string;
+}
+
+// ponytail: ClashInfo duplicates the edit page's renderer (proposed-dates-section.tsx);
+// not shared to keep the join route free of edit-route imports while the edit
+// route's refresh action is being developed in parallel.
+function clashTime(start: string, locale: AppLocale): string {
+  return formatLocalizedDateTime(parseIsoToPlainDateTime(start), locale, {timeStyle: 'short'});
+}
+
+function ClashInfo(props: {clashes?: DateClashes; clashCheckable: boolean; t: TranslateFn; locale: AppLocale}): JSX.Element {
+  const {clashes, clashCheckable, t, locale} = props;
+  if (clashes === undefined) {
+    // ponytail: a Postponement without team identities can never be checked
+    // (hand-entered match); one with identities but no clash data means the
+    // last check failed — render nothing, matching "checked" silence.
+    return clashCheckable ? <></> : <p class="chip outline mt-2">{t('clash_check_not_checked')}</p>;
+  }
+  const homeLines = clashes.home.map((clash) =>
+    t('clash_line_home', {time: clashTime(clash.start, locale), opponent: clash.opponent}));
+  const awayLines = clashes.away.map((clash) =>
+    t('clash_line_away', {time: clashTime(clash.start, locale), opponent: clash.opponent}));
+  if (homeLines.length === 0 && awayLines.length === 0) {
+    return <p class="chip outline mt-2">{t('clash_check_clean')}</p>;
+  }
+  return (
+    <>
+      {homeLines.map((line) => <p class="chip outline mt-2">{line}</p>)}
+      {awayLines.map((line) => <p class="chip outline mt-2">{line}</p>)}
+    </>
+  );
 }
 
 export function VotePage(props: VotePageProps): JSX.Element {
@@ -59,6 +94,12 @@ export function VotePage(props: VotePageProps): JSX.Element {
             {props.proposedDates.map((pd) => (
               <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
                 <legend>{pd.display}</legend>
+                <ClashInfo
+                  clashes={pd.clashes}
+                  clashCheckable={props.clashCheckable}
+                  t={props.t}
+                  locale={props.locale}
+                />
                 <label class="radio">
                   <input
                     type="radio"

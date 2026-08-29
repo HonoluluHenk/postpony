@@ -267,6 +267,188 @@ describe('renderVoteStep', () => {
   });
 });
 
+describe('renderVoteStep clash info', () => {
+  test('renders one line per affected team with the localized time and opponent', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      homeTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't1'},
+      guestTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't2'},
+      players: [player],
+      proposedDates: [
+        aProposedDate({
+          votableByOpponent: true,
+          clashes: {
+            home: [{opponent: 'Thun', start: '2025-09-01T17:00'}],
+            away: [{opponent: 'Burgdorf', start: '2025-09-01T21:30'}],
+          },
+        }),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('Home: 5:00 PM vs Thun');
+    expect(body)
+      .toContain('Away: 9:30 PM vs Burgdorf');
+  });
+
+  test('renders the 24-hour localized clash time for de-CH', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      homeTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't1'},
+      guestTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't2'},
+      players: [player],
+      proposedDates: [
+        aProposedDate({
+          votableByOpponent: true,
+          clashes: {home: [{opponent: 'Thun', start: '2025-09-01T17:00'}], away: []},
+        }),
+      ],
+    });
+    const app = createApp('de-CH');
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('Heim: 17:00 gegen Thun');
+  });
+
+  test('renders "checked, no clashes" when a check ran clean', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      homeTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't1'},
+      guestTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't2'},
+      players: [player],
+      proposedDates: [
+        aProposedDate({
+          votableByOpponent: true,
+          clashes: {home: [], away: []},
+        }),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('Schedule checked, no clashes');
+  });
+
+  test('renders "not checked" for a hand-entered match without team identities', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votableByOpponent: true})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('Not checked');
+  });
+
+  test('renders nothing when the check failed (identities exist, no clash data)', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      homeTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't1'},
+      guestTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't2'},
+      players: [player],
+      proposedDates: [aProposedDate({votableByOpponent: true})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .not
+      .toContain('Not checked');
+    expect(body)
+      .not
+      .toContain('Schedule checked, no clashes');
+    expect(body)
+      .not
+      .toContain('vs ');
+  });
+
+  test('clash lines do not disturb the voting radios', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      homeTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't1'},
+      guestTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't2'},
+      players: [player],
+      proposedDates: [
+        aProposedDate({
+          votableByOpponent: true,
+          clashes: {home: [{opponent: 'Thun', start: '2025-09-01T17:00'}], away: []},
+        }),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('name="vote-proposed-date-1"');
+    expect(body)
+      .toContain('value="Yes"');
+    expect(body)
+      .toContain('value="Maybe"');
+    expect(body)
+      .toContain('value="No"');
+  });
+});
+
 describe('renderConfirmedInfo', () => {
   test('renders the confirmed date chip and hides the reopen count when it is zero', async () => {
     const session = aSession({
