@@ -1,120 +1,108 @@
 Status: ready-for-agent
 
-# Spec — Helper to Generate Proposed Dates
+# Spec — Generator: fixed weekday grid, fill-to-generate
+
+Supersedes the earlier generator spec (free-form add/remove rows). The pure generator module, locale time helper, tuple POST branch and page object from that round are implemented and committed; only the row model and its handler/UI plumbing change here.
 
 ## Problem Statement
 
-As a Postponement organizer (match owner), I need to propose a small grid of candidate re-match slots — one per training night across the next few weeks — so that my team and the opponent can vote. Today the edit page accepts one Proposed Date at a time; for a full slate I must type and submit each datetime individually, repeating the picker interaction for every slot. I want to declare a pattern (e.g. "Mondays 20:00, Wednesdays 19:30") once and have the app propose every matching slot inside the right planning window.
+As a Postponement organizer, I want to propose a weekly slate of candidate re-match slots in one step. The current generator asks me to build the slate row by row: add a row, pick a weekday, type a time, repeat. For the common case — one candidate time per day across the week — that row management is overhead, and a free-form row count invites slates that drift from my weekly rhythm. I want a fixed grid: every weekday Monday through Sunday is already there, I fill the times I want, and the empty days are simply skipped.
 
 ## Solution
 
-The edit page's "Proposed Dates" section gains a **Generate** block above the existing single-date input. The organizer adds up to 14 weekday+time rows (more than one per weekday allowed), submits once, and the app appends to the Postponement every datetime that matches a row inside the planning window — anchored on the postponed Match's `originalMatchDateTime` (per the glossary entry for *Match* and ADR-0017), bounded 8 weeks back and 4 weeks forward, dropping past dates.
+The "Generate Proposed Dates" block renders **one fixed row per weekday, Monday through Sunday** (7 rows). Each row is a static weekday label plus a time input that starts **empty**. The organizer fills the time on the days they want proposed and clicks **Generate**. Only rows with a filled time participate in generation; empty rows are skipped. Rows cannot be added, removed, or re-assigned to a different weekday. The weekday order is the preset; the organizer's input is only the time per day.
 
-Generated Proposed Dates reuse the existing domain operation `PostponementRules.proposeDate()`. Generation is idempotent on duplicate datetimes (silently skipped), single-shot (no preview step), hidden when the Postponement is `Confirmed` (consistent with today's add-form behaviour), and `<=14` rows are capped (client and server).
+Generation stays server-driven: clicking Generate POSTs the filled times, the server generates the matching Proposed Dates inside the planning window (anchored on the Match's `originalMatchDateTime`, bounded 8 weeks back / 4 weeks forward, past dates dropped), and swaps the section. The submitted times round-trip through the response so they survive both error and success re-renders.
 
 ## User Stories
 
-1. As a Postponement owner, I want to provide a list of weekday+time patterns, so that I can propose a typical training-night slate without typing each datetime one by one.
-2. As a Postponement owner, I want the safe planning window to be relative to the match I'm postponing, so that proposed dates stay realistic.
-3. As a Postponement owner, I want the planner to skip dates already proposed, so that I don't accidentally create duplicate rows.
-4. As a Postponement owner, I want the planner to never produce a date in the past, so that voters never see obsolete options.
-5. As a Postponement owner, I want to enter more than one slot per weekday (e.g. early and late practice), so that my team's varied schedules are represented.
-6. As a Postponement owner, I want up to 14 patterns per submission, so that I can model a full week's worth of options in one step.
-7. As a Postponement owner, I want a confirmation count ("12 dates added") after the generate, so that I know how many rows landed.
-8. As a Postponement owner, I want an inline message when nothing was added (all duplicates, all in the past, or all invalid), so that I can correct my input rather than guess whether anything happened.
-9. As a Postponement owner, I want the Generate block to disappear once the Postponement is `Confirmed`, so that the affordances match the lifecycle state.
-10. As a Postponement owner, I want to see the generator next to the manual single-add field, so that I can mix batch generation with one-off tweaks.
-11. As a Postponement owner in `de-CH`, I want weekday dropdown labels in German (`Mo, Di, Mi, …`), so the picker matches my locale.
-12. As a Postponement owner in `en-US`, I want the time input to take `hh:mm aa` (12-hour with am/pm), so that my entry matches the rest of PostPony (ADR-0016).
-13. As a Postponement owner on a Swiss timezone, I want impossible wall-times (`Sun 02:30` on the spring-forward Sunday) to be rejected at the row level, so that the strict ISO parser doesn't silently balance them (mirrors single-add today via `Temporal.PlainDateTime.from`).
-14. As a Postponement owner whose `originalMatchDateTime` is missing, I want the planner to fall back to `[today, today + 4w]` and surface a warning, so that the feature still works for edge-case Postponements.
-15. As a participant (voter), I want the generated Proposed Dates to appear in the same list with the same removal / votable-by-opponent toggles as hand-added ones, so that voting is one consistent flow (ADR-0014 / 0019).
-16. As a screen-reader user, I want each generator row to be labelled and the row-removal / row-add controls to have accessible names, so that I can drive the UI without a pointer.
-17. As a developer, I want the generator logic to be a pure function over the existing `ProposedDate` model, so that corner-case math is unit-testable without a Hono context.
-18. As a developer, I want the new POST branch to live in the same handler as the existing single-date POST, so that there is only one route to maintain and only one place to thread owner-auth.
-19. As a developer, I want the generator's locale strings added to `en.json` and `de.json`, fr-CH/it-CH inheriting English (ADR-0016 explicit decision).
+1. As a Postponement organizer, I want the generator to show one row per weekday Monday through Sunday, so that every day of the week is available without any setup.
+2. As a Postponement organizer, I want the weekday of each row to be fixed and non-editable, so that I cannot accidentally mislabel a day.
+3. As a Postponement organizer, I want no add-row / remove-row controls, so that the grid can't grow out of sync with the week.
+4. As a Postponement organizer, I want every time input to start empty, so that I deliberately choose which days to propose.
+5. As a Postponement organizer, I want to fill only the days I care about and leave the rest blank, so that I don't have to delete default rows.
+6. As a Postponement organizer, I want empty-time rows to be ignored by generation, so that blank days produce no dates.
+7. As a Postponement organizer, I want a message and no writes when I submit with every row empty, so that I know nothing happened instead of guessing.
+8. As a Postponement organizer, I want a row with an invalid (non-empty, unparseable) time to fail that row only — with the error shown under the offending input and all other rows preserved — so that I can correct one value without re-entering the rest.
+9. As a Postponement organizer in `de-CH`, I want to type times in `HH:mm`, so that entry matches my locale (ADR-0016).
+10. As a Postponement organizer in `en-US`, I want to type times in `hh:mm aa`, so that entry matches my locale (ADR-0016).
+11. As a Postponement organizer, I want a confirmation count ("N dates added") after a successful generate, so that I know how many rows landed.
+12. As a Postponement organizer, I want generation to skip dates already proposed (idempotent, silently), so that re-submitting doesn't create duplicates.
+13. As a Postponement organizer, I want the generator to never produce a date in the past, so that voters never see obsolete options.
+14. As a Postponement organizer, I want my submitted times to remain in the form after a successful generate, so that I can tweak and re-submit without retyping.
+15. As a Postponement organizer, I want the generated Proposed Dates to appear in the same list with the same votable-by-opponent / removal controls as hand-added ones, so that voting stays one consistent flow.
+16. As a Postponement organizer whose `originalMatchDateTime` is missing, I want the planner to fall back to `[today, today + 4 weeks]` and surface a warning, so that generation still works for edge-case Postponements.
+17. As a Postponement organizer, I want the Generate block to disappear once the Postponement is `Confirmed`, so that the affordances match the lifecycle state.
+18. As a screen-reader user, I want each weekday row labelled and its time input associated with that label, so that I can drive the grid without a pointer.
+19. As a developer, I want the generator logic to remain a pure function over the existing `ProposedDate` model, so that corner-case math stays unit-testable without a Hono context.
+20. As a developer, I want the tuple POST branch to live in the same handler as the existing single-date POST, so that there is only one route and one owner-auth thread.
+21. As a developer, I want the fixed-grid generator to need no client-side JavaScript, so that the row model stays server-rendered and testable.
 
 ## Implementation Decisions
 
-### Pure generator module
+### Fixed weekday grid (UI)
 
-- A new pure module exposes a single function `generateProposedDates({ anchorIso, todayIso, tuples, existingStarts }) → { added: string[], skipped: number }`. Inputs and outputs are ISO strings (matching what `proposeDate()` already stores). Non-determinism is funneled through the caller's `now` (no clock hidden inside the module).
-- Walking the window: for each tuple `(weekday, hh, mm)`, start at `max(today, anchor − 8 weeks)`, advance by `7 days` while `<= anchor + 4 weeks`. Each candidate is a `Temporal.PlainDateTime`, validated by the strict-ISO `Temporal.PlainDateTime.from` round-trip (existing `temporal-utils.ts:91-94`) so DST-impossible wall-times are filtered naturally.
-- Dedupe at minute precision against `existingStarts`; duplicates contribute to `skipped`, never to `added`. Equal weekday tuples at **different times** both produce independent dates.
-- Anchor fallback: if `anchorIso` is `undefined`, treat the lower bound as the caller's `today` and the upper bound as `today + 4 weeks`. The caller surfaces a user-facing warning ("No match anchor — using today").
+- The generator form renders exactly 7 rows. Row `i` (0-based) carries weekday `i+1` in ISO/Temporal convention (1=Monday .. 7=Sunday), shown as the locale's short weekday label from the existing weekday-label mapping. The label is static text, not a `<select>`.
+- Each row has one time text input, rendered **empty** (no pre-filled value). Placeholder, `lang` and parse grammar match the existing single-date field (ADR-0016): `HH:mm` for 24h locales, `hh:mm aa` for `en-US`.
+- No add-row / remove-row buttons, no row-count state. `MAX_TUPLES` (14) remains the server-side cap as a security guard; the fixed 7-row form can never reach it, so it is no longer exercised by the UI.
+- The block stays gated on `status !== 'Confirmed'`, identical to today.
 
-### Locale-aware time-input helper
+### Submit contract
 
-- A small helper `parseLocaleTimeOnly(value, locale)` returns `{ hour, minute } | undefined`, reusing the locale grammar already encoded in `parseLocaleDateTime` for the time part. Reuses `localeConfigs[locale].clock24` so 24h and 12h (`am`/`pm`) inputs share a code path. fr-CH/it-CH continue to render in 24-hour form per ADR-0016's format table.
+- The only server round-trip is the Generate submit. The request carries a tuple-branch discriminator plus a **`time[]` array only** — `weekday[]` is dropped. The server maps `time[i]` to weekday `i+1`; it never trusts a client-supplied weekday.
+- Time parsing reuses the existing locale-aware time-only helper. Empty strings are not errors: an empty row is **skipped** at the parse boundary. A non-empty string that fails the locale grammar marks that row's index as invalid.
+- If every row is empty (or every non-empty row is invalid), no tuples reach the generator: inline message, no DB write.
+- The submitted `time[]` values round-trip through the re-render for both the success and the error partial, so the organizer's input survives the swap. Success shows the localized count toast; the invalid case marks the offending row (`aria-invalid` + inline error under that row's input) and preserves the other rows.
 
-### Handler change
+### Domain layer
 
-- The existing single-date POST handler receives a discriminator: when the request indicates the generator branch (e.g. a `generate=tuple` field), it parses parallel `weekday[]` and `time[]` arrays, validates each row (cap 14), runs the generator, and loops `proposeDate()` per added datetime. The branches share pre- and post-processing: owner-password enforcement, locale, partial-vs-full render, success-toast injection.
-- Single-date POST behaviour is unchanged; existing tests still cover it.
+- No change to the pure generator module: it keeps taking `(weekday, hh, mm)` tuples and walking the window. Empty-time filtering happens at the handler's parse boundary, before tuples are built.
+- No change to `proposeDate`, no new `Postponement` field, no DB schema change — generation remains a *use* of existing fields.
+- The `action=grow` / `action=remove` branch and the row-count plumbing in the tuple handler are removed.
 
-### UI change
+### Locale
 
-- A new `<form>` (HTMX; same `hx-target="#proposed-dates-management"`) renders **above** the existing single-date form, gated by `status !== 'Confirmed'` (mirrors the single-add block's rule). One submit button. Each row: a `<select>` for weekday (values from `weekdays_short` per locale), a `<input type="text">` for time (placeholder, `lang`, and parse grammar matching the existing single-date field — ADR-0016), and a remove-row button. An "Add weekday" button grows the rowset up to the cap.
-- Initial render ships with one row; subsequent rows are added / removed by rewriting the form during a partial swap (no client-side JS state).
-- The success toast on `n >= 1` carries the localized count message; on `n === 0` an inline validator message is shown, no toast, no DB write.
+- Existing keys `proposed_dates_generate_add_row` and `proposed_dates_generate_remove_row` are removed from `en.json` / `de.json` (fr-CH/it-CH inherit per ADR-0016).
+- `proposed_dates_generate_help` is reworded to describe the fill-to-generate grid.
+- Weekday short labels come from the existing locale weekday mapping; no new label keys.
 
-### Locale keys (added in `en.json`, mirrored in `de.json`; fr-CH/it-CH inherit per ADR-0016)
+### Documentation
 
-- `proposed_dates_generate_section` — heading
-- `proposed_dates_generate_help` — helper text under heading
-- `proposed_dates_generate_button` — submit
-- `proposed_dates_generate_added` — toast with `count` param
-- `proposed_dates_generate_none` — inline empty-result message
-- `proposed_dates_generate_add_row` — add-row button
-- `proposed_dates_generate_remove_row` — row remove button
-- `proposed_dates_generate_no_anchor` — fallback warning
-- `weekdays_short` — array of seven short weekday labels
-
-### What we deliberately do NOT introduce
-
-- No new ADR (the reasoning is recorded in tests + ponytail comments).
-- No new `Postponement` field — generation is a *use* of existing fields, not new state.
-- No new DB schema, no new tables.
-- No preview step, no modal, no drag-and-drop date chips.
+- A small ADR records the fixed-grid decision (locked weekdays, no add/remove, fill-to-generate) with its alternative (free-form rows, client-side row management) and why the grid won.
+- A glossary entry is added for the generate interaction, consistent with the domain vocabulary (Match anchor, planning window, Proposed Date).
 
 ## Testing Decisions
 
 ### What a good test looks like
 
-- Test **external behaviour** only: the pure generator's output list given inputs; the rendered HTML's structural contract (presence / absence / order of the generator block); the POST handler's response semantics (success toast, inline error, no DB write on zero-result); the e2e flow's user-visible result (rows appended, status transition, deletion of unwanted rows still works).
-- Implementation details — private helper names, internal reducer state, exact class layout of components — are not asserted.
+- Test **external behaviour** only: the rendered HTML contract (7 rows, static weekday labels, empty times, no add/remove controls, presence/absence by status), the handler's response semantics (empty rows skipped, invalid row flagged and others preserved, all-empty no-write), and the e2e flow's user-visible result (filled days land, blank days produce nothing, toast count, status transition). Private helpers and internal reducer state are not asserted.
 
 ### Module-by-module test surface
 
-1. **Pure generator** — vitest unit. Cases: anchor in the present → window produces the expected ISO list; past dates dropped on either edge of the window; weekday tuples at distinct times both yield rows; duplicate-of-existing silenced via `skipped`; DST Sunday impossible times excluded; cap of 14 tuples yields exactly 14 datetimes; anchor missing → fallback window; empty tuple list → empty `added`, `skipped === 0`. Prior art: `src/lib/postponement.ts` and its spec — same test shape (small spec, factory `now`).
-2. **Section component** — vitest browser. Cases: generator block renders above the single-date block when status is `Voting` or `Draft` and absent when status is `Confirmed`; row-cap 14 enforced on add; toast count renders on `success`; inline error renders on `error`. Prior art: existing `proposed-dates-section.spec.tsx` (read state for `Confirmed` reused).
-3. **POST handler** — vitest unit, mirroring the existing pattern used in `edit-handlers.spec.ts` (minimal context). Cases: tuple branch with valid rows persists the expected number of ProposedDates; zero-result path does not touch the store; cap 14 enforced server-side; rogue POST with `generate=tuple` + manual `proposedDateTime` is rejected. Existing single-date cases remain green.
-4. **Locale helper (`parseLocaleTimeOnly`)** — vitest unit, colocated with the generator spec. Cases: 24h parses; 12h parses; 12h without `am/pm` rejected; seconds ignored; out-of-range hour/minute rejected.
-5. **E2E happy path** — Playwright, Page Object (`EditPage`). Cases: owner fills two weekday+time rows, submits, sees the generated dates in `#proposed-date-list`, sees the success toast with the count, sees status chip transition to `Voting`; can delete one of the generated rows the same way as a hand-entered row; generator block is hidden after reopen + re-confirm cycle. Prior art: `e2e-tests/postponement-editing.e2e.ts`, `focus-management.e2e.ts`.
+1. **Pure generator** — vitest unit. **Unchanged**: the module does not change, its existing spec stays green and is the seam for the window math, dedupe, DST filtering and anchor fallback.
+2. **Section component** — vitest browser. Updated: renders exactly 7 rows Monday..Sunday with static labels and empty time inputs; no add/remove controls; block absent when `Confirmed`. Prior art: existing `proposed-dates-section.spec.tsx`.
+3. **POST handler** — vitest unit, mirroring the existing `edit-handlers.spec.ts` pattern. Updated: `time[]`-only tuple branch persists the expected count; empty rows are skipped; a row with a bad time returns a per-row error and preserves the other values; all-empty submits nothing to the store; cap 14 still enforced server-side; rogue POST mixing the tuple branch with the single-date field is rejected. Existing single-date cases remain green.
+4. **Locale** — translations spec updated for the removed `add_row` / `remove_row` keys and the reworded `generate_help`.
+5. **E2E happy path** — Playwright, Page Object (`EditPage`). Updated: owner fills two weekday rows (leaving others blank), generates, sees the two generated dates in the list, sees the success toast with count 2, sees status chip transition to `Voting`; a blank day produced nothing. Prior art: `e2e-tests/proposed-date-generator.e2e.ts`.
 
 ### Seams chosen and why
 
-- **Highest broad seam**: e2e covers the full path (form render → fill → submit → swap → list render). One seam for "the user did the thing and saw N rows."
-- **Mid seam**: vitest browser spec covers the HTML contract independently of the backend (asserts DOM order, presence / absence, label semantics). Allows asserting behaviour that the e2e would be flaky about (e.g. Confirmed-state absence).
-- **Lowest seam**: pure unit spec covers the math (anchor fallback, DST, dedupe, cap). Lets the corner cases be exhaustive without paying for browser launches.
-- **No new fixtures, no new harness.** Existing builders and `SessionFixture` are sufficient.
+- Same four-layer seam set as the existing generator, unchanged in shape: e2e (full user path), vitest browser (HTML contract, independent of backend), vitest unit (handler parse/filter semantics), pure unit (window math). No new seams, no new fixtures. The only behavioural gap that closes is at the handler boundary (empty-skip, per-row error), which is why that spec grows.
 
 ## Out of Scope
 
 - Schema changes to `Postponement`. The existing `proposedDates` array is the only sink.
 - Recurring-rule storage (no `RRULE`-like persistence). Each generated Proposed Date is an independent row.
-- Cross-month patterns ("first Monday of each month"). Day-by-day stepping is enough.
-- Time-zone selection per tuple. Wall-clock in `Europe/Zurich` matches today's calendar semantics; storage remains zone-less (per existing `PlainDateTime` representation).
-- UI for editing generated dates as a group. They flow through the existing list controls.
-- Notifications or reminders to participants on generation.
-- ADR writeup. Ponytail comments and tests are the documentation surface.
-- Preview-then-confirm two-step interaction.
+- Editing the weekday of a row, or changing the row count. The Monday–Sunday grid is fixed.
+- Pre-filled default times (e.g. "20:00"). Times start empty by design.
+- Client-side row management. Row add/remove was considered and rejected; the grid is server-rendered.
+- Cross-month patterns, time-zone selection per row, preview-then-confirm, notifications.
+- Any change to the single-date add flow.
 
 ## Further Notes
 
-- The generator's behaviour at the DST boundary is a property of `Temporal.PlainDateTime` strict-ISO parsing — no special handling is added; this is intentional consistency with single-add today.
-- Cap = 14 sits comfortably above "two slots per weekday × 7 weekdays" while keeping the form smaller than the screen at typical viewport widths. Both client (HTMX-rendered count) and server (validation) enforce it; the server's enforcement is the security-relevant one.
-- Anchor fallback is the spec-defined behaviour, not a workaround. Postponements without `originalMatchDateTime` (possible in unusual creation flows) still get a useful generator.
-- The discriminator field name (`generate=tuple`) is implementation detail; it's named here only to anchor the handler discussion.
+- The generator's window behaviour (anchor fallback, DST-boundary strict-ISO filtering, dedupe at minute precision) is inherited unchanged from the committed module.
+- The "preset" is the fixed Monday–Sunday grid itself; the organizer's per-day times are the input. This is the reverse of the earlier free-form model.
+- The committed `MAX_TUPLES = 14` stays exported and enforced server-side; it is a guard, not a UI target, once the grid is fixed at 7 rows.
 
 ## Comments
