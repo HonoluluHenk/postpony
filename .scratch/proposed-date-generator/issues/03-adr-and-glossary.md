@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (fixed weekday grid + time-only submit)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] ADR added: fixed weekday grid decision, the rejected alternatives (free-form rows, client-side row management, pre-filled times), and why the grid won; follows the repo's ADR format and numbering.
-- [ ] Glossary entry added for the generate interaction in the domain glossary, consistent with existing terms and free of implementation details.
+- [x] ADR added: fixed weekday grid decision, the rejected alternatives (free-form rows, client-side row management, pre-filled times), and why the grid won; follows the repo's ADR format and numbering.
+- [x] Glossary entry added for the generate interaction in the domain glossary, consistent with existing terms and free of implementation details.

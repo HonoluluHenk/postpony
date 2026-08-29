@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 (fixed weekday grid + time-only submit)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Page object exposes driving the fixed grid: fill a time for a given weekday row, leave rows blank, submit generate.
-- [ ] Happy path: fill 2 weekday times, generate → exactly those 2 dates visible in the proposed-date list, toast shows count 2, status chip transitions to Voting.
-- [ ] A blank weekday row produced no Proposed Date.
-- [ ] Generator block absent when the Postponement is Confirmed.
-- [ ] Generated dates behave like hand-added ones (deletion of an unwanted generated date still works).
+- [x] Page object exposes driving the fixed grid: fill a time for a given weekday row, leave rows blank, submit generate.
+- [x] Happy path: fill 2 weekday times, generate → exactly those 2 dates visible in the proposed-date list, toast shows count 2, status chip transitions to Voting.
+- [x] A blank weekday row produced no Proposed Date.
+- [x] Generator block absent when the Postponement is Confirmed.
+- [x] Generated dates behave like hand-added ones (deletion of an unwanted generated date still works).
