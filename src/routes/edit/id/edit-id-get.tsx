@@ -1,5 +1,6 @@
 import type { App } from '../../../app';
-import { formatIsoToLocaleTokens } from '../../../lib/temporal-utils';
+import { formatIsoToLocaleTokens, nowPlainDateTimeIso } from '../../../lib/temporal-utils';
+import { Temporal } from '@js-temporal/polyfill';
 import { EditPage } from './edit';
 import { buildEditPartialsData } from './render-edit-partials';
 
@@ -17,6 +18,10 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     ? formatIsoToLocaleTokens(session.originalMatchDateTime, locale)
     : '';
 
+  const todayDate = Temporal.PlainDate.from(nowPlainDateTimeIso());
+  const defaultFromDate = todayDate.toString();
+  const defaultToDate = todayDate.add({weeks: 4}).toString();
+
   const html = app.render(
     <EditPage
       {...app.view}
@@ -24,6 +29,8 @@ export const handleEditGet = async (app: App): Promise<Response> => {
       session={session}
       ownerPassword={ownerPassword ?? undefined}
       proposedDateTime={originalMatchDateTime}
+      fromDate={defaultFromDate}
+      toDate={defaultToDate}
       {...buildEditPartialsData(session, locale)}
     />,
   );

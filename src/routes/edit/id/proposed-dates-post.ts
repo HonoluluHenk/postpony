@@ -51,6 +51,8 @@ interface SingleDateOutput {proposedDateTime: string}
 interface TupleOutput {
   generate: typeof TUPLE_DISCRIMINATOR;
   'time[]': string[];
+  fromDate?: string;
+  toDate?: string;
   proposedDateTime?: never;
 }
 
@@ -58,6 +60,8 @@ function buildTupleSchema(app: App): v.BaseSchema<unknown, TupleOutput, v.BaseIs
   return v.object({
     generate: v.literal(TUPLE_DISCRIMINATOR, app.t('proposed_date_time_invalid')),
     'time[]': v.array(v.string()),
+    fromDate: v.optional(v.string()),
+    toDate: v.optional(v.string()),
     // ponytail: rogue POST combining the generator branch with the single-date
     // field is explicitly rejected. The schema encodes it via the `never`
     // output type — passing `proposedDateTime` makes the parse fail before
@@ -191,12 +195,16 @@ async function handleTupleSubmit(
   }
 
   const times = validation.output['time[]'];
+  const fromDate = validation.output.fromDate;
+  const toDate = validation.output.toDate;
   if (times.length > MAX_TUPLES) {
     // ponytail: the fixed 7-row form can never exceed MAX_TUPLES; this is a
     // security guard against a hand-crafted oversized time[] array.
     if (app.isPartial) {
       return app.c.html(renderEditPartials(app, session, {
         generatorError: app.t('proposed_date_time_invalid'),
+        fromDate,
+        toDate,
       }), {status: 400});
     }
     return redirectAfterEdit(app, session);
@@ -208,13 +216,15 @@ async function handleTupleSubmit(
       return app.c.html(renderEditPartials(app, session, {
         times,
         generatorInvalidRow: parsed.invalidRowIndex,
+        fromDate,
+        toDate,
       }), {status: 400});
     }
     return redirectAfterEdit(app, session);
   }
 
   if (parsed.tuples.length === 0) {
-    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none')});
+    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate, toDate});
   }
 
   const todayIso = nowPlainDateTimeIso();
@@ -242,7 +252,7 @@ async function handleTupleSubmit(
   });
 
   if (generated.added.length === 0) {
-    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none')});
+    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate, toDate});
   }
 
   const rules = new PostponementRules();
@@ -255,9 +265,11 @@ async function handleTupleSubmit(
   }
   updated = await saveWithClashCheck(app, updated, addedIds);
 
-  const extras: {times: string[]; generatorSuccessCount: number; generatorError?: string} = {
+  const extras: {times: string[]; generatorSuccessCount: number; generatorError?: string; fromDate?: string; toDate?: string} = {
     times,
     generatorSuccessCount: generated.added.length,
+    fromDate,
+    toDate,
   };
   return renderPartial(app, session, extras, updated);
 }
@@ -302,6 +314,8 @@ interface GeneratorRenderExtras {
   times?: string[];
   generatorError?: string;
   generatorSuccessCount?: number;
+  fromDate?: string;
+  toDate?: string;
 }
 
 function renderPartial(

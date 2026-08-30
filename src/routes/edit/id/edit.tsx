@@ -16,6 +16,8 @@ export interface EditPageProps extends ViewContext, EditPartialsData {
   ownerPassword?: string;
   proposedDateTime?: string;
   globalError?: string;
+  fromDate?: string;
+  toDate?: string;
 }
 
 interface InviteLinksProps {
@@ -122,6 +124,8 @@ export function EditPage(props: EditPageProps): JSX.Element {
             locale={props.locale}
             inputFormat={props.inputFormat}
             proposedDateTime={props.proposedDateTime}
+            fromDate={props.fromDate}
+            toDate={props.toDate}
           />
         </div>
 

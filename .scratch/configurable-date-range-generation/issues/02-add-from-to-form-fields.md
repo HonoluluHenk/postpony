@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] Add `fromDate` and `toDate` fields to the `GenerateFormProps` interface
-- [ ] Add two date inputs to the `GenerateForm` component in `proposed-dates-section.tsx`, placed above the weekday grid
-- [ ] Pre-fill `value` attributes with defaults when no `originalMatchDateTime` exists (`from = today`, `to = today + 4 weeks`)
-- [ ] Echo back submitted values on form re-render (like the existing `times[]` pattern)
-- [ ] Add `fromDate`/`toDate` to the form POST payload in the handler
-- [ ] Update `EditPartialsData` / partial render extras to include `fromDate`/`toDate` values
-- [ ] Form submits and renders unchanged; window still computed from anchor (no validation yet)
+- [x] Add `fromDate` and `toDate` fields to the `GenerateFormProps` interface
+- [x] Add two date inputs to the `GenerateForm` component in `proposed-dates-section.tsx`, placed above the weekday grid
+- [x] Pre-fill `value` attributes with defaults when no `originalMatchDateTime` exists (`from = today`, `to = today + 4 weeks`)
+- [x] Echo back submitted values on form re-render (like the existing `times[]` pattern)
+- [x] Add `fromDate`/`toDate` to the form POST payload in the handler
+- [x] Update `EditPartialsData` / partial render extras to include `fromDate`/`toDate` values
+- [x] Form submits and renders unchanged; window still computed from anchor (no validation yet)

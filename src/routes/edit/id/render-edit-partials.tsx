@@ -72,6 +72,8 @@ export interface EditPartialExtras {
   generatorSuccessCount?: number;
   refreshError?: boolean;
   confirmClashWarning?: boolean;
+  fromDate?: string;
+  toDate?: string;
 }
 
 /**
@@ -105,6 +107,8 @@ export function renderEditPartials(
     refreshError: extra.refreshError,
     confirmClashWarning: extra.confirmClashWarning,
     globalError: extra.globalError,
+    fromDate: extra.fromDate,
+    toDate: extra.toDate,
   };
   return app.render(<ProposedDatesSectionPartial {...props} />);
 }

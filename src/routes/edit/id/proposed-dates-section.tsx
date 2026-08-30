@@ -38,6 +38,8 @@ export interface ProposedDatesSectionProps extends EditPartialsData {
   generatorSuccessCount?: number;
   refreshError?: boolean;
   confirmClashWarning?: boolean;
+  fromDate?: string;
+  toDate?: string;
 }
 
 interface GenerateFormProps {
@@ -48,15 +50,19 @@ interface GenerateFormProps {
   invalidRow?: number;
   error?: string;
   successCount?: number;
+  fromDate?: string;
+  toDate?: string;
 }
 
 function GenerateForm(props: GenerateFormProps): JSX.Element {
-  const {sessionId, t, locale, times} = props;
+  const {sessionId, t, locale, times, fromDate, toDate} = props;
   const rowAction = `/edit/${sessionId}/proposed-dates`;
   const headingId = 'generate-tuple-heading';
   const timeFormat = localeConfig(locale).timeFormat;
   const timeLabel = t('proposed_dates_generate_time_label');
   const submitted = times ?? [];
+  const fromValue = fromDate ?? '';
+  const toValue = toDate ?? '';
   // ponytail: the fixed Monday–Sunday grid is the preset; each row's time input
   // is empty unless the organizer's latest submit round-trips a value for it.
   return (
@@ -69,6 +75,26 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
       <h4 id={headingId}>{t('proposed_dates_generate_section')}</h4>
       <p>{t('proposed_dates_generate_help')}</p>
       <input type="hidden" name="generate" value="tuple"/>
+      <div class="row items-center gap mt-2">
+        <div class="field label border">
+          <input
+            id="fromDate"
+            type="date"
+            name="fromDate"
+            value={fromValue}
+          />
+          <label for="fromDate">{t('proposed_dates_generate_from_label')}</label>
+        </div>
+        <div class="field label border">
+          <input
+            id="toDate"
+            type="date"
+            name="toDate"
+            value={toValue}
+          />
+          <label for="toDate">{t('proposed_dates_generate_to_label')}</label>
+        </div>
+      </div>
       <ol class="list no-margin" aria-label={t('proposed_dates_generate_section')}>
         {weekdayLabels[locale].map((weekday, index) => {
           const invalid = props.invalidRow === index;
@@ -258,15 +284,17 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                </table>
              </div>
            ) : null}
-           <GenerateForm
-             sessionId={props.sessionId}
-             t={props.t}
-             locale={props.locale}
-             times={props.times}
-             invalidRow={props.generatorInvalidRow}
-             error={props.generatorError}
-             successCount={props.generatorSuccessCount}
-           />
+            <GenerateForm
+              sessionId={props.sessionId}
+              t={props.t}
+              locale={props.locale}
+              times={props.times}
+              invalidRow={props.generatorInvalidRow}
+              error={props.generatorError}
+              successCount={props.generatorSuccessCount}
+              fromDate={props.fromDate}
+              toDate={props.toDate}
+            />
            <form
              hx-post={`/edit/${props.sessionId}/proposed-dates`}
              hx-target="#proposed-dates-management"
