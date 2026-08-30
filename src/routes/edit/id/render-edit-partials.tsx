@@ -49,6 +49,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
       no: counts.no,
       maybe: counts.maybe,
       clashes: pd.clashes,
+      venueNumber: pd.venueNumber,
     };
   });
 

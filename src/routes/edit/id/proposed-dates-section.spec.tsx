@@ -221,6 +221,62 @@ describe('ProposedDatesSection component', () => {
       .not
       .toContain('id="venueNumber"');
   });
+
+  it('defaults dates without a venue number to the V1 badge (legacy dates)', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html)
+      .toContain('>V1</span>');
+    expect((html.match(/>V1<\/span>/g) ?? []))
+      .toHaveLength(2);
+  });
+
+  it('renders the venue number badge next to each date', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      proposedDates: [
+        {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, maybe: 0, no: 0, venueNumber: 1},
+        {id: 'pd-2', display: '12.10.2026 20:00', votable: false, yes: 0, maybe: 0, no: 0, venueNumber: 2},
+      ],
+    }));
+
+    expect(html)
+      .toContain('>V1</span>');
+    expect(html)
+      .toContain('>V2</span>');
+  });
+
+  it('shows the venue name and number in the badge tooltip when venues are known', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      venues: [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+      ],
+      proposedDates: [
+        {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, maybe: 0, no: 0, venueNumber: 2},
+      ],
+    }));
+
+    expect(html)
+      .toContain('title="2 – Turnhalle grün"');
+    expect(html)
+      .toContain('>V2</span>');
+  });
+
+  it('falls back to just the number in the badge tooltip when the venue is unknown', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      proposedDates: [
+        {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, maybe: 0, no: 0, venueNumber: 3},
+      ],
+    }));
+
+    expect(html)
+      .toContain('title="3"');
+    expect(html)
+      .toContain('>V3</span>');
+  });
 });
 
 describe('ProposedDatesSection clash info', () => {

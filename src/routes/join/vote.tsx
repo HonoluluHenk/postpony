@@ -2,15 +2,18 @@ import type { JSX } from 'hono/jsx/jsx-runtime';
 import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../app';
 import type { DateClashes } from '../../lib/clashes';
-import type { Vote, VoteTallyItem } from '../../lib/models';
+import type { Venue, Vote, VoteTallyItem } from '../../lib/models';
 import { pageLayout } from '../layouts/main';
 import { ClashInfo } from '../partials/clash-info';
+import { VenueBadge } from '../partials/venue-badge';
 import { VotePlayerResults } from '../partials/vote-player-results';
 import type { Team } from './join-utils';
 
 export interface VotePageDate extends VoteTallyItem {
   currentVote: string;
   clashes?: DateClashes;
+  /** venue number the date applies to; absent means venue 1 (legacy dates predate venues). */
+  venueNumber?: number;
 }
 
 export interface PlayerVoteRow {
@@ -28,6 +31,7 @@ export interface VotePageProps extends ViewContext {
   proposedDates: readonly VotePageDate[];
   playerVoteRows: readonly PlayerVoteRow[];
   clashCheckable: boolean;
+  venues: readonly Venue[];
   updated?: boolean;
   globalError?: string;
 }
@@ -62,7 +66,7 @@ export function VotePage(props: VotePageProps): JSX.Element {
           >
             {props.proposedDates.map((pd) => (
               <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
-                <legend>{pd.display}</legend>
+                <legend>{pd.display} <VenueBadge venueNumber={pd.venueNumber} venues={props.venues}/></legend>
                 <ClashInfo
                   clashes={pd.clashes}
                   clashCheckable={props.clashCheckable}

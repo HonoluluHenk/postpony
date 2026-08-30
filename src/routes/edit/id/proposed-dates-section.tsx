@@ -5,6 +5,7 @@ import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
 import { ClashInfo } from '../../partials/clash-info';
 import { ErrorContainer } from '../../partials/error-container';
+import { VenueBadge } from '../../partials/venue-badge';
 import type { OwnTeamView } from './own-team-view';
 import { OwnTeamVotes } from './own-team-votes';
 import { StatusChip } from './status-chip';
@@ -13,6 +14,8 @@ import { VoteTallySection } from './vote-tally-section';
 export interface ProposedDateTallyItem extends VoteTallyItem {
   votable: boolean;
   clashes?: DateClashes;
+  /** venue number the date applies to; absent means venue 1 (legacy dates predate venues). */
+  venueNumber?: number;
 }
 
 /**
@@ -248,10 +251,11 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                    return (
                      <tr key={proposedDate.id} class={hasClashes ? 'clash-row' : undefined} aria-label={rowAriaLabel}>
                        <th scope="row">
-                         <div class="row items-center gap">
-                           <i aria-hidden="true">event</i>
-                           <div class="max">{proposedDate.display}</div>
-                         </div>
+<div class="row items-center gap">
+                            <i aria-hidden="true">event</i>
+                            <div class="max">{proposedDate.display}</div>
+                            <VenueBadge venueNumber={proposedDate.venueNumber} venues={props.venues}/>
+                          </div>
                          <ClashInfo
                            clashes={proposedDate.clashes}
                            clashCheckable={props.clashCheckable}

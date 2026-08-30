@@ -301,6 +301,26 @@ describe('edit handlers', () => {
         expect(stored?.proposedDates[0]?.venueNumber)
           .toBeUndefined();
       });
+
+      test('re-renders the list with the venue badge after a successful add', async () => {
+        const session = aSession({venues: twoVenues});
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '2'},
+        });
+        await app.store.save(session);
+
+        const response = await handleEditProposedDatesPost(app);
+        const html = await response.text();
+
+        expect(response.status)
+          .toBe(200);
+        expect(html)
+          .toContain('>V2</span>');
+        expect(html)
+          .toContain('title="2 – Turnhalle grün"');
+      });
     });
 
     describe('generator venue number', () => {
@@ -365,6 +385,98 @@ describe('edit handlers', () => {
           .toContain('value="8:00 pm"');
         expect(html)
           .toContain('value="9:00 pm"');
+      });
+    });
+
+    describe('venue-aware dedup', () => {
+      const existingDateIso = '2026-08-31T20:00';
+
+      function sessionWithExistingDate(): Postponement {
+        return aSession({
+          originalMatchDateTime: '2026-09-02T16:00',
+          status: 'Draft',
+          proposedDates: [
+            aProposedDate({
+              id: 'pd-existing',
+              dateTimeRange: {start: existingDateIso, end: existingDateIso},
+              venueNumber: 1,
+            }),
+          ],
+        });
+      }
+
+      test('duplicate datetime + same venue → only one exists', async () => {
+        const session = sessionWithExistingDate();
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm'], venueNumber: '1'},
+        });
+        await app.store.save(session);
+
+        const html = await (await handleEditProposedDatesPost(app)).text();
+
+        const stored = await app.store.get(session.id);
+        // the same-datetime/same-venue duplicate is skipped, so only the
+        // remaining 4 weekdays are added to the existing date
+        expect(stored?.proposedDates.filter((d) => d.dateTimeRange.start === existingDateIso))
+          .toHaveLength(1);
+        expect(stored?.proposedDates)
+          .toHaveLength(5);
+        expect(html)
+          .toContain('>4 dates added<');
+      });
+
+      test('duplicate datetime + different venue → both exist', async () => {
+        const session = sessionWithExistingDate();
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm'], venueNumber: '2'},
+        });
+        await app.store.save(session);
+
+        const html = await (await handleEditProposedDatesPost(app)).text();
+
+        const stored = await app.store.get(session.id);
+        // the same datetime at venue 2 is a distinct date, so all 5 weekdays
+        // are added alongside the existing venue-1 date
+        expect(stored?.proposedDates.filter((d) => d.dateTimeRange.start === existingDateIso))
+          .toHaveLength(2);
+        expect(stored?.proposedDates)
+          .toHaveLength(6);
+        expect(html)
+          .toContain('>5 dates added<');
+      });
+
+      test('generator skipped count is venue-aware (same venue counts, different venue does not)', () => {
+        // the handler only passes composite keys of existing dates at the form
+        // venue, so venue-1 generation dedups against the existing venue-1 date
+        const sameVenue = generateProposedDates({
+          fromIso: '2026-08-25T08:00',
+          toIso: '2026-09-30T16:00',
+          todayIso: FIXED_TODAY_ISO,
+          tuples: [{weekday: 1, hour: 20, minute: 0}],
+          existingStarts: [`${existingDateIso}|1`],
+        });
+        expect(sameVenue.skipped)
+          .toBe(1);
+        expect(sameVenue.added)
+          .not
+          .toContain(existingDateIso);
+
+        // venue-2 generation filters the venue-1 date out, so nothing is skipped
+        const differentVenue = generateProposedDates({
+          fromIso: '2026-08-25T08:00',
+          toIso: '2026-09-30T16:00',
+          todayIso: FIXED_TODAY_ISO,
+          tuples: [{weekday: 1, hour: 20, minute: 0}],
+          existingStarts: [],
+        });
+        expect(differentVenue.skipped)
+          .toBe(0);
+        expect(differentVenue.added)
+          .toContain(existingDateIso);
       });
     });
 
