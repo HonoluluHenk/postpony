@@ -267,8 +267,10 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                            locale={props.locale}
                          />
                          <VenueOccupancyInfo
+                           id={proposedDate.id}
                            occupancy={proposedDate.venueOccupancy}
                            t={props.t}
+                           locale={props.locale}
                          />
                        </th>
                        <td>

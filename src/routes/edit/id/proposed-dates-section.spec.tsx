@@ -445,6 +445,36 @@ describe('ProposedDatesSection venue occupancy info', () => {
     expect(html).toContain('3 other games at this venue');
   });
 
+  it('renders the conflicting matches in an accessible tooltip popup', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: '10.10.2026 19:00',
+          votable: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          venueOccupancy: {
+            count: 2,
+            matches: [
+              {opponent: 'Port', start: '2026-10-10T20:15'},
+              {opponent: 'Bern', start: '2026-10-10T19:30'},
+            ],
+          },
+        },
+      ],
+    }));
+
+    expect(html).toContain('role="tooltip"');
+    expect(html).toContain('aria-describedby="occupancy-tooltip-pd-1"');
+    expect(html).toContain('id="occupancy-tooltip-pd-1"');
+    expect(html).toContain('Conflicting games at this venue');
+    expect(html).toContain('8:15 PM vs Port');
+    expect(html).toContain('7:30 PM vs Bern');
+  });
+
   it('renders the clean line for a zero-count occupancy', () => {
     const html = renderToString(ProposedDatesSection({
       ...baseProps(),

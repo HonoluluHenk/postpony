@@ -613,6 +613,46 @@ describe('renderVoteStep venue occupancy info', () => {
       .toContain('2 other games at this venue');
   });
 
+  test('renders the conflicting matches in an accessible tooltip popup', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [
+        aProposedDate({
+          id: 'date-1',
+          votable: true,
+          venueOccupancy: {
+            count: 2,
+            matches: [
+              {opponent: 'Port', start: '2025-09-01T20:15'},
+              {opponent: 'Bern', start: '2025-09-01T19:30'},
+            ],
+          },
+        }),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('aria-describedby="occupancy-tooltip-date-1"');
+    expect(body)
+      .toContain('role="tooltip"');
+    expect(body)
+      .toContain('8:15 PM vs Port');
+    expect(body)
+      .toContain('7:30 PM vs Bern');
+  });
+
   test('renders the clean line for a zero-count occupancy', async () => {
     const player = aPlayer();
     const session = aSession({

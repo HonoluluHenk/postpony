@@ -78,8 +78,10 @@ export function VotePage(props: VotePageProps): JSX.Element {
                   locale={props.locale}
                 />
                 <VenueOccupancyInfo
+                  id={pd.id}
                   occupancy={pd.venueOccupancy}
                   t={props.t}
+                  locale={props.locale}
                 />
                 <label class="radio">
                   <input

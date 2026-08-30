@@ -140,6 +140,15 @@ test.describe('Clash checks', () => {
     // The occupancy count renders per proposed date alongside the clash lines.
     await expect(editPage.proposedDateList.getByText('1 other games at this venue'))
       .toBeVisible();
+    // Hovering the count reveals the conflicting match (opponent + time) in an
+    // accessible tooltip: the club-meetings fixture has Ostermundigen vs Port.
+    const occupancyTrigger = editPage.proposedDateList
+      .getByRole('button', {name: '1 other games at this venue'});
+    await occupancyTrigger.hover();
+    await expect(page.getByRole('tooltip'))
+      .toContainText('Port');
+    await expect(page.getByRole('tooltip'))
+      .toContainText('8:15 PM');
 
     // 3. The participant poll mirrors the same snapshot: join the session and
     // see the occupancy count on the proposed date in the vote form.
@@ -149,6 +158,12 @@ test.describe('Clash checks', () => {
     await joinPage.join('Occupancy Watcher');
     await expect(joinPage.voteForm.getByText('1 other games at this venue'))
       .toBeVisible();
+    // The vote page's occupancy count reveals the same conflicting match.
+    const joinOccupancyTrigger = joinPage.voteForm
+      .getByRole('button', {name: '1 other games at this venue'});
+    await joinOccupancyTrigger.hover();
+    await expect(joinPage.voteForm.getByRole('tooltip'))
+      .toContainText('Port');
 
     await checkA11y();
   });
