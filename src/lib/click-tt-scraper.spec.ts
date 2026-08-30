@@ -417,6 +417,38 @@ describe('click-tt-scraper', () => {
           ]),
         );
     });
+
+    test('skips non-match rows, nameless rows, and duplicate rows', async () => {
+      vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: () => Promise.resolve(
+          '<table class="result-set">' +
+          '<tr><td>not enough cells</td></tr>' +
+          '<tr><td>Di</td><td>not-a-date</td><td>19:30</td><td></td>' +
+          '<td>1</td><td>HE 3. Liga</td><td>Ostermundigen V</td><td></td><td>Köniz II</td>' +
+          '<td></td><td></td><td></td><td></td></tr>' +
+          '<tr><td>Di</td><td>25.08.2026</td><td>19:30</td><td></td>' +
+          '<td>1</td><td>HE 3. Liga</td><td>Ostermundigen V</td><td></td><td>Köniz II</td>' +
+          '<td></td><td></td><td></td><td></td></tr>' +
+          '<tr><td>Di</td><td>25.08.2026</td><td>19:30</td><td></td>' +
+          '<td>1</td><td>HE 3. Liga</td><td>Ostermundigen V</td><td></td><td>Köniz II</td>' +
+          '<td></td><td></td><td></td><td></td></tr>' +
+          '<tr><td>Di</td><td>25.08.2026</td><td>19:30</td><td></td>' +
+          '<td>1</td><td>HE 3. Liga</td><td></td><td></td><td>Köniz II</td>' +
+          '<td></td><td></td><td></td><td></td></tr>' +
+          '</table>',
+        ),
+      } as Response)));
+
+      const matches = await fetchClubMeetings('33282', '01.07.2026', '30.06.2027');
+
+      expect(matches.length)
+        .toBe(1);
+      expect(matches[0])
+        .toMatchObject({date: '25.08.2026', homeTeam: 'Ostermundigen V', guestTeam: 'Köniz II'});
+    });
   });
 
   describe('seasonWindow', () => {

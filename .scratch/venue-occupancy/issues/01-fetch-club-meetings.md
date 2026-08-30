@@ -12,4 +12,4 @@
 - [x] `fixtureNameForUrl` gains a `clubMeetings` branch for fixture mapping
 - [x] New `club-meetings.html` fixture anchored on Ostermundigen (club 33282), containing home and away rows and at least one venue-less row
 - [x] Unit tests: `fetchClubMeetings` against the fixture returns the expected home Matches with venue numbers; venue-less rows yield `undefined` venue; the season-window helper derives the correct window
-- [ ] All existing unit tests pass
+- [x] All existing unit tests pass
