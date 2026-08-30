@@ -1,6 +1,8 @@
 # Developer local settings
 developer-local-settings/
 /data/
+/worktrees/
+
 
 
 # Log files

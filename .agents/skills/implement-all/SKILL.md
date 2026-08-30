@@ -24,7 +24,7 @@ Done when: every box is ticked and the comment carries the SHAs, committed on th
 
 ## 3. Set up the feature worktree
 
-- `git worktree add -b <feature> ../<branch>` from current HEAD, then run `/setup-worktree` inside it (`--quick` unless any ticket's acceptance criteria include e2e).
+- `git worktree add -b <feature> ./worktrees/<branch>` from current HEAD, then run `/setup-worktree` inside it (`--quick` unless any ticket's acceptance criteria include e2e). If this skill/command does not exist: tell the user and stop!
 
 Done when: the worktree is up and its tests run.
 
