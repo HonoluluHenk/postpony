@@ -16,3 +16,7 @@
 - [x] On validation success, pass validated `fromIso`/`toIso` to `generateProposedDates()`
 - [x] On validation failure, return 400 with error messages and echoed values
 - [x] Generate button always enabled (no disabled state); errors communicated via field-level messages
+
+## Comments
+
+fe3cc1e - Implemented server-side validation of from/to constraints with field-level error rendering and validated window passed to generator.
