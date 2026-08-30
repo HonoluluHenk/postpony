@@ -9,6 +9,7 @@ import { nowPlainDateTimeIso, parseLocaleDateTime, parseLocaleTimeOnly } from '.
 import type { Postponement, Venue } from '../../../lib/models';
 import { Temporal } from '@js-temporal/polyfill';
 import { renderEditPartials } from './render-edit-partials';
+import { FALLBACK_VENUE_COUNT } from './proposed-dates-section';
 
 const TUPLE_DISCRIMINATOR = 'tuple';
 
@@ -57,7 +58,7 @@ interface SingleDateOutput {
  * `1..venues.length`; without scraped venues the organizer can still pick `1..10`.
  */
 function maxVenueNumber(venues: readonly Venue[]): number {
-  return venues.length > 0 ? venues.length : 10;
+  return venues.length > 0 ? venues.length : FALLBACK_VENUE_COUNT;
 }
 interface TupleOutput {
   generate: typeof TUPLE_DISCRIMINATOR;

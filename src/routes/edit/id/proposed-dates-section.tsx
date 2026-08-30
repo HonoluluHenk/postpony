@@ -15,6 +15,13 @@ export interface ProposedDateTallyItem extends VoteTallyItem {
   clashes?: DateClashes;
 }
 
+/**
+ * Number of venue options offered when the Postponement carries no scraped
+ * venues. Single source of truth for the spec rule "empty venues → 1..10",
+ * shared with the handler's validation bound.
+ */
+export const FALLBACK_VENUE_COUNT = 10;
+
 export type EditPartialsData = OwnTeamView & {
   proposedDates: ProposedDateTallyItem[];
   homeProposedDates: VoteTallyItem[];
@@ -172,7 +179,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
     ))
     : // ponytail: without scraped venues the organizer still picks a hall 1–10;
       // a richer default (e.g. the original match's hall) is out of scope.
-      Array.from({length: 10}, (_, index) => (
+      Array.from({length: FALLBACK_VENUE_COUNT}, (_, index) => (
         <option key={index + 1} value={index + 1}>{index + 1}</option>
       ));
 
