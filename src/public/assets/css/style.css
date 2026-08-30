@@ -338,6 +338,21 @@
     margin-bottom: 24px;
   }
 
+  /* Confirm-clash warning: a persistent, high-visual-weight banner (vs the
+     throwaway red `.error` text it used to be). Solid error surface with the
+     on-error text makes it the strongest thing on the edit card; it stays in
+     place until the next partial swap instead of flashing once. */
+  .confirm-clash-warning {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: var(--error);
+    color: var(--on-error);
+    font-weight: 600;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--border-radius);
+  }
+
   /* BeerCSS floating-label fields: hide placeholder when empty & unfocused
      so it doesn't overlap the label. Shows when typing or focused. */
   .field.label input:not(:focus):placeholder-shown {

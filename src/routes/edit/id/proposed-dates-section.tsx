@@ -132,7 +132,10 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
         <p class="chip outline">{props.t('reopened_count', {count: String(props.reopenCount)})}</p>
       ) : null}
       {props.confirmClashWarning ? (
-        <p class="error mt-2" role="alert">{props.t('clash_check_confirm_warning')}</p>
+        <p class="confirm-clash-warning mt-2" role="alert">
+          <i aria-hidden="true">warning</i>
+          {props.t('clash_check_confirm_warning')}
+        </p>
       ) : null}
       {confirmed ? (
         <form hx-post={`/edit/${props.sessionId}/reopen`} hx-target="#proposed-dates-management" class="mt-4">
