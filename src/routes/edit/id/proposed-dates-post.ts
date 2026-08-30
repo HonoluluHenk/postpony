@@ -65,17 +65,28 @@ interface TupleOutput {
   'time[]': string[];
   fromDate?: string;
   toDate?: string;
+  venueNumber?: number;
   proposedDateTime?: never;
 }
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-function buildTupleSchema(app: App): v.BaseSchema<unknown, TupleOutput, v.BaseIssue<unknown>> {
+function buildTupleSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unknown, TupleOutput, v.BaseIssue<unknown>> {
   return v.object({
     generate: v.literal(TUPLE_DISCRIMINATOR, app.t('proposed_date_time_invalid')),
     'time[]': v.array(v.string()),
     fromDate: v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))),
     toDate: v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))),
+    venueNumber: v.optional(
+      v.pipe(
+        v.string(),
+        v.check((val: string): boolean => {
+          const n = Number(val);
+          return Number.isInteger(n) && n >= 1 && n <= maxVenueNumber(venues);
+        }, app.t('proposed_date_venue_invalid')),
+        v.transform((val: string): number => Number(val)),
+      ),
+    ),
     // ponytail: rogue POST combining the generator branch with the single-date
     // field is explicitly rejected. The schema encodes it via the `never`
     // output type — passing `proposedDateTime` makes the parse fail before
@@ -207,12 +218,16 @@ async function handleTupleSubmit(
   locale: App['locale'],
   values: Record<string, unknown>,
 ): Promise<Response> {
-  const validation = v.safeParse(buildTupleSchema(app), values);
+  const rawTimes = Array.isArray(values['time[]'])
+    ? values['time[]'].filter((value): value is string => typeof value === 'string')
+    : [];
+  const validation = v.safeParse(buildTupleSchema(app, session.venues), values);
   if (!validation.success) {
     const errors = mapValidationToErrors(validation);
     if (app.isPartial) {
       return app.c.html(renderEditPartials(app, session, {
-        generatorError: errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
+        times: rawTimes,
+        generatorError: errors.fields['venueNumber'] ?? errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
         fromDate: typeof values['fromDate'] === 'string' ? values['fromDate'] : '',
         toDate: typeof values['toDate'] === 'string' ? values['toDate'] : '',
       }), {status: 400});
@@ -325,8 +340,9 @@ async function handleTupleSubmit(
   const rules = new PostponementRules();
   let updated = session;
   const addedIds: string[] = [];
+  const venueNumber = validation.output.venueNumber;
   for (const startIso of generated.added) {
-    const proposed = rules.proposeDate(updated, startIso, 'owner');
+    const proposed = rules.proposeDate(updated, startIso, 'owner', venueNumber);
     updated = proposed.session;
     addedIds.push(proposed.proposedDate.id);
   }

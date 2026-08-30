@@ -303,6 +303,71 @@ describe('edit handlers', () => {
       });
     });
 
+    describe('generator venue number', () => {
+      const twoVenues = [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+      ];
+
+      test('generator with a valid venue number stores it on every generated date', async () => {
+        const session = aSession({
+          venues: twoVenues,
+          originalMatchDateTime: '2026-09-02T16:00',
+          proposedDates: [],
+          status: 'Draft',
+        });
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm', '9:00 pm'], venueNumber: '2'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates.length)
+          .toBeGreaterThan(0);
+        for (const proposedDate of stored?.proposedDates ?? []) {
+          expect(proposedDate.venueNumber)
+            .toBe(2);
+        }
+      });
+
+      test('generator with an out-of-range venue number rejects with a translated error and preserves the submitted times', async () => {
+        const session = aSession({
+          venues: twoVenues,
+          originalMatchDateTime: '2026-09-02T16:00',
+          proposedDates: [],
+          status: 'Draft',
+        });
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm', '9:00 pm'], venueNumber: '3'},
+        });
+        await app.store.save(session);
+
+        const response = await handleEditProposedDatesPost(app);
+        const html = await response.text();
+
+        expect(response.status)
+          .toBe(400);
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(0);
+        expect(stored?.status)
+          .toBe('Draft');
+        expect(html)
+          .toContain('Please select a valid venue number');
+        // the submitted times round-trip so the organizer only fixes the venue
+        expect(html)
+          .toContain('value="8:00 pm"');
+        expect(html)
+          .toContain('value="9:00 pm"');
+      });
+    });
+
     test('tuple branch: persists the expected count and renders a success toast with the count', async () => {
       const session = aSession({
         originalMatchDateTime: '2026-09-02T16:00',

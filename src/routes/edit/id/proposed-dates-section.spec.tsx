@@ -535,6 +535,51 @@ describe('ProposedDatesSection generator block', () => {
       .toContain('No dates were added.');
   });
 
+  it('renders a venue select inside the generator form reusing the single-add options', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    // both the generator and the single-add form carry a venue select; the
+    // generator one uses a distinct id so the two selects never collide.
+    expect(html)
+      .toContain('<select id="generateVenueNumber" name="venueNumber">');
+    expect(html)
+      .toContain('for="generateVenueNumber">Venue</label>');
+    expect((html.match(/name="venueNumber"/g) ?? []))
+      .toHaveLength(2);
+    for (let n = 1; n <= 10; n++) {
+      expect(html)
+        .toContain(`<option value="${n}">${n}</option>`);
+    }
+  });
+
+  it('renders venue names in the generator select when venues are known', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      venues: [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+      ],
+    }));
+
+    expect(html)
+      .toContain('<option value="1">1 – Turnhalle orange</option>');
+    expect(html)
+      .toContain('<option value="2">2 – Turnhalle grün</option>');
+    expect(html)
+      .not
+      .toContain('<option value="3">3</option>');
+    expect(html)
+      .toContain('for="generateVenueNumber">Venue</label>');
+  });
+
+  it('hides the generator venue select alongside the single-add form when Confirmed', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), status: 'Confirmed'}));
+
+    expect(html)
+      .not
+      .toContain('id="generateVenueNumber"');
+  });
+
   it('renders the no-anchor fallback warning as an inline message', () => {
     const html = renderToString(ProposedDatesSection({
       ...baseProps(),

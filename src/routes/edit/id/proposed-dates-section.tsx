@@ -56,6 +56,7 @@ interface GenerateFormProps {
   sessionId: string;
   t: TranslateFn;
   locale: AppLocale;
+  venueOptions: JSX.Element[];
   times?: readonly string[];
   invalidRow?: number;
   error?: string;
@@ -115,6 +116,12 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
           {toError ? (
             <span id="toDate-error" class="error" role="alert">{toError}</span>
           ) : null}
+        </div>
+        <div class="field label border">
+          <select id="generateVenueNumber" name="venueNumber">
+            {props.venueOptions}
+          </select>
+          <label for="generateVenueNumber">{t('proposed_date_venue_label')}</label>
         </div>
       </div>
       <ol class="list no-margin" aria-label={t('proposed_dates_generate_section')}>
@@ -318,11 +325,12 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                </table>
              </div>
            ) : null}
-             <GenerateForm
-               sessionId={props.sessionId}
-               t={props.t}
-               locale={props.locale}
-               times={props.times}
+<GenerateForm
+                sessionId={props.sessionId}
+                t={props.t}
+                locale={props.locale}
+                venueOptions={venueOptions}
+                times={props.times}
                invalidRow={props.generatorInvalidRow}
                error={props.generatorError}
                successCount={props.generatorSuccessCount}
