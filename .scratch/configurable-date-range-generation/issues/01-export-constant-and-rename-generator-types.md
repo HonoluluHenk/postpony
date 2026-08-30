@@ -15,3 +15,7 @@
 - [x] Update `handleTupleSubmit` in `proposed-dates-post.ts` to derive `fromIso`/`toIso` from the existing anchor logic and pass them to the generator (no new form fields yet)
 - [x] Remove `usedFallbackWindow` references from handler and UI
 - [x] All existing tests pass with the new interface
+
+## Comments
+
+- `fc5612b` — Export MAX_FORWARD_WEEKS_FROM_ORIGINAL, rename generator I/O types (anchorIso → fromIso/toIso), remove usedFallbackWindow, update handler and all tests.
