@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import { EditPage, JoinPage, ScrapePage } from './pages';
+import { isoToLocaleTokens } from './pages/locale-tokens';
 
 /**
  * Full-flow tests for the schedule clash feature (issue 07): a scrape-created
@@ -102,6 +103,42 @@ test.describe('Clash checks', () => {
       .goto(session.homeHref);
     await joinPage.join('Manual Watcher');
     await expect(joinPage.voteForm.getByText('Not checked'))
+      .toBeVisible();
+
+    await checkA11y();
+  });
+
+  test('scrape-created match shows the venue occupancy count on the edit page', async ({page, checkA11y}) => {
+    // 1. Scrape the return match (14.01.2027) where Ostermundigen is the home
+    // team: the session then carries Ostermundigen's real club id (33282), so
+    // the occupancy check fires against the club-meetings fixture.
+    const scrapePage = await new ScrapePage(page)
+      .goto();
+    await scrapePage.pickLeague('MTTV 2026/27');
+    await scrapePage.pickGroup('O40 1. Liga');
+    await scrapePage.pickTeam('Ostermundigen');
+    await Promise.all([
+      page.waitForURL(/\/edit\/.+/),
+      scrapePage.selectButton('14.01.2027')
+        .click(),
+    ]);
+
+    // 2. Propose a date that overlaps one of the club's other home meetings at
+    // the selected venue: the club-meetings fixture has Ostermundigen vs Port
+    // on 30.03.2027 20:15 at venue 3, inside the proposed 20:00 ± 2h window.
+    const editPage = new EditPage(page);
+    const lang = await page.locator('html')
+      .getAttribute('lang');
+    await editPage.proposedDateTimeInput.fill(isoToLocaleTokens(lang, '2027-03-30T20:00'));
+    await page.locator('#venueNumber')
+      .selectOption('3');
+    await editPage.addProposedDateButton.click();
+
+    await expect(page.getByRole('alert')
+      .filter({hasText: 'Proposed date added!'}))
+      .toBeVisible();
+    // The occupancy count renders per proposed date alongside the clash lines.
+    await expect(editPage.proposedDateList.getByText('1 other games at this venue'))
       .toBeVisible();
 
     await checkA11y();

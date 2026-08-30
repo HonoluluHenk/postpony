@@ -419,6 +419,91 @@ describe('ProposedDatesSection clash info', () => {
   });
 });
 
+describe('ProposedDatesSection venue occupancy info', () => {
+  it('renders the count line when other home matches occupy the date\'s venue', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: '10.10.2026 19:00',
+          votable: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          venueOccupancy: {
+            count: 3,
+            matches: [
+              {opponent: 'Port', start: '2026-10-10T20:15'},
+              {opponent: 'Bern', start: '2026-10-10T19:30'},
+            ],
+          },
+        },
+      ],
+    }));
+
+    expect(html).toContain('3 other games at this venue');
+  });
+
+  it('renders the clean line for a zero-count occupancy', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: '10.10.2026 19:00',
+          votable: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          venueOccupancy: {count: 0, matches: []},
+        },
+      ],
+    }));
+
+    expect(html).toContain('Venue checked, no other games');
+    expect(html).not.toContain('other games at this venue');
+  });
+
+  it('renders nothing when occupancy is absent (hand-entered match or failed scrape)', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html).not.toContain('other games at this venue');
+    expect(html).not.toContain('Venue checked');
+  });
+
+  it('renders the localized de-CH occupancy lines', () => {
+    const tDe = (key: any, params?: any): string => getTranslation('de-CH', key, params);
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      t: tDe,
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: '10.10.2026 19:00',
+          votable: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          venueOccupancy: {count: 2, matches: []},
+        },
+        {
+          id: 'pd-2',
+          display: '12.10.2026 20:00',
+          votable: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          venueOccupancy: {count: 0, matches: []},
+        },
+      ],
+    }));
+
+    expect(html).toContain('2 weitere Spiele an dieser Halle');
+    expect(html).toContain('Halle geprüft, keine weiteren Spiele');
+  });
+});
+
 describe('ProposedDatesSection generator block', () => {
   it('renders the generator block above the single-add form on initial render', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));

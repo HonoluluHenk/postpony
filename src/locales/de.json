@@ -113,6 +113,8 @@
   "skip_to_main": "Zum Hauptinhalt springen",
   "status_label": "Status: <%= it.status %>",
   "tagline": "Spiele verschieben – so schnell und einfach wie der Pony-Express.",
+  "venue_occupancy_clean": "Halle geprüft, keine weiteren Spiele",
+  "venue_occupancy_line": "<%= it.count %> weitere Spiele an dieser Halle",
   "votable_short": "Abstimmbar",
   "votable_toggle": "Abstimmung zulassen",
   "vote_maybe": "Vielleicht",

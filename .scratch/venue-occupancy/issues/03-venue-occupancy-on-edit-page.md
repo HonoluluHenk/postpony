@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] `computeClashesForSession` fires a third parallel fetch (`fetchClubMeetings` for the home club id, season window from the championship) and attaches a Venue Occupancy snapshot to each Proposed Date alongside its `clashes`
-- [ ] The existing two-team clash logic is unchanged; a failed occupancy scrape degrades gracefully — occupancy stays absent, clashes still attach, dates still save
-- [ ] The edit page proposed-date list renders a count line per date (e.g. "N weitere Spiele an diesem Ort"); a clean/zero occupancy renders a clean line; absent data (hand-entered match, failed scrape) renders nothing
-- [ ] The manual refresh action recomputes the occupancy snapshot in the same pass as the clash snapshot
-- [ ] Localization keys added to en/de (fr/it reuse English per ADR-0016)
-- [ ] Route tests (mocked scraper): occupancy attached per proposed date; a failed occupancy scrape still saves dates and still attaches clashes; refresh updates the snapshot
-- [ ] E2E on the edit flow: propose a date and see the occupancy count render
-- [ ] Prior art: `edit-handlers.spec.ts` (mocked-scraper wiring), `clash-checks.e2e.ts` (full flow)
+- [x] `computeClashesForSession` fires a third parallel fetch (`fetchClubMeetings` for the home club id, season window from the championship) and attaches a Venue Occupancy snapshot to each Proposed Date alongside its `clashes`
+- [x] The existing two-team clash logic is unchanged; a failed occupancy scrape degrades gracefully — occupancy stays absent, clashes still attach, dates still save
+- [x] The edit page proposed-date list renders a count line per date (e.g. "N weitere Spiele an diesem Ort"); a clean/zero occupancy renders a clean line; absent data (hand-entered match, failed scrape) renders nothing
+- [x] The manual refresh action recomputes the occupancy snapshot in the same pass as the clash snapshot
+- [x] Localization keys added to en/de (fr/it reuse English per ADR-0016)
+- [x] Route tests (mocked scraper): occupancy attached per proposed date; a failed occupancy scrape still saves dates and still attaches clashes; refresh updates the snapshot
+- [x] E2E on the edit flow: propose a date and see the occupancy count render
+- [x] Prior art: `edit-handlers.spec.ts` (mocked-scraper wiring), `clash-checks.e2e.ts` (full flow)

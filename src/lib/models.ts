@@ -1,5 +1,6 @@
 import type { DateClashes } from './clashes';
 import { DateTimeRange } from './temporal-utils';
+import type { VenueOccupancy } from './venue-occupancy';
 
 // ponytail: placeholder until multi-tenancy (ADR-0001) is implemented;
 // replace with real club resolution (from URL domain, user session, etc.).
@@ -74,6 +75,8 @@ export interface ProposedDate {
   votable: boolean;
   /** per-team schedule Clashes from the last check that ran on this date; absent when never checked or the scrape failed. */
   clashes?: DateClashes;
+  /** Venue Occupancy snapshot from the last check; absent when never checked, the occupancy scrape failed, or the session has no club id. */
+  venueOccupancy?: VenueOccupancy;
 }
 
 export interface Vote {
