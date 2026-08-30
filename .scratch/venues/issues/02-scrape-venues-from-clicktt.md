@@ -16,3 +16,7 @@
 - [x] Add unit tests for `extractClubId` against existing `team.html` fixtures
 - [x] Manual Postponement creation still sets `venues: []`
 - [x] All existing unit tests pass
+
+## Comments
+
+- `3bff844` — ticket done: added `fetchVenues`/`extractClubId`/`fetchClubId` to the scraper, `club-venues.html` fixture, `clubInfoDisplay` fixture branch, venue scraping wired into `match-post.ts` as a parallel `Promise.all` entry (venues `[]` when no club id), unit tests in both specs; 537 unit tests pass (coverage ≥ 80%), lint clean, 6/6 scraping-flow e2e tests pass.
