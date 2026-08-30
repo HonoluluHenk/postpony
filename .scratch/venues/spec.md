@@ -8,7 +8,7 @@ When proposing dates for a postponed match, the organizer cannot specify which v
 
 ## Solution
 
-Add a `Venue` concept to the Postponement: venues are scraped from the click-tt club page during creation, attached to the Postponement, and a venue-number dropdown is added to the proposed-date forms. Duplicates are keyed by `(datetime, venueNumber)` instead of datetime alone. Clashes remain venue-agnostic (time-overlap only).
+Add a `Venue` concept to the Postponement: venues are scraped from the **home team's club** page during creation, attached to the Postponement, and a venue-number dropdown is added to the proposed-date forms. Duplicates are keyed by `(datetime, venueNumber)` instead of datetime alone. Clashes remain venue-agnostic (time-overlap only).
 
 ## User Stories
 
@@ -37,13 +37,13 @@ Add a `Venue` concept to the Postponement: venues are scraped from the click-tt 
     city: string;
   }
   ```
-- **`Postponement` gains** `venues: Venue[]` — snapshotted at creation, locked thereafter.
+- **`Postponement` gains** `venues: Venue[]` — the home team's club venues, snapshotted at creation, locked thereafter. `Postponement.clubId` carries the real home club id (replacing the `DEFAULT_CLUB_ID` placeholder).
 - **`ProposedDate` gains** `venueNumber?: number` — optional for backward compatibility; absence means venue 1.
 
 ### Scraper changes
 
 - **New `fetchVenues(clubId)` function** in `src/lib/click-tt-scraper.ts` — scrapes `clubInfoDisplay?club=<id>` and returns `Venue[]`.
-- **New `extractClubId(root)` function** in `src/lib/click-tt-scraper.ts` — extracts the organizer's club ID from the team page HTML (first `a[href*="clubInfoDisplay"]` link). Exported for use in `match-post.ts`.
+- **New `extractClubId(root)` function** in `src/lib/click-tt-scraper.ts` — extracts the **home team's** club ID for the postponed match from the team page HTML (from the postponed match's row `Ort` cell, which carries the home club id; equals the organizer's club id when the organizer is the home team). Exported for use in `match-post.ts`.
 - **`fixtureNameForUrl`** gains a `clubInfoDisplay` branch for fixture mapping.
 - Venue scraping runs in parallel with player scraping during match creation (`match-post.ts`).
 - Manual postponements start with an empty `venues` array.
@@ -117,7 +117,7 @@ Add a `Venue` concept to the Postponement: venues are scraped from the click-tt 
 
 ## Further Notes
 
-- The club ID is extracted from the team page's first `a[href*="clubInfoDisplay"]` link. This is the organizer's club (e.g. Ostermundigen → club 33282).
+- The club ID is extracted from the team page's postponed match row's `Ort` cell (`clubInfoDisplay?club=<id>`), which carries the **home** team's club (e.g. Ostermundigen as home → club 33282). When the organizer is the away team, this is the opponent's club id, not the organizer's.
 - Venue numbers are 1-based and correspond to the order on the club info page.
 - The `venueNumber` field on `ProposedDate` is typed as `number | undefined` (optional) so that legacy dates created before this feature default to venue 1 at read time.
 - The CONTEXT.md glossary will be updated with the `Venue` term.
