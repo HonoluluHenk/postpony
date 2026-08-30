@@ -41,6 +41,14 @@ A candidate new date/time for the postponed Match, proposed by the owner. Carrie
 
 A scheduled Match of the home or the guest team whose start falls within a Proposed Date's `dateTimeRange` plus a two-hour buffer on either side — the hall may be booked or the team double-booked. Computed from both teams' scraped click-tt schedules by checking when dates are proposed and again on a manual refresh; the postponed Match itself is excluded — the game being rescheduled is not a Clash. Each Clash is attributed to the affected team (home or away) and carries the opponent's name and the game's start. A newly proposed date that has a Clash is auto-deselected (its `votable` flag set to `false`), a default the organizer can reverse with the votable switch. A match without team identities has no clash data. _Avoid_: conflict, collision, double booking
 
+## Venue
+
+A hall of the home club where a rescheduled Match can be played. Carries a 1-based `venueNumber` and a name/address. The home club's venues are snapshotted on the Postponement at creation and locked thereafter; a Proposed Date may reference one by number. _Avoid_: hall, Spiellokal, location
+
+## Venue Occupancy
+
+The number of the home club's home Matches scheduled at a Venue whose start falls within a Proposed Date's `dateTimeRange` plus a two-hour buffer on either side — the hall may be busy at that time. Computed from the home club's scraped schedule (all teams, home matches only) when clashes are checked and again on a manual refresh; the postponed Match itself is excluded. Informational only: unlike a Clash, it never auto-deselects a Proposed Date. Matches without a venue number are not counted. _Avoid_: venue clash, hall conflict, double booking
+
 ## Vote
 
 A Participant's `Yes` / `No` / `Maybe` on one Proposed Date. At most one Vote per Participant per Proposed Date; re-voting updates the existing Vote.
