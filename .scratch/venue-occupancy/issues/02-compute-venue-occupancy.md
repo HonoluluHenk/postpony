@@ -12,3 +12,7 @@
 - [x] Matches without a venue number are skipped (never guessed as venue 1)
 - [x] Unit tests: exact counts per date, buffer boundaries, venue filtering (same time, different venue → not counted), postponed-match exclusion, venue-less rows skipped, empty schedule
 - [x] Prior art: `clashes.spec.ts` (pure buffer-window logic)
+
+## Comments
+
+- 701a769 (ticket done): new `src/lib/venue-occupancy.ts` pure module + spec; exported `bufferedWindow` and `isOriginalMatch` from `clashes.ts` so both signals share the same buffer/window and exclusion logic. Lint clean, 568/568 tests pass, coverage ≥80% all metrics.
