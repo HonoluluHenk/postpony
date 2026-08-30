@@ -251,7 +251,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                    return (
                      <tr key={proposedDate.id} class={hasClashes ? 'clash-row' : undefined} aria-label={rowAriaLabel}>
                        <th scope="row">
-<div class="row items-center gap">
+                          <div class="row items-center gap">
                             <i aria-hidden="true">event</i>
                             <div class="max">{proposedDate.display}</div>
                             <VenueBadge venueNumber={proposedDate.venueNumber} venues={props.venues}/>
