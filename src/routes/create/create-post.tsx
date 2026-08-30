@@ -110,6 +110,7 @@ export async function handleCreatePost(app: App): Promise<Response> {
     organizerTeam: 'home',
     reopenCount: 0,
     players: [],
+    venues: [],
     proposedDates: [],
     votes: [],
     createdAt: app.timestamp.now(),

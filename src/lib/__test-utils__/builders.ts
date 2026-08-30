@@ -32,6 +32,7 @@ export function aProposedDate(overrides: DeepPartial<ProposedDate> = {}): Propos
     proposerId: 'player-1',
     // dates are votable by default; tests that want a closed date override it
     votable: true,
+    venueNumber: 1,
   }, overrides) as ProposedDate;
 }
 
@@ -61,6 +62,7 @@ export function aSession(overrides: DeepPartial<Postponement> = {}): Postponemen
     organizerTeam: 'home',
     reopenCount: 0,
     players: [],
+    venues: [],
     proposedDates: [],
     votes: [],
     createdAt: '2025-01-01T00:00:00.000Z',

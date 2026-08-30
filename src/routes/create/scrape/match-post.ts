@@ -129,6 +129,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
       guestTeamIdentity,
       reopenCount: 0,
       players,
+      venues: [],
       proposedDates: [],
       votes: [],
       originalMatchDateTime,

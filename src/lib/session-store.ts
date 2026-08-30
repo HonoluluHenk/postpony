@@ -1,5 +1,5 @@
 import type { Client } from '@libsql/client/web';
-import type { Postponement, PostponementStatus, ProposedDate } from './models';
+import type { Postponement, PostponementStatus, ProposedDate, Venue } from './models';
 
 export interface SessionStore {
   migrate(): Promise<void>;
@@ -11,7 +11,7 @@ export interface SessionStore {
 
 /**
  * Upgrades a session read from the store to the current shape. Old rows predate
- * `votable`, `organizerTeam`, `reopenCount`, and `confirmedProposedDateId`,
+ * `votable`, `organizerTeam`, `reopenCount`, `confirmedProposedDateId`, and `venues`,
  * and used removed statuses. Pure read-time normalization — nothing is rewritten.
  */
 export function normalize(data: Record<string, unknown>): Postponement {
@@ -36,6 +36,7 @@ export function normalize(data: Record<string, unknown>): Postponement {
     sessionId: pd['sessionId'] as string,
     dateTimeRange: pd['dateTimeRange'] as ProposedDate['dateTimeRange'],
     proposerId: pd['proposerId'] as string,
+    venueNumber: pd['venueNumber'] as ProposedDate['venueNumber'],
     votable:
       typeof pd['votable'] === 'boolean'
         ? pd['votable']
@@ -47,6 +48,8 @@ export function normalize(data: Record<string, unknown>): Postponement {
     clashes: pd['clashes'] as ProposedDate['clashes'],
   }));
 
+  const venues: Venue[] = data['venues'] as Venue[] | undefined ?? [];
+
   return {
     ...(data as unknown as Postponement),
     homeTeam,
@@ -55,6 +58,7 @@ export function normalize(data: Record<string, unknown>): Postponement {
     reopenCount: typeof data['reopenCount'] === 'number' ? data['reopenCount'] : 0,
     status,
     proposedDates,
+    venues,
   };
 }
 
