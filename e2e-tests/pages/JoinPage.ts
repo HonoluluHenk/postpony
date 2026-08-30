@@ -53,7 +53,7 @@ export class JoinPage {
   }
 
   teamResultsSection(): Locator {
-    return this.page.getByRole('region', {name: "Your Team's Votes"});
+    return this.page.getByRole('region', {name: 'Your Team\'s Votes'});
   }
 
   teamResultsTable(): Locator {
@@ -68,8 +68,11 @@ export class JoinPage {
   }
 
   async switchLanguage(locale: string): Promise<void> {
-    await this.page.locator('#language-select')
-      .selectOption(locale);
+    await Promise.all([
+      this.page.waitForLoadState('load'),
+      this.page.locator('#language-select')
+        .selectOption(locale),
+    ]);
   }
 
   async join(name: string): Promise<void> {

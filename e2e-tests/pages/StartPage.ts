@@ -63,7 +63,10 @@ export class StartPage {
   }
 
   async switchLanguage(locale: string): Promise<void> {
-    await this.page.locator('#language-select')
-      .selectOption(locale);
+    await Promise.all([
+      this.page.waitForLoadState('load'),
+      this.page.locator('#language-select')
+        .selectOption(locale),
+    ]);
   }
 }
