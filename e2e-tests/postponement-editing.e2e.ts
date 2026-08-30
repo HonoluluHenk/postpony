@@ -458,6 +458,49 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(0);
   });
 
+  test('cancelling a proposed-date delete must not leave the global spinner stuck', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(1);
+
+    // Opening and cancelling the delete dialog is a pure client-side action;
+    // it must not trigger a misleading "loading a page" overlay.
+    await editPage.deleteButton(0)
+      .click();
+    await expect(editPage.deleteDialog(0))
+      .toBeVisible();
+    await editPage.deleteCancelButton(0)
+      .click();
+
+    await expect(editPage.deleteDialog(0))
+      .toHaveCount(0);
+    await expect(editPage.spinner)
+      .toBeHidden();
+
+    // The list is still intact and interactive.
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(1);
+
+    await checkA11y();
+  });
+
+  test('deleting a proposed date clears the spinner once the htmx swap completes', async ({page}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(1);
+
+    await editPage.deleteProposedDate(0);
+
+    // The date is removed and the overlay is not left hanging.
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(0);
+    await expect(editPage.spinner)
+      .toBeHidden();
+  });
+
+
   test('change match details in place preserves the session id and its players', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addPlayer('Keep Me');

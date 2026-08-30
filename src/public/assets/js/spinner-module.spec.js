@@ -93,6 +93,34 @@ describe('shouldShowSpinner', () => {
     expect(shouldShowSpinner(el)).toBe(false);
   });
 
+  it('returns false for a type=button (client-only action, no navigation)', () => {
+    const el = document.createElement('button');
+    el.setAttribute('type', 'button');
+    expect(shouldShowSpinner(el)).toBe(false);
+  });
+
+  it('returns false for a submit button inside an htmx form (no double spinner)', () => {
+    const form = document.createElement('form');
+    form.setAttribute('hx-post', '/something');
+    form.setAttribute('hx-target', '#list');
+    const btn = document.createElement('button');
+    btn.setAttribute('type', 'submit');
+    form.appendChild(btn);
+    document.body.appendChild(form);
+    expect(shouldShowSpinner(btn)).toBe(false);
+    document.body.removeChild(form);
+  });
+
+  it('returns true for a submit button in a plain form (full-page submit)', () => {
+    const form = document.createElement('form');
+    const btn = document.createElement('button');
+    btn.setAttribute('type', 'submit');
+    form.appendChild(btn);
+    document.body.appendChild(form);
+    expect(shouldShowSpinner(btn)).toBe(true);
+    document.body.removeChild(form);
+  });
+
   it('returns false when hx-get is set', () => {
     const el = document.createElement('button');
     el.setAttribute('hx-get', '/something');

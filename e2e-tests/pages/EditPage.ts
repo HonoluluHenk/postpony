@@ -63,6 +63,10 @@ export class EditPage {
     return this.page.getByRole('heading', {name: 'Editing Postponement', level: 1});
   }
 
+  get spinner(): Locator {
+    return this.page.locator('#global-spinner');
+  }
+
   get status(): Locator {
     return this.page.getByText('Status:');
   }

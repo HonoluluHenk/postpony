@@ -15,6 +15,15 @@ export function isHtmxDriven(el) {
 export function shouldShowSpinner(el) {
   if (el.hasAttribute('data-no-spinner')) return false;
   if (isHtmxDriven(el)) return false;
+  // ponytail: htmx drives submit buttons inside hx-* forms via its own request
+  // events; don't double-show the global spinner (the Delete-proposed-date form).
+  if (el.closest?.('form[hx-get], form[hx-post], form[hx-put], form[hx-delete], form[hx-patch]')) {
+    return false;
+  }
+  // A type="button" never navigates or submits (dialog dismiss, date picker
+  // toggles, etc.), so it must not spin a global loading overlay that then
+  // hangs forever waiting for a page load.
+  if (el.tagName === 'BUTTON' && el.type === 'button') return false;
   if (el.tagName === 'A') {
     const href = el.getAttribute('href');
     if (!href || href.startsWith('#') || el.getAttribute('target') === '_blank') return false;
