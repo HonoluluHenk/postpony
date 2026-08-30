@@ -14,3 +14,8 @@
 - [x] For a match with no team identities (or a failed scrape), a newly proposed date stays `votable: true`.
 - [x] On the edit page, a newly proposed clashing date shows votable-off with its clash chip and remains in the list.
 - [x] On the vote page, a newly proposed clashing date is hidden from the poll while a clean date stays visible and votable (updated e2e proves the end-to-end flow).
+
+## Comments
+- 7a98c02 (ticket done)
+- dc9bf28 (review)
+- No review-fixed needed (0 findings). Clashing dates are auto-deselected at proposal time in the shared save path; refresh handler untouched.
