@@ -11,3 +11,8 @@
 - [x] The warning keeps its existing accessibility semantics (role/announcement) that a test asserts.
 - [x] A view-level test covers the updated rendering of the confirm-clash warning.
 - [x] A clean confirm (no clash) still renders no warning.
+
+## Comments
+- 341092c (ticket done)
+- 4212460 (review)
+- No review-fixed needed (0 findings). Note: ticket/review files committed under .scratch as coordination files; the source impl lives in 341092c.
