@@ -39,7 +39,7 @@ A candidate new date/time for the postponed Match, proposed by the owner. Carrie
 
 ## Clash
 
-A scheduled Match of the home or guest team whose start falls within a Proposed Date's `dateTimeRange` plus a two-hour buffer on either side, found by checking both teams' click-tt schedules when dates are proposed. The postponed Match itself is excluded — the game being rescheduled is not a Clash. _Avoid_: conflict, collision, double booking
+A scheduled Match of the home or the guest team whose start falls within a Proposed Date's `dateTimeRange` plus a two-hour buffer on either side — the hall may be booked or the team double-booked. Computed from both teams' scraped click-tt schedules by checking when dates are proposed and again on a manual refresh; the postponed Match itself is excluded — the game being rescheduled is not a Clash. Each Clash is attributed to the affected team (home or away) and carries the opponent's name and the game's start. A newly proposed date that has a Clash is auto-deselected (its `votable` flag set to `false`), a default the organizer can reverse with the votable switch. A match without team identities has no clash data. _Avoid_: conflict, collision, double booking
 
 ## Vote
 
@@ -48,10 +48,6 @@ A Participant's `Yes` / `No` / `Maybe` on one Proposed Date. At most one Vote pe
 ## Proposed Dates Generator
 
 The edit-page interaction for proposing a weekly slate of candidate times in one step. It renders a fixed Monday–Sunday grid; for each day the organizer either enters a time (which produces a Proposed Date inside the planning window, anchored on the Match's `originalMatchDateTime`) or leaves the row empty (which is skipped). The weekdays are locked and cannot be added, removed, or re-labelled. _Avoid_: add-row/remove-row generator, free-form slate
-
-## Clash
-
-A scheduled game of the home or the away team whose start falls within a Proposed Date's range plus a two-hour buffer (`CLASH_BUFFER_HOURS` in `src/lib/clashes.ts`) on either side — the hall may be booked or a team double-booked. Computed purely by `computeClashes` from both teams' scraped click-tt schedules; the postponed Match itself is excluded. Results split per affected team (`home` / `away`), each Clash carrying the opponent's name and the ISO-normalized start — raw click-tt strings never enter the model. _Avoid_: conflict, collision, double-booking
 
 ## Status
 
