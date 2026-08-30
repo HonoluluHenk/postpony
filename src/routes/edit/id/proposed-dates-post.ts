@@ -325,12 +325,20 @@ async function handleTupleSubmit(
   const fromIso = `${fromDate}T00:00`;
   const toIso = `${toDate}T23:59`;
 
+  const venueNumber = validation.output.venueNumber;
+  // Venue-aware dedup at the handler seam (spec decision): only existing dates
+  // at the form venue can collide with the generated ones, so the composite
+  // "<start>|<venue>" keys are built from those. The generator stays
+  // venue-unaware — it just matches candidates against the given keys.
+  const existingStarts = session.proposedDates
+    .filter((pd) => (pd.venueNumber ?? 1) === (venueNumber ?? 1))
+    .map((pd) => `${pd.dateTimeRange.start}|${pd.venueNumber ?? 1}`);
   const generated = generateProposedDates({
     fromIso,
     toIso,
     todayIso: nowIso,
     tuples: parsed.tuples,
-    existingStarts: session.proposedDates.map((pd) => pd.dateTimeRange.start),
+    existingStarts,
   });
 
   if (generated.added.length === 0) {
@@ -340,7 +348,6 @@ async function handleTupleSubmit(
   const rules = new PostponementRules();
   let updated = session;
   const addedIds: string[] = [];
-  const venueNumber = validation.output.venueNumber;
   for (const startIso of generated.added) {
     const proposed = rules.proposeDate(updated, startIso, 'owner', venueNumber);
     updated = proposed.session;

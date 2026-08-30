@@ -30,7 +30,10 @@ export interface GenerateProposedDatesInput {
   todayIso: string;
   /** Up to 14 tuples are processed; the rest are dropped silently. */
   tuples: readonly ProposedDateTuple[];
-  /** Existing proposed-date starts to dedupe against at minute precision. */
+  /** Existing dedup keys to compare candidates against at minute precision. A
+   *  key is either a plain ISO start or a composite `"<start>|<venue>"` string
+   *  (the handler's venue-aware seam); the venue suffix is treated opaquely —
+   *  only the start portion is compared. */
   existingStarts: readonly string[];
 }
 
@@ -66,7 +69,7 @@ export function generateProposedDates(input: GenerateProposedDatesInput): Genera
   const lower = Temporal.PlainDateTime.compare(today, from) > 0 ? today : from;
   const upper = to;
 
-  const existingSet = new Set(existingStarts.map(canonicalMinuteKey));
+  const existingSet = new Set(existingStarts.map(canonicalExistingKey));
 
   const added: string[] = [];
   let skipped = 0;
@@ -83,7 +86,7 @@ export function generateProposedDates(input: GenerateProposedDatesInput): Genera
     let cursor = first;
     while (Temporal.PlainDateTime.compare(cursor, upper) <= 0) {
       const key = cursor.toString({smallestUnit: 'minutes'});
-      if (existingSet.has(key)) {
+      if (isExistingDuplicate(existingSet, key)) {
         skipped++;
       } else if (Temporal.PlainDateTime.compare(cursor, today) > 0) {
         added.push(key);
@@ -118,6 +121,38 @@ function firstCandidateOnOrAfter(
 
 function canonicalMinuteKey(iso: string): string {
   return Temporal.PlainDateTime.from(iso).toString({smallestUnit: 'minutes'});
+}
+
+/**
+ * Canonicalizes an existing dedup key to minute precision. Composite keys
+ * (`"<start>|<venue>"`) from the handler's venue-aware seam keep their venue
+ * suffix; plain ISO starts canonicalize exactly as before.
+ */
+function canonicalExistingKey(key: string): string {
+  const separator = key.indexOf('|');
+  if (separator === -1) {
+    return canonicalMinuteKey(key);
+  }
+  return `${canonicalMinuteKey(key.slice(0, separator))}${key.slice(separator)}`;
+}
+
+/**
+ * A candidate matches an existing key either exactly (plain ISO starts) or as
+ * the start portion of a composite `"<start>|<venue>"` key.
+ * ponytail: O(n) scan per candidate over the existing set; the planning window
+ * yields at most a few dozen candidates, so a prefix index is not worth it.
+ */
+function isExistingDuplicate(existingSet: Set<string>, candidateKey: string): boolean {
+  if (existingSet.has(candidateKey)) {
+    return true;
+  }
+  const prefix = `${candidateKey}|`;
+  for (const existing of existingSet) {
+    if (existing.startsWith(prefix)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function pad(value: number, width: number): string {
