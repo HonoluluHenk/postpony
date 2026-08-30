@@ -141,6 +141,15 @@ test.describe('Clash checks', () => {
     await expect(editPage.proposedDateList.getByText('1 other games at this venue'))
       .toBeVisible();
 
+    // 3. The participant poll mirrors the same snapshot: join the session and
+    // see the occupancy count on the proposed date in the vote form.
+    const {homeHref} = await editPage.getInviteLinks();
+    const joinPage = await new JoinPage(page)
+      .goto(homeHref);
+    await joinPage.join('Occupancy Watcher');
+    await expect(joinPage.voteForm.getByText('1 other games at this venue'))
+      .toBeVisible();
+
     await checkA11y();
   });
 });
