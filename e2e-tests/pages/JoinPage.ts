@@ -68,11 +68,11 @@ export class JoinPage {
   }
 
   async switchLanguage(locale: string): Promise<void> {
-    await Promise.all([
-      this.page.waitForLoadState('load'),
-      this.page.locator('#language-select')
-        .selectOption(locale),
-    ]);
+    await this.page.locator('#language-select')
+      .selectOption(locale);
+    // The lang query is stripped by a server redirect, so wait on the settled <html lang>.
+    await expect(this.page.locator('html'))
+      .toHaveAttribute('lang', locale);
   }
 
   async join(name: string): Promise<void> {
