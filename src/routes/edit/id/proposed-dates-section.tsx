@@ -171,80 +171,89 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                  </tr>
                  </thead>
                  <tbody>
-                 {props.proposedDates.map((proposedDate) => (
-                   <tr key={proposedDate.id}>
-                     <th scope="row">
-                       <div class="row items-center gap">
-                         <i aria-hidden="true">event</i>
-                         <div class="max">{proposedDate.display}</div>
-                       </div>
-                       <ClashInfo
-                         clashes={proposedDate.clashes}
-                         clashCheckable={props.clashCheckable}
-                         t={props.t}
-                         locale={props.locale}
-                       />
-                     </th>
-                     <td>
-                       <label
-                         class="switch"
-                         title={props.t('votable_toggle')}
-                       >
-<input
-                            type="checkbox"
-                            id={`votable-${proposedDate.id}`}
-                            hx-post={`/edit/${props.sessionId}/proposed-date-visibility?proposedDateId=${proposedDate.id}&votable=${!proposedDate.votable}`}
-                            hx-target="#proposed-dates-management"
-                            checked={proposedDate.votable}
-                            aria-label={props.t('votable_toggle')}
-                          />
-                         <span></span>
-                       </label>
-                     </td>
-                     <td>
-                       <div class="row items-center gap">
-                         <button
-                           type="button"
-                           class="button outline"
-                           data-open-dialog={`delete-proposed-date-${proposedDate.id}`}
-                           aria-label={props.t('delete_proposed_date')}
-                           title={props.t('delete_proposed_date')}
-                         >
-                           <i aria-hidden="true">delete</i>
-                         </button>
-                         {proposedDate.votable ? (
-<button
-                              type="button"
-                              class="button outline"
-                              hx-post={`/edit/${props.sessionId}/proposed-date-confirm?proposedDateId=${proposedDate.id}`}
-                              hx-target="#proposed-dates-management"
-                            >
-                             {props.t('confirm_date')}
-                           </button>
-                         ) : null}
-                       </div>
-                       <dialog
-                         id={`delete-proposed-date-${proposedDate.id}`}
-                         class="padding small-round surface"
-                         aria-labelledby={`delete-proposed-date-title-${proposedDate.id}`}
-                       >
-                         <h4 id={`delete-proposed-date-title-${proposedDate.id}`}>
-                           {props.t('delete_proposed_date_confirm_title')}
-                         </h4>
-                         <p>{props.t('delete_proposed_date_confirm_message', {date: proposedDate.display})}</p>
+                 {props.proposedDates.map((proposedDate) => {
+                   const hasClashes = proposedDate.clashes !== undefined &&
+                     (proposedDate.clashes.home.length > 0 || proposedDate.clashes.away.length > 0);
+                   const isClean = proposedDate.clashes !== undefined && !hasClashes;
+                   const rowAriaLabel = hasClashes ? props.t('clash_row_label', {date: proposedDate.display}) : isClean
+                                                                                                                ? props.t('clash_row_clean_label', {date: proposedDate.display})
+                                                                                                                : undefined;
+                   return (
+                     <tr key={proposedDate.id} class={hasClashes ? 'clash-row' : undefined} aria-label={rowAriaLabel}>
+                       <th scope="row">
                          <div class="row items-center gap">
-                           <button type="button" class="button outline" data-dismiss-dialog>{props.t('cancel')}</button>
-                           <form
-                             hx-post={`/edit/${props.sessionId}/proposed-date-delete?proposedDateId=${proposedDate.id}`}
-                             hx-target="#proposed-dates-management"
-                           >
-                             <button type="submit" class="button">{props.t('delete_proposed_date')}</button>
-                           </form>
+                           <i aria-hidden="true">event</i>
+                           <div class="max">{proposedDate.display}</div>
                          </div>
-                       </dialog>
-                     </td>
-                   </tr>
-                 ))}
+                         <ClashInfo
+                           clashes={proposedDate.clashes}
+                           clashCheckable={props.clashCheckable}
+                           t={props.t}
+                           locale={props.locale}
+                         />
+                       </th>
+                       <td>
+                         <label
+                           class="switch"
+                           title={props.t('votable_toggle')}
+                         >
+                           <input
+                             type="checkbox"
+                             id={`votable-${proposedDate.id}`}
+                             hx-post={`/edit/${props.sessionId}/proposed-date-visibility?proposedDateId=${proposedDate.id}&votable=${!proposedDate.votable}`}
+                             hx-target="#proposed-dates-management"
+                             checked={proposedDate.votable}
+                             aria-label={props.t('votable_toggle')}
+                           />
+                           <span></span>
+                         </label>
+                       </td>
+                       <td>
+                         <div class="row items-center gap">
+                           <button
+                             type="button"
+                             class="button outline"
+                             data-open-dialog={`delete-proposed-date-${proposedDate.id}`}
+                             aria-label={props.t('delete_proposed_date')}
+                             title={props.t('delete_proposed_date')}
+                           >
+                             <i aria-hidden="true">delete</i>
+                           </button>
+                           {proposedDate.votable ? (
+                             <button
+                               type="button"
+                               class="button outline"
+                               hx-post={`/edit/${props.sessionId}/proposed-date-confirm?proposedDateId=${proposedDate.id}`}
+                               hx-target="#proposed-dates-management"
+                             >
+                               {props.t('confirm_date')}
+                             </button>
+                           ) : null}
+                         </div>
+                         <dialog
+                           id={`delete-proposed-date-${proposedDate.id}`}
+                           class="padding small-round surface"
+                           aria-labelledby={`delete-proposed-date-title-${proposedDate.id}`}
+                         >
+                           <h4 id={`delete-proposed-date-title-${proposedDate.id}`}>
+                             {props.t('delete_proposed_date_confirm_title')}
+                           </h4>
+                           <p>{props.t('delete_proposed_date_confirm_message', {date: proposedDate.display})}</p>
+                           <div class="row items-center gap">
+                             <button type="button" class="button outline"
+                                     data-dismiss-dialog>{props.t('cancel')}</button>
+                             <form
+                               hx-post={`/edit/${props.sessionId}/proposed-date-delete?proposedDateId=${proposedDate.id}`}
+                               hx-target="#proposed-dates-management"
+                             >
+                               <button type="submit" class="button">{props.t('delete_proposed_date')}</button>
+                             </form>
+                           </div>
+                         </dialog>
+                       </td>
+                     </tr>
+                   );
+                 })}
                  </tbody>
                </table>
              </div>
@@ -258,11 +267,11 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
              error={props.generatorError}
              successCount={props.generatorSuccessCount}
            />
-<form
-              hx-post={`/edit/${props.sessionId}/proposed-dates`}
-              hx-target="#proposed-dates-management"
-              class="mt-4"
-            >
+           <form
+             hx-post={`/edit/${props.sessionId}/proposed-dates`}
+             hx-target="#proposed-dates-management"
+             class="mt-4"
+           >
              <div class="row items-center gap">
                <div class={`field label border fill max${props.error ? ' invalid' : ''}`}>
                  <input

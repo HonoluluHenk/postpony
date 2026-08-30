@@ -16,6 +16,8 @@
   "clash_check_refresh_failed": "Spielplanprüfung konnte nicht aktualisiert werden — die vorherigen Ergebnisse werden angezeigt.",
   "clash_line_away": "Gast: <%= it.time %> gegen <%= it.opponent %>",
   "clash_line_home": "Heim: <%= it.time %> gegen <%= it.opponent %>",
+  "clash_row_label": "Überschneidung: <%= it.date %>",
+  "clash_row_clean_label": "Spielplan geprüft, keine Überschneidungen: <%= it.date %>",
   "confirm_date": "Bestätigen",
   "confirmed_date_label": "Bestätigter Termin",
   "confirmed_date_title": "Verschiebung bestätigt",

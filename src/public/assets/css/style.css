@@ -295,6 +295,17 @@
     gap: var(--space-4);
   }
 
+  /* Proposed-date rows with clashes: left error border + subtle tint so the
+     conflict is visible at a glance without drowning the rest of the table. */
+  #proposed-date-list tr.clash-row {
+    border-inline-start: 4px solid var(--error);
+    background: var(--error-container);
+  }
+
+  #proposed-date-list tr.clash-row th[scope="row"] {
+    padding-inline-start: calc(var(--space-3) - 4px);
+  }
+
   /* air-datepicker themed to the BeerCSS/Material palette (design layer beats vendor). */
   .air-datepicker {
     --adp-background-color: var(--surface);

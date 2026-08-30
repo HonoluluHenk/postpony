@@ -16,6 +16,8 @@
   "clash_check_refresh_failed": "Couldn't refresh the schedule check — showing the previous results.",
   "clash_line_away": "Away: <%= it.time %> vs <%= it.opponent %>",
   "clash_line_home": "Home: <%= it.time %> vs <%= it.opponent %>",
+  "clash_row_label": "Schedule clash: <%= it.date %>",
+  "clash_row_clean_label": "Schedule checked, no clashes: <%= it.date %>",
   "confirm_date": "Confirm",
   "confirmed_date_label": "Confirmed date",
   "confirmed_date_title": "Postponement Confirmed",
