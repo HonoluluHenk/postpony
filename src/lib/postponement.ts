@@ -1,8 +1,15 @@
-import { firstBy } from 'thenby';
+import thenby from 'thenby';
 import type { AppLocale } from '../locales';
 import { generateId } from './crypto-utils';
 import type { Player, Postponement, ProposedDate, Team, Vote } from './models';
 import { formatIsoToLocaleTokens } from './temporal-utils';
+
+// tsx resolves 'thenby' to its CJS build, whose named export (firstBy)
+// the ESM loader doesn't detect; the real function always hangs off the default,
+// so read it off there. Works under node-ESM, tsx, and vitest alike.
+const firstBy = (thenby as {
+  firstBy?: typeof thenby
+}).firstBy ?? thenby;
 
 export interface VoteTally {
   yes: number;
