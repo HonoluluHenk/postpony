@@ -13,3 +13,7 @@
 - [x] Add `fromDate`/`toDate` to the form POST payload in the handler
 - [x] Update `EditPartialsData` / partial render extras to include `fromDate`/`toDate` values
 - [x] Form submits and renders unchanged; window still computed from anchor (no validation yet)
+
+## Comments
+
+5d7c1e6 - Add from/to date inputs to generator UI with echo-back and passthrough handling.
