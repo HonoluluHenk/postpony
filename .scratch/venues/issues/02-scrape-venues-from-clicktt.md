@@ -6,13 +6,13 @@
 
 **Status:** ready-for-agent
 
-- [ ] Add `fetchVenues(clubId)` function to `src/lib/click-tt-scraper.ts` that scrapes `clubInfoDisplay?club=<id>` and returns `Venue[]`
-- [ ] Add `extractClubId(root)` helper to `src/lib/click-tt-scraper.ts` that extracts the organizer's club ID from the team page HTML (first `a[href*="clubInfoDisplay"]` link)
-- [ ] Add `clubInfoDisplay` branch to `fixtureNameForUrl` for fixture mapping
-- [ ] Create `club-venues.html` fixture file with a realistic club info page containing venue listings
-- [ ] Wire venue scraping into `match-post.ts` as an additional parallel `Promise.all` entry alongside player scraping
-- [ ] Venue scraping runs only when a `clubId` is available; otherwise `venues` stays `[]`
-- [ ] Add unit tests for `fetchVenues` against the `club-venues.html` fixture
-- [ ] Add unit tests for `extractClubId` against existing `team.html` fixtures
-- [ ] Manual Postponement creation still sets `venues: []`
-- [ ] All existing unit tests pass
+- [x] Add `fetchVenues(clubId)` function to `src/lib/click-tt-scraper.ts` that scrapes `clubInfoDisplay?club=<id>` and returns `Venue[]`
+- [x] Add `extractClubId(root)` helper to `src/lib/click-tt-scraper.ts` that extracts the organizer's club ID from the team page HTML (first `a[href*="clubInfoDisplay"]` link)
+- [x] Add `clubInfoDisplay` branch to `fixtureNameForUrl` for fixture mapping
+- [x] Create `club-venues.html` fixture file with a realistic club info page containing venue listings
+- [x] Wire venue scraping into `match-post.ts` as an additional parallel `Promise.all` entry alongside player scraping
+- [x] Venue scraping runs only when a `clubId` is available; otherwise `venues` stays `[]`
+- [x] Add unit tests for `fetchVenues` against the `club-venues.html` fixture
+- [x] Add unit tests for `extractClubId` against existing `team.html` fixtures
+- [x] Manual Postponement creation still sets `venues: []`
+- [x] All existing unit tests pass

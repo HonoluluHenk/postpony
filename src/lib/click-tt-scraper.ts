@@ -1,6 +1,7 @@
 import { type HTMLElement, parse } from 'node-html-parser';
 import config from '../config';
 import { ClickTTError } from './errors';
+import type { Venue } from './models';
 
 // ponytail: fixture loading is dev/E2E-only and uses `node:fs`. The import is
 // dynamic with a non-literal specifier so the Cloudflare Worker bundle never
@@ -21,6 +22,8 @@ const GROUP_URL = `${WA_URL}/groupPage?championship={championship}&group={group}
 /** Team page; lists the team's matches (complete schedule). */
 const TEAM_URL =
   `${WA_URL}/teamPortrait?teamtable={teamtable}&championship={championship}&group={group}&preferredLanguage={preferredLanguage}`;
+/** Club page; lists the club's venues ("Spiellokal N" / "Matchlocation N"). */
+const CLUB_URL = `${WA_URL}/clubInfoDisplay?club={club}`;
 
 export interface League {
   name: string;
@@ -101,6 +104,9 @@ function fixtureNameForUrl(url: string): string {
   }
   if (url.includes('leaguePage')) {
     return 'groups.html';
+  }
+  if (url.includes('clubInfoDisplay')) {
+    return 'club-venues.html';
   }
   if (url.includes('index.htm')) {
     return 'leagues.html';
@@ -333,4 +339,91 @@ export async function fetchPlayers(
     return players;
   }
   return [];
+}
+
+/**
+ * Extracts the organizer's club ID from a team page (`teamPortrait`): the
+ * first `a[href*="clubInfoDisplay"]` link points at the organizer's club.
+ * Returns undefined when the page carries no such link.
+ */
+export function extractClubId(root: HTMLElement): string | undefined {
+  const href = root.querySelector('a[href*="clubInfoDisplay"]')?.getAttribute('href');
+  if (!href) {
+    return undefined;
+  }
+  return queryParam(href, 'club') ?? undefined;
+}
+
+/**
+ * Fetches a team page and returns the organizer's club ID, or undefined when
+ * the page has no club link. Thin seam over `extractClubId` so callers never
+ * touch the raw page HTML.
+ */
+export async function fetchClubId(
+  championship: string,
+  group: string,
+  teamtable: string,
+  preferredLanguage: ClickTTLanguage = 'German',
+): Promise<string | undefined> {
+  const root = await fetchHtml(
+    buildUrl(TEAM_URL, {teamtable, championship, group, preferredLanguage}),
+  );
+  return extractClubId(root);
+}
+
+/**
+ * Parses a venue address line like "Dennigkofenweg 169, 3072 Ostermundigen,
+ * Schweiz" into address / postalCode / city. A trailing country token
+ * (Schweiz/Swiss/Suisse/Svizzera) is dropped.
+ */
+function parseVenueAddress(line: string): {address: string; postalCode: string; city: string} | null {
+  const parts = line.split(',').map((part) => part.trim()).filter((part) => part.length > 0);
+  if (parts.length < 2) {
+    return null;
+  }
+  const last = parts[parts.length - 1];
+  if (last && /^(?:Schweiz|Swiss|Suisse|Svizzera)$/i.test(last)) {
+    parts.pop();
+  }
+  if (parts.length < 2) {
+    return null;
+  }
+  const address = parts[0];
+  const location = parts[parts.length - 1];
+  const m = location && /^(\d{4})\s+(.+)$/.exec(location);
+  const postalCode = m?.[1];
+  const city = m?.[2];
+  if (!address || !postalCode || !city) {
+    return null;
+  }
+  return {address, postalCode, city};
+}
+
+/**
+ * Scrapes the venue list of a club from its club info page (`clubInfoDisplay`).
+ * Venue numbers are 1-based and follow the order on the page. Returns an empty
+ * array when the page lists no venues.
+ */
+export async function fetchVenues(clubId: string): Promise<Venue[]> {
+  const root = await fetchHtml(buildUrl(CLUB_URL, {club: clubId}));
+
+  const venues: Venue[] = [];
+  for (const heading of root.querySelectorAll('h2')) {
+    const match = /^(?:Spiellokal|Matchlocation)\s+(\d+)$/i.exec(heading.text.trim());
+    if (!match) {
+      continue;
+    }
+    // ponytail: on the live site the venue <h2> sits inside a <p> wrapper, so
+    // the venue <p> is the wrapper's next sibling, not the heading's.
+    const venueP = heading.nextElementSibling ?? heading.parentNode.nextElementSibling;
+    const lines = (venueP?.text ?? '')
+      .split('\n').map((line) => line.trim()).filter((line) => line.length > 0);
+    const parsed = parseVenueAddress(lines[1] ?? '');
+    if (!lines[0] || !parsed) {
+      continue;
+    }
+    venues.push({venueNumber: Number(match[1]), name: lines[0], ...parsed});
+  }
+  venues.sort((a, b) => a.venueNumber - b.venueNumber);
+  return venues;
 }

@@ -1,7 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { parse } from 'node-html-parser';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchGroups, fetchLeagues, fetchMatches, fetchPlayers, fetchTeams } from './click-tt-scraper';
+import {
+  extractClubId,
+  fetchClubId,
+  fetchGroups,
+  fetchLeagues,
+  fetchMatches,
+  fetchPlayers,
+  fetchTeams,
+  fetchVenues,
+} from './click-tt-scraper';
 import { ClickTTError } from './errors';
 
 
@@ -32,6 +42,10 @@ describe('click-tt-scraper', () => {
     // League page (lists the groups of a championship).
     if (url.includes('leaguePage')) {
       return fixture('groups.html');
+    }
+    // Club page (lists the club's venues).
+    if (url.includes('clubInfoDisplay')) {
+      return fixture('club-venues.html');
     }
     // Start page (lists the championships / leagues).
     if (url.includes('index.htm')) {
@@ -213,6 +227,73 @@ describe('click-tt-scraper', () => {
             {name: 'Linder, Christoph'},
             {name: 'Schmid, Oliver'},
             {name: 'Milcu, Sasha'},
+          ]),
+        );
+    });
+  });
+
+  describe('extractClubId', () => {
+    test('extracts the organizer club id from the Ostermundigen team page', () => {
+      const root = parse(fixture('team.html'));
+
+      expect(extractClubId(root))
+        .toBe('33282');
+    });
+
+    test('extracts the organizer club id from the Thun team page', () => {
+      const root = parse(fixture('team-thun.html'));
+
+      expect(extractClubId(root))
+        .toBe('33132');
+    });
+
+    test('returns undefined when the page has no club link', () => {
+      const root = parse('<html><body><a href="/wa/teamPortrait?teamtable=1">no club</a></body></html>');
+
+      expect(extractClubId(root))
+        .toBeUndefined();
+    });
+  });
+
+  describe('fetchClubId', () => {
+    test('fetches the team page and returns the organizer club id', async () => {
+      const clubId = await fetchClubId('MTTV 26/27', '219397', '1732193');
+
+      expect(clubId)
+        .toBe('33282');
+    });
+  });
+
+  describe('fetchVenues', () => {
+    test('parses all venues from the club page in venue-number order', async () => {
+      const venues = await fetchVenues('33282');
+
+      expect(venues.length)
+        .toBe(3);
+      expect(venues.map((v) => v.venueNumber))
+        .toEqual([1, 2, 3]);
+    });
+
+    test('parses venue details from the fixture', async () => {
+      const venues = await fetchVenues('33282');
+
+      expect(venues)
+        .toEqual(
+          expect.arrayContaining([
+            {
+              venueNumber: 1,
+              name: 'Turnhalle orange, UG, Schule Dennigkofen',
+              address: 'Dennigkofenweg 169',
+              postalCode: '3072',
+              city: 'Ostermundigen',
+            },
+            {
+              venueNumber: 3,
+              name: 'Turnhalle Weiher',
+              address: 'Weiherweg 2',
+              postalCode: '3072',
+              city: 'Ostermundigen',
+            },
           ]),
         );
     });
