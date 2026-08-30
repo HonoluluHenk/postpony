@@ -1,6 +1,6 @@
 ---
 name: testing
-description: How to write and run tests for this project (PostPony). Use when adding or updating Vitest unit tests or Playwright/axe end-to-end tests, especially around fixture builders, session injection, accessibility checks, and the beer.css/heading gotchas that repeatedly trip up UI tests.
+description: Use when writing, updating, or debugging any test in this repo — unit, browser, e2e, or visual. Covers the fixture builders, session injection, a11y checks, and the beer.css/heading gotchas that trip up UI tests.
 ---
 
 # PostPony Testing
