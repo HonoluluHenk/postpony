@@ -37,13 +37,17 @@ A Player taking part in a Postponement — joined via the invitation link and ab
 
 A candidate new date/time for the postponed Match, proposed by the owner. Carries a `dateTimeRange` and a `votable` flag — a pure access toggle deciding whether either team may vote on it, flipped by the organizer. New dates are votable by default; non-votable dates are hidden from both teams' polls and cannot be confirmed.
 
-## Venue
-
-A hall a postponed Match could be played in: `{venueNumber, name, address, postalCode, city}`. Scraped from the click-tt club page (the club's `clubInfoDisplay` page) at creation and snapshotted onto the Postponement as `venues`, locked thereafter; manual postponements start with an empty list. `venueNumber` is 1-based and matches the order on the club info page. A Proposed Date carries an optional `venueNumber` (absence means venue 1, so legacy dates keep working), and two dates at the same time but in different venues are distinct. _Avoid_: hall, location, room
-
 ## Clash
 
 A scheduled Match of the home or the guest team whose start falls within a Proposed Date's `dateTimeRange` plus a two-hour buffer on either side — the hall may be booked or the team double-booked. Computed from both teams' scraped click-tt schedules by checking when dates are proposed and again on a manual refresh; the postponed Match itself is excluded — the game being rescheduled is not a Clash. Each Clash is attributed to the affected team (home or away) and carries the opponent's name and the game's start. A newly proposed date that has a Clash is auto-deselected (its `votable` flag set to `false`), a default the organizer can reverse with the votable switch. A match without team identities has no clash data. _Avoid_: conflict, collision, double booking
+
+## Venue
+
+A hall of the home club where a rescheduled Match can be played. Carries a 1-based `venueNumber` and a name/address. The home club's venues are snapshotted on the Postponement at creation and locked thereafter; a Proposed Date may reference one by number. _Avoid_: hall, Spiellokal, location
+
+## Venue Occupancy
+
+The number of the home club's home Matches scheduled at a Venue whose start falls within a Proposed Date's `dateTimeRange` plus a two-hour buffer on either side — the hall may be busy at that time. Computed from the home club's scraped schedule (all teams, home matches only) when clashes are checked and again on a manual refresh; the postponed Match itself is excluded. Informational only: unlike a Clash, it never auto-deselects a Proposed Date. Matches without a venue number are not counted. _Avoid_: venue clash, hall conflict, double booking
 
 ## Vote
 
