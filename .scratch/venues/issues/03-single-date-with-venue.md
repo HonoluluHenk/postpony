@@ -17,3 +17,7 @@
     - Venue number out of range → validation error
     - Empty venues → accepts 1–10
 - [x] All existing unit tests pass
+
+## Comments
+
+- `5b8ad52` ticket done: single-date venue select + handler validation (1..venues.length or 1..10) + storage on `ProposedDate`; `f966a33` review-fixed: extracted duplicated fallback to `FALLBACK_VENUE_COUNT`; `4fd8760` review: findings saved under `.scratch/venues/reviews/`.
