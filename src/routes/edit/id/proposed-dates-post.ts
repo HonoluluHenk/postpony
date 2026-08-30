@@ -2,11 +2,12 @@ import * as v from 'valibot';
 import type { App } from '../../../app';
 import { computeClashes, type ClashesByProposedDate } from '../../../lib/clashes';
 import { fetchMatches } from '../../../lib/click-tt-scraper';
-import { MAX_TUPLES, generateProposedDates, type ProposedDateTuple } from '../../../lib/proposed-dates-generator';
+import { MAX_TUPLES, MAX_FORWARD_WEEKS_FROM_ORIGINAL, generateProposedDates, type ProposedDateTuple } from '../../../lib/proposed-dates-generator';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import { PostponementRules } from '../../../lib/postponement';
 import { nowPlainDateTimeIso, parseLocaleDateTime, parseLocaleTimeOnly } from '../../../lib/temporal-utils';
 import type { Postponement } from '../../../lib/models';
+import { Temporal } from '@js-temporal/polyfill';
 import { renderEditPartials } from './render-edit-partials';
 
 const TUPLE_DISCRIMINATOR = 'tuple';
@@ -216,9 +217,26 @@ async function handleTupleSubmit(
     return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none')});
   }
 
+  const todayIso = nowPlainDateTimeIso();
+  const today = Temporal.PlainDateTime.from(todayIso);
+  const BACKWARD_WEEKS = 8;
+  let fromIso: string;
+  let toIso: string;
+  if (session.originalMatchDateTime === undefined) {
+    fromIso = todayIso;
+    toIso = today.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL}).toString();
+  } else {
+    const anchor = Temporal.PlainDateTime.from(session.originalMatchDateTime);
+    const back = anchor.subtract({weeks: BACKWARD_WEEKS});
+    const lower = Temporal.PlainDateTime.compare(today, back) > 0 ? today : back;
+    fromIso = lower.toString();
+    toIso = anchor.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL}).toString();
+  }
+
   const generated = generateProposedDates({
-    anchorIso: session.originalMatchDateTime,
-    todayIso: nowPlainDateTimeIso(),
+    fromIso,
+    toIso,
+    todayIso,
     tuples: parsed.tuples,
     existingStarts: session.proposedDates.map((pd) => pd.dateTimeRange.start),
   });
@@ -241,9 +259,6 @@ async function handleTupleSubmit(
     times,
     generatorSuccessCount: generated.added.length,
   };
-  if (generated.usedFallbackWindow) {
-    extras.generatorError = app.t('proposed_dates_generate_no_anchor');
-  }
   return renderPartial(app, session, extras, updated);
 }
 

@@ -11,24 +11,25 @@ import { generateProposedDates, type ProposedDateTuple } from './proposed-dates-
  * - All dates cluster around Aug–Sep 2026 so weekday arithmetic is human-auditable.
  */
 const TODAY_TUE_25_AUG = '2026-08-25T08:00';
-const ANCHOR_WED_2_SEP = '2026-09-02T16:00';
+// Window derived from anchor with today: from = max(today, anchor - 8w) = today, to = anchor + 4w
+const FROM_TODAY = TODAY_TUE_25_AUG; // anchor - 8w = Jul 8, but today > that
+const TO_WED_30_SEP = '2026-09-30T16:00'; // anchor + 4w
 
 describe('generateProposedDates', () => {
 
   describe('window computation', () => {
-    test('walks from max(today, anchor - 8w) to anchor + 4w in 7-day strides', () => {
+    test('walks from max(today, fromIso) to toIso in 7-day strides', () => {
       // Tue 8/25 → first Mon ≥ today is Mon 8/31.
       // Mon 8/31, 9/07, 9/14, 9/21, 9/28 all ≤ upper Wed 9/30T16:00.
       // Mon 10/05 > upper → stop. 5 Mondays at 20:00.
       const result = generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: TODAY_TUE_25_AUG,
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
       });
 
-      expect(result.usedFallbackWindow)
-        .toBe(false);
       expect(result.skipped)
         .toBe(0);
       expect(result.added)
@@ -41,12 +42,13 @@ describe('generateProposedDates', () => {
         ]);
     });
 
-    test('uses anchor - 8w when it is later than today', () => {
-      // Today: Mon 2026-08-24 (early). Anchor: Mon 2026-12-28 (4 months out).
-      // anchor - 8w = Mon 2026-11-02 > today → lower = back.
-      // First Mon ≥ back is Mon 11/02 (not 8/31, which is "today-relative").
+    test('uses fromIso when it is later than today', () => {
+      // Today: Mon 2026-08-24 (early). fromIso: Mon 2026-11-02.
+      // fromIso > today → lower = fromIso.
+      // First Mon ≥ fromIso is Mon 11/02 (not 8/31, which is "today-relative").
       const result = generateProposedDates({
-        anchorIso: '2026-12-28T16:00',
+        fromIso: '2026-11-02T20:00',
+        toIso: '2027-01-25T16:00',
         todayIso: '2026-08-24T08:00',
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
@@ -75,10 +77,11 @@ describe('generateProposedDates', () => {
     });
 
     test('inclusive: a candidate exactly at the upper bound is included', () => {
-      // Anchor at Mon 20:00 → upper = Mon + 4w at the same wall-time.
+      // fromIso = Mon 20:00 → upper = Mon + 4w at the same wall-time.
       // The Monday exactly 4 weeks out sits at the upper bound and must be added.
       const result = generateProposedDates({
-        anchorIso: '2026-12-28T20:00',
+        fromIso: '2026-12-28T20:00',
+        toIso: '2027-01-25T20:00',
         todayIso: '2026-08-24T08:00',
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
@@ -91,11 +94,12 @@ describe('generateProposedDates', () => {
 
   describe('past-edge drops', () => {
     test('drops a candidate on the lower edge when today is on the same weekday at a later time', () => {
-      // Today: Mon 8/24T22:00. Anchor: Mon 9/14T16:00.
-      // First Mon ≥ today is Mon 8/24 (same day); Mon 8/24T20:00 < today → past.
-      // Walk: 8/31, 9/07, 9/14, 9/21, 9/28, 10/05 — 6 dates. 10/12 > upper = Mon 10/12T16:00 → stop.
+      // Today: Mon 8/24T22:00. fromIso: Mon 9/14T16:00.
+      // fromIso > today → lower = fromIso = Mon 9/14.
+      // Walk: 9/14, 9/21, 9/28, 10/05, 10/12 — but toIso = Mon 10/12T16:00, so 10/12T20:00 > upper → stop.
       const result = generateProposedDates({
-        anchorIso: '2026-09-14T16:00',
+        fromIso: '2026-09-14T16:00',
+        toIso: '2026-10-12T16:00',
         todayIso: '2026-08-24T22:00',
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
@@ -106,8 +110,6 @@ describe('generateProposedDates', () => {
         .toContain('2026-08-24T20:00');
       expect(result.added)
         .toEqual([
-          '2026-08-31T20:00',
-          '2026-09-07T20:00',
           '2026-09-14T20:00',
           '2026-09-21T20:00',
           '2026-09-28T20:00',
@@ -118,9 +120,10 @@ describe('generateProposedDates', () => {
         .toBe(0);
     });
 
-    test('drops all candidates when the upper bound has already elapsed (anchor in past)', () => {
+    test('drops all candidates when the upper bound has already elapsed', () => {
       const result = generateProposedDates({
-        anchorIso: '2020-01-15T16:00',
+        fromIso: '2020-01-15T16:00',
+        toIso: '2020-02-12T16:00',
         todayIso: TODAY_TUE_25_AUG,
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
@@ -130,8 +133,6 @@ describe('generateProposedDates', () => {
         .toEqual([]);
       expect(result.skipped)
         .toBe(0);
-      expect(result.usedFallbackWindow)
-        .toBe(false);
     });
   });
 
@@ -139,7 +140,8 @@ describe('generateProposedDates', () => {
     test('same weekday at different times produces independent rows', () => {
       // 5 Mondays × 2 timeslots (20:00, 14:00) = 10 dates.
       const result = generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: TODAY_TUE_25_AUG,
         tuples: [
           {weekday: 1, hour: 20, minute: 0},
@@ -166,7 +168,8 @@ describe('generateProposedDates', () => {
     test('different weekdays each contribute their own dates', () => {
       // 5 Mondays + 5 Wednesdays (8/26, 9/2, 9/9, 9/16, 9/23) = 10 dates.
       const result = generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: TODAY_TUE_25_AUG,
         tuples: [
           {weekday: 1, hour: 20, minute: 0},
@@ -194,7 +197,8 @@ describe('generateProposedDates', () => {
   describe('dedupe against existingStarts', () => {
     test('duplicates count toward skipped and never appear in added', () => {
       const result = generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: TODAY_TUE_25_AUG,
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: ['2026-09-07T20:00:00'],
@@ -217,7 +221,8 @@ describe('generateProposedDates', () => {
     test('matches existingStarts at minute precision regardless of seconds in input format', () => {
       // The two existingStarts values are the same minute, so only one counts toward skipped.
       const result = generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: TODAY_TUE_25_AUG,
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: ['2026-09-07T20:00', '2026-09-07T20:00:00'],
@@ -239,7 +244,8 @@ describe('generateProposedDates', () => {
       );
 
       const expected = generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: TODAY_TUE_25_AUG,
         tuples: fourteen,
         existingStarts: [],
@@ -248,7 +254,8 @@ describe('generateProposedDates', () => {
       // Append a sentinel tuple with a marker hour. If it were processed, that
       // hour would appear in `added`. Slicing keeps it out.
       const truncated = generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: TODAY_TUE_25_AUG,
         tuples: [...fourteen, {weekday: 1, hour: 14, minute: 0}],
         existingStarts: [],
@@ -261,20 +268,19 @@ describe('generateProposedDates', () => {
     });
   });
 
-  describe('anchor fallback', () => {
-    test('collapses to [today, today + 4w] and flags usedFallbackWindow when anchor is missing', () => {
+  describe('fallback window', () => {
+    test('collapses to [today, today + 4w] when caller passes that window', () => {
       // lower = Tue 8/25T08:00, upper = Tue 9/22T08:00.
       // First Mon ≥ Tue 8/25 = Mon 8/31.
       // 8/31, 9/7, 9/14, 9/21 ≤ Tue 9/22T08:00. 9/28 > upper → stop. 4 dates.
       const result = generateProposedDates({
-        anchorIso: undefined,
+        fromIso: TODAY_TUE_25_AUG,
+        toIso: '2026-09-22T08:00',
         todayIso: TODAY_TUE_25_AUG,
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
       });
 
-      expect(result.usedFallbackWindow)
-        .toBe(true);
       expect(result.skipped)
         .toBe(0);
       expect(result.added)
@@ -292,7 +298,8 @@ describe('generateProposedDates', () => {
       // First tuple (hour=25) yields no candidates via strict-ISO round-trip.
       // The loop continues with subsequent tuples.
       const result = generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: TODAY_TUE_25_AUG,
         tuples: [
           {weekday: 1, hour: 25, minute: 0},
@@ -316,7 +323,8 @@ describe('generateProposedDates', () => {
 
     test('out-of-range minute is silently filtered and does not crash the loop', () => {
       const result = generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: TODAY_TUE_25_AUG,
         tuples: [{weekday: 1, hour: 20, minute: 70}],
         existingStarts: [],
@@ -331,9 +339,10 @@ describe('generateProposedDates', () => {
     test('does not throw on a Sun 02:30 candidate (PlainDateTime is timezone-naive)', () => {
       // ponytail: PlainDateTime lacks timezone awareness, so DST-impossible
       // wall-times still round-trip. The strict-ISO pattern catches calendar
-      // impossibles; DST narrowing happens at the handler boundary.
+      // impossibilities; DST narrowing happens at the handler boundary.
       expect(() => generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: '2026-03-29T10:00',
         tuples: [{weekday: 7, hour: 2, minute: 30}],
         existingStarts: [],
@@ -346,14 +355,15 @@ describe('generateProposedDates', () => {
   describe('empty input', () => {
     test('returns an empty result for an empty tuple list', () => {
       const result = generateProposedDates({
-        anchorIso: ANCHOR_WED_2_SEP,
+        fromIso: FROM_TODAY,
+        toIso: TO_WED_30_SEP,
         todayIso: TODAY_TUE_25_AUG,
         tuples: [],
         existingStarts: [],
       });
 
       expect(result)
-        .toEqual({added: [], skipped: 0, usedFallbackWindow: false});
+        .toEqual({added: [], skipped: 0});
     });
   });
 

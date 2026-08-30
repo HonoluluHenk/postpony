@@ -218,7 +218,8 @@ describe('edit handlers', () => {
       await app.store.save(session);
 
       const expected = generateProposedDates({
-        anchorIso: '2026-09-02T16:00',
+        fromIso: '2026-08-25T08:00',
+        toIso: '2026-09-30T16:00',
         todayIso: FIXED_TODAY_ISO,
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
@@ -260,7 +261,8 @@ describe('edit handlers', () => {
 
       // time[0] -> weekday 1 (Mon), time[2] -> weekday 3 (Wed); time[1] is empty.
       const expected = generateProposedDates({
-        anchorIso: '2026-09-02T16:00',
+        fromIso: '2026-08-25T08:00',
+        toIso: '2026-09-30T16:00',
         todayIso: FIXED_TODAY_ISO,
         tuples: [
           {weekday: 1, hour: 20, minute: 0},
@@ -380,7 +382,7 @@ describe('edit handlers', () => {
         .toContain('Please provide a valid date and time');
     });
 
-    test('tuple branch anchor missing: success toast plus the no_anchor fallback warning', async () => {
+    test('tuple branch anchor missing: uses today-based window and shows success toast', async () => {
       const session = aSession({
         status: 'Draft',
         proposedDates: [],
@@ -396,13 +398,12 @@ describe('edit handlers', () => {
       await app.store.save(session);
 
       const expected = generateProposedDates({
-        anchorIso: undefined,
+        fromIso: '2026-08-25T08:00',
+        toIso: '2026-09-22T08:00',
         todayIso: FIXED_TODAY_ISO,
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
       });
-      expect(expected.usedFallbackWindow)
-        .toBe(true);
       expect(expected.added.length)
         .toBeGreaterThan(0);
 
@@ -411,8 +412,6 @@ describe('edit handlers', () => {
       const stored = await app.store.get(session.id);
       expect(stored?.proposedDates.map((d) => d.dateTimeRange.start))
         .toEqual(expected.added);
-      expect(html)
-        .toContain('No match anchor');
       expect(html)
         .toContain(`>${expected.added.length} dates added<`);
     });
@@ -485,7 +484,8 @@ describe('edit handlers', () => {
       expect(response.headers.get('location'))
         .toBe(`/edit/${session.id}`);
       const expected = generateProposedDates({
-        anchorIso: '2026-09-02T16:00',
+        fromIso: '2026-08-25T08:00',
+        toIso: '2026-09-30T16:00',
         todayIso: FIXED_TODAY_ISO,
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [],
@@ -560,7 +560,8 @@ describe('edit handlers', () => {
       await app.store.save(session);
 
       const expected = generateProposedDates({
-        anchorIso: '2026-09-02T16:00',
+        fromIso: '2026-08-25T08:00',
+        toIso: '2026-09-30T16:00',
         todayIso: FIXED_TODAY_ISO,
         tuples: [{weekday: 1, hour: 20, minute: 0}],
         existingStarts: [existingDateIso],
@@ -683,7 +684,8 @@ describe('edit handlers', () => {
         session.proposedDates = [];
         session.status = 'Draft';
         const expected = generateProposedDates({
-          anchorIso: '2026-09-02T16:00',
+          fromIso: '2026-08-25T08:00',
+        toIso: '2026-09-30T16:00',
           todayIso: FIXED_TODAY_ISO,
           tuples: [{weekday: 1, hour: 20, minute: 0}],
           existingStarts: [],
@@ -782,7 +784,8 @@ describe('edit handlers', () => {
         session.proposedDates = [];
         session.status = 'Draft';
         const expected = generateProposedDates({
-          anchorIso: '2026-09-02T16:00',
+          fromIso: '2026-08-25T08:00',
+        toIso: '2026-09-30T16:00',
           todayIso: FIXED_TODAY_ISO,
           tuples: [
             {weekday: 1, hour: 20, minute: 0},
