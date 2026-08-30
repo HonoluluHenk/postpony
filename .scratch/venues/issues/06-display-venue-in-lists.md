@@ -12,3 +12,10 @@
 - [x] Legacy dates without `venueNumber` default to displaying "V1" (backward compatibility)
 - [x] Add E2E test: propose a date with venue number, verify it appears in the list
 - [x] All existing unit and E2E tests pass
+
+## Comments
+
+- 7025965 ticket done: 06-display-venue-in-lists
+- 22030f2 review: 06-display-venue-in-lists
+- 1eaba19 review-fixed: 06-display-venue-in-lists
+- Venue badge (V1..V10, tooltip "1 – Turnhalle orange") in edit date/time column and poll legend; legacy dates default to V1; E2E test + 2 regenerated screenshot baselines.
