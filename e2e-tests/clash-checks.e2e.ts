@@ -40,6 +40,11 @@ test.describe('Clash checks', () => {
       .toBeVisible();
     await expect(editPage.proposedDateList.getByText('Home: 7:30 PM vs Burgdorf'))
       .toBeVisible();
+    // Auto-deselected: the clashing date stays in the list with its clash chip
+    // but its votable switch is off.
+    await expect(editPage.votableCheckbox(0))
+      .not
+      .toBeChecked();
 
     // 3. A second, clean date: no scheduled game within 10.10.2026 18:00 ± 2h.
     await editPage.addProposedDate('2026-10-10T18:00');
@@ -48,6 +53,13 @@ test.describe('Clash checks', () => {
       .toBeVisible();
     await expect(editPage.proposedDateList.getByText('Schedule checked, no clashes'))
       .toBeVisible();
+    // Rows sort chronologically: the clean date (10 Oct) leads and stays
+    // votable, the clashing date (4 Dec) follows and stays deselected.
+    await expect(editPage.votableCheckbox(0))
+      .toBeChecked();
+    await expect(editPage.votableCheckbox(1))
+      .not
+      .toBeChecked();
     // The clashing date still shows its line after the re-check.
     await expect(editPage.proposedDateList.getByText('Home: 7:30 PM vs Burgdorf'))
       .toBeVisible();
@@ -56,16 +68,18 @@ test.describe('Clash checks', () => {
     await expect(page.getByRole('button', {name: 'Refresh schedule check'}))
       .toBeVisible();
 
-    // 5. Dates are votable by both teams out of the box, so the opponent
-    // (the scraped organizer team, away) sees them on the vote page.
+    // 5. Only votable dates reach the polls: the organizer's auto-deselect
+    // keeps the clashing date off the opponent's vote page, while the clean
+    // date is shown.
 
-    // 6. Vote page shows the same clash info as the edit page.
+    // 6. Vote page shows the clean date's clash info; the clashing date is
+    // hidden from the poll entirely.
     const {awayHref} = await editPage.getInviteLinks();
     const joinPage = await new JoinPage(page)
       .goto(awayHref);
     await joinPage.join('Clash Watcher');
     await expect(joinPage.voteForm.getByText('Home: 7:30 PM vs Burgdorf'))
-      .toBeVisible();
+      .toHaveCount(0);
     await expect(joinPage.voteForm.getByText('Schedule checked, no clashes'))
       .toBeVisible();
 
