@@ -302,7 +302,7 @@ describe('ProposedDatesSection clash info', () => {
     expect(html).not.toContain('refresh-clashes');
   });
 
-  it('renders the confirm clash warning when the flag is set', () => {
+  it('renders the confirm clash warning with the persistent high-visibility notice when the flag is set', () => {
     const html = renderToString(ProposedDatesSection({
       ...baseProps(),
       status: 'Confirmed',
@@ -310,6 +310,7 @@ describe('ProposedDatesSection clash info', () => {
     }));
 
     expect(html).toContain('A scheduled game clashes with this date.');
+    expect(html).toContain('class="confirm-clash-warning mt-2"');
     expect(html).toContain('role="alert"');
   });
 

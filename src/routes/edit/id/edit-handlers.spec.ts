@@ -632,12 +632,13 @@ describe('edit handlers', () => {
         away: {championship: 'MTTV 26/27', group: '219397', teamtable: '1732193'},
       };
 
-      function clashSession(): Postponement {
+      function clashSession(overrides: Parameters<typeof aSession>[0] = {}): Postponement {
         return aSession({
           homeTeam: 'Home Team',
           guestTeam: 'Guest Team',
           homeTeamIdentity: identities.home,
           guestTeamIdentity: identities.away,
+          ...overrides,
         });
       }
 
@@ -726,7 +727,142 @@ describe('edit handlers', () => {
           .toHaveBeenCalledTimes(1);
       });
 
-      test('single add: a failed scrape leaves the date clash-free but still saves and renders', async () => {
+      test('single add: a newly added clashing date is auto-deselected but still persisted with its clash data', async () => {
+        const session = clashSession();
+        mockFetchMatches.mockResolvedValue([
+          {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
+        ]);
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(1);
+        expect(stored?.proposedDates[0]?.votable)
+          .toBe(false);
+        expect(stored?.proposedDates[0]?.clashes)
+          .toEqual({
+            home: [{opponent: 'Guest Team', start: '2025-09-01T19:00'}],
+            away: [{opponent: 'Home Team', start: '2025-09-01T19:00'}],
+          });
+      });
+
+      test('single add: a clean date stays votable', async () => {
+        const session = clashSession();
+        mockFetchMatches.mockResolvedValue([
+          {day: 'Fr', date: '05.09.2025', time: '10:00', homeTeam: 'Some Team', guestTeam: 'Other Team'},
+        ]);
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(1);
+        expect(stored?.proposedDates[0]?.votable)
+          .toBe(true);
+        expect(stored?.proposedDates[0]?.clashes)
+          .toEqual({home: [], away: []});
+      });
+
+      test('generator run: only the newly generated dates that clash are auto-deselected', async () => {
+        const session = clashSession();
+        session.originalMatchDateTime = '2026-09-02T16:00';
+        session.proposedDates = [];
+        session.status = 'Draft';
+        const expected = generateProposedDates({
+          anchorIso: '2026-09-02T16:00',
+          todayIso: FIXED_TODAY_ISO,
+          tuples: [
+            {weekday: 1, hour: 20, minute: 0},
+            {weekday: 2, hour: 20, minute: 0},
+          ],
+          existingStarts: [],
+        });
+        expect(expected.added.length)
+          .toBeGreaterThan(1);
+        const clashStart = expected.added[0];
+        if (clashStart === undefined) {
+          throw new Error('generator produced no dates');
+        }
+        const [gameYear, gameMonth, gameDay] = clashStart.split('T')[0]?.split('-') ?? [];
+        const gameStartTime = clashStart.split('T')[1]?.slice(0, 5);
+        mockFetchMatches.mockResolvedValue([
+          {
+            day: 'Mo',
+            date: `${gameDay}.${gameMonth}.${gameYear}`,
+            time: gameStartTime ?? '',
+            homeTeam: 'Home Team',
+            guestTeam: 'Guest Team',
+          },
+        ]);
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm', '8:00 pm']},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates
+          .map((pd) => pd.votable))
+          .toEqual(expected.added.map((start) => start !== clashStart));
+      });
+
+      test('a later proposal leaves pre-existing dates\' votable untouched (including a manual flip)', async () => {
+        const session = clashSession({
+          status: 'Voting',
+          proposedDates: [
+            aProposedDate({
+              id: 'pd-open',
+              dateTimeRange: {start: '2025-09-10T20:00', end: '2025-09-10T20:00'},
+              votable: true,
+            }),
+            aProposedDate({
+              id: 'pd-flipped',
+              dateTimeRange: {start: '2025-09-11T20:00', end: '2025-09-11T20:00'},
+              votable: false,
+            }),
+          ],
+        });
+        mockFetchMatches.mockResolvedValue([
+          {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
+        ]);
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(3);
+        expect(stored?.proposedDates.find((pd) => pd.id === 'pd-open')?.votable)
+          .toBe(true);
+        expect(stored?.proposedDates.find((pd) => pd.id === 'pd-flipped')?.votable)
+          .toBe(false);
+        const added = stored?.proposedDates.find((pd) => pd.id !== 'pd-open' && pd.id !== 'pd-flipped');
+        expect(added?.votable)
+          .toBe(false);
+      });
+
+      test('single add: a failed scrape leaves the date clash-free, votable, still saves and renders', async () => {
         const session = clashSession();
         mockFetchMatches.mockRejectedValue(new ClickTTError('click-tt is down'));
         const app = createApp({
@@ -744,6 +880,8 @@ describe('edit handlers', () => {
           .toHaveLength(1);
         expect(stored?.proposedDates[0]?.clashes)
           .toBeUndefined();
+        expect(stored?.proposedDates[0]?.votable)
+          .toBe(true);
         expect(saveSpy)
           .toHaveBeenCalledTimes(1);
         expect(html)
@@ -795,6 +933,8 @@ describe('edit handlers', () => {
         const stored = await app.store.get(session.id);
         expect(stored?.proposedDates[0]?.clashes)
           .toBeUndefined();
+        expect(stored?.proposedDates[0]?.votable)
+          .toBe(true);
         expect(html)
           .toContain('Not checked');
       });
@@ -1376,6 +1516,9 @@ describe('edit handlers', () => {
           home: [{opponent: 'Guest Team', start: '2025-09-01T19:00'}],
           away: [{opponent: 'Home Team', start: '2025-09-01T19:00'}],
         });
+      // The manual refresh re-attaches the clash snapshot but never touches votable.
+      expect(stored?.proposedDates[0]?.votable)
+        .toBe(true);
       expect(saveSpy)
         .toHaveBeenCalledTimes(1);
       // The refreshed rows render immediately, without a failure notice.

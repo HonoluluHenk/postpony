@@ -135,11 +135,41 @@ export function attachClashes(session: Postponement, clashes: ClashesByProposedD
   };
 }
 
-async function saveWithClashCheck(app: App, session: Postponement): Promise<Postponement> {
+/**
+ * Flips the newly added dates with a non-empty Clash set to `votable: false`,
+ * so a clashing date never enters either poll without the organizer noticing.
+ * Only the ids named by `addedIds` are touched; pre-existing dates keep their
+ * current `votable` (respecting any manual override). Dates with an empty clash
+ * set (clean) or without clash data stay votable.
+ */
+function deselectClashingAddedDates(
+  session: Postponement,
+  addedIds: readonly string[],
+  clashes: ClashesByProposedDate,
+): Postponement {
+  const rules = new PostponementRules();
+  let updated = session;
+  for (const id of addedIds) {
+    const dateClashes = clashes[id];
+    if (dateClashes !== undefined && (dateClashes.home.length > 0 || dateClashes.away.length > 0)) {
+      updated = rules.setVotable(updated, id, false);
+    }
+  }
+  return updated;
+}
+
+async function saveWithClashCheck(
+  app: App,
+  session: Postponement,
+  addedIds: readonly string[],
+): Promise<Postponement> {
   const clashes = await computeClashesForSession(session);
-  const withClashes = clashes === undefined ? session : attachClashes(session, clashes);
-  await app.store.save(withClashes);
-  return withClashes;
+  let result = session;
+  if (clashes !== undefined) {
+    result = deselectClashingAddedDates(attachClashes(session, clashes), addedIds, clashes);
+  }
+  await app.store.save(result);
+  return result;
 }
 
 async function handleTupleSubmit(
@@ -199,10 +229,13 @@ async function handleTupleSubmit(
 
   const rules = new PostponementRules();
   let updated = session;
+  const addedIds: string[] = [];
   for (const startIso of generated.added) {
-    updated = rules.proposeDate(updated, startIso, 'owner').session;
+    const proposed = rules.proposeDate(updated, startIso, 'owner');
+    updated = proposed.session;
+    addedIds.push(proposed.proposedDate.id);
   }
-  updated = await saveWithClashCheck(app, updated);
+  updated = await saveWithClashCheck(app, updated, addedIds);
 
   const extras: {times: string[]; generatorSuccessCount: number; generatorError?: string} = {
     times,
@@ -241,10 +274,8 @@ async function handleSingleSubmit(
   // ponytail: the schema's `check` predicate already guarantees `parsed` is defined.
   // Use ?-chained parse so the lint ban on non-null assertions stays clean.
   const parsedOrFail = parsed ?? app.failure(app.t('proposed_date_time_invalid'));
-  const updated = await saveWithClashCheck(
-    app,
-    new PostponementRules().proposeDate(session, parsedOrFail.toString(), 'owner').session,
-  );
+  const proposed = new PostponementRules().proposeDate(session, parsedOrFail.toString(), 'owner');
+  const updated = await saveWithClashCheck(app, proposed.session, [proposed.proposedDate.id]);
 
   if (app.isPartial) {
     return app.c.html(renderEditPartials(app, updated, {success: true}));

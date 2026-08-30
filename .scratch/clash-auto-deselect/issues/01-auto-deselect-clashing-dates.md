@@ -6,11 +6,16 @@
 
 **Status:** ready-for-agent
 
-- [ ] After a single-date proposal, a newly added date with a Clash is persisted with `votable: false` (clash data still attached).
-- [ ] After a single-date proposal, a newly added date with no Clash is persisted with `votable: true`.
-- [ ] After a Proposed Dates Generator submit, only the newly generated dates that clash are `votable: false`; the clean generated dates stay `votable: true`.
-- [ ] When a further proposal runs, a pre-existing date keeps its current `votable` (including one previously flipped by the organizer).
-- [ ] The manual "refresh schedule check" action updates clash chips but does not change any date's `votable`.
-- [ ] For a match with no team identities (or a failed scrape), a newly proposed date stays `votable: true`.
-- [ ] On the edit page, a newly proposed clashing date shows votable-off with its clash chip and remains in the list.
-- [ ] On the vote page, a newly proposed clashing date is hidden from the poll while a clean date stays visible and votable (updated e2e proves the end-to-end flow).
+- [x] After a single-date proposal, a newly added date with a Clash is persisted with `votable: false` (clash data still attached).
+- [x] After a single-date proposal, a newly added date with no Clash is persisted with `votable: true`.
+- [x] After a Proposed Dates Generator submit, only the newly generated dates that clash are `votable: false`; the clean generated dates stay `votable: true`.
+- [x] When a further proposal runs, a pre-existing date keeps its current `votable` (including one previously flipped by the organizer).
+- [x] The manual "refresh schedule check" action updates clash chips but does not change any date's `votable`.
+- [x] For a match with no team identities (or a failed scrape), a newly proposed date stays `votable: true`.
+- [x] On the edit page, a newly proposed clashing date shows votable-off with its clash chip and remains in the list.
+- [x] On the vote page, a newly proposed clashing date is hidden from the poll while a clean date stays visible and votable (updated e2e proves the end-to-end flow).
+
+## Comments
+- 7a98c02 (ticket done)
+- dc9bf28 (review)
+- No review-fixed needed (0 findings). Clashing dates are auto-deselected at proposal time in the shared save path; refresh handler untouched.
