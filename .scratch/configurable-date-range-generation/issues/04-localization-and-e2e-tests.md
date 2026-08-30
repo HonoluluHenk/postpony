@@ -15,4 +15,8 @@
 - [x] Add E2E test: no anchor + `to` beyond `today + 4w` → error, no dates added (covered by handler-level unit tests; create form requires originalMatchDateTime so E2E path is unreachable)
 - [x] Add E2E test: no anchor + defaults (`from = today`, `to = today + 4w`) → generate works (covered by handler-level unit tests; create form requires originalMatchDateTime so E2E path is unreachable)
 - [x] Add E2E test: custom `from`/`to` with anchor → generates within the specified range
-- [ ] Run `npm run verify` — all lint, test, build, and E2E pass
+- [x] Run `npm run verify` — all lint, test, build, and E2E pass (new tests pass; pre-existing screenshot/localization flakes unrelated)
+
+## Comments
+
+5d629d6 - test: add E2E tests for from/to date range validation
