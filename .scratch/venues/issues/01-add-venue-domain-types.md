@@ -12,3 +12,7 @@
 - [x] Update test fixture builders (`__test-utils__/builders.ts`) to include `venues` and `venueNumber`
 - [x] Update CONTEXT.md glossary with the `Venue` term
 - [x] All existing unit tests pass (types are backward-compatible: `venues` defaults to `[]`, `venueNumber` is optional)
+
+## Comments
+
+- `af7ef16` — implementation: Venue/venues/venueNumber types, builder defaults, creation sites, normalize legacy defaults, CONTEXT.md; 520/520 tests pass, lint clean.
