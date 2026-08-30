@@ -513,6 +513,13 @@ export async function fetchClubMeetings(clubId: string, from: string, to: string
 
   const matches: Match[] = [];
   const seen = new Set<string>();
+  // Same-day rows share one day/date cell pair — click-tt spans the two cells
+  // over the block (`tabelle-rowspan`) and repeats the time on continuation
+  // rows. The inherited day/date is updated on every row that carries a real
+  // date, before the home-meeting filter, so a filtered leading row still
+  // feeds the correct date to its continuation row.
+  let lastDay = '';
+  let lastDate = '';
   for (const table of root.querySelectorAll('table.result-set')) {
     const rows = table.querySelectorAll('tr');
     for (const row of rows) {
@@ -520,15 +527,19 @@ export async function fetchClubMeetings(clubId: string, from: string, to: string
       if (cells.length < 9) {
         continue;
       }
-      const date = (cells[1]?.text ?? '').trim();
+      const dayCell = (cells[0]?.text ?? '').trim();
+      const dateCell = (cells[1]?.text ?? '').trim();
+      const day = dayCell || lastDay;
+      const date = dateCell || lastDate;
       if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) {
         continue;
       }
+      lastDay = day;
+      lastDate = date;
       const ortCell = cells[3];
       if (ortCell === undefined || !isClubHomeMeeting(ortCell, clubId)) {
         continue;
       }
-      const day = (cells[0]?.text ?? '').trim();
       const time = (cells[2]?.text ?? '').trim()
         .replace(/\s+/g, ' ');
       const homeTeam = (cells[6]?.text ?? '').replace(/\u00a0/g, ' ')

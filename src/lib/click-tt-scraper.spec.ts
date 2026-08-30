@@ -361,7 +361,7 @@ describe('click-tt-scraper', () => {
       const matches = await fetchClubMeetings('33282', '01.07.2026', '30.06.2027');
 
       expect(matches.length)
-        .toBe(4);
+        .toBe(6);
       expect(matches)
         .toEqual(
           expect.arrayContaining([
@@ -388,6 +388,32 @@ describe('click-tt-scraper', () => {
               homeTeam: 'Ostermundigen',
               guestTeam: 'Port',
               venueNumber: 3,
+            },
+          ]),
+        );
+    });
+
+    test('parses same-day continuation rows whose day/date cells are spanned', async () => {
+      const matches = await fetchClubMeetings('33282', '01.07.2026', '30.06.2027');
+
+      expect(matches)
+        .toEqual(
+          expect.arrayContaining([
+            {
+              day: 'Mi',
+              date: '09.09.2026',
+              time: '19:45',
+              homeTeam: 'Ostermundigen II',
+              guestTeam: 'Ostermundigen',
+              venueNumber: 1,
+            },
+            {
+              day: 'Mi',
+              date: '09.09.2026',
+              time: '19:45',
+              homeTeam: 'Ostermundigen',
+              guestTeam: 'Port',
+              venueNumber: 1,
             },
           ]),
         );
