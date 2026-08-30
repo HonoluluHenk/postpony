@@ -71,22 +71,31 @@ interface TupleOutput {
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * Shared venue-number field for the single-date and generator schemas: absent
+ * means legacy venue 1; present it must be an integer within `1..venues.length`
+ * (or `1..FALLBACK_VENUE_COUNT` when no venues are scraped).
+ */
+function venueNumberSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unknown, number | undefined, v.BaseIssue<unknown>> {
+  return v.optional(
+    v.pipe(
+      v.string(),
+      v.check((val: string): boolean => {
+        const n = Number(val);
+        return Number.isInteger(n) && n >= 1 && n <= maxVenueNumber(venues);
+      }, app.t('proposed_date_venue_invalid')),
+      v.transform((val: string): number => Number(val)),
+    ),
+  );
+}
+
 function buildTupleSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unknown, TupleOutput, v.BaseIssue<unknown>> {
   return v.object({
     generate: v.literal(TUPLE_DISCRIMINATOR, app.t('proposed_date_time_invalid')),
     'time[]': v.array(v.string()),
     fromDate: v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))),
     toDate: v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))),
-    venueNumber: v.optional(
-      v.pipe(
-        v.string(),
-        v.check((val: string): boolean => {
-          const n = Number(val);
-          return Number.isInteger(n) && n >= 1 && n <= maxVenueNumber(venues);
-        }, app.t('proposed_date_venue_invalid')),
-        v.transform((val: string): number => Number(val)),
-      ),
-    ),
+    venueNumber: venueNumberSchema(app, venues),
     // ponytail: rogue POST combining the generator branch with the single-date
     // field is explicitly rejected. The schema encodes it via the `never`
     // output type — passing `proposedDateTime` makes the parse fail before
@@ -102,16 +111,7 @@ function buildSingleDateSchema(app: App, venues: readonly Venue[]): v.BaseSchema
       v.check((val: string): boolean => parseLocaleDateTime(val, app.locale) !==
         undefined, app.t('proposed_date_time_invalid')),
     ),
-    venueNumber: v.optional(
-      v.pipe(
-        v.string(),
-        v.check((val: string): boolean => {
-          const n = Number(val);
-          return Number.isInteger(n) && n >= 1 && n <= maxVenueNumber(venues);
-        }, app.t('proposed_date_venue_invalid')),
-        v.transform((val: string): number => Number(val)),
-      ),
-    ),
+    venueNumber: venueNumberSchema(app, venues),
   });
 }
 
