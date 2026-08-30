@@ -3,6 +3,7 @@ import { App } from '../../app';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../lib/__test-utils__/builders';
 import { LOCALE_KEY } from '../../locales';
 import { MemorySessionStore } from '../../lib/session-store';
+import { formatProposedDateDisplay } from '../../lib/temporal-utils';
 import {
   buildPlayerVoteRows,
   renderConfirmedInfo,
@@ -236,6 +237,45 @@ describe('renderVoteStep', () => {
       .toContain('<h3 id="vote-results-title">Your Team&#39;s Votes</h3>');
     expect(body)
       .toContain('<h4 id="vote-tally-title">Vote Summary</h4>');
+  });
+
+  test('renders the votable dates chronologically and keeps the results table aligned', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [
+        aProposedDate({id: 'date-later', dateTimeRange: {start: '2026-09-12T18:00'}}),
+        aProposedDate({id: 'date-earlier', dateTimeRange: {start: '2026-09-05T18:00'}}),
+      ],
+      votes: [
+        aVote({proposedDateId: 'date-earlier', participantId: 'player-1', type: 'Yes'}),
+        aVote({proposedDateId: 'date-later', participantId: 'player-1', type: 'Maybe'}),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    const earlier = formatProposedDateDisplay('2026-09-05T18:00', 'en-US');
+    const later = formatProposedDateDisplay('2026-09-12T18:00', 'en-US');
+
+    const earlierRadio = body.indexOf('name="vote-date-earlier"');
+    const laterRadio = body.indexOf('name="vote-date-later"');
+    expect(earlierRadio)
+      .toBeGreaterThan(0);
+    expect(laterRadio)
+      .toBeGreaterThan(earlierRadio);
+
+    expect(body.indexOf(`data-label="${earlier}">Yes</td>`))
+      .toBeLessThan(body.indexOf(`data-label="${later}">Maybe</td>`));
   });
 
   test('renders the confirmed-info view when the session is Confirmed', async () => {

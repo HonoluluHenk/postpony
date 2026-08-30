@@ -1,7 +1,7 @@
 import type { App } from '../../../app';
 import type { AppLocale } from '../../../locales';
 import type { Postponement, ProposedDate, VoteTallyItem } from '../../../lib/models';
-import { PostponementRules, type VoteTally } from '../../../lib/postponement';
+import { PostponementRules, sortedProposedDates, type VoteTally } from '../../../lib/postponement';
 import { formatProposedDateDisplay } from '../../../lib/temporal-utils';
 import { buildOwnTeamView } from './own-team-view';
 import {
@@ -37,8 +37,9 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
   const tallies = rules.tally(session);
   const homeTallies = rules.tally(session, 'home');
   const awayTallies = rules.tally(session, 'away');
+  const dates = sortedProposedDates(session.proposedDates);
 
-  const proposedDates: EditPartialsData['proposedDates'] = session.proposedDates.map((pd) => {
+  const proposedDates: EditPartialsData['proposedDates'] = dates.map((pd) => {
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
     return {
       id: pd.id,
@@ -53,8 +54,8 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
 
   return {
     proposedDates,
-    homeProposedDates: toVoteTallyItems(session.proposedDates, homeTallies, locale),
-    awayProposedDates: toVoteTallyItems(session.proposedDates, awayTallies, locale),
+    homeProposedDates: toVoteTallyItems(dates, homeTallies, locale),
+    awayProposedDates: toVoteTallyItems(dates, awayTallies, locale),
     clashCheckable: session.homeTeamIdentity !== undefined && session.guestTeamIdentity !== undefined,
     ...buildOwnTeamView(session, locale),
   };

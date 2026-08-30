@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { aPlayer, aProposedDate, aSession, aVote } from './__test-utils__/builders';
-import { derivePostponementName, PostponementRules } from './postponement';
+import { derivePostponementName, PostponementRules, sortedProposedDates } from './postponement';
 
 /**
  * Deterministic PostponementRules for assertions: overrides the `newId` and `now` seams so ids
@@ -34,6 +34,42 @@ describe('postponement', () => {
     test('omits the date part when the original match datetime is unknown', () => {
       expect(derivePostponementName('Thun', 'Ostermundigen', undefined, 'de-CH'))
         .toBe('Thun vs Ostermundigen');
+    });
+  });
+
+  describe('sortedProposedDates', () => {
+    test('orders dates by start date/time ascending regardless of stored order', () => {
+      const dates = [
+        aProposedDate({id: 'pd-later', dateTimeRange: {start: '2026-09-12T18:00'}}),
+        aProposedDate({id: 'pd-earlier', dateTimeRange: {start: '2026-09-05T18:00'}}),
+      ];
+
+      expect(sortedProposedDates(dates)
+        .map((pd) => pd.id))
+        .toEqual(['pd-earlier', 'pd-later']);
+    });
+
+    test('breaks ties on the same start date/time by id asc', () => {
+      const dates = [
+        aProposedDate({id: 'pd-b', dateTimeRange: {start: '2026-09-05T18:00'}}),
+        aProposedDate({id: 'pd-a', dateTimeRange: {start: '2026-09-05T18:00'}}),
+      ];
+
+      expect(sortedProposedDates(dates)
+        .map((pd) => pd.id))
+        .toEqual(['pd-a', 'pd-b']);
+    });
+
+    test('returns a sorted copy and leaves the input untouched', () => {
+      const dates = [
+        aProposedDate({id: 'pd-later', dateTimeRange: {start: '2026-09-12T18:00'}}),
+        aProposedDate({id: 'pd-earlier', dateTimeRange: {start: '2026-09-05T18:00'}}),
+      ];
+
+      sortedProposedDates(dates);
+
+      expect(dates.map((pd) => pd.id))
+        .toEqual(['pd-later', 'pd-earlier']);
     });
   });
 
@@ -329,7 +365,7 @@ describe('postponement', () => {
   });
 
   describe('votableDates', () => {
-    test('returns only the votable dates, in stored order', () => {
+    test('returns only the votable dates, in date order', () => {
       const session = aSession({
         proposedDates: [
           aProposedDate({id: 'pd-1', votable: true}),
@@ -338,8 +374,24 @@ describe('postponement', () => {
         ],
       });
 
-      expect(new FakePostponementRules().votableDates(session).map((pd) => pd.id))
+      expect(new FakePostponementRules().votableDates(session)
+        .map((pd) => pd.id))
         .toEqual(['pd-1', 'pd-3']);
+    });
+
+    test('sorts the votable dates by start date/time, ignoring closed ones', () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [
+          aProposedDate({id: 'pd-later', dateTimeRange: {start: '2026-09-12T18:00'}}),
+          aProposedDate({id: 'pd-earlier', votable: false, dateTimeRange: {start: '2026-09-01T18:00'}}),
+          aProposedDate({id: 'pd-mid', dateTimeRange: {start: '2026-09-05T18:00'}}),
+        ],
+      });
+
+      expect(new FakePostponementRules().votableDates(session)
+        .map((pd) => pd.id))
+        .toEqual(['pd-mid', 'pd-later']);
     });
 
     test('returns an empty list when no dates are votable', () => {

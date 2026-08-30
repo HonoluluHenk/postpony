@@ -1,3 +1,4 @@
+import { firstBy } from 'thenby';
 import type { AppLocale } from '../locales';
 import { generateId } from './crypto-utils';
 import type { Player, Postponement, ProposedDate, Team, Vote } from './models';
@@ -22,10 +23,22 @@ export function derivePostponementName(
   locale: AppLocale,
 ): string {
   const dateTime = originalMatchDateTime
-    ? formatIsoToLocaleTokens(originalMatchDateTime, locale)
-    : '';
+                   ? formatIsoToLocaleTokens(originalMatchDateTime, locale)
+                   : '';
   const base = `${homeTeam} vs ${guestTeam}`;
   return dateTime ? `${base} – ${dateTime}` : base;
+}
+
+/**
+ * The stable order every on-screen Proposed Date list renders in: ascending by
+ * start date/time, with the id as a deterministic tie-break for identical
+ * starts (e.g. a re-proposed duplicate).
+ */
+export function sortedProposedDates(dates: readonly ProposedDate[]): ProposedDate[] {
+  return [...dates].sort(
+    firstBy((pd: ProposedDate) => pd.dateTimeRange.start)
+      .thenBy((pd: ProposedDate) => pd.id),
+  );
 }
 
 /**
@@ -196,12 +209,12 @@ export class PostponementRules {
   }
 
   /**
-   * Returns the Proposed Dates that are open for voting, in their stored order.
-   * The single source of truth for "which dates can be voted on": the vote poll
+   * Returns the Proposed Dates that are open for voting, in ascending date
+   * order. The single source of truth for "which dates can be voted on": the vote poll
    * filter and the vote guard must both call this so they cannot drift apart.
    */
   votableDates(session: Postponement): ProposedDate[] {
-    return session.proposedDates.filter((pd) => pd.votable);
+    return sortedProposedDates(session.proposedDates.filter((pd) => pd.votable));
   }
 
   /**
@@ -266,8 +279,8 @@ export class PostponementRules {
       votes: session.votes.filter((v) => v.proposedDateId !== proposedDateId),
       confirmedProposedDateId:
         session.confirmedProposedDateId === proposedDateId
-          ? undefined
-          : session.confirmedProposedDateId,
+        ? undefined
+        : session.confirmedProposedDateId,
     };
   }
 
@@ -285,13 +298,15 @@ export class PostponementRules {
     // joined flag yet, so a registered-but-never-voted player is indistinguishable from
     // a never-joined roster player. Upgrade path: persist a joined marker on Player.
     const joinedIds = new Set(
-      session.votes.filter((v) => playerIds.has(v.participantId)).map((v) => v.participantId),
+      session.votes.filter((v) => playerIds.has(v.participantId))
+        .map((v) => v.participantId),
     );
 
     const result: Record<string, DateCompletion> = {};
     for (const pd of session.proposedDates) {
       const dateVoterIds = new Set(
-        session.votes.filter((v) => v.proposedDateId === pd.id).map((v) => v.participantId),
+        session.votes.filter((v) => v.proposedDateId === pd.id)
+          .map((v) => v.participantId),
       );
       const voted = teamPlayers.filter((p) => dateVoterIds.has(p.id)).length;
       const nonVoters = teamPlayers
@@ -317,29 +332,30 @@ export class PostponementRules {
     const teamPlayerIds = new Set(teamPlayers.map((p) => p.id));
     const completion = this.teamCompletion(session, team);
 
-    return session.proposedDates.map((pd) => {
-      const voteByPlayerId = new Map(
-        session.votes
-          .filter((v) => v.proposedDateId === pd.id && teamPlayerIds.has(v.participantId))
-          .map((v) => [v.participantId, v.type]),
-      );
-      const dateCompletion = completion[pd.id] ?? {
-        voted: 0,
-        total: teamPlayers.length,
-        nonVoters: [],
-      };
-      return {
-        dateId: pd.id,
-        votes: teamPlayers.map((p) => ({
-          playerId: p.id,
-          playerName: p.name,
-          vote: voteByPlayerId.get(p.id) ?? null,
-        })),
-        voted: dateCompletion.voted,
-        total: dateCompletion.total,
-        nonVoters: dateCompletion.nonVoters,
-      };
-    });
+    return sortedProposedDates(session.proposedDates)
+      .map((pd) => {
+        const voteByPlayerId = new Map(
+          session.votes
+            .filter((v) => v.proposedDateId === pd.id && teamPlayerIds.has(v.participantId))
+            .map((v) => [v.participantId, v.type]),
+        );
+        const dateCompletion = completion[pd.id] ?? {
+          voted: 0,
+          total: teamPlayers.length,
+          nonVoters: [],
+        };
+        return {
+          dateId: pd.id,
+          votes: teamPlayers.map((p) => ({
+            playerId: p.id,
+            playerName: p.name,
+            vote: voteByPlayerId.get(p.id) ?? null,
+          })),
+          voted: dateCompletion.voted,
+          total: dateCompletion.total,
+          nonVoters: dateCompletion.nonVoters,
+        };
+      });
   }
 
 }

@@ -39,7 +39,39 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(2);
 
     await checkA11y();
-    await expect(page).toHaveScreenshot('edit-with-dates.png', {fullPage: true});
+    await expect(page)
+      .toHaveScreenshot('edit-with-dates.png', {fullPage: true});
+  });
+
+  test('should render proposed dates chronologically on the edit and vote pages regardless of the order they were added', async ({
+                                                                                                                                   page,
+                                                                                                                                   checkA11y,
+                                                                                                                                 }) => {
+    const {session} = await EditPage.createSession(page, [
+      '2026-03-12T18:30',
+      '2026-03-05T20:00',
+    ]);
+    const editPage = new EditPage(page);
+
+    await expect(editPage.proposedDateDisplays())
+      .resolves
+      .toEqual([
+        expect.stringContaining('Mar 5'),
+        expect.stringContaining('Mar 12'),
+      ]);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+
+    await expect(joinPage.voteForm.getByRole('group')
+      .nth(0))
+      .toContainText('Mar 5');
+    await expect(joinPage.voteForm.getByRole('group')
+      .nth(1))
+      .toContainText('Mar 12');
+
+    await checkA11y();
   });
 
   test('should show vote tallies on the edit page', async ({page, checkA11y}) => {
@@ -107,7 +139,8 @@ test.describe('Postponement Editing', () => {
       .toHaveText('0');
 
     await checkA11y();
-    await expect(page).toHaveScreenshot('edit-with-votes.png', {fullPage: true});
+    await expect(page)
+      .toHaveScreenshot('edit-with-votes.png', {fullPage: true});
   });
 
   test('should toggle voting visibility on proposed dates', async ({page, checkA11y}) => {
@@ -271,7 +304,8 @@ test.describe('Postponement Editing', () => {
 
   test('should maintain accessibility on the editing interface', async ({page, checkA11y}) => {
     await checkA11y();
-    await expect(page).toHaveScreenshot('edit-empty.png', {fullPage: true});
+    await expect(page)
+      .toHaveScreenshot('edit-empty.png', {fullPage: true});
   });
 
   test('maintains accessibility on the edit page with split tallies visible', async ({page, checkA11y}) => {
@@ -323,7 +357,8 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(0);
 
     await checkA11y();
-    await expect(page).toHaveScreenshot('edit-confirmed.png', {fullPage: true});
+    await expect(page)
+      .toHaveScreenshot('edit-confirmed.png', {fullPage: true});
   });
 
   test('should reopen a confirmed postponement; new dates stay votable', async ({page, checkA11y}) => {
