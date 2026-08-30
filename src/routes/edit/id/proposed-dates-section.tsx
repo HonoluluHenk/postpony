@@ -1,8 +1,8 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
-import type { AppLocale, TranslateFn } from '../../../locales';
-import { localeConfig, weekdayLabels } from '../../../locales';
 import type { DateClashes } from '../../../lib/clashes';
 import type { PostponementStatus, VoteTallyItem } from '../../../lib/models';
+import type { AppLocale, TranslateFn } from '../../../locales';
+import { localeConfig, weekdayLabels } from '../../../locales';
 import { ClashInfo } from '../../partials/clash-info';
 import { ErrorContainer } from '../../partials/error-container';
 import type { OwnTeamView } from './own-team-view';
@@ -186,22 +186,31 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                        />
                      </th>
                      <td>
-                        <label
-                          class="switch"
-                          title={props.t('votable_toggle')}
-                        >
-                          <input
-                            type="checkbox"
-                            hx-post={`/edit/${props.sessionId}/proposed-date-visibility?proposedDateId=${proposedDate.id}&votable=${!proposedDate.votable}`}
-                            hx-target="#proposed-dates-management"
-                            checked={proposedDate.votable}
-                            aria-label={props.t('votable_toggle')}
-                          />
-                          <span></span>
-                        </label>
-                      </td>
+                       <label
+                         class="switch"
+                         title={props.t('votable_toggle')}
+                       >
+                         <input
+                           type="checkbox"
+                           hx-post={`/edit/${props.sessionId}/proposed-date-visibility?proposedDateId=${proposedDate.id}&votable=${!proposedDate.votable}`}
+                           hx-target="#proposed-dates-management"
+                           checked={proposedDate.votable}
+                           aria-label={props.t('votable_toggle')}
+                         />
+                         <span></span>
+                       </label>
+                     </td>
                      <td>
                        <div class="row items-center gap">
+                         <button
+                           type="button"
+                           class="button outline"
+                           data-open-dialog={`delete-proposed-date-${proposedDate.id}`}
+                           aria-label={props.t('delete_proposed_date')}
+                           title={props.t('delete_proposed_date')}
+                         >
+                           <i aria-hidden="true">delete</i>
+                         </button>
                          {proposedDate.votable ? (
                            <button
                              type="button"
@@ -212,15 +221,6 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                              {props.t('confirm_date')}
                            </button>
                          ) : null}
-                         <button
-                           type="button"
-                           class="button outline"
-                           data-open-dialog={`delete-proposed-date-${proposedDate.id}`}
-                           aria-label={props.t('delete_proposed_date')}
-                           title={props.t('delete_proposed_date')}
-                         >
-                           <i aria-hidden="true">delete</i>
-                         </button>
                        </div>
                        <dialog
                          id={`delete-proposed-date-${proposedDate.id}`}
