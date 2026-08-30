@@ -28,6 +28,25 @@ export interface DateClashes {
 
 export type ClashesByProposedDate = Record<string, DateClashes>;
 
+export interface BufferedWindow {
+  lower: Temporal.PlainDateTime;
+  upper: Temporal.PlainDateTime;
+}
+
+/**
+ * The `[proposedStart − CLASH_BUFFER_HOURS, proposedEnd + CLASH_BUFFER_HOURS]`
+ * window around a Proposed Date's range, inclusive at the edges. Shared by the
+ * clash and venue-occupancy checks so both signals use the same edges.
+ */
+export function bufferedWindow(dateTimeRange: ProposedDate['dateTimeRange']): BufferedWindow {
+  return {
+    lower: parseIsoToPlainDateTime(dateTimeRange.start)
+      .subtract({hours: CLASH_BUFFER_HOURS}),
+    upper: parseIsoToPlainDateTime(dateTimeRange.end)
+      .add({hours: CLASH_BUFFER_HOURS}),
+  };
+}
+
 /**
  * Computes the Clashes of every Proposed Date against both teams' scraped
  * schedules, keyed by Proposed Date id. A game clashes when its start falls
@@ -61,10 +80,7 @@ function clashesInRange(
   games: Match[],
   sideName: string | undefined,
 ): Clash[] {
-  const lower = parseIsoToPlainDateTime(dateTimeRange.start)
-    .subtract({hours: CLASH_BUFFER_HOURS});
-  const upper = parseIsoToPlainDateTime(dateTimeRange.end)
-    .add({hours: CLASH_BUFFER_HOURS});
+  const {lower, upper} = bufferedWindow(dateTimeRange);
 
   const clashes: Clash[] = [];
   for (const game of games) {
@@ -82,7 +98,11 @@ function clashesInRange(
   return clashes;
 }
 
-function isOriginalMatch(game: Match, originalMatch: OriginalMatchIdentity): boolean {
+/**
+ * True when the game is the postponed match itself (same date plus home and
+ * guest names); a hand-entered match (no identity) matches nothing.
+ */
+export function isOriginalMatch(game: Match, originalMatch: OriginalMatchIdentity): boolean {
   if (originalMatch.start === undefined
       || originalMatch.homeTeam === undefined
       || originalMatch.guestTeam === undefined) {
