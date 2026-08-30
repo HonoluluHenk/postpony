@@ -79,6 +79,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
       no: counts.no,
       clashes: pd.clashes,
       venueNumber: pd.venueNumber,
+      venueOccupancy: pd.venueOccupancy,
     };
   });
 

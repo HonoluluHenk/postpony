@@ -91,6 +91,61 @@ export function initLanguage() {
 }
 
 /**
+ * Shows/hides one venue-occupancy tooltip by toggling `.is-open` on its host
+ * (the `.venue-occupancy` wrapper holding the count chip and the popup). The
+ * CSS renders the `role="tooltip"` popup only when the host is open.
+ * @param {HTMLElement} host
+ * @param {boolean} open
+ */
+function setOccupancyTooltip(host, open) {
+  host.classList.toggle('is-open', open);
+}
+
+/**
+ * Wires the venue-occupancy count chips to their `role="tooltip"` popups.
+ * Shown on hover (pointerover), keyboard focus (focusin), and tap (click);
+ * dismissed by pointer leave (pointerout outside the host), focus loss
+ * (focusout outside the host), clicking anywhere else, or Escape (which also
+ * returns focus to the chip). All listeners are delegated on `document`, so
+ * they survive HTMX swaps that re-render the proposed-date list or vote form.
+ */
+export function initOccupancyTooltips() {
+  document.addEventListener('pointerover', (e) => {
+    const host = e.target.closest('.venue-occupancy');
+    if (host) setOccupancyTooltip(host, true);
+  });
+  document.addEventListener('pointerout', (e) => {
+    const host = e.target.closest('.venue-occupancy');
+    if (host && !host.contains(e.relatedTarget)) setOccupancyTooltip(host, false);
+  });
+  document.addEventListener('focusin', (e) => {
+    const trigger = e.target.closest('[data-occupancy-trigger]');
+    if (trigger) setOccupancyTooltip(trigger.closest('.venue-occupancy'), true);
+  });
+  document.addEventListener('focusout', (e) => {
+    const host = e.target.closest('.venue-occupancy');
+    if (host && !host.contains(e.relatedTarget)) setOccupancyTooltip(host, false);
+  });
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-occupancy-trigger]');
+    if (trigger) {
+      setOccupancyTooltip(trigger.closest('.venue-occupancy'), true);
+    } else if (!e.target.closest('.venue-occupancy')) {
+      document.querySelectorAll('.venue-occupancy.is-open')
+        .forEach((host) => setOccupancyTooltip(host, false));
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const trigger = e.target.closest('[data-occupancy-trigger]');
+    if (trigger) {
+      setOccupancyTooltip(trigger.closest('.venue-occupancy'), false);
+      trigger.focus();
+    }
+  });
+}
+
+/**
  * Handles click-to-copy for [data-copy] buttons.
  */
 export function initClipboard() {

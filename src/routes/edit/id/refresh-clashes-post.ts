@@ -1,5 +1,5 @@
 import type { App } from '../../../app';
-import { attachClashes, computeClashesForSession } from './proposed-dates-post';
+import { attachClashCheckResult, computeClashesForSession } from './proposed-dates-post';
 import { renderEditPartials } from './render-edit-partials';
 
 export const handleRefreshClashesPost = async (app: App): Promise<Response> => {
@@ -9,15 +9,15 @@ export const handleRefreshClashesPost = async (app: App): Promise<Response> => {
     app.notFound(app.t('session_not_found'));
   }
 
-  const clashes = await computeClashesForSession(session);
-  const refreshed = clashes === undefined ? session : attachClashes(session, clashes);
+  const checkResult = await computeClashesForSession(session);
+  const refreshed = checkResult === undefined ? session : attachClashCheckResult(session, checkResult);
   await app.store.save(refreshed);
 
   if (app.isPartial) {
     // Only claim "showing the previous results" when a previous snapshot
     // actually exists; a first check that fails renders the plain nothing state.
     const hadSnapshot = session.proposedDates.some((pd) => pd.clashes !== undefined);
-    const html = renderEditPartials(app, refreshed, clashes === undefined && hadSnapshot
+    const html = renderEditPartials(app, refreshed, checkResult === undefined && hadSnapshot
       ? {refreshError: true}
       : {});
     return app.c.html(html);

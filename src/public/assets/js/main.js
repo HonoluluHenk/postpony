@@ -6,6 +6,7 @@ import {
   initClipboard,
   initDeleteDialogs,
   initFocusManagement,
+  initOccupancyTooltips,
   initProposedDateTimePicker
 } from './ui.js';
 
@@ -19,5 +20,6 @@ window.addEventListener('load', () => {
   initClipboard();
   initDeleteDialogs();
   initFocusManagement();
+  initOccupancyTooltips();
   initProposedDateTimePicker();
 });

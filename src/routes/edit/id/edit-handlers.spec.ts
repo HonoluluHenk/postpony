@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../../lib/__test-utils__/builders';
-import { fetchMatches } from '../../../lib/click-tt-scraper';
+import { fetchClubMeetings, fetchMatches } from '../../../lib/click-tt-scraper';
 import { ClickTTError } from '../../../lib/errors';
 import { generateProposedDates } from '../../../lib/proposed-dates-generator';
 import type { Postponement } from '../../../lib/models';
@@ -17,11 +17,17 @@ import { handleProposedDateVisibilityPost } from './proposed-date-visibility-pos
 import { handleRefreshClashesPost } from './refresh-clashes-post';
 import { handleReopenPost } from './reopen-post';
 
-vi.mock('../../../lib/click-tt-scraper', () => ({
-  fetchMatches: vi.fn(),
-}));
+vi.mock('../../../lib/click-tt-scraper', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../lib/click-tt-scraper')>();
+  return {
+    ...actual,
+    fetchMatches: vi.fn(),
+    fetchClubMeetings: vi.fn(),
+  };
+});
 
 const mockFetchMatches = vi.mocked(fetchMatches);
+const mockFetchClubMeetings = vi.mocked(fetchClubMeetings);
 
 interface MockOptions {
   params?: Record<string, string>;
@@ -57,6 +63,7 @@ describe('edit handlers', () => {
     vi.spyOn(temporalUtils, 'nowPlainDateTimeIso')
       .mockReturnValue(FIXED_TODAY_ISO);
     mockFetchMatches.mockReset();
+    mockFetchClubMeetings.mockReset();
   });
 
   afterEach(() => {
@@ -1222,6 +1229,129 @@ describe('edit handlers', () => {
         expect(html)
           .toContain('Not checked');
       });
+
+      describe('venue occupancy', () => {
+        function occupancySession(overrides: Parameters<typeof aSession>[0] = {}): Postponement {
+          return clashSession({clubId: '33282', ...overrides});
+        }
+
+        test('single add: fetches the home club\'s meetings in the same pass and attaches the occupancy snapshot', async () => {
+          const session = occupancySession();
+          mockFetchMatches.mockResolvedValue([]);
+          mockFetchClubMeetings.mockResolvedValue([
+            {day: 'Di', date: '01.09.2025', time: '19:30', homeTeam: 'Ostermundigen', guestTeam: 'Köniz II', venueNumber: 1},
+          ]);
+          const app = createApp({
+            params: {id: session.id},
+            headers: {'HX-Request': 'true'},
+            body: {proposedDateTime: '09/01/2025 08:00 pm'},
+          });
+          await app.store.save(session);
+
+          const html = await (await handleEditProposedDatesPost(app)).text();
+
+          // The occupancy fetch runs in parallel with the two team fetches,
+          // deriving its season window from the home team's championship.
+          expect(mockFetchClubMeetings)
+            .toHaveBeenCalledTimes(1);
+          expect(mockFetchClubMeetings)
+            .toHaveBeenCalledWith('33282', '01.07.2026', '30.06.2027');
+          const stored = await app.store.get(session.id);
+          expect(stored?.proposedDates)
+            .toHaveLength(1);
+          expect(stored?.proposedDates[0]?.venueOccupancy)
+            .toEqual({
+              count: 1,
+              matches: [{opponent: 'Köniz II', start: '2025-09-01T19:30'}],
+            });
+          // The clash snapshot still attaches in the same pass.
+          expect(stored?.proposedDates[0]?.clashes)
+            .toEqual({home: [], away: []});
+          expect(html)
+            .toContain('1 other games at this venue');
+        });
+
+        test('single add: a failed occupancy scrape still saves the date and still attaches the clash snapshot', async () => {
+          const session = occupancySession();
+          mockFetchMatches.mockResolvedValue([
+            {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
+          ]);
+          mockFetchClubMeetings.mockRejectedValue(new ClickTTError('click-tt is down'));
+          const app = createApp({
+            params: {id: session.id},
+            headers: {'HX-Request': 'true'},
+            body: {proposedDateTime: '09/01/2025 08:00 pm'},
+          });
+          await app.store.save(session);
+          const saveSpy = vi.spyOn(app.store, 'save');
+
+          await handleEditProposedDatesPost(app);
+
+          const stored = await app.store.get(session.id);
+          expect(stored?.proposedDates)
+            .toHaveLength(1);
+          expect(stored?.proposedDates[0]?.venueOccupancy)
+            .toBeUndefined();
+          expect(stored?.proposedDates[0]?.clashes)
+            .toEqual({
+              home: [{opponent: 'Guest Team', start: '2025-09-01T19:00'}],
+              away: [{opponent: 'Home Team', start: '2025-09-01T19:00'}],
+            });
+          expect(saveSpy)
+            .toHaveBeenCalledTimes(1);
+        });
+
+        test('a club-id-less session (DEFAULT_CLUB_ID placeholder) never fires the occupancy fetch', async () => {
+          const session = clashSession({clubId: 'default-club'});
+          mockFetchMatches.mockResolvedValue([]);
+          const app = createApp({
+            params: {id: session.id},
+            headers: {'HX-Request': 'true'},
+            body: {proposedDateTime: '09/01/2025 08:00 pm'},
+          });
+          await app.store.save(session);
+
+          const html = await (await handleEditProposedDatesPost(app)).text();
+
+          expect(mockFetchClubMeetings)
+            .not
+            .toHaveBeenCalled();
+          const stored = await app.store.get(session.id);
+          expect(stored?.proposedDates[0]?.venueOccupancy)
+            .toBeUndefined();
+          // clashes still attach: the session has team identities
+          expect(stored?.proposedDates[0]?.clashes)
+            .toEqual({home: [], away: []});
+          expect(html)
+            .not
+            .toContain('other games at this venue');
+        });
+
+        test('a clean occupancy (zero count) renders the clean line, not the count', async () => {
+          const session = occupancySession();
+          mockFetchMatches.mockResolvedValue([]);
+          mockFetchClubMeetings.mockResolvedValue([
+            {day: 'Fr', date: '05.09.2025', time: '10:00', homeTeam: 'Ostermundigen', guestTeam: 'Bern', venueNumber: 1},
+          ]);
+          const app = createApp({
+            params: {id: session.id},
+            headers: {'HX-Request': 'true'},
+            body: {proposedDateTime: '09/01/2025 08:00 pm'},
+          });
+          await app.store.save(session);
+
+          const html = await (await handleEditProposedDatesPost(app)).text();
+
+          const stored = await app.store.get(session.id);
+          expect(stored?.proposedDates[0]?.venueOccupancy)
+            .toEqual({count: 0, matches: []});
+          expect(html)
+            .toContain('Venue checked, no other games');
+          expect(html)
+            .not
+            .toContain('other games at this venue');
+        });
+      });
     });
   });
 
@@ -1866,6 +1996,46 @@ describe('edit handlers', () => {
       expect(html)
         .not
         .toContain('showing the previous results');
+    });
+
+    test('re-fetches the club meetings and replaces the stored occupancy snapshot alongside the clashes', async () => {
+      const session = aSession({
+        homeTeam: 'Home Team',
+        guestTeam: 'Guest Team',
+        clubId: '33282',
+        homeTeamIdentity: identities.home,
+        guestTeamIdentity: identities.away,
+        proposedDates: [
+          aProposedDate({
+            id: 'pd-1',
+            clashes: {home: [], away: []},
+            venueOccupancy: {count: 0, matches: []},
+          }),
+        ],
+      });
+      mockFetchMatches.mockResolvedValue([]);
+      mockFetchClubMeetings.mockResolvedValue([
+        {day: 'Di', date: '01.09.2025', time: '19:30', homeTeam: 'Ostermundigen', guestTeam: 'Köniz II', venueNumber: 1},
+      ]);
+      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      await app.store.save(session);
+
+      const html = await (await handleRefreshClashesPost(app)).text();
+
+      expect(mockFetchClubMeetings)
+        .toHaveBeenCalledTimes(1);
+      expect(mockFetchClubMeetings)
+        .toHaveBeenCalledWith('33282', '01.07.2026', '30.06.2027');
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates[0]?.venueOccupancy)
+        .toEqual({
+          count: 1,
+          matches: [{opponent: 'Köniz II', start: '2025-09-01T19:30'}],
+        });
+      expect(stored?.proposedDates[0]?.clashes)
+        .toEqual({home: [], away: []});
+      expect(html)
+        .toContain('1 other games at this venue');
     });
   });
 

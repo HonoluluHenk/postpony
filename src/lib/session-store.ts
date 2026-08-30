@@ -46,6 +46,7 @@ export function normalize(data: Record<string, unknown>): Postponement {
             ? pd['awayTeamVotable']
             : false,
     clashes: pd['clashes'] as ProposedDate['clashes'],
+    venueOccupancy: pd['venueOccupancy'] as ProposedDate['venueOccupancy'],
   }));
 
   const venues: Venue[] = data['venues'] as Venue[] | undefined ?? [];

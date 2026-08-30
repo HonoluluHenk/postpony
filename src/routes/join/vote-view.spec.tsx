@@ -579,6 +579,164 @@ describe('renderVoteStep clash info', () => {
   });
 });
 
+describe('renderVoteStep venue occupancy info', () => {
+  test('renders the count line when other home matches occupy the date\'s venue', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [
+        aProposedDate({
+          votable: true,
+          venueOccupancy: {
+            count: 2,
+            matches: [
+              {opponent: 'Port', start: '2025-09-01T20:15'},
+              {opponent: 'Bern', start: '2025-09-01T19:30'},
+            ],
+          },
+        }),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('2 other games at this venue');
+  });
+
+  test('renders the conflicting matches in an accessible tooltip popup', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [
+        aProposedDate({
+          id: 'date-1',
+          votable: true,
+          venueOccupancy: {
+            count: 2,
+            matches: [
+              {opponent: 'Port', start: '2025-09-01T20:15'},
+              {opponent: 'Bern', start: '2025-09-01T19:30'},
+            ],
+          },
+        }),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('aria-describedby="occupancy-tooltip-date-1"');
+    expect(body)
+      .toContain('role="tooltip"');
+    expect(body)
+      .toContain('8:15 PM vs Port');
+    expect(body)
+      .toContain('7:30 PM vs Bern');
+  });
+
+  test('renders the clean line for a zero-count occupancy', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [
+        aProposedDate({
+          votable: true,
+          venueOccupancy: {count: 0, matches: []},
+        }),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('Venue checked, no other games');
+    expect(body)
+      .not
+      .toContain('other games at this venue');
+  });
+
+  test('renders nothing when occupancy is absent (hand-entered match or failed scrape)', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: true})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .not
+      .toContain('other games at this venue');
+    expect(body)
+      .not
+      .toContain('Venue checked');
+  });
+
+  test('renders the localized de-CH occupancy lines', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [
+        aProposedDate({id: 'date-1', votable: true, venueOccupancy: {count: 2, matches: []}}),
+        aProposedDate({id: 'date-2', votable: true, venueOccupancy: {count: 0, matches: []}}),
+      ],
+    });
+    const app = createApp('de-CH');
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('2 weitere Spiele an dieser Halle');
+    expect(body)
+      .toContain('Halle geprüft, keine weiteren Spiele');
+  });
+});
+
 describe('renderConfirmedInfo', () => {
   test('renders the confirmed date chip and hides the reopen count when it is zero', async () => {
     const session = aSession({

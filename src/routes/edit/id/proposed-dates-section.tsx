@@ -1,11 +1,13 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { DateClashes } from '../../../lib/clashes';
 import type { PostponementStatus, Venue, VoteTallyItem } from '../../../lib/models';
+import type { VenueOccupancy } from '../../../lib/venue-occupancy';
 import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
 import { ClashInfo } from '../../partials/clash-info';
 import { ErrorContainer } from '../../partials/error-container';
 import { VenueBadge } from '../../partials/venue-badge';
+import { VenueOccupancyInfo } from '../../partials/venue-occupancy-info';
 import type { OwnTeamView } from './own-team-view';
 import { OwnTeamVotes } from './own-team-votes';
 import { StatusChip } from './status-chip';
@@ -16,6 +18,8 @@ export interface ProposedDateTallyItem extends VoteTallyItem {
   clashes?: DateClashes;
   /** venue number the date applies to; absent means venue 1 (legacy dates predate venues). */
   venueNumber?: number;
+  /** Venue Occupancy snapshot from the last check; absent when never checked, the scrape failed, or the session has no club id. */
+  venueOccupancy?: VenueOccupancy;
 }
 
 /**
@@ -259,6 +263,12 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                          <ClashInfo
                            clashes={proposedDate.clashes}
                            clashCheckable={props.clashCheckable}
+                           t={props.t}
+                           locale={props.locale}
+                         />
+                         <VenueOccupancyInfo
+                           id={proposedDate.id}
+                           occupancy={proposedDate.venueOccupancy}
                            t={props.t}
                            locale={props.locale}
                          />

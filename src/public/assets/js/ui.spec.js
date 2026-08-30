@@ -8,6 +8,7 @@ import {
   initClipboard,
   initDeleteDialogs,
   initFocusManagement,
+  initOccupancyTooltips,
 } from './ui.js';
 
 describe('shouldSwapErrorBody', () => {
@@ -147,6 +148,91 @@ describe('initClipboard', () => {
     expect(icon.textContent).toBe('content_copy');
 
     document.body.removeChild(btn);
+  });
+});
+
+describe('initOccupancyTooltips', () => {
+  let host;
+  let trigger;
+  let tooltip;
+  let outside;
+  let cleanup;
+
+  beforeEach(() => {
+    host = document.createElement('div');
+    host.className = 'venue-occupancy';
+    host.innerHTML = '<button type="button" data-occupancy-trigger="true">1 other games at this venue</button>'
+      + '<div id="occupancy-tooltip-pd-1" role="tooltip" class="occupancy-tooltip">8:15 PM vs Port</div>';
+    document.body.appendChild(host);
+    trigger = host.querySelector('[data-occupancy-trigger]');
+    tooltip = host.querySelector('.occupancy-tooltip');
+    outside = document.createElement('div');
+    document.body.appendChild(outside);
+    initOccupancyTooltips();
+    cleanup = () => {
+      document.body.removeChild(host);
+      document.body.removeChild(outside);
+    };
+  });
+
+  afterEach(() => cleanup());
+
+  it('shows the tooltip on pointerover of the trigger', () => {
+    trigger.dispatchEvent(new MouseEvent('pointerover', {bubbles: true}));
+    expect(host.classList.contains('is-open')).toBe(true);
+  });
+
+  it('keeps the tooltip open when the pointer moves from trigger to tooltip', () => {
+    trigger.dispatchEvent(new MouseEvent('pointerover', {bubbles: true}));
+    trigger.dispatchEvent(new MouseEvent('pointerout', {bubbles: true, relatedTarget: tooltip}));
+    expect(host.classList.contains('is-open')).toBe(true);
+  });
+
+  it('dismisses the tooltip when the pointer leaves the host', () => {
+    trigger.dispatchEvent(new MouseEvent('pointerover', {bubbles: true}));
+    trigger.dispatchEvent(new MouseEvent('pointerout', {bubbles: true, relatedTarget: outside}));
+    expect(host.classList.contains('is-open')).toBe(false);
+  });
+
+  it('shows the tooltip on keyboard focus and dismisses on focus loss', () => {
+    trigger.dispatchEvent(new FocusEvent('focusin', {bubbles: true}));
+    expect(host.classList.contains('is-open')).toBe(true);
+    trigger.dispatchEvent(new FocusEvent('focusout', {bubbles: true, relatedTarget: outside}));
+    expect(host.classList.contains('is-open')).toBe(false);
+  });
+
+  it('shows the tooltip on tap (click) and dismisses when clicking outside', () => {
+    trigger.click();
+    expect(host.classList.contains('is-open')).toBe(true);
+    outside.click();
+    expect(host.classList.contains('is-open')).toBe(false);
+  });
+
+  it('keeps the tooltip open when clicking inside the host', () => {
+    trigger.click();
+    tooltip.click();
+    expect(host.classList.contains('is-open')).toBe(true);
+  });
+
+  it('dismisses on Escape and returns focus to the trigger', () => {
+    trigger.focus();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}));
+    expect(host.classList.contains('is-open')).toBe(false);
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('works for a host injected after initialization', () => {
+    const lateHost = document.createElement('div');
+    lateHost.className = 'venue-occupancy';
+    lateHost.innerHTML = '<button type="button" data-occupancy-trigger="true">late</button>'
+      + '<div role="tooltip" class="occupancy-tooltip">late tooltip</div>';
+    document.body.appendChild(lateHost);
+
+    lateHost.querySelector('button')
+      .dispatchEvent(new MouseEvent('pointerover', {bubbles: true}));
+    expect(lateHost.classList.contains('is-open')).toBe(true);
+
+    document.body.removeChild(lateHost);
   });
 });
 

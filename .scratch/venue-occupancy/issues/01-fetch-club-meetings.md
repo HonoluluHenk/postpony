@@ -6,10 +6,14 @@
 
 **Status:** ready-for-agent
 
-- [ ] New scraper function `fetchClubMeetings(clubId, from, to)` fetches `clubMeetings?club=<id>&searchType=1&searchTimeRangeFrom=<from>&searchTimeRangeTo=<to>&onlyHomeMeetings=true` (GET) and returns the club's home Matches; `onlyHomeMeetings=true` keeps only rows where the club is the home team
-- [ ] The scraper `Match` type gains an optional `venueNumber?: number` parsed from the `Ort` cell link (`(n)`); rows without a venue link yield `undefined`
-- [ ] A pure helper derives the `from`/`to` season window from a championship (e.g. "MTTV 26/27" → `01.07.2026`..`30.06.2027`, seasons run Aug→Jul)
-- [ ] `fixtureNameForUrl` gains a `clubMeetings` branch for fixture mapping
-- [ ] New `club-meetings.html` fixture anchored on Ostermundigen (club 33282), containing home and away rows and at least one venue-less row
-- [ ] Unit tests: `fetchClubMeetings` against the fixture returns the expected home Matches with venue numbers; venue-less rows yield `undefined` venue; the season-window helper derives the correct window
-- [ ] All existing unit tests pass
+- [x] New scraper function `fetchClubMeetings(clubId, from, to)` fetches `clubMeetings?club=<id>&searchType=1&searchTimeRangeFrom=<from>&searchTimeRangeTo=<to>&onlyHomeMeetings=true` (GET) and returns the club's home Matches; `onlyHomeMeetings=true` keeps only rows where the club is the home team
+- [x] The scraper `Match` type gains an optional `venueNumber?: number` parsed from the `Ort` cell link (`(n)`); rows without a venue link yield `undefined`
+- [x] A pure helper derives the `from`/`to` season window from a championship (e.g. "MTTV 26/27" → `01.07.2026`..`30.06.2027`, seasons run Aug→Jul)
+- [x] `fixtureNameForUrl` gains a `clubMeetings` branch for fixture mapping
+- [x] New `club-meetings.html` fixture anchored on Ostermundigen (club 33282), containing home and away rows and at least one venue-less row
+- [x] Unit tests: `fetchClubMeetings` against the fixture returns the expected home Matches with venue numbers; venue-less rows yield `undefined` venue; the season-window helper derives the correct window
+- [x] All existing unit tests pass
+
+## Comments
+
+- `637db68` ticket done: `fetchClubMeetings(clubId, from, to)` with `onlyHomeMeetings=true` + home-row filter via the `Ort` club link, `Match.venueNumber?` parsed from the `(n)` link, `seasonWindow` helper, `clubMeetings` fixture branch, Ostermundigen `club-meetings.html` fixture (home/away/venue-less rows), and unit tests; `014ac8f` ticket done: edge-case tests for non-match/nameless/duplicate rows (branch coverage ≥ 80%).

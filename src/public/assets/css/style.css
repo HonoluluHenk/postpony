@@ -373,4 +373,43 @@
   .field.label input:not(:focus):placeholder-shown::placeholder {
     color: transparent;
   }
+
+  /* Venue-occupancy tooltip: the count chip's popup listing the conflicting
+     matches. Hidden by default; JS toggles `.is-open` on the host on hover,
+     keyboard focus, or tap, and dismisses on pointer leave, focus loss, or
+     Escape. Positioned above the chip (bottom: 100%) so it never reflows the
+     row. */
+  .venue-occupancy {
+    position: relative;
+    display: inline-block;
+  }
+
+  .occupancy-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + var(--space-2));
+    left: 0;
+    z-index: 10;
+    min-width: 13rem;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--border-radius);
+    background: var(--inverse-surface);
+    color: var(--inverse-on-surface);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
+  }
+
+  .venue-occupancy.is-open .occupancy-tooltip {
+    display: block;
+  }
+
+  .occupancy-tooltip__title {
+    display: block;
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+  }
+
+  .occupancy-tooltip__list {
+    margin: 0;
+    padding-inline-start: var(--space-4);
+  }
 }

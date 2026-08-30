@@ -3,9 +3,11 @@ import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../app';
 import type { DateClashes } from '../../lib/clashes';
 import type { Venue, Vote, VoteTallyItem } from '../../lib/models';
+import type { VenueOccupancy } from '../../lib/venue-occupancy';
 import { pageLayout } from '../layouts/main';
 import { ClashInfo } from '../partials/clash-info';
 import { VenueBadge } from '../partials/venue-badge';
+import { VenueOccupancyInfo } from '../partials/venue-occupancy-info';
 import { VotePlayerResults } from '../partials/vote-player-results';
 import type { Team } from './join-utils';
 
@@ -14,6 +16,8 @@ export interface VotePageDate extends VoteTallyItem {
   clashes?: DateClashes;
   /** venue number the date applies to; absent means venue 1 (legacy dates predate venues). */
   venueNumber?: number;
+  /** Venue Occupancy snapshot from the last check; absent when never checked, the scrape failed, or the session has no club id. */
+  venueOccupancy?: VenueOccupancy;
 }
 
 export interface PlayerVoteRow {
@@ -70,6 +74,12 @@ export function VotePage(props: VotePageProps): JSX.Element {
                 <ClashInfo
                   clashes={pd.clashes}
                   clashCheckable={props.clashCheckable}
+                  t={props.t}
+                  locale={props.locale}
+                />
+                <VenueOccupancyInfo
+                  id={pd.id}
+                  occupancy={pd.venueOccupancy}
                   t={props.t}
                   locale={props.locale}
                 />

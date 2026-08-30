@@ -6,8 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] The occupancy count line becomes interactive: hovering/tapping shows the conflicting Matches (opponent + localized start time) in a tooltip/popup
-- [ ] Implemented with the project's existing HTMX/JS conventions and accessible (keyboard-reachable, dismissible)
-- [ ] Rendered on both the edit page and the poll view
-- [ ] Localization keys for the tooltip wording (fr/it reuse English per ADR-0016)
-- [ ] Browser/e2e test: the tooltip reveals the expected matches; a11y check passes (per the testing skill's `checkA11y`)
+- [x] The occupancy count line becomes interactive: hovering/tapping shows the conflicting Matches (opponent + localized start time) in a tooltip/popup
+- [x] Implemented with the project's existing HTMX/JS conventions and accessible (keyboard-reachable, dismissible)
+- [x] Rendered on both the edit page and the poll view
+- [x] Localization keys for the tooltip wording (fr/it reuse English per ADR-0016)
+- [x] Browser/e2e test: the tooltip reveals the expected matches; a11y check passes (per the testing skill's `checkA11y`)
+## Comments
+
+- 16a5409 — tooltip implemented: count chip becomes a `role="tooltip"` button (delegated ui.js show/hide, hover/focus/tap, Escape-dismissible), shared partial renders on edit + poll views, en/de keys added, browser+unit+e2e tests cover reveal and a11y.
