@@ -71,6 +71,8 @@
   "proposed_date_time_invalid": "Bitte geben Sie ein gültiges Datum und eine gültige Uhrzeit an",
   "proposed_date_time_label": "Vorgeschlagenes Datum & Uhrzeit",
   "proposed_date_time_picker_label": "Kalender öffnen",
+  "proposed_date_venue_invalid": "Bitte wählen Sie eine gültige Hallennummer",
+  "proposed_date_venue_label": "Halle",
   "proposed_dates_generate_from_label": "Von",
   "proposed_dates_generate_to_label": "Bis",
   "proposed_dates_generate_section": "Termine vorschlagen (Generator)",

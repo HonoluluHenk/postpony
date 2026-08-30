@@ -71,6 +71,8 @@
   "proposed_date_time_invalid": "Please provide a valid date and time",
   "proposed_date_time_label": "Proposed Date & Time",
   "proposed_date_time_picker_label": "Open calendar",
+  "proposed_date_venue_invalid": "Please select a valid venue number",
+  "proposed_date_venue_label": "Venue",
   "proposed_dates_generate_from_label": "From",
   "proposed_dates_generate_to_label": "To",
   "proposed_dates_generate_section": "Generate Proposed Dates",

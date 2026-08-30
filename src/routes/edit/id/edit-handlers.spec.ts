@@ -201,6 +201,108 @@ describe('edit handlers', () => {
         .toBe(302);
     });
 
+    describe('single-date venue number', () => {
+      const twoVenues = [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+      ];
+
+      test('single add with a valid venue number stores it on the ProposedDate', async () => {
+        const session = aSession({venues: twoVenues});
+        const app = createApp({
+          params: {id: session.id},
+          body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '2'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(1);
+        expect(stored?.proposedDates[0]?.venueNumber)
+          .toBe(2);
+      });
+
+      test('single add with an out-of-range venue number rejects with a translated error in the error container', async () => {
+        const session = aSession({venues: twoVenues});
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '3'},
+        });
+        await app.store.save(session);
+
+        const response = await handleEditProposedDatesPost(app);
+        const html = await response.text();
+
+        expect(response.status)
+          .toBe(400);
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(0);
+        expect(html)
+          .toContain('id="error-container" hx-swap-oob="true"');
+        expect(html)
+          .toContain('Please select a valid venue number');
+        // the datetime round-trips so the organizer only fixes the venue
+        expect(html)
+          .toContain('value="09/01/2025 08:00 pm"');
+      });
+
+      test('single add with no venues accepts any venue number in 1..10', async () => {
+        const session = aSession();
+        const app = createApp({
+          params: {id: session.id},
+          body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '10'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(1);
+        expect(stored?.proposedDates[0]?.venueNumber)
+          .toBe(10);
+      });
+
+      test('single add with no venues rejects 11 as out of range', async () => {
+        const session = aSession();
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '11'},
+        });
+        await app.store.save(session);
+
+        const response = await handleEditProposedDatesPost(app);
+
+        expect(response.status)
+          .toBe(400);
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(0);
+      });
+
+      test('single add without a venue number leaves venueNumber undefined (legacy default = venue 1)', async () => {
+        const session = aSession({venues: twoVenues});
+        const app = createApp({
+          params: {id: session.id},
+          body: {proposedDateTime: '09/01/2025 08:00 pm'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(1);
+        expect(stored?.proposedDates[0]?.venueNumber)
+          .toBeUndefined();
+      });
+    });
+
     test('tuple branch: persists the expected count and renders a success toast with the count', async () => {
       const session = aSession({
         originalMatchDateTime: '2026-09-02T16:00',

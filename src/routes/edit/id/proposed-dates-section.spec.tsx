@@ -24,6 +24,7 @@ function baseProps(): ProposedDatesSectionProps {
     organizerPlayers: [],
     ownTeamResults: [],
     clashCheckable: false,
+    venues: [],
     t,
     locale: 'en-US',
     inputFormat: 'MM/dd/yyyy hh:mm aa',
@@ -178,6 +179,47 @@ describe('ProposedDatesSection component', () => {
     expect(html)
       .not
       .toContain(' required=""');
+  });
+
+  it('renders the venue select with the fixed 1–10 options when no venues are known', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html)
+      .toContain('<select id="venueNumber" name="venueNumber">');
+    expect(html)
+      .toContain('>Venue</label>');
+    for (let n = 1; n <= 10; n++) {
+      expect(html)
+        .toContain(`<option value="${n}">${n}</option>`);
+    }
+  });
+
+  it('renders venue names next to their numbers when venues are known', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      venues: [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+      ],
+    }));
+
+    expect(html)
+      .toContain('<option value="1">1 – Turnhalle orange</option>');
+    expect(html)
+      .toContain('<option value="2">2 – Turnhalle grün</option>');
+    expect(html)
+      .not
+      .toContain('<option value="3">3</option>');
+    expect(html)
+      .toContain('>Venue</label>');
+  });
+
+  it('hides the venue select alongside the single-add form when Confirmed', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), status: 'Confirmed'}));
+
+    expect(html)
+      .not
+      .toContain('id="venueNumber"');
   });
 });
 

@@ -124,12 +124,14 @@ export class PostponementRules {
   /**
    * Adds a Proposed Date. `start` must already be a normalized ISO datetime string.
    * The first date moves the session from `Draft` to `Voting`; later adds keep `Voting`.
-   * New dates are votable by both teams immediately.
+   * New dates are votable by both teams immediately. A `venueNumber` is stored when
+   * given; absence leaves the field undefined (read-time default: venue 1).
    */
   proposeDate(
     session: Postponement,
     start: string,
     proposerId: string,
+    venueNumber?: number,
   ): {
     session: Postponement;
     proposedDate: ProposedDate
@@ -143,6 +145,7 @@ export class PostponementRules {
       dateTimeRange: {start, end: start},
       proposerId,
       votable: true,
+      ...(venueNumber !== undefined ? {venueNumber} : {}),
     };
     return {
       session: {
