@@ -40,7 +40,6 @@ export function TeamSection(props: TeamSectionProps): JSX.Element {
         hx-post={`/edit/${props.sessionId}/players`}
         hx-target="#team-management"
         class="mt-4"
-        {...{['hx-on::after-request']: "focusAfterSwap('#team-management')"}}
       >
         <input type="hidden" name="teamId" value="home" />
         <div class={`field label border fill${homeInvalid ? ' invalid' : ''}`}>
@@ -81,7 +80,6 @@ export function TeamSection(props: TeamSectionProps): JSX.Element {
         hx-post={`/edit/${props.sessionId}/players`}
         hx-target="#team-management"
         class="mt-4"
-        {...{['hx-on::after-request']: "focusAfterSwap('#team-management')"}}
       >
         <input type="hidden" name="teamId" value="away" />
         <div class={`field label border fill${awayInvalid ? ' invalid' : ''}`}>

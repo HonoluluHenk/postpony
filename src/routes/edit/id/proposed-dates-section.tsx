@@ -190,13 +190,14 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                          class="switch"
                          title={props.t('votable_toggle')}
                        >
-                         <input
-                           type="checkbox"
-                           hx-post={`/edit/${props.sessionId}/proposed-date-visibility?proposedDateId=${proposedDate.id}&votable=${!proposedDate.votable}`}
-                           hx-target="#proposed-dates-management"
-                           checked={proposedDate.votable}
-                           aria-label={props.t('votable_toggle')}
-                         />
+<input
+                            type="checkbox"
+                            id={`votable-${proposedDate.id}`}
+                            hx-post={`/edit/${props.sessionId}/proposed-date-visibility?proposedDateId=${proposedDate.id}&votable=${!proposedDate.votable}`}
+                            hx-target="#proposed-dates-management"
+                            checked={proposedDate.votable}
+                            aria-label={props.t('votable_toggle')}
+                          />
                          <span></span>
                        </label>
                      </td>
@@ -212,12 +213,12 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                            <i aria-hidden="true">delete</i>
                          </button>
                          {proposedDate.votable ? (
-                           <button
-                             type="button"
-                             class="button outline"
-                             hx-post={`/edit/${props.sessionId}/proposed-date-confirm?proposedDateId=${proposedDate.id}`}
-                             hx-target="#proposed-dates-management"
-                           >
+<button
+                              type="button"
+                              class="button outline"
+                              hx-post={`/edit/${props.sessionId}/proposed-date-confirm?proposedDateId=${proposedDate.id}`}
+                              hx-target="#proposed-dates-management"
+                            >
                              {props.t('confirm_date')}
                            </button>
                          ) : null}
@@ -257,12 +258,11 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
              error={props.generatorError}
              successCount={props.generatorSuccessCount}
            />
-           <form
-             hx-post={`/edit/${props.sessionId}/proposed-dates`}
-             hx-target="#proposed-dates-management"
-             class="mt-4"
-             {...{['hx-on::after-request']: 'focusAfterSwap(\'#proposed-dates-management\')'}}
-           >
+<form
+              hx-post={`/edit/${props.sessionId}/proposed-dates`}
+              hx-target="#proposed-dates-management"
+              class="mt-4"
+            >
              <div class="row items-center gap">
                <div class={`field label border fill max${props.error ? ' invalid' : ''}`}>
                  <input

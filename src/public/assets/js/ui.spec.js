@@ -233,6 +233,30 @@ describe('initFocusManagement', () => {
     expect(document.activeElement).toBe(h2);
   });
 
+  it('does not steal focus htmx restored to a control inside the section', () => {
+    const el = document.createElement('div');
+    el.id = 'proposed-dates-management';
+    const h3 = document.createElement('h3');
+    h3.textContent = 'Dates';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'votable-abc';
+    el.appendChild(h3);
+    el.appendChild(checkbox);
+    document.body.appendChild(el);
+    cleanup = () => document.body.removeChild(el);
+
+    checkbox.focus();
+
+    el.dispatchEvent(new CustomEvent('htmx:afterSettle', {
+      bubbles: true,
+      detail: {target: el},
+    }));
+
+    expect(document.activeElement).toBe(checkbox);
+    expect(h3.getAttribute('tabindex')).toBe(null);
+  });
+
   it('ignores non-element event targets without throwing', () => {
     const event = new CustomEvent('htmx:afterSettle', {
       bubbles: true,

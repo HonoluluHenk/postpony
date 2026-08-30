@@ -224,10 +224,14 @@ export function initFocusManagement() {
     }
 
     if (el.matches('#team-management, #venue-management, #proposed-dates-management')) {
+      // ponytail: htmx already refocuses the interacted control (matched by
+      // id) after a swap, with preventScroll; only fall back to the heading
+      // when there is nothing to restore, and never scroll the page for it.
+      if (el.contains(document.activeElement)) return;
       var heading = el.querySelector('h2, h3, h4');
       if (heading) {
         heading.setAttribute('tabindex', '-1');
-        heading.focus();
+        heading.focus({preventScroll: true});
       }
     }
   });
