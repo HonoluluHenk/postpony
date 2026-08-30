@@ -278,14 +278,14 @@ describe('join handlers', () => {
         .toContain(`/join/${session.id}/home`);
     });
 
-    test('renders the pre-proposal empty-state hint for an away team with no votable dates', async () => {
+    test.each(['home', 'away'] as const)('renders the pre-proposal empty-state hint for the %s team with no votable dates', async (team) => {
       const session = await seedSession({
         status: 'Draft',
-        players: [aPlayer({teamId: 'away'})],
-        proposedDates: [aProposedDate({votableByOpponent: false})],
+        players: [aPlayer({teamId: team})],
+        proposedDates: [aProposedDate({votable: false})],
       });
       const app = createApp({
-        params: {id: session.id, team: 'away'},
+        params: {id: session.id, team},
         queries: {token: TOKEN, playerId: 'player-1'},
       });
       await app.store.save(session);
@@ -406,6 +406,30 @@ describe('join handlers', () => {
       const stored = await app.store.get(session.id);
       expect(stored?.votes)
         .toMatchObject([{proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'No'}]);
+    });
+
+    test.each(['home', 'away'] as const)('ignores the Vote posted for a closed date for the %s team', async (team) => {
+      const session = await seedSession({
+        players: [aPlayer({teamId: team})],
+        proposedDates: [
+          aProposedDate({id: 'open', votable: true}),
+          aProposedDate({id: 'closed', votable: false}),
+        ],
+      });
+      const app = createApp({
+        params: {id: session.id, team},
+        queries: {token: TOKEN, playerId: 'player-1'},
+        body: {'vote-open': 'Yes', 'vote-closed': 'No'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVotePost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.votes)
+        .toMatchObject([{proposedDateId: 'open', participantId: 'player-1', type: 'Yes'}]);
+      expect(response.status)
+        .toBe(200);
     });
 
     test('does not change votes when the session is confirmed', async () => {

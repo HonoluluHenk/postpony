@@ -122,7 +122,7 @@
   }
 
   /* BeerCSS `.list > li` is `flex-wrap: nowrap`; when a long proposed date
-     and the "away team votable" switch cannot share one line, let the row
+     and the "votable" switch cannot share one line, let the row
      wrap so the switch drops below the date instead of overlapping it. */
   .list li {
     flex-wrap: wrap;

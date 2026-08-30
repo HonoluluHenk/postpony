@@ -15,8 +15,8 @@ The primary entity: one postponed match, from draft to a confirmed new date. Per
     - `proposeDate` — add a Proposed Date.
     - `castVote` — record or update a Vote, one per participant per date.
     - `tally` / `splitTallies` — aggregate Votes per Proposed Date, optionally per team.
-    - `setVotableByOpponent` — toggle whether the opponent may vote on a Proposed Date.
-    - `confirmDate` — lock a Proposed Date as final: sets `confirmedProposedDateId` and moves to `Confirmed`; a no-op for dates not `votableByOpponent`.
+    - `setVotable` — toggle whether either team may vote on a Proposed Date (formerly `setVotableByOpponent`, now symmetric for home and away).
+    - `confirmDate` — lock a Proposed Date as final: sets `confirmedProposedDateId` and moves to `Confirmed`; a no-op for dates not `votable`.
     - `reopen` — soft-reopen a Confirmed session back to `Voting`; `reopenCount` + 1, history/votes/flags preserved.
     - `deleteProposedDate` — delete a Proposed Date; cascade-deletes its Votes and clears a dangling `confirmedProposedDateId` if that date was the confirmed-history date. A no-op for an unknown date id; status is left untouched.
 - **Seam** — non-determinism sits behind two overridable methods, `newId` and `now` (an id generator and a clock): real defaults in production, overridden by a `FakePostponementRules` subclass in tests. The class is the test surface.
@@ -35,7 +35,7 @@ A Player taking part in a Postponement — joined via the invitation link and ab
 
 ## Proposed Date
 
-A candidate new date/time for the postponed Match, proposed by the owner. Carries a `dateTimeRange` and a `votableByOpponent` flag — a pure access toggle deciding whether the opponent may vote on it, flipped by the organizer.
+A candidate new date/time for the postponed Match, proposed by the owner. Carries a `dateTimeRange` and a `votable` flag — a pure access toggle deciding whether either team may vote on it, flipped by the organizer. New dates are votable by default; non-votable dates are hidden from both teams' polls and cannot be confirmed.
 
 ## Clash
 

@@ -35,7 +35,7 @@ describe('builders', () => {
             end: '2025-09-01T22:00:00',
           },
           proposerId: 'player-1',
-          votableByOpponent: false,
+          votable: true,
         });
     });
 
@@ -117,7 +117,7 @@ describe('builders', () => {
               end: '2025-09-01T22:00:00',
             },
             proposerId: 'player-1',
-            votableByOpponent: false,
+            votable: true,
           },
         ]);
     });

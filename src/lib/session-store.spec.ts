@@ -48,7 +48,8 @@ describe('normalize', () => {
       .toBe(0);
     expect(session.confirmedProposedDateId)
       .toBeUndefined();
-    expect(session.proposedDates[0]?.votableByOpponent)
+    // row only carries the pre-rename awayTeamVotable key; the legacy value surfaces as votable
+    expect(session.proposedDates[0]?.votable)
       .toBe(true);
   });
 
@@ -66,7 +67,7 @@ describe('normalize', () => {
       .toBe('Confirmed');
   });
 
-  test('keeps the modern flag and fields when present', () => {
+  test('keeps the modern votable flag when present', () => {
     const session = normalize(legacySession({
       status: 'Voting',
       organizerTeam: 'away',
@@ -78,7 +79,7 @@ describe('normalize', () => {
           sessionId: 'legacy-1',
           dateTimeRange: {start: '2025-09-01T20:00:00', end: '2025-09-01T22:00:00'},
           proposerId: 'player-1',
-          votableByOpponent: false,
+          votable: false,
         },
       ],
     }));
@@ -91,16 +92,33 @@ describe('normalize', () => {
       .toBe(2);
     expect(session.confirmedProposedDateId)
       .toBe('pd-1');
-    expect(session.proposedDates[0]?.votableByOpponent)
+    expect(session.proposedDates[0]?.votable)
       .toBe(false);
   });
 
-  test('defaults the flag to false when neither field is present', () => {
+  test('falls back to the old votableByOpponent key when votable is absent', () => {
+    const session = normalize(legacySession({
+      proposedDates: [
+        {
+          id: 'pd-1',
+          sessionId: 'legacy-1',
+          dateTimeRange: {start: '2025-09-01T20:00:00', end: '2025-09-01T22:00:00'},
+          proposerId: 'player-1',
+          votableByOpponent: false,
+        },
+      ],
+    }));
+
+    expect(session.proposedDates[0]?.votable)
+      .toBe(false);
+  });
+
+  test('defaults the flag to false when no votable key is present', () => {
     const raw = legacySession();
     const rawDates = raw['proposedDates'] as Record<string, unknown>[];
     delete rawDates[0]?.['awayTeamVotable'];
 
-    expect(normalize(raw).proposedDates[0]?.votableByOpponent)
+    expect(normalize(raw).proposedDates[0]?.votable)
       .toBe(false);
   });
 
@@ -162,7 +180,7 @@ describe('SqliteSessionStore', () => {
       .toBe('home');
     expect(session?.reopenCount)
       .toBe(0);
-    expect(session?.proposedDates[0]?.votableByOpponent)
+    expect(session?.proposedDates[0]?.votable)
       .toBe(true);
   });
 
@@ -204,7 +222,7 @@ describe('MemorySessionStore.get', () => {
       .toBe('home');
     expect(session?.reopenCount)
       .toBe(0);
-    expect(session?.proposedDates[0]?.votableByOpponent)
+    expect(session?.proposedDates[0]?.votable)
       .toBe(true);
   });
 

@@ -215,7 +215,7 @@ export class EditPage {
       .locator('button.clipboard-btn');
   }
 
-  votableByOpponentToggle(dateIndex: number): Locator {
+  votableToggle(dateIndex: number): Locator {
     // ponytail: the switch is icon-only inside the "Votable" column (full
     // label only in aria-label/title), so locate the row's switch structurally
     // instead of by text. beer.css hides the native checkbox (opacity:0), so
@@ -232,9 +232,9 @@ export class EditPage {
     await this.addProposedDateButton.click();
   }
 
-  async toggleVotableByOpponent(dateIndex: number): Promise<void> {
+  async toggleVotable(dateIndex: number): Promise<void> {
     // ponytail: beer.css hides native checkboxes; toggle via the switch label
-    await this.votableByOpponentToggle(dateIndex)
+    await this.votableToggle(dateIndex)
       .click();
   }
 

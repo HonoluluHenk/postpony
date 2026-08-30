@@ -110,26 +110,27 @@ test.describe('Postponement Editing', () => {
     await expect(page).toHaveScreenshot('edit-with-votes.png', {fullPage: true});
   });
 
-  test('should toggle away team voting visibility on proposed dates', async ({page, checkA11y}) => {
+  test('should toggle voting visibility on proposed dates', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     // Add a proposed date
     await editPage.addProposedDate('2026-03-05T20:00');
     await expect(page.locator('#proposed-date-list tbody tr'))
       .toHaveCount(1);
 
-    // Toggle it on
-    await editPage.toggleVotableByOpponent(0);
-    await expect(editPage.votableByOpponentToggle(0))
-      .toBeVisible();
+    // Dates are votable by both teams out of the box.
+    await expect(editPage.votableCheckbox(0))
+      .toBeChecked();
 
     // Toggle it off
-    await editPage.toggleVotableByOpponent(0);
-    await expect(editPage.votableByOpponentToggle(0))
-      .toBeVisible();
+    await editPage.toggleVotable(0);
+    await expect(editPage.votableCheckbox(0))
+      .not
+      .toBeChecked();
 
-    await editPage.toggleVotableByOpponent(0);
-    await expect(editPage.votableByOpponentToggle(0))
-      .toBeVisible();
+    // Toggle it back on
+    await editPage.toggleVotable(0);
+    await expect(editPage.votableCheckbox(0))
+      .toBeChecked();
 
     await checkA11y();
   });
@@ -148,12 +149,6 @@ test.describe('Postponement Editing', () => {
       .toBeVisible();
 
     const editUrl = page.url();
-
-    // Make both dates votable for away team
-    await editPage.toggleVotableByOpponent(0);
-    await expect(editPage.votableByOpponentToggle(0))
-      .toBeVisible();
-    await editPage.toggleVotableByOpponent(1);
 
     // Join as home player and vote Yes on first date
     const joinPage = await new JoinPage(page)
@@ -310,11 +305,8 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.proposedDateRows)
       .toHaveCount(1);
 
-    // No confirm control until the date is proposed to the opponent.
-    await expect(editPage.proposedDateList.getByRole('button', {name: 'Confirm'}))
-      .toHaveCount(0);
-
-    await editPage.toggleVotableByOpponent(0);
+    // Dates are votable by both teams out of the box, so the confirm control
+    // is present immediately.
     await expect(editPage.confirmButton(0))
       .toBeVisible();
 
@@ -334,10 +326,9 @@ test.describe('Postponement Editing', () => {
     await expect(page).toHaveScreenshot('edit-confirmed.png', {fullPage: true});
   });
 
-  test('should reopen a confirmed postponement and start new dates non-votable', async ({page, checkA11y}) => {
+  test('should reopen a confirmed postponement; new dates stay votable', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
-    await editPage.toggleVotableByOpponent(0);
     await editPage.confirmDate(0);
     await expect(editPage.status)
       .toContainText('Confirmed');
@@ -348,16 +339,16 @@ test.describe('Postponement Editing', () => {
       .toContainText('Voting');
     await expect(editPage.reopenedCountNote())
       .toContainText('Reopened 1 time(s)');
-    // The previously proposed date keeps its opponent flag.
+    // The previously proposed date keeps its votable flag.
     await expect(editPage.votableCheckbox(0))
       .toBeChecked();
 
-    // A new date added after the reopen starts non-votable until flipped.
+    // A new date added after the reopen is votable too — dates start votable
+    // for both teams and the organizer may close specific ones.
     await editPage.addProposedDate('2026-06-15T18:30');
     await expect(editPage.proposedDateRows)
       .toHaveCount(2);
     await expect(editPage.votableCheckbox(1))
-      .not
       .toBeChecked();
 
     await checkA11y();

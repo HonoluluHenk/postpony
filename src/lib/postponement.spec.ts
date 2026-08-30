@@ -115,15 +115,17 @@ describe('postponement', () => {
   });
 
   describe('proposeDate', () => {
-    test('adds a proposed date with matching start and end', () => {
+    test('adds a proposed date with matching start and end, votable by default', () => {
       const {session, proposedDate} = new FakePostponementRules().proposeDate(aSession(), '2025-09-01T20:00', 'owner');
 
       expect(proposedDate.dateTimeRange.start)
         .toBe(proposedDate.dateTimeRange.end);
       expect(proposedDate.proposerId)
         .toBe('owner');
-      expect(proposedDate.votableByOpponent)
-        .toBe(false);
+      expect(proposedDate.votable)
+        .toBe(true);
+      expect(session.status)
+        .toBe('Voting');
       expect(session.proposedDates)
         .toEqual([proposedDate]);
     });
@@ -291,38 +293,65 @@ describe('postponement', () => {
     });
   });
 
-  describe('setVotableByOpponent', () => {
-    test('sets votableByOpponent on a proposed date', () => {
+  describe('setVotable', () => {
+    test('opens a proposed date for voting', () => {
       const session = aSession({
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: false})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: false})],
       });
 
-      const updated = new FakePostponementRules().setVotableByOpponent(session, 'pd-1', true);
+      const updated = new FakePostponementRules().setVotable(session, 'pd-1', true);
 
-      expect(updated.proposedDates[0]?.votableByOpponent)
+      expect(updated.proposedDates[0]?.votable)
         .toBe(true);
     });
 
-    test('clears votableByOpponent on a proposed date', () => {
+    test('closes a proposed date for voting', () => {
       const session = aSession({
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
 
-      const updated = new FakePostponementRules().setVotableByOpponent(session, 'pd-1', false);
+      const updated = new FakePostponementRules().setVotable(session, 'pd-1', false);
 
-      expect(updated.proposedDates[0]?.votableByOpponent)
+      expect(updated.proposedDates[0]?.votable)
         .toBe(false);
     });
 
     test('does not mutate the input session', () => {
       const session = aSession({
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: false})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: false})],
       });
 
-      new FakePostponementRules().setVotableByOpponent(session, 'pd-1', true);
+      new FakePostponementRules().setVotable(session, 'pd-1', true);
 
-      expect(session.proposedDates[0]?.votableByOpponent)
+      expect(session.proposedDates[0]?.votable)
         .toBe(false);
+    });
+  });
+
+  describe('votableDates', () => {
+    test('returns only the votable dates, in stored order', () => {
+      const session = aSession({
+        proposedDates: [
+          aProposedDate({id: 'pd-1', votable: true}),
+          aProposedDate({id: 'pd-2', votable: false}),
+          aProposedDate({id: 'pd-3', votable: true}),
+        ],
+      });
+
+      expect(new FakePostponementRules().votableDates(session).map((pd) => pd.id))
+        .toEqual(['pd-1', 'pd-3']);
+    });
+
+    test('returns an empty list when no dates are votable', () => {
+      const session = aSession({
+        proposedDates: [
+          aProposedDate({id: 'pd-1', votable: false}),
+          aProposedDate({id: 'pd-2', votable: false}),
+        ],
+      });
+
+      expect(new FakePostponementRules().votableDates(session))
+        .toEqual([]);
     });
   });
 
@@ -330,7 +359,7 @@ describe('postponement', () => {
     test('confirms a votable date and locks the session', () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
 
       const updated = new FakePostponementRules().confirmDate(session, 'pd-1');
@@ -341,10 +370,10 @@ describe('postponement', () => {
         .toBe('pd-1');
     });
 
-    test('is a no-op for a date that is not votable by the opponent', () => {
+    test('is a no-op for a date that is not votable', () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: false})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: false})],
       });
 
       const updated = new FakePostponementRules().confirmDate(session, 'pd-1');
@@ -369,7 +398,7 @@ describe('postponement', () => {
     test('is idempotent: confirming the same date twice keeps the same state', () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
 
       const first = new FakePostponementRules().confirmDate(session, 'pd-1');
@@ -391,8 +420,8 @@ describe('postponement', () => {
         reopenCount: 0,
         confirmedProposedDateId: 'pd-1',
         proposedDates: [
-          aProposedDate({id: 'pd-1', votableByOpponent: true}),
-          aProposedDate({id: 'pd-2', votableByOpponent: false}),
+          aProposedDate({id: 'pd-1', votable: true}),
+          aProposedDate({id: 'pd-2', votable: false}),
         ],
         votes: [aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
       });
@@ -416,7 +445,7 @@ describe('postponement', () => {
         status: 'Confirmed',
         reopenCount: 1,
         confirmedProposedDateId: 'pd-1',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
 
       const updated = new FakePostponementRules().reopen(session);

@@ -13,6 +13,7 @@ import { buildOwnTeamView } from './own-team-view';
 import { handleEditPlayersPost } from './players-post';
 import { handleProposedDateDeletePost } from './proposed-date-delete-post';
 import { handleEditProposedDatesPost } from './proposed-dates-post';
+import { handleProposedDateVisibilityPost } from './proposed-date-visibility-post';
 import { handleRefreshClashesPost } from './refresh-clashes-post';
 import { handleReopenPost } from './reopen-post';
 
@@ -182,8 +183,8 @@ describe('edit handlers', () => {
       const stored = await app.store.get(session.id);
       expect(stored?.status)
         .toBe('Voting');
-      expect(stored?.proposedDates[0]?.votableByOpponent)
-        .toBe(false);
+      expect(stored?.proposedDates[0]?.votable)
+        .toBe(true);
     });
 
     test('redirects without adding when the datetime is invalid', async () => {
@@ -920,7 +921,7 @@ describe('edit handlers', () => {
     test('confirms a votable date and locks the session', async () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
       const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
@@ -934,10 +935,10 @@ describe('edit handlers', () => {
         .toBe('pd-1');
     });
 
-    test('is a no-op for a date that is not votable by the opponent', async () => {
+    test('is a no-op for a date that is not votable', async () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: false})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: false})],
       });
       const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
@@ -955,7 +956,7 @@ describe('edit handlers', () => {
       const session = aSession({
         status: 'Confirmed',
         confirmedProposedDateId: 'pd-1',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
       const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
@@ -975,7 +976,7 @@ describe('edit handlers', () => {
         proposedDates: [
           aProposedDate({
             id: 'pd-1',
-            votableByOpponent: true,
+            votable: true,
             clashes: {home: [{opponent: 'Thun', start: '2025-09-01T18:00'}], away: []},
           }),
         ],
@@ -1004,7 +1005,7 @@ describe('edit handlers', () => {
         proposedDates: [
           aProposedDate({
             id: 'pd-1',
-            votableByOpponent: true,
+            votable: true,
             clashes: {home: [], away: []},
           }),
         ],
@@ -1029,12 +1030,12 @@ describe('edit handlers', () => {
         proposedDates: [
           aProposedDate({
             id: 'pd-clashing',
-            votableByOpponent: true,
+            votable: true,
             clashes: {home: [{opponent: 'Thun', start: '2025-09-01T18:00'}], away: []},
           }),
           aProposedDate({
             id: 'pd-clean',
-            votableByOpponent: true,
+            votable: true,
             clashes: {home: [], away: []},
           }),
         ],
@@ -1059,7 +1060,7 @@ describe('edit handlers', () => {
     test('renders the partial with the reopen control and no confirm control when partial', async () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
       const app = createApp({
         params: {id: session.id},
@@ -1086,7 +1087,7 @@ describe('edit handlers', () => {
     test('redirects to the edit page when not partial', async () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
       const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
@@ -1134,8 +1135,8 @@ describe('edit handlers', () => {
       const session = aSession({
         status: 'Voting',
         proposedDates: [
-          aProposedDate({id: 'pd-1', votableByOpponent: true}),
-          aProposedDate({id: 'pd-2', votableByOpponent: false}),
+          aProposedDate({id: 'pd-1', votable: true}),
+          aProposedDate({id: 'pd-2', votable: false}),
         ],
       });
       const app = createApp({
@@ -1175,6 +1176,74 @@ describe('edit handlers', () => {
     });
   });
 
+  describe('handleProposedDateVisibilityPost', () => {
+    test('throws when the session does not exist', async () => {
+      const app = createApp({params: {id: 'missing'}});
+
+      await expect(handleProposedDateVisibilityPost(app))
+        .rejects
+        .toThrow('Session not found');
+    });
+
+    test('flips the votable flag on for a closed date', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: false})],
+      });
+      const app = createApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1', votable: 'true'},
+      });
+      await app.store.save(session);
+
+      await handleProposedDateVisibilityPost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates[0]?.votable)
+        .toBe(true);
+    });
+
+    test('flips the votable flag off for an open date', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+      });
+      const app = createApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1', votable: 'false'},
+      });
+      await app.store.save(session);
+
+      await handleProposedDateVisibilityPost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates[0]?.votable)
+        .toBe(false);
+    });
+
+    test('renders the partial with the updated switch state when partial', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: false})],
+      });
+      const app = createApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1', votable: 'true'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const html = await (await handleProposedDateVisibilityPost(app)).text();
+
+      expect(html)
+        .toContain('<section id="proposed-dates-management"');
+      expect(html)
+        .toContain('proposed-date-visibility?proposedDateId=pd-1&amp;votable=false');
+      expect(html)
+        .toContain('proposed-date-confirm?proposedDateId=pd-1');
+    });
+  });
+
   describe('handleReopenPost', () => {
     test('throws when the session does not exist', async () => {
       const app = createApp({params: {id: 'missing'}});
@@ -1190,8 +1259,8 @@ describe('edit handlers', () => {
         reopenCount: 0,
         confirmedProposedDateId: 'pd-1',
         proposedDates: [
-          aProposedDate({id: 'pd-1', votableByOpponent: true}),
-          aProposedDate({id: 'pd-2', votableByOpponent: false}),
+          aProposedDate({id: 'pd-1', votable: true}),
+          aProposedDate({id: 'pd-2', votable: false}),
         ],
         votes: [aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
       });
@@ -1218,7 +1287,7 @@ describe('edit handlers', () => {
         status: 'Confirmed',
         reopenCount: 0,
         confirmedProposedDateId: 'pd-1',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
       const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
       await app.store.save(session);
@@ -1241,7 +1310,7 @@ describe('edit handlers', () => {
         status: 'Confirmed',
         reopenCount: 0,
         confirmedProposedDateId: 'pd-1',
-        proposedDates: [aProposedDate({id: 'pd-1', votableByOpponent: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
       const app = createApp({params: {id: session.id}});
       await app.store.save(session);

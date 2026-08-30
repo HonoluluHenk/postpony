@@ -11,7 +11,7 @@ import { StatusChip } from './status-chip';
 import { VoteTallySection } from './vote-tally-section';
 
 export interface ProposedDateTallyItem extends VoteTallyItem {
-  votableByOpponent: boolean;
+  votable: boolean;
   clashes?: DateClashes;
 }
 
@@ -183,23 +183,23 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                        />
                      </th>
                      <td>
-                       <label
-                         class="switch"
-                         title={props.t('votable_by_opponent')}
-                       >
-                         <input
-                           type="checkbox"
-                           hx-post={`/edit/${props.sessionId}/proposed-date-visibility?proposedDateId=${proposedDate.id}&votable=${!proposedDate.votableByOpponent}`}
-                           hx-target="#proposed-dates-management"
-                           checked={proposedDate.votableByOpponent}
-                           aria-label={props.t('votable_by_opponent')}
-                         />
-                         <span></span>
-                       </label>
-                     </td>
+                        <label
+                          class="switch"
+                          title={props.t('votable_toggle')}
+                        >
+                          <input
+                            type="checkbox"
+                            hx-post={`/edit/${props.sessionId}/proposed-date-visibility?proposedDateId=${proposedDate.id}&votable=${!proposedDate.votable}`}
+                            hx-target="#proposed-dates-management"
+                            checked={proposedDate.votable}
+                            aria-label={props.t('votable_toggle')}
+                          />
+                          <span></span>
+                        </label>
+                      </td>
                      <td>
                        <div class="row items-center gap">
-                         {proposedDate.votableByOpponent ? (
+                         {proposedDate.votable ? (
                            <button
                              type="button"
                              class="button outline"

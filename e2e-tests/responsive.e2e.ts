@@ -67,11 +67,11 @@ test.describe('Responsive Layout', () => {
 
     // The proposed-dates table stays a real table on phones (no card-stacking):
     // its thead keeps a static position and the `.scroll` wrapper pans
-    // sideways, so the "away team votable" switch stays reachable.
+    // sideways, so the "Votable" switch stays reachable.
     await expect(editPage.proposedDateList.locator('thead'))
       .not
       .toHaveCSS('position', 'absolute');
-    await expectFullyInViewport(editPage.votableByOpponentToggle(0));
+    await expectFullyInViewport(editPage.votableToggle(0));
   });
 
   test('desktop viewport: container caps at 1200px', async ({page}) => {

@@ -104,7 +104,7 @@ export class PostponementRules {
   /**
    * Adds a Proposed Date. `start` must already be a normalized ISO datetime string.
    * The first date moves the session from `Draft` to `Voting`; later adds keep `Voting`.
-   * New dates are never votable by the opponent until the organizer flips the flag.
+   * New dates are votable by both teams immediately.
    */
   proposeDate(
     session: Postponement,
@@ -122,7 +122,7 @@ export class PostponementRules {
       sessionId: session.id,
       dateTimeRange: {start, end: start},
       proposerId,
-      votableByOpponent: false,
+      votable: true,
     };
     return {
       session: {
@@ -196,22 +196,31 @@ export class PostponementRules {
   }
 
   /**
-   * Sets whether a Proposed Date is votable by the opponent team.
+   * Returns the Proposed Dates that are open for voting, in their stored order.
+   * The single source of truth for "which dates can be voted on": the vote poll
+   * filter and the vote guard must both call this so they cannot drift apart.
    */
-  setVotableByOpponent(
+  votableDates(session: Postponement): ProposedDate[] {
+    return session.proposedDates.filter((pd) => pd.votable);
+  }
+
+  /**
+   * Sets whether a Proposed Date is open for voting by either team.
+   */
+  setVotable(
     session: Postponement,
     proposedDateId: string,
     votable: boolean,
   ): Postponement {
     const proposedDates = session.proposedDates.map((pd) =>
-      pd.id === proposedDateId ? {...pd, votableByOpponent: votable} : pd,
+      pd.id === proposedDateId ? {...pd, votable} : pd,
     );
     return {...session, proposedDates};
   }
 
   /**
    * Locks a date as final: sets `confirmedProposedDateId` and moves the session to
-   * `Confirmed`. A no-op for any date that is not `votableByOpponent` or unknown.
+   * `Confirmed`. A no-op for any date that is not `votable` or unknown.
    * Idempotent — confirming an already-confirmed date leaves the session unchanged.
    */
   confirmDate(
@@ -219,7 +228,7 @@ export class PostponementRules {
     proposedDateId: string,
   ): Postponement {
     const date = session.proposedDates.find((pd) => pd.id === proposedDateId);
-    if (!date?.votableByOpponent) {
+    if (!date?.votable) {
       return session;
     }
     return {...session, status: 'Confirmed', confirmedProposedDateId: proposedDateId};
@@ -227,7 +236,7 @@ export class PostponementRules {
 
   /**
    * Reopens a Confirmed session back to `Voting`. The locked date stays as history in
-   * `confirmedProposedDateId`; all votes and per-date opponent flags are kept.
+   * `confirmedProposedDateId`; all votes and per-date votable flags are kept.
    */
   reopen(session: Postponement): Postponement {
     return {

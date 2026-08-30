@@ -11,7 +11,7 @@ export interface SessionStore {
 
 /**
  * Upgrades a session read from the store to the current shape. Old rows predate
- * `votableByOpponent`, `organizerTeam`, `reopenCount`, and `confirmedProposedDateId`,
+ * `votable`, `organizerTeam`, `reopenCount`, and `confirmedProposedDateId`,
  * and used removed statuses. Pure read-time normalization — nothing is rewritten.
  */
 export function normalize(data: Record<string, unknown>): Postponement {
@@ -36,12 +36,14 @@ export function normalize(data: Record<string, unknown>): Postponement {
     sessionId: pd['sessionId'] as string,
     dateTimeRange: pd['dateTimeRange'] as ProposedDate['dateTimeRange'],
     proposerId: pd['proposerId'] as string,
-    votableByOpponent:
-      typeof pd['votableByOpponent'] === 'boolean'
-        ? pd['votableByOpponent']
-        : typeof pd['awayTeamVotable'] === 'boolean'
-          ? pd['awayTeamVotable']
-          : false,
+    votable:
+      typeof pd['votable'] === 'boolean'
+        ? pd['votable']
+        : typeof pd['votableByOpponent'] === 'boolean'
+          ? pd['votableByOpponent']
+          : typeof pd['awayTeamVotable'] === 'boolean'
+            ? pd['awayTeamVotable']
+            : false,
     clashes: pd['clashes'] as ProposedDate['clashes'],
   }));
 

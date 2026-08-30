@@ -194,7 +194,6 @@ test.describe('Proposed Date Generator', () => {
     await expect(editPage.generateForm.locator('input[name="time[]"]'))
       .toHaveCount(7);
 
-    await editPage.toggleVotableByOpponent(0);
     await editPage.confirmDate(0);
     await expect(editPage.status)
       .toContainText('Confirmed');

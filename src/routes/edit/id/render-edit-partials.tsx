@@ -29,7 +29,7 @@ function toVoteTallyItems(
 
 /**
  * Shared shape for the edit page and the HTMX partials: the proposed-date list items
- * (with the opponent-vote flag), the per-team tallies, and the organizer-team completion
+ * (with the votable flag), the per-team tallies, and the organizer-team completion
  * view. Used by edit-id-get and every post handler that re-renders the partial set.
  */
 export function buildEditPartialsData(session: Postponement, locale: AppLocale): EditPartialsData {
@@ -43,7 +43,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
     return {
       id: pd.id,
       display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
-      votableByOpponent: pd.votableByOpponent,
+      votable: pd.votable,
       yes: counts.yes,
       no: counts.no,
       maybe: counts.maybe,

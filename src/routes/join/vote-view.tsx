@@ -15,10 +15,6 @@ export interface VoteViewOptions {
   updated?: boolean;
 }
 
-export function visibleDatesForTeam(session: Postponement, team: Team): ProposedDate[] {
-  return session.proposedDates.filter((pd) => (team === 'away' ? pd.votableByOpponent : true));
-}
-
 export function confirmedDateDisplay(session: Postponement, locale: AppLocale): string | undefined {
   const confirmed = session.proposedDates.find((pd) => pd.id === session.confirmedProposedDateId);
   return confirmed
@@ -68,7 +64,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const rules = new PostponementRules();
   const tallies = rules.tally(session, team);
 
-  const visibleDates = visibleDatesForTeam(session, team);
+  const visibleDates = rules.votableDates(session);
   const playerVoteRows = buildPlayerVoteRows(session, team, visibleDates);
 
   const proposedDates: VotePageDate[] = visibleDates.map((pd) => {

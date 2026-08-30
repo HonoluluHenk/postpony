@@ -7,7 +7,6 @@ import {
   buildPlayerVoteRows,
   renderConfirmedInfo,
   renderVoteStep,
-  visibleDatesForTeam,
 } from './vote-view';
 
 function createApp(locale = 'en-US'): App {
@@ -26,29 +25,88 @@ function createApp(locale = 'en-US'): App {
   return App.create(context, store);
 }
 
-describe('visibleDatesForTeam', () => {
-  test('home team sees every proposed date', () => {
+describe('renderVoteStep date visibility', () => {
+  test.each(['home', 'away'] as const)('%s team sees every date when all are votable', async (team) => {
+    const player = aPlayer({teamId: team});
     const session = aSession({
+      status: 'Voting',
+      players: [player],
       proposedDates: [
-        aProposedDate({id: 'date-1', votableByOpponent: false}),
-        aProposedDate({id: 'date-2', votableByOpponent: true}),
+        aProposedDate({id: 'date-1', votable: true}),
+        aProposedDate({id: 'date-2', votable: true}),
       ],
     });
+    const app = createApp();
+    await app.store.save(session);
 
-    expect(visibleDatesForTeam(session, 'home').map((pd) => pd.id))
-      .toEqual(['date-1', 'date-2']);
+    const response = renderVoteStep(app, {
+      session,
+      team,
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('name="vote-date-1"');
+    expect(body)
+      .toContain('name="vote-date-2"');
   });
 
-  test('away team only sees dates the organizer proposed to them', () => {
+  test.each(['home', 'away'] as const)('hides a closed date from the %s team poll', async (team) => {
+    const player = aPlayer({teamId: team});
     const session = aSession({
+      status: 'Voting',
+      players: [player],
       proposedDates: [
-        aProposedDate({id: 'date-1', votableByOpponent: false}),
-        aProposedDate({id: 'date-2', votableByOpponent: true}),
+        aProposedDate({id: 'date-1', votable: true}),
+        aProposedDate({id: 'date-2', votable: false}),
       ],
     });
+    const app = createApp();
+    await app.store.save(session);
 
-    expect(visibleDatesForTeam(session, 'away').map((pd) => pd.id))
-      .toEqual(['date-2']);
+    const response = renderVoteStep(app, {
+      session,
+      team,
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('name="vote-date-1"');
+    expect(body)
+      .not
+      .toContain('name="vote-date-2"');
+  });
+
+  test.each(['home', 'away'] as const)('renders the empty-state hint for the %s team when no dates are votable', async (team) => {
+    const player = aPlayer({teamId: team});
+    const session = aSession({
+      status: 'Draft',
+      players: [player],
+      proposedDates: [aProposedDate({votable: false})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team,
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('No dates have been proposed yet');
+    expect(body)
+      .not
+      .toContain('name="vote-');
+    expect(body)
+      .not
+      .toContain("Your Team's Votes");
   });
 });
 
@@ -149,7 +207,7 @@ describe('renderVoteStep', () => {
     const session = aSession({
       status: 'Voting',
       players: [player],
-      proposedDates: [aProposedDate({votableByOpponent: true})],
+      proposedDates: [aProposedDate({votable: true})],
       votes: [aVote({participantId: 'player-1', proposedDateId: 'proposed-date-1', type: 'Yes'})],
     });
     const app = createApp();
@@ -178,34 +236,6 @@ describe('renderVoteStep', () => {
       .toContain('<h3 id="vote-results-title">Your Team&#39;s Votes</h3>');
     expect(body)
       .toContain('<h4 id="vote-tally-title">Vote Summary</h4>');
-  });
-
-  test('renders the pre-proposal empty state when the team has no votable dates', async () => {
-    const player = aPlayer({teamId: 'away'});
-    const session = aSession({
-      status: 'Draft',
-      players: [player],
-      proposedDates: [aProposedDate({votableByOpponent: false})],
-    });
-    const app = createApp();
-    await app.store.save(session);
-
-    const response = renderVoteStep(app, {
-      session,
-      team: 'away',
-      token: 'token',
-      player,
-    });
-    const body = await response.text();
-
-    expect(body)
-      .toContain('No dates have been proposed yet');
-    expect(body)
-      .not
-      .toContain('name="vote-');
-    expect(body)
-      .not
-      .toContain("Your Team's Votes");
   });
 
   test('renders the confirmed-info view when the session is Confirmed', async () => {
@@ -277,7 +307,7 @@ describe('renderVoteStep clash info', () => {
       players: [player],
       proposedDates: [
         aProposedDate({
-          votableByOpponent: true,
+          votable: true,
           clashes: {
             home: [{opponent: 'Thun', start: '2025-09-01T17:00'}],
             away: [{opponent: 'Burgdorf', start: '2025-09-01T21:30'}],
@@ -311,7 +341,7 @@ describe('renderVoteStep clash info', () => {
       players: [player],
       proposedDates: [
         aProposedDate({
-          votableByOpponent: true,
+          votable: true,
           clashes: {home: [{opponent: 'Thun', start: '2025-09-01T17:00'}], away: []},
         }),
       ],
@@ -340,7 +370,7 @@ describe('renderVoteStep clash info', () => {
       players: [player],
       proposedDates: [
         aProposedDate({
-          votableByOpponent: true,
+          votable: true,
           clashes: {home: [], away: []},
         }),
       ],
@@ -365,7 +395,7 @@ describe('renderVoteStep clash info', () => {
     const session = aSession({
       status: 'Voting',
       players: [player],
-      proposedDates: [aProposedDate({votableByOpponent: true})],
+      proposedDates: [aProposedDate({votable: true})],
     });
     const app = createApp();
     await app.store.save(session);
@@ -389,7 +419,7 @@ describe('renderVoteStep clash info', () => {
       homeTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't1'},
       guestTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't2'},
       players: [player],
-      proposedDates: [aProposedDate({votableByOpponent: true})],
+      proposedDates: [aProposedDate({votable: true})],
     });
     const app = createApp();
     await app.store.save(session);
@@ -422,7 +452,7 @@ describe('renderVoteStep clash info', () => {
       players: [player],
       proposedDates: [
         aProposedDate({
-          votableByOpponent: true,
+          votable: true,
           clashes: {home: [{opponent: 'Thun', start: '2025-09-01T17:00'}], away: []},
         }),
       ],

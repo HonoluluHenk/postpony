@@ -107,27 +107,27 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
-  test('home team sees all proposed dates; away team only sees votable ones', async ({page, checkA11y}) => {
+  test('both teams see only the votable dates', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-12T18:30']);
 
-    // Make only the second date votable for away team
+    // Close the second date: it disappears from every poll, home and away alike.
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
-    await editPage.toggleVotableByOpponent(1);
+    await editPage.toggleVotable(1);
 
-    // Join as away team — should see only 1 date
+    // Join as away team — should see only the votable date
     const awayJoinPage = new JoinPage(page);
     await awayJoinPage.goto(session.awayHref);
     await awayJoinPage.join('AwayPlayer');
     await expect(awayJoinPage.voteForm.getByRole('group'))
       .toHaveCount(1);
 
-    // Join as home team — should see both dates
+    // Join as home team — the closed date is hidden from them too
     const homeJoinPage = new JoinPage(page);
     await homeJoinPage.goto(session.homeHref);
     await homeJoinPage.join('HomePlayer');
     await expect(homeJoinPage.voteForm.getByRole('group'))
-      .toHaveCount(2);
+      .toHaveCount(1);
 
     await checkA11y();
   });
@@ -139,7 +139,6 @@ test.describe('Join and Voting', () => {
 
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
-    await editPage.toggleVotableByOpponent(0);
 
     // Join as home player and vote Yes
     const homeJoinPage = new JoinPage(page);
@@ -198,7 +197,6 @@ test.describe('Join and Voting', () => {
 
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
-    await editPage.toggleVotableByOpponent(0);
 
     // Home voter casts a Yes.
     const homeJoinPage = new JoinPage(page);
@@ -242,8 +240,13 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
-  test('shows the pre-proposal empty state to an opponent with no votable dates', async ({page, checkA11y}) => {
+  test('shows the pre-proposal empty state to either team when no dates are votable', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    // Close the only date; both teams land on the pre-proposal empty state.
+    const editPage = new EditPage(page);
+    await editPage.goto(session.editUrl);
+    await editPage.toggleVotable(0);
 
     const awayJoinPage = await new JoinPage(page)
       .goto(session.awayHref);
@@ -254,6 +257,17 @@ test.describe('Join and Voting', () => {
     await expect(awayJoinPage.submitVotesButton)
       .toHaveCount(0);
     await expect(awayJoinPage.teamResultsSection())
+      .toHaveCount(0);
+
+    const homeJoinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await homeJoinPage.join('Dora');
+
+    await expect(homeJoinPage.noDatesMessage)
+      .toBeVisible();
+    await expect(homeJoinPage.submitVotesButton)
+      .toHaveCount(0);
+    await expect(homeJoinPage.teamResultsSection())
       .toHaveCount(0);
 
     await checkA11y();
@@ -292,9 +306,8 @@ test.describe('Join and Voting', () => {
     await expect(editPage.ownTeamTable().getByText('2/2 voted'))
       .toBeVisible();
 
-    // Propose to the opponent and have them vote.
-    await editPage.toggleVotableByOpponent(0);
-
+    // The proposed date is votable by both teams out of the box; have the
+    // opponent vote on it.
     const awayJoinPage = new JoinPage(page);
     await awayJoinPage.goto(session.awayHref);
     await awayJoinPage.join('Charlie');
@@ -343,7 +356,6 @@ test.describe('Join and Voting', () => {
 
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
-    await editPage.toggleVotableByOpponent(0);
     await editPage.confirmDate(0);
     await expect(editPage.status)
       .toContainText('Confirmed');

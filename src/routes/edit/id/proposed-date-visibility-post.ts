@@ -12,7 +12,7 @@ export const handleProposedDateVisibilityPost = async (app: App): Promise<Respon
   const proposedDateId = app.c.req.query('proposedDateId') ?? '';
   const votable = app.c.req.query('votable') === 'true';
 
-  const updated = new PostponementRules().setVotableByOpponent(session, proposedDateId, votable);
+  const updated = new PostponementRules().setVotable(session, proposedDateId, votable);
   await app.store.save(updated);
 
   const html = renderEditPartials(app, updated);

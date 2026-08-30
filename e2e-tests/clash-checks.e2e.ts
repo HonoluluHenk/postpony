@@ -56,10 +56,8 @@ test.describe('Clash checks', () => {
     await expect(page.getByRole('button', {name: 'Refresh schedule check'}))
       .toBeVisible();
 
-    // 5. Make both dates votable so the opponent (the scraped organizer team,
-    // away) sees them on the vote page.
-    await editPage.toggleVotableByOpponent(0);
-    await editPage.toggleVotableByOpponent(1);
+    // 5. Dates are votable by both teams out of the box, so the opponent
+    // (the scraped organizer team, away) sees them on the vote page.
 
     // 6. Vote page shows the same clash info as the edit page.
     const {awayHref} = await editPage.getInviteLinks();
@@ -86,7 +84,6 @@ test.describe('Clash checks', () => {
       .toHaveCount(0);
 
     // The vote page mirrors the "not checked" state.
-    await editPage.toggleVotableByOpponent(0);
     const joinPage = await new JoinPage(page)
       .goto(session.homeHref);
     await joinPage.join('Manual Watcher');

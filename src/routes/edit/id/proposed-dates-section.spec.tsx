@@ -14,8 +14,8 @@ function baseProps(): ProposedDatesSectionProps {
     status: 'Voting',
     reopenCount: 0,
     proposedDates: [
-      {id: 'pd-1', display: '10.10.2026 19:00', votableByOpponent: true, yes: 0, maybe: 0, no: 0},
-      {id: 'pd-2', display: '12.10.2026 20:00', votableByOpponent: false, yes: 0, maybe: 0, no: 0},
+      {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, maybe: 0, no: 0},
+      {id: 'pd-2', display: '12.10.2026 20:00', votable: false, yes: 0, maybe: 0, no: 0},
     ],
     homeProposedDates: [
       {id: 'pd-1', display: '10.10.2026 19:00', yes: 1, maybe: 0, no: 0},
@@ -79,7 +79,7 @@ describe('ProposedDatesSection component', () => {
       .toContain('Reopened 2 time(s)');
   });
 
-  it('checks the opponent-votable toggle only for dates that are votable', () => {
+  it('checks the votable toggle only for dates that are votable', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
     expect(html)
@@ -126,9 +126,9 @@ describe('ProposedDatesSection component', () => {
       .not
       .toContain('<i aria-hidden="true">delete</i>\n                      Delete');
     // The accessible name and the hover tooltip carry the full labels.
-    expect((html.match(/aria-label="Allow opponent to vote"/g) ?? []))
+    expect((html.match(/aria-label="Allow voting"/g) ?? []))
       .toHaveLength(2);
-    expect((html.match(/title="Allow opponent to vote"/g) ?? []))
+    expect((html.match(/title="Allow voting"/g) ?? []))
       .toHaveLength(2);
     expect((html.match(/aria-label="Delete"/g) ?? []))
       .toHaveLength(2);
@@ -136,7 +136,7 @@ describe('ProposedDatesSection component', () => {
       .toHaveLength(2);
   });
 
-  it('offers a confirm control only for opponent-votable dates', () => {
+  it('offers a confirm control only for votable dates', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
     expect(html)
@@ -190,7 +190,7 @@ describe('ProposedDatesSection clash info', () => {
         {
           id: 'pd-1',
           display: '10.10.2026 19:00',
-          votableByOpponent: true,
+          votable: true,
           yes: 0,
           maybe: 0,
           no: 0,
@@ -217,7 +217,7 @@ describe('ProposedDatesSection clash info', () => {
         {
           id: 'pd-1',
           display: '10.10.2026 19:00',
-          votableByOpponent: true,
+          votable: true,
           yes: 0,
           maybe: 0,
           no: 0,
@@ -237,7 +237,7 @@ describe('ProposedDatesSection clash info', () => {
         {
           id: 'pd-1',
           display: '10.10.2026 19:00',
-          votableByOpponent: true,
+          votable: true,
           yes: 0,
           maybe: 0,
           no: 0,
