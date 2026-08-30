@@ -13,3 +13,7 @@
 - [x] New `club-meetings.html` fixture anchored on Ostermundigen (club 33282), containing home and away rows and at least one venue-less row
 - [x] Unit tests: `fetchClubMeetings` against the fixture returns the expected home Matches with venue numbers; venue-less rows yield `undefined` venue; the season-window helper derives the correct window
 - [x] All existing unit tests pass
+
+## Comments
+
+- `637db68` ticket done: `fetchClubMeetings(clubId, from, to)` with `onlyHomeMeetings=true` + home-row filter via the `Ort` club link, `Match.venueNumber?` parsed from the `(n)` link, `seasonWindow` helper, `clubMeetings` fixture branch, Ostermundigen `club-meetings.html` fixture (home/away/venue-less rows), and unit tests; `014ac8f` ticket done: edge-case tests for non-match/nameless/duplicate rows (branch coverage ≥ 80%).
