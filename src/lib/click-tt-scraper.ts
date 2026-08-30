@@ -341,34 +341,64 @@ export async function fetchPlayers(
   return [];
 }
 
+/** Identity of a click-tt match, enough to locate its row on a team page. */
+export type MatchIdentity = Pick<Match, 'date' | 'time' | 'homeTeam' | 'guestTeam'>;
+
 /**
- * Extracts the organizer's club ID from a team page (`teamPortrait`): the
- * first `a[href*="clubInfoDisplay"]` link points at the organizer's club.
- * Returns undefined when the page carries no such link.
+ * Extracts the home team's club ID for a given match from a team page
+ * (`teamPortrait`): the postponed match's row `Ort` cell links to the home
+ * club (the rescheduled match is played at the home team's hall). Equals the
+ * organizer's club when the organizer is the home team; otherwise it is the
+ * opponent's club. Returns undefined when the row is missing or its `Ort` cell
+ * carries no club link.
  */
-export function extractClubId(root: HTMLElement): string | undefined {
-  const href = root.querySelector('a[href*="clubInfoDisplay"]')?.getAttribute('href');
-  if (!href) {
-    return undefined;
+export function extractClubId(root: HTMLElement, identity: MatchIdentity): string | undefined {
+  for (const row of root.querySelectorAll('table.result-set tr')) {
+    const cells = row.querySelectorAll('td');
+    if (cells.length < 8) {
+      continue;
+    }
+    const date = (cells[1]?.text ?? '').trim();
+    if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) {
+      continue;
+    }
+    const time = (cells[2]?.text ?? '').trim()
+      .replace(/\s+/g, ' ');
+    const homeTeam = (cells[5]?.text ?? '').replace(/\u00a0/g, ' ')
+      .trim();
+    const guestTeam = (cells[7]?.text ?? '').replace(/\u00a0/g, ' ')
+      .trim();
+    if (
+      date !== identity.date || time !== identity.time ||
+      homeTeam !== identity.homeTeam || guestTeam !== identity.guestTeam
+    ) {
+      continue;
+    }
+    const href = cells[3]?.querySelector('a[href*="clubInfoDisplay"]')?.getAttribute('href');
+    if (!href) {
+      return undefined;
+    }
+    return queryParam(href, 'club') ?? undefined;
   }
-  return queryParam(href, 'club') ?? undefined;
+  return undefined;
 }
 
 /**
- * Fetches a team page and returns the organizer's club ID, or undefined when
- * the page has no club link. Thin seam over `extractClubId` so callers never
- * touch the raw page HTML.
+ * Fetches a team page and returns the home team's club ID for the given match,
+ * or undefined when the row has no club link. Thin seam over `extractClubId`
+ * so callers never touch the raw page HTML.
  */
 export async function fetchClubId(
   championship: string,
   group: string,
   teamtable: string,
+  identity: MatchIdentity,
   preferredLanguage: ClickTTLanguage = 'German',
 ): Promise<string | undefined> {
   const root = await fetchHtml(
     buildUrl(TEAM_URL, {teamtable, championship, group, preferredLanguage}),
   );
-  return extractClubId(root);
+  return extractClubId(root, identity);
 }
 
 /**

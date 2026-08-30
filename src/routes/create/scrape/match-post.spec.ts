@@ -5,6 +5,7 @@ import { hashPassword } from '../../../lib/crypto-utils';
 import { fetchClubId, fetchVenues } from '../../../lib/click-tt-scraper';
 import { LOCALE_KEY } from '../../../locales';
 import { MemorySessionStore } from '../../../lib/session-store';
+import { DEFAULT_CLUB_ID } from '../../../lib/models';
 import { handleScrapeMatchPost } from './match-post';
 
 vi.mock('../../../lib/click-tt-scraper', () => ({
@@ -161,8 +162,8 @@ describe('handleScrapeMatchPost', () => {
       .toBeUndefined();
   });
 
-  test('stores the scraped venues when the organizer team resolves a club id', async () => {
-    vi.mocked(fetchClubId).mockResolvedValueOnce('33282');
+  test('stores the scraped venues and home club id when the team page resolves one', async () => {
+    vi.mocked(fetchClubId).mockResolvedValueOnce('33132');
     vi.mocked(fetchVenues).mockResolvedValueOnce([
       {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
     ]);
@@ -171,14 +172,21 @@ describe('handleScrapeMatchPost', () => {
     const stored = await storedSession(app);
 
     expect(fetchClubId)
-      .toHaveBeenCalledWith('MTTV 26/27', '219397', 'tt-own');
+      .toHaveBeenCalledWith('MTTV 26/27', '219397', 'tt-own', {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      });
+    expect(stored?.clubId)
+      .toBe('33132');
     expect(stored?.venues)
       .toEqual([
         {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
       ]);
   });
 
-  test('keeps venues empty when no club id is resolvable', async () => {
+  test('keeps venues empty and clubId unset when no club id is resolvable', async () => {
     vi.mocked(fetchClubId).mockResolvedValueOnce(undefined);
     const app = createApp({body: {...MATCH, teamName: 'Thun', teamtable: 'tt-own'}});
 
@@ -189,6 +197,8 @@ describe('handleScrapeMatchPost', () => {
       .toHaveBeenCalled();
     expect(stored?.venues)
       .toEqual([]);
+    expect(stored?.clubId)
+      .toBe(DEFAULT_CLUB_ID);
   });
 
   test('keeps venues empty when no teamtable is submitted', async () => {
@@ -201,6 +211,8 @@ describe('handleScrapeMatchPost', () => {
       .toHaveBeenCalled();
     expect(stored?.venues)
       .toEqual([]);
+    expect(stored?.clubId)
+      .toBe(DEFAULT_CLUB_ID);
   });
 });
 

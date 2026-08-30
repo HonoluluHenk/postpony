@@ -233,34 +233,85 @@ describe('click-tt-scraper', () => {
   });
 
   describe('extractClubId', () => {
-    test('extracts the organizer club id from the Ostermundigen team page', () => {
+    test('returns the home team club id when the organizer is the away team', () => {
       const root = parse(fixture('team.html'));
 
-      expect(extractClubId(root))
-        .toBe('33282');
-    });
-
-    test('extracts the organizer club id from the Thun team page', () => {
-      const root = parse(fixture('team-thun.html'));
-
-      expect(extractClubId(root))
+      expect(extractClubId(root, {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      }))
         .toBe('33132');
     });
 
-    test('returns undefined when the page has no club link', () => {
-      const root = parse('<html><body><a href="/wa/teamPortrait?teamtable=1">no club</a></body></html>');
+    test('returns the home team club id when the organizer is the home team', () => {
+      const root = parse(fixture('team-thun.html'));
 
-      expect(extractClubId(root))
+      expect(extractClubId(root, {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      }))
+        .toBe('33132');
+    });
+
+    test('returns the opponent club id for an away match', () => {
+      const root = parse(fixture('team-thun.html'));
+
+      expect(extractClubId(root, {
+        date: '17.09.2026',
+        time: '20:00',
+        homeTeam: 'Bern',
+        guestTeam: 'Thun',
+      }))
+        .toBe('33091');
+    });
+
+    test('returns undefined when the postponed match row has no club link', () => {
+      const root = parse(
+        '<table class="result-set">' +
+        '<tr>' +
+        '<td>Sat.</td><td>29.08.2026</td><td>16:00</td><td class="center"></td>' +
+        '<td>1</td><td>Thun</td><td></td><td>Ostermundigen</td><td></td>' +
+        '</tr>' +
+        '</table>',
+      );
+
+      expect(extractClubId(root, {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      }))
+        .toBeUndefined();
+    });
+
+    test('returns undefined when no row matches the postponed match', () => {
+      const root = parse(fixture('team.html'));
+
+      expect(extractClubId(root, {
+        date: '01.01.2099',
+        time: '00:00',
+        homeTeam: 'None',
+        guestTeam: 'Nowhere',
+      }))
         .toBeUndefined();
     });
   });
 
   describe('fetchClubId', () => {
-    test('fetches the team page and returns the organizer club id', async () => {
-      const clubId = await fetchClubId('MTTV 26/27', '219397', '1732193');
+    test('fetches the team page and returns the home team club id', async () => {
+      const clubId = await fetchClubId('MTTV 26/27', '219397', '1732193', {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      });
 
       expect(clubId)
-        .toBe('33282');
+        .toBe('33132');
     });
   });
 

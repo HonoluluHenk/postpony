@@ -59,17 +59,27 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   const players: Player[] = selectedTeamPlayers.map((pn) => makePlayer(pn, selectedTeamId));
 
   const opponentTeamId: 'home' | 'away' = selectedTeamId === 'home' ? 'away' : 'home';
-  // Player and venue scraping run in parallel; venues are only scraped when the
-  // organizer's team page resolves a club id, otherwise they stay empty.
-  const [opponentPlayers, venues] = await Promise.all([
+  // Player and venue scraping run in parallel. The postponed match's row `Ort`
+  // cell yields the home club id (the rescheduled match is played at the home
+  // team's hall); venues are scraped from that club's page and the id is
+  // persisted on the session. No teamtable → no club, no venues.
+  const [opponentPlayers, homeClub] = await Promise.all([
     m.opponentTeamtable
       ? fetchPlayers(m.championship, m.group, m.opponentTeamtable)
       : Promise.resolve([] as PlayerOnTeam[]),
-    (async (): Promise<Venue[]> => {
-      const clubId = m.teamtable ? await fetchClubId(m.championship, m.group, m.teamtable) : undefined;
-      return clubId ? fetchVenues(clubId) : [];
+    (async (): Promise<{clubId?: string; venues: Venue[]}> => {
+      const clubId = m.teamtable
+        ? await fetchClubId(m.championship, m.group, m.teamtable, {
+            date: m.date,
+            time: m.time,
+            homeTeam: m.homeTeam,
+            guestTeam: m.guestTeam,
+          })
+        : undefined;
+      return clubId ? {clubId, venues: await fetchVenues(clubId)} : {venues: []};
     })(),
   ]);
+  const {clubId, venues} = homeClub;
   for (const op of opponentPlayers) {
     players.push(makePlayer(op.name, opponentTeamId));
   }
@@ -108,6 +118,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     session = {
       ...existing,
       name,
+      clubId: clubId ?? existing.clubId,
       homeTeam: m.homeTeam,
       guestTeam: m.guestTeam,
       originalMatchDateTime,
@@ -124,7 +135,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
 
     session = {
       id,
-      clubId: DEFAULT_CLUB_ID,
+      clubId: clubId ?? DEFAULT_CLUB_ID,
       name,
       homeTeam: m.homeTeam,
       guestTeam: m.guestTeam,
