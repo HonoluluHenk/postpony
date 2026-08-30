@@ -262,7 +262,7 @@ describe('edit handlers', () => {
       // time[0] -> weekday 1 (Mon), time[2] -> weekday 3 (Wed); time[1] is empty.
       const expected = generateProposedDates({
         fromIso: '2026-08-25T08:00',
-        toIso: '2026-09-30T16:00',
+        toIso: '2026-09-30T23:59',
         todayIso: FIXED_TODAY_ISO,
         tuples: [
           {weekday: 1, hour: 20, minute: 0},
@@ -418,7 +418,7 @@ describe('edit handlers', () => {
 
     test('tuple branch zero-result path: no store write, renders the inline empty-result message', async () => {
       const session = aSession({
-        originalMatchDateTime: '2020-01-01T16:00',
+        originalMatchDateTime: undefined,
       });
       const app = createApp({
         params: {id: session.id},
@@ -426,6 +426,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': ['8:00 pm'],
+          fromDate: FIXED_TODAY_ISO.slice(0, 10),
+          toDate: '2026-08-26',
         },
       });
       await app.store.save(session);

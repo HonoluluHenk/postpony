@@ -70,6 +70,8 @@ export interface EditPartialExtras {
   generatorInvalidRow?: number;
   generatorError?: string;
   generatorSuccessCount?: number;
+  generatorFromError?: string;
+  generatorToError?: string;
   refreshError?: boolean;
   confirmClashWarning?: boolean;
   fromDate?: string;
@@ -104,6 +106,8 @@ export function renderEditPartials(
     generatorInvalidRow: extra.generatorInvalidRow,
     generatorError: extra.generatorError,
     generatorSuccessCount: extra.generatorSuccessCount,
+    generatorFromError: extra.generatorFromError,
+    generatorToError: extra.generatorToError,
     refreshError: extra.refreshError,
     confirmClashWarning: extra.confirmClashWarning,
     globalError: extra.globalError,

@@ -56,12 +56,14 @@ interface TupleOutput {
   proposedDateTime?: never;
 }
 
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
 function buildTupleSchema(app: App): v.BaseSchema<unknown, TupleOutput, v.BaseIssue<unknown>> {
   return v.object({
     generate: v.literal(TUPLE_DISCRIMINATOR, app.t('proposed_date_time_invalid')),
     'time[]': v.array(v.string()),
-    fromDate: v.optional(v.string()),
-    toDate: v.optional(v.string()),
+    fromDate: v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))),
+    toDate: v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))),
     // ponytail: rogue POST combining the generator branch with the single-date
     // field is explicitly rejected. The schema encodes it via the `never`
     // output type — passing `proposedDateTime` makes the parse fail before
@@ -189,22 +191,24 @@ async function handleTupleSubmit(
     if (app.isPartial) {
       return app.c.html(renderEditPartials(app, session, {
         generatorError: errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
+        fromDate: typeof values['fromDate'] === 'string' ? values['fromDate'] : '',
+        toDate: typeof values['toDate'] === 'string' ? values['toDate'] : '',
       }), {status: 400});
     }
     return redirectAfterEdit(app, session);
   }
 
   const times = validation.output['time[]'];
-  const fromDate = validation.output.fromDate;
-  const toDate = validation.output.toDate;
+  const rawFromDate = validation.output.fromDate;
+  const rawToDate = validation.output.toDate;
   if (times.length > MAX_TUPLES) {
     // ponytail: the fixed 7-row form can never exceed MAX_TUPLES; this is a
     // security guard against a hand-crafted oversized time[] array.
     if (app.isPartial) {
       return app.c.html(renderEditPartials(app, session, {
         generatorError: app.t('proposed_date_time_invalid'),
-        fromDate,
-        toDate,
+        fromDate: rawFromDate ?? '',
+        toDate: rawToDate ?? '',
       }), {status: 400});
     }
     return redirectAfterEdit(app, session);
@@ -216,37 +220,78 @@ async function handleTupleSubmit(
       return app.c.html(renderEditPartials(app, session, {
         times,
         generatorInvalidRow: parsed.invalidRowIndex,
-        fromDate,
-        toDate,
+        fromDate: rawFromDate ?? '',
+        toDate: rawToDate ?? '',
       }), {status: 400});
     }
     return redirectAfterEdit(app, session);
   }
 
   if (parsed.tuples.length === 0) {
-    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate, toDate});
+    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate: rawFromDate ?? '', toDate: rawToDate ?? ''});
   }
 
-  const todayIso = nowPlainDateTimeIso();
-  const today = Temporal.PlainDateTime.from(todayIso);
-  const BACKWARD_WEEKS = 8;
-  let fromIso: string;
-  let toIso: string;
-  if (session.originalMatchDateTime === undefined) {
-    fromIso = todayIso;
-    toIso = today.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL}).toString();
-  } else {
-    const anchor = Temporal.PlainDateTime.from(session.originalMatchDateTime);
-    const back = anchor.subtract({weeks: BACKWARD_WEEKS});
-    const lower = Temporal.PlainDateTime.compare(today, back) > 0 ? today : back;
-    fromIso = lower.toString();
-    toIso = anchor.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL}).toString();
+  // Validate from/to date constraints
+  const nowIso = nowPlainDateTimeIso();
+  const _now = Temporal.PlainDateTime.from(nowIso);
+  const todayDate = Temporal.PlainDate.from(nowIso);
+
+  // Defaults: when no anchor, use today/today+4w; when anchor exists, use today/anchor+4w
+  const defaultToDate = session.originalMatchDateTime !== undefined
+    ? Temporal.PlainDate.from(session.originalMatchDateTime).add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL}).toString()
+    : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL}).toString();
+
+  const fromDate = rawFromDate ?? todayDate.toString();
+  const toDate = rawToDate ?? defaultToDate;
+
+  const fromDatePlain = Temporal.PlainDate.from(fromDate);
+  const toDatePlain = Temporal.PlainDate.from(toDate);
+
+  // Validate from >= today
+  if (Temporal.PlainDate.compare(fromDatePlain, todayDate) < 0) {
+    return renderPartial(app, session, {
+      times,
+      generatorFromError: app.t('proposed_dates_generate_from_invalid'),
+      fromDate,
+      toDate,
+    });
   }
+
+  // Validate to > from
+  if (Temporal.PlainDate.compare(toDatePlain, fromDatePlain) <= 0) {
+    return renderPartial(app, session, {
+      times,
+      generatorToError: app.t('proposed_dates_generate_to_invalid'),
+      fromDate,
+      toDate,
+    });
+  }
+
+  // Validate to <= cap
+  const capDate = session.originalMatchDateTime !== undefined
+    ? Temporal.PlainDate.from(session.originalMatchDateTime).add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL})
+    : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL});
+
+  if (Temporal.PlainDate.compare(toDatePlain, capDate) > 0) {
+    const toErrorKey = session.originalMatchDateTime !== undefined
+      ? 'proposed_dates_generate_to_invalid'
+      : 'proposed_dates_generate_to_invalid_no_anchor';
+    return renderPartial(app, session, {
+      times,
+      generatorToError: app.t(toErrorKey),
+      fromDate,
+      toDate,
+    });
+  }
+
+  // Build datetime boundaries for the generator
+  const fromIso = `${fromDate}T00:00`;
+  const toIso = `${toDate}T23:59`;
 
   const generated = generateProposedDates({
     fromIso,
     toIso,
-    todayIso,
+    todayIso: nowIso,
     tuples: parsed.tuples,
     existingStarts: session.proposedDates.map((pd) => pd.dateTimeRange.start),
   });
@@ -265,7 +310,7 @@ async function handleTupleSubmit(
   }
   updated = await saveWithClashCheck(app, updated, addedIds);
 
-  const extras: {times: string[]; generatorSuccessCount: number; generatorError?: string; fromDate?: string; toDate?: string} = {
+  const extras: {times: string[]; generatorSuccessCount: number; generatorError?: string; generatorFromError?: string; generatorToError?: string; fromDate?: string; toDate?: string} = {
     times,
     generatorSuccessCount: generated.added.length,
     fromDate,
@@ -314,6 +359,8 @@ interface GeneratorRenderExtras {
   times?: string[];
   generatorError?: string;
   generatorSuccessCount?: number;
+  generatorFromError?: string;
+  generatorToError?: string;
   fromDate?: string;
   toDate?: string;
 }

@@ -36,6 +36,8 @@ export interface ProposedDatesSectionProps extends EditPartialsData {
   generatorInvalidRow?: number;
   generatorError?: string;
   generatorSuccessCount?: number;
+  generatorFromError?: string;
+  generatorToError?: string;
   refreshError?: boolean;
   confirmClashWarning?: boolean;
   fromDate?: string;
@@ -50,12 +52,14 @@ interface GenerateFormProps {
   invalidRow?: number;
   error?: string;
   successCount?: number;
+  fromError?: string;
+  toError?: string;
   fromDate?: string;
   toDate?: string;
 }
 
 function GenerateForm(props: GenerateFormProps): JSX.Element {
-  const {sessionId, t, locale, times, fromDate, toDate} = props;
+  const {sessionId, t, locale, times, fromDate, toDate, fromError, toError} = props;
   const rowAction = `/edit/${sessionId}/proposed-dates`;
   const headingId = 'generate-tuple-heading';
   const timeFormat = localeConfig(locale).timeFormat;
@@ -76,23 +80,33 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
       <p>{t('proposed_dates_generate_help')}</p>
       <input type="hidden" name="generate" value="tuple"/>
       <div class="row items-center gap mt-2">
-        <div class="field label border">
+        <div class={`field label border${fromError ? ' invalid' : ''}`}>
           <input
             id="fromDate"
             type="date"
             name="fromDate"
             value={fromValue}
+            aria-invalid={fromError ? 'true' : undefined}
+            aria-describedby={fromError ? 'fromDate-error' : undefined}
           />
           <label for="fromDate">{t('proposed_dates_generate_from_label')}</label>
+          {fromError ? (
+            <span id="fromDate-error" class="error" role="alert">{fromError}</span>
+          ) : null}
         </div>
-        <div class="field label border">
+        <div class={`field label border${toError ? ' invalid' : ''}`}>
           <input
             id="toDate"
             type="date"
             name="toDate"
             value={toValue}
+            aria-invalid={toError ? 'true' : undefined}
+            aria-describedby={toError ? 'toDate-error' : undefined}
           />
           <label for="toDate">{t('proposed_dates_generate_to_label')}</label>
+          {toError ? (
+            <span id="toDate-error" class="error" role="alert">{toError}</span>
+          ) : null}
         </div>
       </div>
       <ol class="list no-margin" aria-label={t('proposed_dates_generate_section')}>
@@ -284,17 +298,19 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                </table>
              </div>
            ) : null}
-            <GenerateForm
-              sessionId={props.sessionId}
-              t={props.t}
-              locale={props.locale}
-              times={props.times}
-              invalidRow={props.generatorInvalidRow}
-              error={props.generatorError}
-              successCount={props.generatorSuccessCount}
-              fromDate={props.fromDate}
-              toDate={props.toDate}
-            />
+             <GenerateForm
+               sessionId={props.sessionId}
+               t={props.t}
+               locale={props.locale}
+               times={props.times}
+               invalidRow={props.generatorInvalidRow}
+               error={props.generatorError}
+               successCount={props.generatorSuccessCount}
+               fromError={props.generatorFromError}
+               toError={props.generatorToError}
+               fromDate={props.fromDate}
+               toDate={props.toDate}
+             />
            <form
              hx-post={`/edit/${props.sessionId}/proposed-dates`}
              hx-target="#proposed-dates-management"

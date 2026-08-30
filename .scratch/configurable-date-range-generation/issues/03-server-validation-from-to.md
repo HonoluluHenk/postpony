@@ -6,13 +6,13 @@
 
 **Status:** ready-for-agent
 
-- [ ] Add Valibot validation for `fromDate` and `toDate` in the tuple submission schema
-- [ ] Validate `from >= today` (parsed via locale-aware date parsing)
-- [ ] Validate `to > from`
-- [ ] Validate `to <= originalMatchDateTime + MAX_FORWARD_WEEKS_FROM_ORIGINAL`
-- [ ] When no anchor, validate `to <= today + MAX_FORWARD_WEEKS_FROM_ORIGINAL`
-- [ ] Add `generatorFromError` and `generatorToError` to `GeneratorRenderExtras` and `ProposedDatesSectionProps`
-- [ ] Render field-level error spans next to `from`/`to` inputs on validation failure
-- [ ] On validation success, pass validated `fromIso`/`toIso` to `generateProposedDates()`
-- [ ] On validation failure, return 400 with error messages and echoed values
-- [ ] Generate button always enabled (no disabled state); errors communicated via field-level messages
+- [x] Add Valibot validation for `fromDate` and `toDate` in the tuple submission schema
+- [x] Validate `from >= today` (parsed via locale-aware date parsing)
+- [x] Validate `to > from`
+- [x] Validate `to <= originalMatchDateTime + MAX_FORWARD_WEEKS_FROM_ORIGINAL`
+- [x] When no anchor, validate `to <= today + MAX_FORWARD_WEEKS_FROM_ORIGINAL`
+- [x] Add `generatorFromError` and `generatorToError` to `GeneratorRenderExtras` and `ProposedDatesSectionProps`
+- [x] Render field-level error spans next to `from`/`to` inputs on validation failure
+- [x] On validation success, pass validated `fromIso`/`toIso` to `generateProposedDates()`
+- [x] On validation failure, return 400 with error messages and echoed values
+- [x] Generate button always enabled (no disabled state); errors communicated via field-level messages
