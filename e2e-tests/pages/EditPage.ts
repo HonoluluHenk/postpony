@@ -192,6 +192,12 @@ export class EditPage {
     await this.toDateInput.fill(isoDate);
   }
 
+  // The generator form's venue dropdown (the single-date form carries a second
+  // select with the same "Venue" label, so scope to the generator here).
+  get generateVenueSelect(): Locator {
+    return this.generateForm.getByLabel('Venue');
+  }
+
   async generateProposedDates(rows: { weekday: number; time: string }[]): Promise<void> {
     // Fixed Monday-Sunday grid: weekday N maps to row index N-1.
     for (const row of rows) {

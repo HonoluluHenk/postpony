@@ -336,4 +336,32 @@ test.describe('Proposed Date Generator', () => {
     expect([...new Set(weekdays)].sort((a: number, b: number): number => a - b))
       .toEqual([3, 6]);
   });
+
+  test('proposes dates with a chosen venue and shows the venue badge in the list', async ({page, checkA11y}) => {
+    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+
+    // Pick venue 2 in the generator form; every generated date carries it.
+    await editPage.generateVenueSelect.selectOption('2');
+    await editPage.generateProposedDates([...TUPLES]);
+
+    const successToast = page.getByRole('alert')
+      .filter({hasText: /\d+ dates? added/});
+    await expect(successToast)
+      .toBeVisible();
+
+    const items = editPage.proposedDateRows;
+    const count = await items.count();
+    expect(count)
+      .toBeGreaterThan(0);
+
+    // Each list row renders the venue badge for the chosen venue. (The row's
+    // clash chip also carries the generic .chip class, so scope to .venue-badge.)
+    const venueBadges = editPage.proposedDateRows.locator('.venue-badge');
+    await expect(venueBadges)
+      .toHaveCount(count);
+    await expect(venueBadges.first())
+      .toHaveText('V2');
+
+    await checkA11y();
+  });
 });

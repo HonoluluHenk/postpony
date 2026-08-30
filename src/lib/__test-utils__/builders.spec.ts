@@ -36,6 +36,7 @@ describe('builders', () => {
           },
           proposerId: 'player-1',
           votable: true,
+          venueNumber: 1,
         });
     });
 
@@ -81,6 +82,7 @@ describe('builders', () => {
           organizerTeam: 'home',
           reopenCount: 0,
           players: [],
+          venues: [],
           proposedDates: [],
           votes: [],
           createdAt: '2025-01-01T00:00:00.000Z',

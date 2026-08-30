@@ -6,9 +6,10 @@ import { MAX_TUPLES, MAX_FORWARD_WEEKS_FROM_ORIGINAL, generateProposedDates, typ
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import { PostponementRules } from '../../../lib/postponement';
 import { nowPlainDateTimeIso, parseLocaleDateTime, parseLocaleTimeOnly } from '../../../lib/temporal-utils';
-import type { Postponement } from '../../../lib/models';
+import type { Postponement, Venue } from '../../../lib/models';
 import { Temporal } from '@js-temporal/polyfill';
 import { renderEditPartials } from './render-edit-partials';
+import { FALLBACK_VENUE_COUNT } from './proposed-dates-section';
 
 const TUPLE_DISCRIMINATOR = 'tuple';
 
@@ -47,23 +48,54 @@ function parseTupleTimes(times: readonly string[], locale: App['locale']): Parse
   return {tuples, invalidRowIndex: undefined};
 }
 
-interface SingleDateOutput {proposedDateTime: string}
+interface SingleDateOutput {
+  proposedDateTime: string;
+  venueNumber?: number;
+}
+
+/**
+ * Upper bound for the single-date venue dropdown. Known venues bound the range to
+ * `1..venues.length`; without scraped venues the organizer can still pick `1..10`.
+ */
+function maxVenueNumber(venues: readonly Venue[]): number {
+  return venues.length > 0 ? venues.length : FALLBACK_VENUE_COUNT;
+}
 interface TupleOutput {
   generate: typeof TUPLE_DISCRIMINATOR;
   'time[]': string[];
   fromDate?: string;
   toDate?: string;
+  venueNumber?: number;
   proposedDateTime?: never;
 }
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-function buildTupleSchema(app: App): v.BaseSchema<unknown, TupleOutput, v.BaseIssue<unknown>> {
+/**
+ * Shared venue-number field for the single-date and generator schemas: absent
+ * means legacy venue 1; present it must be an integer within `1..venues.length`
+ * (or `1..FALLBACK_VENUE_COUNT` when no venues are scraped).
+ */
+function venueNumberSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unknown, number | undefined, v.BaseIssue<unknown>> {
+  return v.optional(
+    v.pipe(
+      v.string(),
+      v.check((val: string): boolean => {
+        const n = Number(val);
+        return Number.isInteger(n) && n >= 1 && n <= maxVenueNumber(venues);
+      }, app.t('proposed_date_venue_invalid')),
+      v.transform((val: string): number => Number(val)),
+    ),
+  );
+}
+
+function buildTupleSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unknown, TupleOutput, v.BaseIssue<unknown>> {
   return v.object({
     generate: v.literal(TUPLE_DISCRIMINATOR, app.t('proposed_date_time_invalid')),
     'time[]': v.array(v.string()),
     fromDate: v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))),
     toDate: v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))),
+    venueNumber: venueNumberSchema(app, venues),
     // ponytail: rogue POST combining the generator branch with the single-date
     // field is explicitly rejected. The schema encodes it via the `never`
     // output type — passing `proposedDateTime` makes the parse fail before
@@ -72,13 +104,14 @@ function buildTupleSchema(app: App): v.BaseSchema<unknown, TupleOutput, v.BaseIs
   });
 }
 
-function buildSingleDateSchema(app: App): v.BaseSchema<unknown, SingleDateOutput, v.BaseIssue<unknown>> {
+function buildSingleDateSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unknown, SingleDateOutput, v.BaseIssue<unknown>> {
   return v.object({
     proposedDateTime: v.pipe(
       v.string(),
       v.check((val: string): boolean => parseLocaleDateTime(val, app.locale) !==
         undefined, app.t('proposed_date_time_invalid')),
     ),
+    venueNumber: venueNumberSchema(app, venues),
   });
 }
 
@@ -185,12 +218,16 @@ async function handleTupleSubmit(
   locale: App['locale'],
   values: Record<string, unknown>,
 ): Promise<Response> {
-  const validation = v.safeParse(buildTupleSchema(app), values);
+  const rawTimes = Array.isArray(values['time[]'])
+    ? values['time[]'].filter((value): value is string => typeof value === 'string')
+    : [];
+  const validation = v.safeParse(buildTupleSchema(app, session.venues), values);
   if (!validation.success) {
     const errors = mapValidationToErrors(validation);
     if (app.isPartial) {
       return app.c.html(renderEditPartials(app, session, {
-        generatorError: errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
+        times: rawTimes,
+        generatorError: errors.fields['venueNumber'] ?? errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
         fromDate: typeof values['fromDate'] === 'string' ? values['fromDate'] : '',
         toDate: typeof values['toDate'] === 'string' ? values['toDate'] : '',
       }), {status: 400});
@@ -288,12 +325,20 @@ async function handleTupleSubmit(
   const fromIso = `${fromDate}T00:00`;
   const toIso = `${toDate}T23:59`;
 
+  const venueNumber = validation.output.venueNumber;
+  // Venue-aware dedup at the handler seam (spec decision): only existing dates
+  // at the form venue can collide with the generated ones, so the composite
+  // "<start>|<venue>" keys are built from those. The generator stays
+  // venue-unaware — it just matches candidates against the given keys.
+  const existingStarts = session.proposedDates
+    .filter((pd) => (pd.venueNumber ?? 1) === (venueNumber ?? 1))
+    .map((pd) => `${pd.dateTimeRange.start}|${pd.venueNumber ?? 1}`);
   const generated = generateProposedDates({
     fromIso,
     toIso,
     todayIso: nowIso,
     tuples: parsed.tuples,
-    existingStarts: session.proposedDates.map((pd) => pd.dateTimeRange.start),
+    existingStarts,
   });
 
   if (generated.added.length === 0) {
@@ -304,7 +349,7 @@ async function handleTupleSubmit(
   let updated = session;
   const addedIds: string[] = [];
   for (const startIso of generated.added) {
-    const proposed = rules.proposeDate(updated, startIso, 'owner');
+    const proposed = rules.proposeDate(updated, startIso, 'owner', venueNumber);
     updated = proposed.session;
     addedIds.push(proposed.proposedDate.id);
   }
@@ -327,7 +372,11 @@ async function handleSingleSubmit(
   values: Record<string, unknown>,
 ): Promise<Response> {
   const rawDateTime = typeof values['proposedDateTime'] === 'string' ? values['proposedDateTime'] : '';
-  const validation = v.safeParse(buildSingleDateSchema(app), {proposedDateTime: rawDateTime});
+  const rawVenueNumber = typeof values['venueNumber'] === 'string' ? values['venueNumber'] : undefined;
+  const validation = v.safeParse(buildSingleDateSchema(app, session.venues), {
+    proposedDateTime: rawDateTime,
+    venueNumber: rawVenueNumber,
+  });
 
   if (!validation.success) {
     const errors = mapValidationToErrors(validation);
@@ -335,18 +384,19 @@ async function handleSingleSubmit(
       return app.c.html(renderEditPartials(app, session, {
         proposedDateTime: rawDateTime,
         error: errors.fields['proposedDateTime'],
-        globalError: errors.global,
+        globalError: errors.fields['venueNumber'] ?? errors.global,
       }), {status: 400});
     }
     return app.c.redirect(`/edit/${id}?ownerPassword=${ownerQuery(app)}`);
   }
 
   const proposedDateTime = validation.output.proposedDateTime;
+  const venueNumber = validation.output.venueNumber;
   const parsed = parseLocaleDateTime(proposedDateTime, locale);
   // ponytail: the schema's `check` predicate already guarantees `parsed` is defined.
   // Use ?-chained parse so the lint ban on non-null assertions stays clean.
   const parsedOrFail = parsed ?? app.failure(app.t('proposed_date_time_invalid'));
-  const proposed = new PostponementRules().proposeDate(session, parsedOrFail.toString(), 'owner');
+  const proposed = new PostponementRules().proposeDate(session, parsedOrFail.toString(), 'owner', venueNumber);
   const updated = await saveWithClashCheck(app, proposed.session, [proposed.proposedDate.id]);
 
   if (app.isPartial) {

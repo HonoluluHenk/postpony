@@ -335,6 +335,66 @@ describe('renderVoteStep', () => {
       .not
       .toContain('Sep 1, 2025');
   });
+
+  test('renders the venue badge next to each proposed date in the poll', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      venues: [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+      ],
+      players: [player],
+      proposedDates: [
+        aProposedDate({id: 'date-1', venueNumber: 2, votable: true}),
+        // legacy date without a stored venue number defaults to the V1 badge
+        {...aProposedDate({id: 'date-2', votable: true}), venueNumber: undefined},
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('>V2</span>');
+    expect(body)
+      .toContain('title="2 – Turnhalle grün"');
+    expect(body)
+      .toContain('>V1</span>');
+  });
+
+  test('renders the venue badge tooltip with just the number when no venue name is known', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [
+        aProposedDate({id: 'date-1', votable: true, venueNumber: 4}),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('title="4"');
+    expect(body)
+      .toContain('>V4</span>');
+  });
 });
 
 describe('renderVoteStep clash info', () => {

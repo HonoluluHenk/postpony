@@ -1,8 +1,8 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
-import { fetchPlayers } from '../../../lib/click-tt-scraper';
+import { fetchClubId, fetchPlayers, fetchVenues, type PlayerOnTeam } from '../../../lib/click-tt-scraper';
 import { generateId, generateRandomPassword, hashPassword } from '../../../lib/crypto-utils';
-import { DEFAULT_CLUB_ID, type ClickTtTeamIdentity, type Player, type Postponement } from '../../../lib/models';
+import { DEFAULT_CLUB_ID, type ClickTtTeamIdentity, type Player, type Postponement, type Venue } from '../../../lib/models';
 import { derivePostponementName } from '../../../lib/postponement';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
 import { requireChangeSession } from '../change-utils';
@@ -59,11 +59,29 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   const players: Player[] = selectedTeamPlayers.map((pn) => makePlayer(pn, selectedTeamId));
 
   const opponentTeamId: 'home' | 'away' = selectedTeamId === 'home' ? 'away' : 'home';
-  if (m.opponentTeamtable) {
-    const opponentPlayers = await fetchPlayers(m.championship, m.group, m.opponentTeamtable);
-    for (const op of opponentPlayers) {
-      players.push(makePlayer(op.name, opponentTeamId));
-    }
+  // Player and venue scraping run in parallel. The postponed match's row `Ort`
+  // cell yields the home club id (the rescheduled match is played at the home
+  // team's hall); venues are scraped from that club's page and the id is
+  // persisted on the session. No teamtable → no club, no venues.
+  const [opponentPlayers, homeClub] = await Promise.all([
+    m.opponentTeamtable
+      ? fetchPlayers(m.championship, m.group, m.opponentTeamtable)
+      : Promise.resolve([] as PlayerOnTeam[]),
+    (async (): Promise<{clubId?: string; venues: Venue[]}> => {
+      const clubId = m.teamtable
+        ? await fetchClubId(m.championship, m.group, m.teamtable, {
+            date: m.date,
+            time: m.time,
+            homeTeam: m.homeTeam,
+            guestTeam: m.guestTeam,
+          })
+        : undefined;
+      return clubId ? {clubId, venues: await fetchVenues(clubId)} : {venues: []};
+    })(),
+  ]);
+  const {clubId, venues} = homeClub;
+  for (const op of opponentPlayers) {
+    players.push(makePlayer(op.name, opponentTeamId));
   }
 
   // Both teams' click-tt identities captured at the source (ADR-0022); an
@@ -100,6 +118,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     session = {
       ...existing,
       name,
+      clubId: clubId ?? existing.clubId,
       homeTeam: m.homeTeam,
       guestTeam: m.guestTeam,
       originalMatchDateTime,
@@ -116,7 +135,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
 
     session = {
       id,
-      clubId: DEFAULT_CLUB_ID,
+      clubId: clubId ?? DEFAULT_CLUB_ID,
       name,
       homeTeam: m.homeTeam,
       guestTeam: m.guestTeam,
@@ -129,6 +148,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
       guestTeamIdentity,
       reopenCount: 0,
       players,
+      venues,
       proposedDates: [],
       votes: [],
       originalMatchDateTime,

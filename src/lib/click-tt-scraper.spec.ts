@@ -1,7 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { parse } from 'node-html-parser';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchGroups, fetchLeagues, fetchMatches, fetchPlayers, fetchTeams } from './click-tt-scraper';
+import {
+  extractClubId,
+  fetchClubId,
+  fetchGroups,
+  fetchLeagues,
+  fetchMatches,
+  fetchPlayers,
+  fetchTeams,
+  fetchVenues,
+} from './click-tt-scraper';
 import { ClickTTError } from './errors';
 
 
@@ -32,6 +42,10 @@ describe('click-tt-scraper', () => {
     // League page (lists the groups of a championship).
     if (url.includes('leaguePage')) {
       return fixture('groups.html');
+    }
+    // Club page (lists the club's venues).
+    if (url.includes('clubInfoDisplay')) {
+      return fixture('club-venues.html');
     }
     // Start page (lists the championships / leagues).
     if (url.includes('index.htm')) {
@@ -213,6 +227,124 @@ describe('click-tt-scraper', () => {
             {name: 'Linder, Christoph'},
             {name: 'Schmid, Oliver'},
             {name: 'Milcu, Sasha'},
+          ]),
+        );
+    });
+  });
+
+  describe('extractClubId', () => {
+    test('returns the home team club id when the organizer is the away team', () => {
+      const root = parse(fixture('team.html'));
+
+      expect(extractClubId(root, {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      }))
+        .toBe('33132');
+    });
+
+    test('returns the home team club id when the organizer is the home team', () => {
+      const root = parse(fixture('team-thun.html'));
+
+      expect(extractClubId(root, {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      }))
+        .toBe('33132');
+    });
+
+    test('returns the opponent club id for an away match', () => {
+      const root = parse(fixture('team-thun.html'));
+
+      expect(extractClubId(root, {
+        date: '17.09.2026',
+        time: '20:00',
+        homeTeam: 'Bern',
+        guestTeam: 'Thun',
+      }))
+        .toBe('33091');
+    });
+
+    test('returns undefined when the postponed match row has no club link', () => {
+      const root = parse(
+        '<table class="result-set">' +
+        '<tr>' +
+        '<td>Sat.</td><td>29.08.2026</td><td>16:00</td><td class="center"></td>' +
+        '<td>1</td><td>Thun</td><td></td><td>Ostermundigen</td><td></td>' +
+        '</tr>' +
+        '</table>',
+      );
+
+      expect(extractClubId(root, {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      }))
+        .toBeUndefined();
+    });
+
+    test('returns undefined when no row matches the postponed match', () => {
+      const root = parse(fixture('team.html'));
+
+      expect(extractClubId(root, {
+        date: '01.01.2099',
+        time: '00:00',
+        homeTeam: 'None',
+        guestTeam: 'Nowhere',
+      }))
+        .toBeUndefined();
+    });
+  });
+
+  describe('fetchClubId', () => {
+    test('fetches the team page and returns the home team club id', async () => {
+      const clubId = await fetchClubId('MTTV 26/27', '219397', '1732193', {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      });
+
+      expect(clubId)
+        .toBe('33132');
+    });
+  });
+
+  describe('fetchVenues', () => {
+    test('parses all venues from the club page in venue-number order', async () => {
+      const venues = await fetchVenues('33282');
+
+      expect(venues.length)
+        .toBe(3);
+      expect(venues.map((v) => v.venueNumber))
+        .toEqual([1, 2, 3]);
+    });
+
+    test('parses venue details from the fixture', async () => {
+      const venues = await fetchVenues('33282');
+
+      expect(venues)
+        .toEqual(
+          expect.arrayContaining([
+            {
+              venueNumber: 1,
+              name: 'Turnhalle orange, UG, Schule Dennigkofen',
+              address: 'Dennigkofenweg 169',
+              postalCode: '3072',
+              city: 'Ostermundigen',
+            },
+            {
+              venueNumber: 3,
+              name: 'Turnhalle Weiher',
+              address: 'Weiherweg 2',
+              postalCode: '3072',
+              city: 'Ostermundigen',
+            },
           ]),
         );
     });

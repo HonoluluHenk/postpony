@@ -1,10 +1,11 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { DateClashes } from '../../../lib/clashes';
-import type { PostponementStatus, VoteTallyItem } from '../../../lib/models';
+import type { PostponementStatus, Venue, VoteTallyItem } from '../../../lib/models';
 import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
 import { ClashInfo } from '../../partials/clash-info';
 import { ErrorContainer } from '../../partials/error-container';
+import { VenueBadge } from '../../partials/venue-badge';
 import type { OwnTeamView } from './own-team-view';
 import { OwnTeamVotes } from './own-team-votes';
 import { StatusChip } from './status-chip';
@@ -13,13 +14,23 @@ import { VoteTallySection } from './vote-tally-section';
 export interface ProposedDateTallyItem extends VoteTallyItem {
   votable: boolean;
   clashes?: DateClashes;
+  /** venue number the date applies to; absent means venue 1 (legacy dates predate venues). */
+  venueNumber?: number;
 }
+
+/**
+ * Number of venue options offered when the Postponement carries no scraped
+ * venues. Single source of truth for the spec rule "empty venues → 1..10",
+ * shared with the handler's validation bound.
+ */
+export const FALLBACK_VENUE_COUNT = 10;
 
 export type EditPartialsData = OwnTeamView & {
   proposedDates: ProposedDateTallyItem[];
   homeProposedDates: VoteTallyItem[];
   awayProposedDates: VoteTallyItem[];
   clashCheckable: boolean;
+  venues: Venue[];
 };
 
 export interface ProposedDatesSectionProps extends EditPartialsData {
@@ -48,6 +59,7 @@ interface GenerateFormProps {
   sessionId: string;
   t: TranslateFn;
   locale: AppLocale;
+  venueOptions: JSX.Element[];
   times?: readonly string[];
   invalidRow?: number;
   error?: string;
@@ -108,6 +120,12 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
             <span id="toDate-error" class="error" role="alert">{toError}</span>
           ) : null}
         </div>
+        <div class="field label border">
+          <select id="generateVenueNumber" name="venueNumber">
+            {props.venueOptions}
+          </select>
+          <label for="generateVenueNumber">{t('proposed_date_venue_label')}</label>
+        </div>
       </div>
       <ol class="list no-margin" aria-label={t('proposed_dates_generate_section')}>
         {weekdayLabels[locale].map((weekday, index) => {
@@ -162,6 +180,18 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
 
 export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Element {
   const confirmed = props.status === 'Confirmed';
+
+  const venueOptions = props.venues.length > 0
+    ? props.venues.map((venue) => (
+      <option key={venue.venueNumber} value={venue.venueNumber}>
+        {venue.venueNumber} – {venue.name}
+      </option>
+    ))
+    : // ponytail: without scraped venues the organizer still picks a hall 1–10;
+      // a richer default (e.g. the original match's hall) is out of scope.
+      Array.from({length: FALLBACK_VENUE_COUNT}, (_, index) => (
+        <option key={index + 1} value={index + 1}>{index + 1}</option>
+      ));
 
   return (
     <section id="proposed-dates-management" class="padding small-round surface-variant s12 m8" aria-live="polite">
@@ -221,10 +251,11 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                    return (
                      <tr key={proposedDate.id} class={hasClashes ? 'clash-row' : undefined} aria-label={rowAriaLabel}>
                        <th scope="row">
-                         <div class="row items-center gap">
-                           <i aria-hidden="true">event</i>
-                           <div class="max">{proposedDate.display}</div>
-                         </div>
+                          <div class="row items-center gap">
+                            <i aria-hidden="true">event</i>
+                            <div class="max">{proposedDate.display}</div>
+                            <VenueBadge venueNumber={proposedDate.venueNumber} venues={props.venues}/>
+                          </div>
                          <ClashInfo
                            clashes={proposedDate.clashes}
                            clashCheckable={props.clashCheckable}
@@ -298,11 +329,12 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                </table>
              </div>
            ) : null}
-             <GenerateForm
-               sessionId={props.sessionId}
-               t={props.t}
-               locale={props.locale}
-               times={props.times}
+<GenerateForm
+                sessionId={props.sessionId}
+                t={props.t}
+                locale={props.locale}
+                venueOptions={venueOptions}
+                times={props.times}
                invalidRow={props.generatorInvalidRow}
                error={props.generatorError}
                successCount={props.generatorSuccessCount}
@@ -335,16 +367,22 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                    <span id="proposedDateTime-error" class="error" role="alert">{props.error}</span>
                  ) : null}
                </div>
-               <button
-                 type="button"
-                 id="proposedDateTimePicker"
-                 class="button"
-                 aria-label={props.t('proposed_date_time_picker_label')}
-                 title={props.t('proposed_date_time_picker_label')}
-               >
-                 <i aria-hidden="true">calendar_today</i>
-               </button>
-             </div>
+<button
+                  type="button"
+                  id="proposedDateTimePicker"
+                  class="button"
+                  aria-label={props.t('proposed_date_time_picker_label')}
+                  title={props.t('proposed_date_time_picker_label')}
+                >
+                  <i aria-hidden="true">calendar_today</i>
+                </button>
+                <div class="field label border">
+                  <select id="venueNumber" name="venueNumber">
+                    {venueOptions}
+                  </select>
+                  <label for="venueNumber">{props.t('proposed_date_venue_label')}</label>
+                </div>
+              </div>
              <div class="right-align">
                <button type="submit">{props.t('add_proposed_date')}</button>
              </div>

@@ -201,6 +201,285 @@ describe('edit handlers', () => {
         .toBe(302);
     });
 
+    describe('single-date venue number', () => {
+      const twoVenues = [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+      ];
+
+      test('single add with a valid venue number stores it on the ProposedDate', async () => {
+        const session = aSession({venues: twoVenues});
+        const app = createApp({
+          params: {id: session.id},
+          body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '2'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(1);
+        expect(stored?.proposedDates[0]?.venueNumber)
+          .toBe(2);
+      });
+
+      test('single add with an out-of-range venue number rejects with a translated error in the error container', async () => {
+        const session = aSession({venues: twoVenues});
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '3'},
+        });
+        await app.store.save(session);
+
+        const response = await handleEditProposedDatesPost(app);
+        const html = await response.text();
+
+        expect(response.status)
+          .toBe(400);
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(0);
+        expect(html)
+          .toContain('id="error-container" hx-swap-oob="true"');
+        expect(html)
+          .toContain('Please select a valid venue number');
+        // the datetime round-trips so the organizer only fixes the venue
+        expect(html)
+          .toContain('value="09/01/2025 08:00 pm"');
+      });
+
+      test('single add with no venues accepts any venue number in 1..10', async () => {
+        const session = aSession();
+        const app = createApp({
+          params: {id: session.id},
+          body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '10'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(1);
+        expect(stored?.proposedDates[0]?.venueNumber)
+          .toBe(10);
+      });
+
+      test('single add with no venues rejects 11 as out of range', async () => {
+        const session = aSession();
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '11'},
+        });
+        await app.store.save(session);
+
+        const response = await handleEditProposedDatesPost(app);
+
+        expect(response.status)
+          .toBe(400);
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(0);
+      });
+
+      test('single add without a venue number leaves venueNumber undefined (legacy default = venue 1)', async () => {
+        const session = aSession({venues: twoVenues});
+        const app = createApp({
+          params: {id: session.id},
+          body: {proposedDateTime: '09/01/2025 08:00 pm'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(1);
+        expect(stored?.proposedDates[0]?.venueNumber)
+          .toBeUndefined();
+      });
+
+      test('re-renders the list with the venue badge after a successful add', async () => {
+        const session = aSession({venues: twoVenues});
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '2'},
+        });
+        await app.store.save(session);
+
+        const response = await handleEditProposedDatesPost(app);
+        const html = await response.text();
+
+        expect(response.status)
+          .toBe(200);
+        expect(html)
+          .toContain('>V2</span>');
+        expect(html)
+          .toContain('title="2 – Turnhalle grün"');
+      });
+    });
+
+    describe('generator venue number', () => {
+      const twoVenues = [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+      ];
+
+      test('generator with a valid venue number stores it on every generated date', async () => {
+        const session = aSession({
+          venues: twoVenues,
+          originalMatchDateTime: '2026-09-02T16:00',
+          proposedDates: [],
+          status: 'Draft',
+        });
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm', '9:00 pm'], venueNumber: '2'},
+        });
+        await app.store.save(session);
+
+        await handleEditProposedDatesPost(app);
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates.length)
+          .toBeGreaterThan(0);
+        for (const proposedDate of stored?.proposedDates ?? []) {
+          expect(proposedDate.venueNumber)
+            .toBe(2);
+        }
+      });
+
+      test('generator with an out-of-range venue number rejects with a translated error and preserves the submitted times', async () => {
+        const session = aSession({
+          venues: twoVenues,
+          originalMatchDateTime: '2026-09-02T16:00',
+          proposedDates: [],
+          status: 'Draft',
+        });
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm', '9:00 pm'], venueNumber: '3'},
+        });
+        await app.store.save(session);
+
+        const response = await handleEditProposedDatesPost(app);
+        const html = await response.text();
+
+        expect(response.status)
+          .toBe(400);
+        const stored = await app.store.get(session.id);
+        expect(stored?.proposedDates)
+          .toHaveLength(0);
+        expect(stored?.status)
+          .toBe('Draft');
+        expect(html)
+          .toContain('Please select a valid venue number');
+        // the submitted times round-trip so the organizer only fixes the venue
+        expect(html)
+          .toContain('value="8:00 pm"');
+        expect(html)
+          .toContain('value="9:00 pm"');
+      });
+    });
+
+    describe('venue-aware dedup', () => {
+      const existingDateIso = '2026-08-31T20:00';
+
+      function sessionWithExistingDate(): Postponement {
+        return aSession({
+          originalMatchDateTime: '2026-09-02T16:00',
+          status: 'Draft',
+          proposedDates: [
+            aProposedDate({
+              id: 'pd-existing',
+              dateTimeRange: {start: existingDateIso, end: existingDateIso},
+              venueNumber: 1,
+            }),
+          ],
+        });
+      }
+
+      test('duplicate datetime + same venue → only one exists', async () => {
+        const session = sessionWithExistingDate();
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm'], venueNumber: '1'},
+        });
+        await app.store.save(session);
+
+        const html = await (await handleEditProposedDatesPost(app)).text();
+
+        const stored = await app.store.get(session.id);
+        // the same-datetime/same-venue duplicate is skipped, so only the
+        // remaining 4 weekdays are added to the existing date
+        expect(stored?.proposedDates.filter((d) => d.dateTimeRange.start === existingDateIso))
+          .toHaveLength(1);
+        expect(stored?.proposedDates)
+          .toHaveLength(5);
+        expect(html)
+          .toContain('>4 dates added<');
+      });
+
+      test('duplicate datetime + different venue → both exist', async () => {
+        const session = sessionWithExistingDate();
+        const app = createApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm'], venueNumber: '2'},
+        });
+        await app.store.save(session);
+
+        const html = await (await handleEditProposedDatesPost(app)).text();
+
+        const stored = await app.store.get(session.id);
+        // the same datetime at venue 2 is a distinct date, so all 5 weekdays
+        // are added alongside the existing venue-1 date
+        expect(stored?.proposedDates.filter((d) => d.dateTimeRange.start === existingDateIso))
+          .toHaveLength(2);
+        expect(stored?.proposedDates)
+          .toHaveLength(6);
+        expect(html)
+          .toContain('>5 dates added<');
+      });
+
+      test('generator skipped count is venue-aware (same venue counts, different venue does not)', () => {
+        // the handler only passes composite keys of existing dates at the form
+        // venue, so venue-1 generation dedups against the existing venue-1 date
+        const sameVenue = generateProposedDates({
+          fromIso: '2026-08-25T08:00',
+          toIso: '2026-09-30T16:00',
+          todayIso: FIXED_TODAY_ISO,
+          tuples: [{weekday: 1, hour: 20, minute: 0}],
+          existingStarts: [`${existingDateIso}|1`],
+        });
+        expect(sameVenue.skipped)
+          .toBe(1);
+        expect(sameVenue.added)
+          .not
+          .toContain(existingDateIso);
+
+        // venue-2 generation filters the venue-1 date out, so nothing is skipped
+        const differentVenue = generateProposedDates({
+          fromIso: '2026-08-25T08:00',
+          toIso: '2026-09-30T16:00',
+          todayIso: FIXED_TODAY_ISO,
+          tuples: [{weekday: 1, hour: 20, minute: 0}],
+          existingStarts: [],
+        });
+        expect(differentVenue.skipped)
+          .toBe(0);
+        expect(differentVenue.added)
+          .toContain(existingDateIso);
+      });
+    });
+
     test('tuple branch: persists the expected count and renders a success toast with the count', async () => {
       const session = aSession({
         originalMatchDateTime: '2026-09-02T16:00',

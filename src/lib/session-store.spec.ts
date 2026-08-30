@@ -240,6 +240,7 @@ describe('MemorySessionStore.get', () => {
       reopenCount: 1,
       confirmedProposedDateId: 'pd-1',
       players: [],
+      venues: [],
       proposedDates: [],
       votes: [],
       createdAt: '2025-01-01T00:00:00.000Z',

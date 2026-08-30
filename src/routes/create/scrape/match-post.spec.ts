@@ -1,13 +1,17 @@
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
 import { hashPassword } from '../../../lib/crypto-utils';
+import { fetchClubId, fetchVenues } from '../../../lib/click-tt-scraper';
 import { LOCALE_KEY } from '../../../locales';
 import { MemorySessionStore } from '../../../lib/session-store';
+import { DEFAULT_CLUB_ID } from '../../../lib/models';
 import { handleScrapeMatchPost } from './match-post';
 
 vi.mock('../../../lib/click-tt-scraper', () => ({
   fetchPlayers: vi.fn(() => []),
+  fetchClubId: vi.fn(() => undefined),
+  fetchVenues: vi.fn(() => []),
 }));
 
 interface MockOptions {
@@ -53,6 +57,10 @@ async function storedSession(app: App): Promise<ReturnType<App['store']['get']>>
 }
 
 describe('handleScrapeMatchPost', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test('stores organizerTeam "home" when the organizer claims the home side', async () => {
     const app = createApp({body: {...MATCH, teamName: 'Thun'}});
 
@@ -152,6 +160,59 @@ describe('handleScrapeMatchPost', () => {
       .toBeUndefined();
     expect(stored?.guestTeamIdentity)
       .toBeUndefined();
+  });
+
+  test('stores the scraped venues and home club id when the team page resolves one', async () => {
+    vi.mocked(fetchClubId).mockResolvedValueOnce('33132');
+    vi.mocked(fetchVenues).mockResolvedValueOnce([
+      {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+    ]);
+    const app = createApp({body: {...MATCH, teamName: 'Thun', teamtable: 'tt-own'}});
+
+    const stored = await storedSession(app);
+
+    expect(fetchClubId)
+      .toHaveBeenCalledWith('MTTV 26/27', '219397', 'tt-own', {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      });
+    expect(stored?.clubId)
+      .toBe('33132');
+    expect(stored?.venues)
+      .toEqual([
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+      ]);
+  });
+
+  test('keeps venues empty and clubId unset when no club id is resolvable', async () => {
+    vi.mocked(fetchClubId).mockResolvedValueOnce(undefined);
+    const app = createApp({body: {...MATCH, teamName: 'Thun', teamtable: 'tt-own'}});
+
+    const stored = await storedSession(app);
+
+    expect(fetchVenues)
+      .not
+      .toHaveBeenCalled();
+    expect(stored?.venues)
+      .toEqual([]);
+    expect(stored?.clubId)
+      .toBe(DEFAULT_CLUB_ID);
+  });
+
+  test('keeps venues empty when no teamtable is submitted', async () => {
+    const app = createApp({body: {...MATCH, teamName: 'Thun', teamtable: ''}});
+
+    const stored = await storedSession(app);
+
+    expect(fetchClubId)
+      .not
+      .toHaveBeenCalled();
+    expect(stored?.venues)
+      .toEqual([]);
+    expect(stored?.clubId)
+      .toBe(DEFAULT_CLUB_ID);
   });
 });
 

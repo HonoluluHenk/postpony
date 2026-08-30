@@ -49,6 +49,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
       no: counts.no,
       maybe: counts.maybe,
       clashes: pd.clashes,
+      venueNumber: pd.venueNumber,
     };
   });
 
@@ -57,6 +58,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
     homeProposedDates: toVoteTallyItems(dates, homeTallies, locale),
     awayProposedDates: toVoteTallyItems(dates, awayTallies, locale),
     clashCheckable: session.homeTeamIdentity !== undefined && session.guestTeamIdentity !== undefined,
+    venues: session.venues,
     ...buildOwnTeamView(session, locale),
   };
 }
@@ -99,6 +101,7 @@ export function renderEditPartials(
     t: view.t,
     locale: view.locale,
     inputFormat: view.inputFormat,
+    venues: data.venues,
     proposedDateTime: extra.proposedDateTime,
     error: extra.error,
     success: extra.success,
