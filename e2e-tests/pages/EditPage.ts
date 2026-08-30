@@ -168,6 +168,30 @@ export class EditPage {
     return this.generateForm.getByRole('button', {name: 'Generate', exact: true});
   }
 
+  get fromDateInput(): Locator {
+    return this.generateForm.getByLabel('From');
+  }
+
+  get toDateInput(): Locator {
+    return this.generateForm.getByLabel('To');
+  }
+
+  get fromDateError(): Locator {
+    return this.page.locator('#fromDate-error');
+  }
+
+  get toDateError(): Locator {
+    return this.page.locator('#toDate-error');
+  }
+
+  async fillFromDate(isoDate: string): Promise<void> {
+    await this.fromDateInput.fill(isoDate);
+  }
+
+  async fillToDate(isoDate: string): Promise<void> {
+    await this.toDateInput.fill(isoDate);
+  }
+
   async generateProposedDates(rows: { weekday: number; time: string }[]): Promise<void> {
     // Fixed Monday-Sunday grid: weekday N maps to row index N-1.
     for (const row of rows) {

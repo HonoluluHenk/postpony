@@ -209,4 +209,131 @@ test.describe('Proposed Date Generator', () => {
 
     await checkA11y();
   });
+
+  test('valid from/to range generates dates within the window', async ({page}) => {
+    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+
+    // Fill from/to with a valid range inside the allowed window
+    // Anchor is 2026-09-15, cap is 2026-10-13 (4 weeks after)
+    // Use from=2026-09-01, to=2026-09-30
+    await editPage.fillFromDate('2026-09-01');
+    await editPage.fillToDate('2026-09-30');
+    await editPage.generateProposedDates([...TUPLES]);
+
+    const successToast = page.getByRole('alert')
+      .filter({hasText: /\d+ dates? added/});
+    await expect(successToast)
+      .toBeVisible();
+
+    const items = editPage.proposedDateRows;
+    const count = await items.count();
+    expect(count)
+      .toBeGreaterThan(0);
+
+    // All generated dates must fall within [from, to]
+    const dateTexts = await editPage.proposedDateDisplays();
+    const fromDate = new Date('2026-09-01T00:00');
+    const toDate = new Date('2026-09-30T23:59');
+    for (const dateText of dateTexts) {
+      const date = new Date(stripWeekdayPrefix(dateText)
+        .replace(' at ', ', '));
+      expect(date.getTime())
+        .toBeGreaterThanOrEqual(fromDate.getTime());
+      expect(date.getTime())
+        .toBeLessThanOrEqual(toDate.getTime());
+    }
+  });
+
+  test('from before today shows error and no dates added', async ({page}) => {
+    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+
+    const initialCount = await editPage.proposedDateRows.count();
+
+    // Set from to a date in the past
+    await editPage.fillFromDate('2020-01-01');
+    await editPage.fillToDate('2026-10-01');
+    await editPage.generateProposedDates([...TUPLES]);
+
+    await expect(editPage.fromDateError)
+      .toBeVisible();
+    await expect(editPage.fromDateError)
+      .toContainText('Date must be today or later');
+
+    const finalCount = await editPage.proposedDateRows.count();
+    expect(finalCount)
+      .toBe(initialCount);
+  });
+
+  test('to before or equal to from shows error and no dates added', async ({page}) => {
+    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+
+    const initialCount = await editPage.proposedDateRows.count();
+
+    // today is ~2026-08-29 per env, so from=2026-09-10, to=2026-09-05 (to < from)
+    await editPage.fillFromDate('2026-09-10');
+    await editPage.fillToDate('2026-09-05');
+    await editPage.generateProposedDates([...TUPLES]);
+
+    await expect(editPage.toDateError)
+      .toBeVisible();
+
+    const finalCount = await editPage.proposedDateRows.count();
+    expect(finalCount)
+      .toBe(initialCount);
+  });
+
+  test('to beyond originalMatchDateTime + 4w shows error and no dates added', async ({page}) => {
+    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+
+    const initialCount = await editPage.proposedDateRows.count();
+
+    // Anchor is 2026-09-15, cap is 2026-10-13 (4 weeks after)
+    // Set to beyond the cap
+    await editPage.fillFromDate('2026-09-01');
+    await editPage.fillToDate('2026-12-01');
+    await editPage.generateProposedDates([...TUPLES]);
+
+    await expect(editPage.toDateError)
+      .toBeVisible();
+    await expect(editPage.toDateError)
+      .toContainText('at most 4 weeks after the original match');
+
+    const finalCount = await editPage.proposedDateRows.count();
+    expect(finalCount)
+      .toBe(initialCount);
+  });
+
+  test('custom from/to with anchor generates within specified range', async ({page}) => {
+    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+
+    // Narrow window: only one week starting 2026-09-07 (Monday)
+    // Anchor is 2026-09-15, cap is 2026-10-13
+    // from=2026-09-07, to=2026-09-13 (one week: Mon-Sun)
+    await editPage.fillFromDate('2026-09-07');
+    await editPage.fillToDate('2026-09-13');
+    await editPage.generateProposedDates([...TUPLES]);
+
+    const successToast = page.getByRole('alert')
+      .filter({hasText: /\d+ dates? added/});
+    await expect(successToast)
+      .toBeVisible();
+
+    const dateTexts = await editPage.proposedDateDisplays();
+    const fromDate = new Date('2026-09-07T00:00');
+    const toDate = new Date('2026-09-13T23:59');
+    for (const dateText of dateTexts) {
+      const date = new Date(stripWeekdayPrefix(dateText)
+        .replace(' at ', ', '));
+      expect(date.getTime())
+        .toBeGreaterThanOrEqual(fromDate.getTime());
+      expect(date.getTime())
+        .toBeLessThanOrEqual(toDate.getTime());
+    }
+
+    // Should only contain Wednesday (2026-09-09) and Saturday (2026-09-12)
+    const weekdays: number[] = dateTexts.map((dateText: string): number => isoWeekday(new Date(stripWeekdayPrefix(dateText)
+      .replace(' at ', ', '))));
+    expect([...new Set(weekdays)].sort((a: number, b: number): number => a - b))
+      .toEqual([3, 6]);
+  });
 });
