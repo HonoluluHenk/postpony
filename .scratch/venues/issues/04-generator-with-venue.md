@@ -16,3 +16,7 @@
     - Generator with valid venue number → all generated dates have that venue number
     - Venue number out of range → validation error
 - [x] All existing unit tests pass
+
+## Comments
+
+- `42d3a8e` ticket done: generator venue select (reuses 03's options) + tuple-schema venue validation + handler attaches venueNumber to every generated date + preserves submitted times on the venue error + unit/component tests; `3ff1ba8` review: findings under `.scratch/venues/reviews/04-generator-with-venue.md` (extract shared venue schema); `8be7746` review-fixed: shared `venueNumberSchema` used by both single-date and tuple schemas.
