@@ -5,12 +5,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   extractClubId,
   fetchClubId,
+  fetchClubMeetings,
   fetchGroups,
   fetchLeagues,
   fetchMatches,
   fetchPlayers,
   fetchTeams,
   fetchVenues,
+  seasonWindow,
 } from './click-tt-scraper';
 import { ClickTTError } from './errors';
 
@@ -46,6 +48,10 @@ describe('click-tt-scraper', () => {
     // Club page (lists the club's venues).
     if (url.includes('clubInfoDisplay')) {
       return fixture('club-venues.html');
+    }
+    // Club meeting search (lists the club's meetings with venue numbers).
+    if (url.includes('clubMeetings')) {
+      return fixture('club-meetings.html');
     }
     // Start page (lists the championships / leagues).
     if (url.includes('index.htm')) {
@@ -347,6 +353,81 @@ describe('click-tt-scraper', () => {
             },
           ]),
         );
+    });
+  });
+
+  describe('fetchClubMeetings', () => {
+    test('returns only the club home Matches with their venue numbers', async () => {
+      const matches = await fetchClubMeetings('33282', '01.07.2026', '30.06.2027');
+
+      expect(matches.length)
+        .toBe(4);
+      expect(matches)
+        .toEqual(
+          expect.arrayContaining([
+            {
+              day: 'Di',
+              date: '25.08.2026',
+              time: '19:30',
+              homeTeam: 'Ostermundigen V',
+              guestTeam: 'Köniz II',
+              venueNumber: 1,
+            },
+            {
+              day: 'Mi',
+              date: '07.09.2026',
+              time: '20:00',
+              homeTeam: 'Ostermundigen',
+              guestTeam: 'Bern',
+              venueNumber: 2,
+            },
+            {
+              day: 'Di',
+              date: '30.03.2027',
+              time: '20:15',
+              homeTeam: 'Ostermundigen',
+              guestTeam: 'Port',
+              venueNumber: 3,
+            },
+          ]),
+        );
+    });
+
+    test('excludes rows where the club is the guest team', async () => {
+      const matches = await fetchClubMeetings('33282', '01.07.2026', '30.06.2027');
+
+      expect(matches.some((m) => m.homeTeam === 'Thun' && m.guestTeam === 'Ostermundigen'))
+        .toBe(false);
+    });
+
+    test('yields undefined venueNumber for rows without a venue link', async () => {
+      const matches = await fetchClubMeetings('33282', '01.07.2026', '30.06.2027');
+
+      expect(matches)
+        .toEqual(
+          expect.arrayContaining([
+            {
+              day: 'So',
+              date: '06.12.2026',
+              time: '09:00',
+              homeTeam: 'Ostermundigen',
+              guestTeam: 'Bremgarten II',
+              venueNumber: undefined,
+            },
+          ]),
+        );
+    });
+  });
+
+  describe('seasonWindow', () => {
+    test('derives the from/to season window from a championship', () => {
+      expect(seasonWindow('MTTV 26/27'))
+        .toEqual({from: '01.07.2026', to: '30.06.2027'});
+    });
+
+    test('returns undefined for a championship without a year pair', () => {
+      expect(seasonWindow('MTTV'))
+        .toBeUndefined();
     });
   });
 

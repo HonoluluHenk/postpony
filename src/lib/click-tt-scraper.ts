@@ -24,6 +24,9 @@ const TEAM_URL =
   `${WA_URL}/teamPortrait?teamtable={teamtable}&championship={championship}&group={group}&preferredLanguage={preferredLanguage}`;
 /** Club page; lists the club's venues ("Spiellokal N" / "Matchlocation N"). */
 const CLUB_URL = `${WA_URL}/clubInfoDisplay?club={club}`;
+/** Club meeting search; lists a club's meetings in a date range (`onlyHomeMeetings=true` keeps rows where the club is the home team). */
+const CLUB_MEETINGS_URL =
+  `${WA_URL}/clubMeetings?club={club}&searchType=1&searchTimeRangeFrom={from}&searchTimeRangeTo={to}&onlyHomeMeetings=true`;
 
 export interface League {
   name: string;
@@ -53,6 +56,8 @@ export interface Match {
   time: string;
   homeTeam: string;
   guestTeam: string;
+  /** Venue number of the home hall, from the row's `Ort` cell link (`(n)`); undefined when the league assigns no hall. */
+  venueNumber?: number;
 }
 
 /**
@@ -107,6 +112,9 @@ function fixtureNameForUrl(url: string): string {
   }
   if (url.includes('clubInfoDisplay')) {
     return 'club-venues.html';
+  }
+  if (url.includes('clubMeetings')) {
+    return 'club-meetings.html';
   }
   if (url.includes('index.htm')) {
     return 'leagues.html';
@@ -456,4 +464,94 @@ export async function fetchVenues(clubId: string): Promise<Venue[]> {
   }
   venues.sort((a, b) => a.venueNumber - b.venueNumber);
   return venues;
+}
+
+/**
+ * Derives the season window for a championship ("MTTV 26/27") as the date range
+ * the season occupies, `01.07.<first>` to `30.06.<second>` (seasons run
+ * Aug→Jul). Returns undefined when the championship carries no `YY/YY` year pair.
+ */
+export function seasonWindow(championship: string): {from: string; to: string} | undefined {
+  const m = /(\d{2})\/(\d{2})$/.exec(championship);
+  const first = m?.[1];
+  const second = m?.[2];
+  if (first === undefined || second === undefined) {
+    return undefined;
+  }
+  return {from: `01.07.20${first}`, to: `30.06.20${second}`};
+}
+
+/** Extracts the venue number from a row's `Ort` cell link (`(n)`); undefined when the row has no hall link. */
+function venueNumberFromOrtCell(cell: HTMLElement): number | undefined {
+  const link = cell.querySelector('a[href*="clubInfoDisplay"]');
+  const m = /\((\d+)\)/.exec(link?.text ?? '');
+  return m?.[1] !== undefined ? Number(m[1]) : undefined;
+}
+
+/**
+ * True when the row is one of the club's own home meetings: its `Ort` cell
+ * links the home club (`clubInfoDisplay?club=<clubId>`). A row without a hall
+ * link is still a home meeting — the venue-less leagues (e.g. DA 1.Liga) play
+ * at the home club but click-tt assigns no hall.
+ */
+function isClubHomeMeeting(ortCell: HTMLElement, clubId: string): boolean {
+  const href = ortCell.querySelector('a[href*="clubInfoDisplay"]')?.getAttribute('href');
+  if (!href) {
+    return true;
+  }
+  return queryParam(href, 'club') === clubId;
+}
+
+/**
+ * Fetches a club's home Matches for a date range from the club meeting search
+ * (`clubMeetings`). The request passes `onlyHomeMeetings=true`; rows where the
+ * club is not the home team (venue link to another club) are filtered out
+ * defensively. Matches without a venue link yield `venueNumber` undefined.
+ */
+export async function fetchClubMeetings(clubId: string, from: string, to: string): Promise<Match[]> {
+  const root = await fetchHtml(buildUrl(CLUB_MEETINGS_URL, {club: clubId, from, to}));
+
+  const matches: Match[] = [];
+  const seen = new Set<string>();
+  for (const table of root.querySelectorAll('table.result-set')) {
+    const rows = table.querySelectorAll('tr');
+    for (const row of rows) {
+      const cells = row.querySelectorAll('td');
+      if (cells.length < 9) {
+        continue;
+      }
+      const date = (cells[1]?.text ?? '').trim();
+      if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) {
+        continue;
+      }
+      const ortCell = cells[3];
+      if (ortCell === undefined || !isClubHomeMeeting(ortCell, clubId)) {
+        continue;
+      }
+      const day = (cells[0]?.text ?? '').trim();
+      const time = (cells[2]?.text ?? '').trim()
+        .replace(/\s+/g, ' ');
+      const homeTeam = (cells[6]?.text ?? '').replace(/\u00a0/g, ' ')
+        .trim();
+      const guestTeam = (cells[8]?.text ?? '').replace(/\u00a0/g, ' ')
+        .trim();
+      if (!homeTeam || !guestTeam) {
+        continue;
+      }
+      const key = `${date}|${time}|${homeTeam}|${guestTeam}`;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      matches.push({
+        day,
+        date,
+        time,
+        homeTeam,
+        guestTeam,
+        venueNumber: venueNumberFromOrtCell(ortCell),
+      });
+    }
+  }
+  return matches;
 }
