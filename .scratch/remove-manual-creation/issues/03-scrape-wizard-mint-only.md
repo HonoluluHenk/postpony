@@ -12,3 +12,8 @@
 - [x] The shared change-mode helper (owner-password guard + change-suffix threading) is deleted
 - [x] Unit specs for the scrape wizard / final scrape handler updated to mint-only behaviour
 - [x] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
+
+## Comments
+
+- `72ed7e9` — implementation: scrape wizard is mint-only (change-mode helper + threading removed, final POST always mints a fresh Postponement, specs updated)
+- `e4a451f` — review: clean on both Standards and Spec axes; no fixes needed
