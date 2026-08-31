@@ -24,24 +24,35 @@ export function venueTooltip(venueNumber: number | undefined, venues: readonly V
   return venue ? `${venue.venueNumber} – ${venue.name}` : String(number);
 }
 
-/** The "V1" pill shown next to a proposed date; `title` carries the full venue name when known. */
-export function VenueBadge(props: { venueNumber?: number; venues: readonly Venue[] }): JSX.Element {
+/**
+ * The "V1" pill shown next to a proposed date; `title` carries the full venue
+ * name when known. `label` overrides the visible text (the vote page shows the
+ * number, short name, and occupancy count inside the pill).
+ */
+export function VenueBadge(props: { venueNumber?: number; venues: readonly Venue[]; label?: string }): JSX.Element {
   return (
     <span class="chip venue-badge" title={venueTooltip(props.venueNumber, props.venues)}>
-      {venueNumberToken(props.venueNumber)}
+      {props.label ?? venueNumberToken(props.venueNumber)}
     </span>
   );
 }
 
 /**
- * Legend text for a proposed date's venue in the poll: "V1 – Turnhalle orange"
- * when the venue's name is known, otherwise just the number token ("V4").
- * Scraped venue names are full lines ("Turnhalle orange, UG, Schule
- * Dennigkofen"), so only the first comma-segment is shown to keep the legend
- * short; the edit page still shows the full name.
+ * First comma-segment of a venue's name for the vote pill, e.g. "Turnhalle
+ * orange" from "Turnhalle orange, UG, Schule Dennigkofen"; undefined when the
+ * venue number is unknown.
  */
-export function venueLegendLabel(venueNumber: number | undefined, venues: readonly Venue[]): string {
-  const venue = findVenue(venueNumber, venues);
-  const shortName = venue?.name.split(',')[0]?.trim();
-  return shortName ? `${venueNumberToken(venueNumber)} – ${shortName}` : venueNumberToken(venueNumber);
+export function venueShortName(venueNumber: number | undefined, venues: readonly Venue[]): string | undefined {
+  return findVenue(venueNumber, venues)?.name.split(',')[0]?.trim();
+}
+
+/**
+ * The vote pill label: "V1 – Turnhalle orange" (short name only, so the pill
+ * stays short) plus the occupancy suffix when the hall is busy. The pill's
+ * tooltip still carries the full name.
+ */
+export function venuePillLabel(venueNumber: number | undefined, venues: readonly Venue[], occupancySuffix?: string): string {
+  const shortName = venueShortName(venueNumber, venues);
+  const base = shortName ? `${venueNumberToken(venueNumber)} – ${shortName}` : venueNumberToken(venueNumber);
+  return occupancySuffix ? `${base}, ${occupancySuffix}` : base;
 }

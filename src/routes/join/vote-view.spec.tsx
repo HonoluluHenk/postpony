@@ -336,7 +336,7 @@ describe('renderVoteStep', () => {
       .toContain('Sep 1, 2025');
   });
 
-  test('renders the venue number and name next to each proposed date in the poll legend', async () => {
+  test('renders the venue number and short name inside the vote page\'s venue pill', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -347,7 +347,7 @@ describe('renderVoteStep', () => {
       players: [player],
       proposedDates: [
         aProposedDate({id: 'date-1', venueNumber: 2, votable: true}),
-        // legacy date without a stored venue number defaults to the V1 legend
+        // legacy date without a stored venue number defaults to the V1 badge
         {...aProposedDate({id: 'date-2', votable: true}), venueNumber: undefined},
       ],
     });
@@ -363,15 +363,12 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('V2 – Turnhalle grün');
+      .toContain('>V2 – Turnhalle grün</span></legend>');
     expect(body)
-      .toContain('V1 – Turnhalle orange');
-    expect(body)
-      .not
-      .toContain('class="chip venue-badge"');
+      .toContain('>V1 – Turnhalle orange</span></legend>');
   });
 
-  test('renders just the venue number when no venue name is known', async () => {
+  test('renders just the venue number in the pill when no venue name is known', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -392,10 +389,10 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('V4</legend>');
+      .toContain('>V4</span></legend>');
   });
 
-  test('truncates a multi-line venue name at the first comma in the legend', async () => {
+  test('truncates a multi-line venue name at the first comma in the vote pill', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -418,11 +415,14 @@ describe('renderVoteStep', () => {
     });
     const body = await response.text();
 
+    // Visible pill text is the first comma-segment; the pill's tooltip keeps the full name.
     expect(body)
-      .toContain('V1 – Turnhalle orange</legend>');
+      .toContain('>V1 – Turnhalle orange</span></legend>');
+    expect(body)
+      .toContain('title="1 – Turnhalle orange, UG, Schule Dennigkofen"');
     expect(body)
       .not
-      .toContain('Schule Dennigkofen');
+      .toContain('Schule Dennigkofen</span>');
   });
 });
 
@@ -589,7 +589,7 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('V1 – Turnhalle orange, 2 other games');
+      .toContain('>V1 – Turnhalle orange, 2 other games</span></legend>');
     expect(body)
       .not
       .toContain('2 other games at this venue');
@@ -656,7 +656,7 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('V1 – Turnhalle orange');
+      .toContain('>V1 – Turnhalle orange</span></legend>');
     expect(body)
       .not
       .toContain('other games');
