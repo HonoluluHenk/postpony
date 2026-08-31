@@ -4,9 +4,10 @@ import { isoToLocaleTokens } from './pages/locale-tokens';
 
 /**
  * Full-flow tests for the schedule clash feature (issue 07): a scrape-created
- * match shows clash lines and the clean-check state on the edit page, while the
- * vote page hides clash info entirely; a hand-entered match shows "not checked"
- * on the edit page only.
+ * match shows clash lines and the clean-check state on both the edit and the
+ * vote page. Every Postponement is now minted through the scrape wizard, so
+ * no session lacks click-tt identities — there is no reachable "not checked"
+ * state to assert.
  *
  * The failed-schedule-check degradation (a scrape error must never block
  * adding dates) is NOT covered here: the Playwright webServer env
@@ -18,7 +19,7 @@ import { isoToLocaleTokens } from './pages/locale-tokens';
  * still saves and renders").
  */
 test.describe('Clash checks', () => {
-  test('scrape-created match shows clash lines and the clean state on the edit page only', async ({page, checkA11y}) => {
+  test('scrape-created match shows clash lines and the clean state on edit and vote pages', async ({page, checkA11y}) => {
     // 1. Scrape the Thun vs Ostermundigen match (fixture mode) — organizer
     // claims the guest side (Ostermundigen), Thun keeps the home side.
     const scrapePage = await new ScrapePage(page)
@@ -74,8 +75,8 @@ test.describe('Clash checks', () => {
     // keeps the clashing date off the opponent's vote page, while the clean
     // date is shown.
 
-    // 6. Vote page hides clash info entirely: neither the clashing date's
-    // line nor the clean date's "checked" chip appear in the poll.
+    // 6. Vote page shows the clean date's clash info; the clashing date is
+    // hidden from the poll entirely.
     const {awayHref} = await editPage.getInviteLinks();
     const joinPage = await new JoinPage(page)
       .goto(awayHref);
@@ -83,28 +84,7 @@ test.describe('Clash checks', () => {
     await expect(joinPage.voteForm.getByText('Home: 7:30 PM vs Burgdorf'))
       .toHaveCount(0);
     await expect(joinPage.voteForm.getByText('Schedule checked, no clashes'))
-      .toHaveCount(0);
-
-    await checkA11y();
-  });
-
-  test('hand-entered match shows "not checked" on the edit page only', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
-
-    // Hand-entered matches carry no click-tt identities, so the date is
-    // rendered "not checked" and no refresh action is offered.
-    const editPage = new EditPage(page);
-    await expect(editPage.proposedDateList.getByText('Not checked'))
       .toBeVisible();
-    await expect(page.getByRole('button', {name: 'Refresh schedule check'}))
-      .toHaveCount(0);
-
-    // The vote page hides the "not checked" state.
-    const joinPage = await new JoinPage(page)
-      .goto(session.homeHref);
-    await joinPage.join('Manual Watcher');
-    await expect(joinPage.voteForm.getByText('Not checked'))
-      .toHaveCount(0);
 
     await checkA11y();
   });
@@ -151,19 +131,20 @@ test.describe('Clash checks', () => {
     await expect(page.getByRole('tooltip'))
       .toContainText('8:15 PM');
 
-    // 3. The participant poll folds the same count into the legend, without a
-    // tooltip button.
+    // 3. The participant poll mirrors the same snapshot: join the session and
+    // see the occupancy count on the proposed date in the vote form.
     const {homeHref} = await editPage.getInviteLinks();
     const joinPage = await new JoinPage(page)
       .goto(homeHref);
     await joinPage.join('Occupancy Watcher');
-    // The legend carries the venue number and the count as static text.
-    await expect(joinPage.voteForm.getByText('V3'))
+    await expect(joinPage.voteForm.getByText('1 other games at this venue'))
       .toBeVisible();
-    await expect(joinPage.voteForm.getByText('1 other games'))
-      .toBeVisible();
-    await expect(joinPage.voteForm.getByRole('button', {name: '1 other games at this venue'}))
-      .toHaveCount(0);
+    // The vote page's occupancy count reveals the same conflicting match.
+    const joinOccupancyTrigger = joinPage.voteForm
+      .getByRole('button', {name: '1 other games at this venue'});
+    await joinOccupancyTrigger.hover();
+    await expect(joinPage.voteForm.getByRole('tooltip'))
+      .toContainText('Port');
 
     await checkA11y();
   });

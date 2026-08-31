@@ -6,9 +6,14 @@
 
 **Status:** ready-for-agent
 
-- [ ] A scrape POST always mints a new Postponement (new id, new owner/invitation passwords)
-- [ ] A scrape POST carrying `sessionId` / `ownerPassword` parameters never mutates the referenced existing Postponement (acts as a fresh mint)
-- [ ] The wizard's step views no longer thread change-mode context through their links or renders
-- [ ] The shared change-mode helper (owner-password guard + change-suffix threading) is deleted
-- [ ] Unit specs for the scrape wizard / final scrape handler updated to mint-only behaviour
-- [ ] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
+- [x] A scrape POST always mints a new Postponement (new id, new owner/invitation passwords)
+- [x] A scrape POST carrying `sessionId` / `ownerPassword` parameters never mutates the referenced existing Postponement (acts as a fresh mint)
+- [x] The wizard's step views no longer thread change-mode context through their links or renders
+- [x] The shared change-mode helper (owner-password guard + change-suffix threading) is deleted
+- [x] Unit specs for the scrape wizard / final scrape handler updated to mint-only behaviour
+- [x] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
+
+## Comments
+
+- `72ed7e9` — implementation: scrape wizard is mint-only (change-mode helper + threading removed, final POST always mints a fresh Postponement, specs updated)
+- `e4a451f` — review: clean on both Standards and Spec axes; no fixes needed

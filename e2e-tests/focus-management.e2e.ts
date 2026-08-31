@@ -22,10 +22,10 @@ test.describe('Focus management after HTMX swaps', () => {
 
   test('should move focus to heading after boosted navigation', async ({page, checkA11y}) => {
     await page.goto('/');
-    await page.getByRole('link', {name: /create/i}).click();
-    await page.waitForURL('/create');
+    await page.getByRole('link', {name: 'Find your match (click-tt.ch)'}).click();
+    await page.waitForURL('/create/scrape');
 
-    await expect(page.getByRole('heading', {name: /create/i, level: 2})).toBeFocused();
+    await expect(page.getByRole('heading', {name: 'Choose your league', level: 2})).toBeFocused();
     await checkA11y();
   });
 

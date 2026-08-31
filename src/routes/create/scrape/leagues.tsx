@@ -2,9 +2,8 @@ import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { ViewContext } from '../../../app';
 import type { League } from '../../../lib/click-tt-scraper';
 import { pageLayout } from '../../layouts/main';
-import type { WizardChangeMode } from '../change-utils';
 
-export interface ScrapeLeaguesPageProps extends ViewContext, WizardChangeMode {
+export interface ScrapeLeaguesPageProps extends ViewContext {
   title?: string;
   leagues: readonly League[];
 }
@@ -23,7 +22,7 @@ export function ScrapeLeaguesPage(props: ScrapeLeaguesPageProps): JSX.Element {
           {props.leagues.map((league) => (
             <li>
               <a
-                href={`/create/scrape/groups?championship=${encodeURIComponent(league.championship)}&leagueName=${encodeURIComponent(league.name)}${props.changeSuffix}`}
+                href={`/create/scrape/groups?championship=${encodeURIComponent(league.championship)}&leagueName=${encodeURIComponent(league.name)}`}
               >
                 {league.name}
               </a>
@@ -33,15 +32,9 @@ export function ScrapeLeaguesPage(props: ScrapeLeaguesPageProps): JSX.Element {
       )}
 
       <div class="right-align">
-        {props.changeMode ? (
-          <a href={`/edit/${props.sessionId}?ownerPassword=${props.ownerPassword}`}>
-            {props.t('scrape_back')}
-          </a>
-        ) : (
-          <a href="/create">
-            {props.t('scrape_back')}
-          </a>
-        )}
+        <a href="/create/scrape">
+          {props.t('scrape_back')}
+        </a>
       </div>
     </section>
   );

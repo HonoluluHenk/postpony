@@ -1,8 +1,17 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import type { SessionFixture } from '../test-session';
-import { CreatePage } from './CreatePage';
 import { isoToLocaleTokens } from './locale-tokens';
+import { ScrapePage } from './ScrapePage';
+
+// The fixture drilldown that backs every e2e session: MTTV 2026/27 → O40
+// 1. Liga → Ostermundigen. The return match (14.01.2027) has Ostermundigen as
+// the home side, so the organizer claims the home team — the same orientation
+// the manual create path used.
+const SCRAPE_LEAGUE = 'MTTV 2026/27';
+const SCRAPE_GROUP = 'O40 1. Liga';
+const SCRAPE_TEAM = 'Ostermundigen';
+const SCRAPE_MATCH = '14.01.2027';
 
 export class EditPage {
   constructor(private readonly page: Page) {
@@ -16,21 +25,24 @@ export class EditPage {
   static async createSession(
     page: Page,
     dates?: string[],
-    originalMatchDateTime?: string,
   ): Promise<{
     session: SessionFixture;
     editPage: EditPage
   }>
   {
-    const createPage = await new CreatePage(page)
+    const scrapePage = await new ScrapePage(page)
       .goto();
-    const lang = await page.locator('html')
-      .getAttribute('lang');
-    const editPage = await createPage.create(
-      originalMatchDateTime
-        ? {originalMatchDateTime: isoToLocaleTokens(lang, originalMatchDateTime)}
-        : {},
-    );
+    await scrapePage.pickLeague(SCRAPE_LEAGUE);
+    await scrapePage.pickGroup(SCRAPE_GROUP);
+    await scrapePage.pickTeam(SCRAPE_TEAM);
+    await expect(scrapePage.matchesHeading)
+      .toBeVisible();
+    await Promise.all([
+      page.waitForURL(/\/edit\/.+/),
+      scrapePage.selectButton(SCRAPE_MATCH)
+        .click(),
+    ]);
+    const editPage = new EditPage(page);
 
     for (const [i, dt] of (dates ?? []).entries()) {
       await editPage.addProposedDate(dt);
@@ -73,6 +85,10 @@ export class EditPage {
 
   get changeMatchDetailsLink(): Locator {
     return this.page.getByRole('link', {name: 'Change match details'});
+  }
+
+  get matchSummary(): Locator {
+    return this.page.locator('.match-summary');
   }
 
   get ownerPasswordAlert(): Locator {

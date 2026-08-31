@@ -1,13 +1,14 @@
 import { expect, test } from './fixtures';
 import { EditPage } from './pages';
 
-// Anchor 2026-09-15 sits ~2.5 weeks ahead of today (env 2026-08-29) so the
-// generator's `[max(today, anchor − 8w), anchor + 4w]` window is wide enough
-// to produce 10+ future candidates for any weekday + time pattern we feed.
+// The session's anchor is the scraped fixture match (14.01.2027, the
+// createSession default), so the generator's
+// `[max(today, anchor − 8w), anchor + 4w]` window reaches ~5 months ahead of
+// today (env 2026-09) — wide enough to produce 10+ future candidates for any
+// weekday + time pattern we feed.
 // ponytail: the count is wall-clock dependent on the lower bound, so the
 // assertions here check the live `toast.count === list.count` invariant
 // instead of nailing the absolute date list.
-const ANCHOR = '2026-09-15T20:00';
 
 // Two NON-adjacent weekdays (Wednesday 3, Saturday 6): every blank row
 // (Mon/Tue/Thu/Fri/Sun) sits next to, between, or beyond a filled one, so any
@@ -66,7 +67,7 @@ test.describe('Proposed Date Generator', () => {
              page,
              checkA11y,
            }) => {
-      await EditPage.createSession(page, undefined, ANCHOR);
+      await EditPage.createSession(page);
       const editPage = new EditPage(page);
 
       await expect(editPage.status)
@@ -211,10 +212,10 @@ test.describe('Proposed Date Generator', () => {
   });
 
   test('valid from/to range generates dates within the window', async ({page}) => {
-    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+    const {editPage} = await EditPage.createSession(page);
 
     // Fill from/to with a valid range inside the allowed window
-    // Anchor is 2026-09-15, cap is 2026-10-13 (4 weeks after)
+    // Anchor is the scraped match (2027-01-14), cap is 2027-02-11 (4 weeks after)
     // Use from=2026-09-01, to=2026-09-30
     await editPage.fillFromDate('2026-09-01');
     await editPage.fillToDate('2026-09-30');
@@ -245,7 +246,7 @@ test.describe('Proposed Date Generator', () => {
   });
 
   test('from before today shows error and no dates added', async ({page}) => {
-    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+    const {editPage} = await EditPage.createSession(page);
 
     const initialCount = await editPage.proposedDateRows.count();
 
@@ -265,7 +266,7 @@ test.describe('Proposed Date Generator', () => {
   });
 
   test('to before or equal to from shows error and no dates added', async ({page}) => {
-    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+    const {editPage} = await EditPage.createSession(page);
 
     const initialCount = await editPage.proposedDateRows.count();
 
@@ -283,14 +284,14 @@ test.describe('Proposed Date Generator', () => {
   });
 
   test('to beyond originalMatchDateTime + 4w shows error and no dates added', async ({page}) => {
-    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+    const {editPage} = await EditPage.createSession(page);
 
     const initialCount = await editPage.proposedDateRows.count();
 
-    // Anchor is 2026-09-15, cap is 2026-10-13 (4 weeks after)
+    // Anchor is the scraped match (2027-01-14), cap is 2027-02-11 (4 weeks after)
     // Set to beyond the cap
     await editPage.fillFromDate('2026-09-01');
-    await editPage.fillToDate('2026-12-01');
+    await editPage.fillToDate('2027-03-01');
     await editPage.generateProposedDates([...TUPLES]);
 
     await expect(editPage.toDateError)
@@ -304,10 +305,10 @@ test.describe('Proposed Date Generator', () => {
   });
 
   test('custom from/to with anchor generates within specified range', async ({page}) => {
-    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+    const {editPage} = await EditPage.createSession(page);
 
     // Narrow window: only one week starting 2026-09-07 (Monday)
-    // Anchor is 2026-09-15, cap is 2026-10-13
+    // Anchor is the scraped match (2027-01-14), cap is 2027-02-11
     // from=2026-09-07, to=2026-09-13 (one week: Mon-Sun)
     await editPage.fillFromDate('2026-09-07');
     await editPage.fillToDate('2026-09-13');
@@ -338,7 +339,7 @@ test.describe('Proposed Date Generator', () => {
   });
 
   test('proposes dates with a chosen venue and shows the venue badge in the list', async ({page, checkA11y}) => {
-    const {editPage} = await EditPage.createSession(page, undefined, ANCHOR);
+    const {editPage} = await EditPage.createSession(page);
 
     // Pick venue 2 in the generator form; every generated date carries it.
     await editPage.generateVenueSelect.selectOption('2');

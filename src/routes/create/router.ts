@@ -1,6 +1,4 @@
 import { factory, handleAppRequest } from '../../lib/hono-factory';
-import { handleCreateGet } from './create-get';
-import { handleCreatePost } from './create-post';
 import { handleScrapeGroupsGet } from './scrape/groups-get';
 import { handleScrapeLeaguesGet } from './scrape/leagues-get';
 import { handleScrapeMatchPost } from './scrape/match-post';
@@ -9,8 +7,6 @@ import { handleScrapeTeamsGet } from './scrape/teams-get';
 
 const createRouter = factory.createApp();
 
-createRouter.get('/', handleAppRequest(handleCreateGet));
-createRouter.post('/', handleAppRequest(handleCreatePost));
 createRouter.get('/scrape', handleAppRequest(handleScrapeLeaguesGet));
 createRouter.get('/scrape/groups', handleAppRequest(handleScrapeGroupsGet));
 createRouter.get('/scrape/teams', handleAppRequest(handleScrapeTeamsGet));

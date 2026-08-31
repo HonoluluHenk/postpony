@@ -33,12 +33,14 @@ describe('buildApp seam', () => {
     expect(res.headers.get('content-type')).toContain('text/html');
   });
 
-  it('wires the create route', async () => {
+  it('wires the scrape-creation route and not the manual create route', async () => {
     const app = newApp();
 
-    const res = await app.request('/create', {headers: {Accept: 'text/html'}});
+    const scrape = await app.request('/create/scrape', {headers: {Accept: 'text/html'}});
+    expect(scrape.status).toBe(200);
 
-    expect(res.status).toBe(200);
+    const manual = await app.request('/create', {headers: {Accept: 'text/html'}});
+    expect(manual.status).toBe(404);
   });
 
   it('returns 404 for an unknown edit session', async () => {

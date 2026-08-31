@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { CreatePage } from './pages';
+import { EditPage } from './pages';
 
 test.describe('Error Handling', () => {
   test('should show 404 error page for non-existent session', async ({page, checkA11y}) => {
@@ -17,10 +17,10 @@ test.describe('Error Handling', () => {
     await checkA11y();
   });
 
-  test('should show validation error for missing match details in creation', async ({page}) => {
+  test('should show validation error for a scrape submission without match details', async ({page}) => {
     // We use a direct request to avoid HTMX/Playwright interaction complexities for this specific edge case
-    const response = await page.request.post('/create', {
-      form: {homeTeam: '', guestTeam: '', originalMatchDateTime: ''},
+    const response = await page.request.post('/create/scrape/match', {
+      form: {teamName: 'Ostermundigen'},
       // Raw requests send no Accept-Language; pick English explicitly so the
       // asserted message is deterministic regardless of the default locale.
       headers: {'Accept': 'text/html', 'Accept-Language': 'en-US'},
@@ -30,18 +30,14 @@ test.describe('Error Handling', () => {
       .toBe(400);
     const html = await response.text();
     expect(html)
-      .toContain('Home team is required');
-    expect(html)
-      .toContain('Guest team is required');
+      .toContain('Missing required parameter: match');
     expect(html)
       .toContain('error');
   });
 
   test('should show HTMX error for invalid updates in edit page', async ({page, checkA11y}) => {
     // 1. Create a session first
-    const createPage = await new CreatePage(page)
-      .goto();
-    await createPage.create();
+    await EditPage.createSession(page);
 
     // 2. Manually trigger an HTMX request to a non-existent session's sub-route
     await page.evaluate(async () => {

@@ -216,10 +216,10 @@ describe('handleScrapeMatchPost', () => {
   });
 });
 
-describe('handleScrapeMatchPost change mode (re-scrape)', () => {
+describe('handleScrapeMatchPost ignores leftover change parameters', () => {
   const ownerPassword = 'owner-secret';
 
-  test('replaces the rosters in place, preserving id, passwords, votes, and proposed dates', async () => {
+  test('carrying sessionId/ownerPassword mints a fresh Postponement and never mutates the referenced one', async () => {
     const session = aSession({
       ownerPasswordHash: await hashPassword(ownerPassword),
       players: [aPlayer({id: 'old-p', name: 'Old Player'})],
@@ -228,70 +228,51 @@ describe('handleScrapeMatchPost change mode (re-scrape)', () => {
     const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: session.id, ownerPassword}});
     await app.store.save(session);
 
-    await handleScrapeMatchPost(app);
+    const response = await handleScrapeMatchPost(app);
+    const location = response.headers.get('Location') ?? '';
+    const mintedId = /\/edit\/([^?]+)/.exec(location)?.[1] ?? '';
 
-    const stored = await app.store.get(session.id);
-    expect(stored?.id).toBe(session.id);
-    expect(stored?.name).toBe('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
-    expect(stored?.homeTeam).toBe('Thun');
-    expect(stored?.guestTeam).toBe('Ostermundigen');
-    expect(stored?.originalMatchDateTime).toBe('2026-08-29T16:00');
-    expect(stored?.players.map((p) => p.name))
-      .toEqual(['Linder, Christoph', 'Schmid, Oliver', 'Milcu, Sasha']);
-    expect(stored?.players.every((p) => p.teamId === 'home'))
-      .toBe(true);
-    expect(stored?.organizerTeam)
-      .toBe('home');
-    expect(stored?.ownerPasswordHash).toBe(session.ownerPasswordHash);
-    expect(stored?.proposedDates).toEqual(session.proposedDates);
-    expect(stored?.votes).toEqual(session.votes);
-    // A session without identity fields stays without them (backwards compatible).
-    expect(stored?.homeTeamIdentity).toBeUndefined();
-    expect(stored?.guestTeamIdentity).toBeUndefined();
+    const existing = await app.store.get(session.id);
+    // The referenced Postponement is untouched.
+    expect(existing).toMatchObject({
+      id: session.id,
+      name: session.name,
+      homeTeam: session.homeTeam,
+      guestTeam: session.guestTeam,
+      ownerPasswordHash: session.ownerPasswordHash,
+      proposedDates: session.proposedDates,
+      votes: session.votes,
+    });
+    expect(existing?.players).toEqual(session.players);
+
+    const minted = await app.store.get(mintedId);
+    // A brand-new Postponement was minted with a new id.
+    expect(minted?.id).toBeDefined();
+    expect(minted?.id).not.toBe(session.id);
+    expect(minted?.ownerPasswordHash).not.toBe(session.ownerPasswordHash);
+    expect(minted?.name).toBe('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
+    expect(minted?.homeTeam).toBe('Thun');
+    expect(minted?.guestTeam).toBe('Ostermundigen');
   });
 
-  test('re-scrape replaces the stored team identities', async () => {
-    const session = aSession({
-      ownerPasswordHash: await hashPassword(ownerPassword),
-      homeTeamIdentity: {championship: 'Old', group: 'Old', teamtable: 'old-1'},
-      guestTeamIdentity: {championship: 'Old', group: 'Old', teamtable: 'old-2'},
-    });
-    const app = createApp({
-      body: {
-        ...MATCH,
-        teamName: 'Thun',
-        sessionId: session.id,
-        ownerPassword,
-        teamtable: 'tt-own',
-        opponentTeamtable: 'tt-opp',
-      },
-    });
-    await app.store.save(session);
-
-    await handleScrapeMatchPost(app);
-
-    const stored = await app.store.get(session.id);
-    expect(stored?.homeTeamIdentity)
-      .toEqual({championship: 'MTTV 26/27', group: '219397', teamtable: 'tt-own'});
-    expect(stored?.guestTeamIdentity)
-      .toEqual({championship: 'MTTV 26/27', group: '219397', teamtable: 'tt-opp'});
-  });
-
-  test('rejects a wrong owner password', async () => {
+  test('a wrong owner password does not block the mint', async () => {
     const session = aSession({ownerPasswordHash: await hashPassword('real-pw')});
     const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: session.id, ownerPassword: 'wrong'}});
     await app.store.save(session);
 
-    await expect(handleScrapeMatchPost(app))
-      .rejects
-      .toThrow('Invalid owner password.');
+    const minted = await storedSession(app);
+
+    expect(minted?.id).not.toBe(session.id);
+    const existing = await app.store.get(session.id);
+    expect(existing?.name).toBe(session.name);
   });
 
-  test('throws when the session does not exist', async () => {
+  test('a missing session does not block the mint', async () => {
     const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: 'missing', ownerPassword}});
 
-    await expect(handleScrapeMatchPost(app))
-      .rejects
-      .toThrow('Session not found');
+    const minted = await storedSession(app);
+
+    expect(minted?.id).toBeDefined();
+    expect(minted?.homeTeam).toBe('Thun');
   });
 });

@@ -1,7 +1,7 @@
 # ADR 0017: Two-Path Match Creation — Manual or Scrape, with In-Place Change
 
 ## Status
-Accepted.
+Superseded by ADR-0024 (scrape-only creation; a Match is never editable afterwards).
 
 ## Context
 Creation only collected a free-form name, so a freshly created Postponement had no match details. The click-tt scraper lived on the edit page and always minted a brand-new Postponement, silently abandoning the session the user had just created. Users who skipped scraping ended up with name-only sessions; there was no way to enter match details by hand and no typed home/guest team fields in the model.

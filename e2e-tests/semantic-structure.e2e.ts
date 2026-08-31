@@ -23,8 +23,8 @@ test.describe('Semantic structure', () => {
     await checkA11y();
   });
 
-  test('create page', async ({page, checkA11y}) => {
-    await page.goto('/create');
+  test('scrape page (league selection)', async ({page, checkA11y}) => {
+    await page.goto('/create/scrape');
 
     await expectNoSkippedHeadings(page);
     await expectAllIconsHidden(page);

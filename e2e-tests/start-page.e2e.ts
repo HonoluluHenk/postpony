@@ -16,14 +16,16 @@ test.describe('Start Page', () => {
     await checkA11y();
   });
 
-  test('should display the main action links', async ({checkA11y}) => {
+  test('should display the main action links', async ({page, checkA11y}) => {
     // These navigate, so they must be links (not buttons) for correct semantics.
-    await expect(startPage.createLink)
-      .toHaveAttribute('href', '/create');
+    // The scrape wizard is the single creation path; only it and the edit path
+    // remain.
     await expect(startPage.scrapeLink)
       .toHaveAttribute('href', '/create/scrape');
     await expect(startPage.editLink)
       .toHaveAttribute('href', '/edit');
+    await expect(page.getByRole('link', {name: /create a new postponement/i}))
+      .toHaveCount(0);
 
     await checkA11y();
   });

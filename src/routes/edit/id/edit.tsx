@@ -19,6 +19,9 @@ export interface EditPageProps extends ViewContext, EditPartialsData {
   globalError?: string;
   fromDate?: string;
   toDate?: string;
+  homeTeam?: string;
+  guestTeam?: string;
+  matchDateTime?: string;
 }
 
 interface InviteLinksProps {
@@ -92,14 +95,13 @@ export function EditPage(props: EditPageProps): JSX.Element {
 
       <div class="row items-center gap wrap">
         <StatusChip status={props.session.status} t={props.t} />
-        {props.ownerPassword ? (
-          <a
-            class="button outline"
-            href={`/create?sessionId=${props.session.id}&ownerPassword=${props.ownerPassword}`}
-          >
-            {props.t('change_match_details')}
-          </a>
-        ) : null}
+        <p class="match-summary">
+          {props.t('match_summary', {
+            home: props.homeTeam ?? '',
+            guest: props.guestTeam ?? '',
+            datetime: props.matchDateTime ?? '',
+          })}
+        </p>
       </div>
 
       <InviteLinks

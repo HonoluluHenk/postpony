@@ -87,10 +87,6 @@ afterEach(() => {
 });
 
 describe('scrape wizard GET handlers', () => {
-  // JSX escapes `&` inside attribute values to `&amp;`; the browser decodes it
-  // back, so the raw HTML carries the entity form.
-  const CHANGE_QUERY = 'sessionId=sess-1&amp;ownerPassword=owner-secret';
-
   describe('handleScrapeLeaguesGet', () => {
     test('lists every league from the start-page fixture with drill-down links', async () => {
       const app = createApp();
@@ -104,20 +100,8 @@ describe('scrape wizard GET handlers', () => {
       expect(html).toContain('href="/create/scrape/groups?championship=MTTV%2026%2F27');
       expect((html.match(/href="\/create\/scrape\/groups\?/g) ?? []).length)
         .toBe(12);
-      // Mint mode: back goes to the create form.
-      expect(html).toContain('href="/create"');
-      expect(html).not.toContain(CHANGE_QUERY);
-    });
-
-    test('threads change-mode context into the drill-down links and back link', async () => {
-      const app = createApp({queries: {sessionId: 'sess-1', ownerPassword: 'owner-secret'}});
-
-      const response = await handleScrapeLeaguesGet(app);
-      const html = await response.text();
-
-      expect(html).toContain(CHANGE_QUERY);
-      expect(html).toContain('href="/edit/sess-1?ownerPassword=owner-secret"');
-      expect(html).not.toContain('href="/create"');
+      // Mint mode: back goes to the wizard start.
+      expect(html).toContain('href="/create/scrape"');
     });
 
     test('shows the empty message when no leagues are loadable', async () => {
@@ -148,7 +132,7 @@ describe('scrape wizard GET handlers', () => {
       expect(html).toContain('href="/create/scrape"');
     });
 
-    test('shows the empty message and backs to the edit page in change mode', async () => {
+    test('shows the empty message and ignores leftover change parameters (mint back link)', async () => {
       stubEmptyClickTt();
       const app = createApp({
         queries: {
@@ -163,8 +147,8 @@ describe('scrape wizard GET handlers', () => {
 
       expect(html).toContain('No groups found for this league.');
       expect(html).not.toContain('<ul class="list border">');
-      expect(html).toContain('href="/edit/sess-1?ownerPassword=owner-secret"');
-      expect(html).not.toContain('href="/create/scrape"');
+      expect(html).not.toContain('href="/edit/sess-1?ownerPassword=owner-secret"');
+      expect(html).toContain('href="/create/scrape"');
     });
 
     test('throws when the championship query parameter is missing', async () => {
@@ -197,7 +181,7 @@ describe('scrape wizard GET handlers', () => {
       expect(html).toContain('href="/create/scrape/groups?championship=MTTV%2026%2F27&amp;leagueName=MTTV%202026%2F27"');
     });
 
-    test('shows the empty message and backs to the edit page in change mode', async () => {
+    test('shows the empty message and ignores leftover change parameters (mint back link)', async () => {
       stubEmptyClickTt();
       const app = createApp({
         queries: {
@@ -213,8 +197,8 @@ describe('scrape wizard GET handlers', () => {
 
       expect(html).toContain('No teams found for this group.');
       expect(html).not.toContain('<ul class="list border">');
-      expect(html).toContain('href="/edit/sess-1?ownerPassword=owner-secret"');
-      expect(html).not.toContain('href="/create/scrape/groups"');
+      expect(html).not.toContain('href="/edit/sess-1?ownerPassword=owner-secret"');
+      expect(html).toContain('href="/create/scrape/groups');
     });
 
     test('throws when the group query parameter is missing', async () => {
@@ -271,7 +255,7 @@ describe('scrape wizard GET handlers', () => {
       expect(html).toContain('href="/create/scrape/teams?championship=MTTV%2026%2F27&amp;group=219397&amp;groupName=O40%201.%20Liga&amp;leagueName=MTTV%202026%2F27"');
     });
 
-    test('threads change-mode context into the create forms and back link', async () => {
+    test('does not thread change-mode context into create forms or links', async () => {
       const app = createApp({
         queries: {
           championship: 'MTTV 26/27',
@@ -288,10 +272,11 @@ describe('scrape wizard GET handlers', () => {
       const response = await handleScrapeMatchesGet(app);
       const html = await response.text();
 
-      expect(html).toContain('name="sessionId" value="sess-1"');
-      expect(html).toContain('name="ownerPassword" value="owner-secret"');
-      expect(html).toContain('href="/edit/sess-1?ownerPassword=owner-secret"');
-      expect(html).not.toContain('href="/create/scrape/teams"');
+      expect(html).not.toContain('name="sessionId"');
+      expect(html).not.toContain('name="ownerPassword"');
+      expect(html).not.toContain('href="/edit/sess-1?ownerPassword=owner-secret"');
+      // Mint back link is threaded as before.
+      expect(html).toContain('href="/create/scrape/teams');
     });
 
     test('shows the empty message when the team has no matches', async () => {

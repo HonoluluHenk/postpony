@@ -53,9 +53,9 @@ test.describe('Localization', () => {
       .toContainText('Willkommen bei PostPony');
 
     // Navigate to another page, language should persist (via cookie)
-    await page.goto('/create');
+    await page.goto('/create/scrape');
     await expect(page.getByRole('heading', {level: 2}))
-      .toContainText('Neue Verschiebung erstellen');
+      .toContainText('Wählen Sie Ihre Liga');
 
     await checkA11y();
   });

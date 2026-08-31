@@ -2,13 +2,12 @@ import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { ViewContext } from '../../../app';
 import type { Match, PlayerOnTeam } from '../../../lib/click-tt-scraper';
 import { pageLayout } from '../../layouts/main';
-import type { WizardChangeMode } from '../change-utils';
 
 export interface ScrapeMatchRow extends Match {
   opponentTeamtable: string;
 }
 
-export interface ScrapeMatchesPageProps extends ViewContext, WizardChangeMode {
+export interface ScrapeMatchesPageProps extends ViewContext {
   title?: string;
   matches: readonly ScrapeMatchRow[];
   players: readonly PlayerOnTeam[];
@@ -57,12 +56,6 @@ export function ScrapeMatchesPage(props: ScrapeMatchesPageProps): JSX.Element {
                 <td data-label={props.t('scrape_match_guest')}>{m.guestTeam}</td>
                 <td data-label={props.t('scrape_match_actions')}>
                   <form method="post" action="/create/scrape/match">
-                    {props.changeMode ? (
-                      <>
-                        <input type="hidden" name="sessionId" value={props.sessionId} />
-                        <input type="hidden" name="ownerPassword" value={props.ownerPassword} />
-                      </>
-                    ) : null}
                     <input type="hidden" name="day" value={m.day} />
                     <input type="hidden" name="date" value={m.date} />
                     <input type="hidden" name="time" value={m.time} />
@@ -90,15 +83,9 @@ export function ScrapeMatchesPage(props: ScrapeMatchesPageProps): JSX.Element {
       )}
 
       <div class="right-align">
-        {props.changeMode ? (
-          <a href={`/edit/${props.sessionId}?ownerPassword=${props.ownerPassword}`}>
-            {props.t('scrape_back')}
-          </a>
-        ) : (
-          <a href={`/create/scrape/teams?championship=${encodeURIComponent(props.championship)}&group=${encodeURIComponent(props.group)}&groupName=${encodeURIComponent(props.groupName)}&leagueName=${encodeURIComponent(props.leagueName)}`}>
-            {props.t('scrape_back')}
-          </a>
-        )}
+        <a href={`/create/scrape/teams?championship=${encodeURIComponent(props.championship)}&group=${encodeURIComponent(props.group)}&groupName=${encodeURIComponent(props.groupName)}&leagueName=${encodeURIComponent(props.leagueName)}`}>
+          {props.t('scrape_back')}
+        </a>
       </div>
     </section>
   );

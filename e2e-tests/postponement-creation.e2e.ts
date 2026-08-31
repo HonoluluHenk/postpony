@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { CreatePage, StartPage } from './pages';
+import { EditPage, ScrapePage, StartPage } from './pages';
 
 test.describe('Postponement Creation', () => {
   let startPage: StartPage;
@@ -9,23 +9,30 @@ test.describe('Postponement Creation', () => {
       .goto();
   });
 
-  test('should create a new Postponement from match details with a derived name', async ({page, checkA11y}) => {
-    // 1. Click on "Create a new Postponement"
-    await startPage.createLink.click();
-
-    // 2. Check if we are on the create form (HTMX swap happened)
-    const createPage = new CreatePage(page);
-    await expect(createPage.heading)
+  test('scrapes a Match, mints a Postponement, and lands on its edit page with a read-only Match summary', async ({page, checkA11y}) => {
+    // 1. The start page offers the scrape wizard as the single creation path.
+    await expect(startPage.scrapeLink)
       .toBeVisible();
 
-    // 3. Fill in the match details and submit; no name is entered anywhere.
-    const editPage = await createPage.create({
-      homeTeam: 'Thun',
-      guestTeam: 'Ostermundigen',
-      originalMatchDateTime: '08/29/2026 04:00 pm',
-    });
+    // 2. Drive the wizard: leagues → groups → teams → matches.
+    const scrapePage = await new ScrapePage(page)
+      .goto();
+    await scrapePage.pickLeague('MTTV 2026/27');
+    await scrapePage.pickGroup('O40 1. Liga');
+    await scrapePage.pickTeam('Ostermundigen');
+    await expect(scrapePage.matchesHeading)
+      .toBeVisible();
 
-    // 4. The name is derived from the match details in the creator's locale.
+    // 3. Select the first fixture match (Thun hosts Ostermundigen): a
+    // Postponement is minted and we land on its edit page.
+    await Promise.all([
+      page.waitForURL(/\/edit\/.+/),
+      scrapePage.selectButton('29.08.2026')
+        .click(),
+    ]);
+    const editPage = new EditPage(page);
+
+    // 4. The name is derived from the scraped match details in the creator's locale.
     await expect(editPage.heading)
       .toContainText('Editing Postponement');
     await expect(editPage.heading)
@@ -33,17 +40,22 @@ test.describe('Postponement Creation', () => {
     await expect(editPage.heading)
       .toContainText('08/29/2026 04:00 pm');
 
-    // 5. Verify the owner password is displayed
+    // 5. The edit page shows the referenced Match read-only.
+    await expect(editPage.matchSummary)
+      .toContainText('Match: Thun vs Ostermundigen');
+    await expect(editPage.matchSummary)
+      .toContainText('08/29/2026 04:00 pm');
+
+    // 6. Verify the owner password is displayed.
     await expect(editPage.ownerPasswordAlert)
       .toBeVisible();
-
     const password = await editPage.ownerPassword;
     expect(password)
       .toBeTruthy();
     expect(password?.length)
       .toBeGreaterThan(0);
 
-    // 6. Verify status and invite link
+    // 7. Verify status and invite links.
     await expect(editPage.status)
       .toContainText('Draft');
     await expect(page.getByText('Invite participants using these links'))
@@ -52,24 +64,33 @@ test.describe('Postponement Creation', () => {
     await checkA11y();
   });
 
-  test('should pass accessibility on create and edit pages', async ({page, checkA11y}) => {
+  test('should pass accessibility on start, scrape, and edit pages', async ({page, checkA11y}) => {
     // Start page
     await checkA11y();
 
-    // Create page
-    await startPage.createLink.click();
+    // Scrape wizard (league selection)
+    const scrapePage = await new ScrapePage(page)
+      .goto();
+    await expect(scrapePage.heading)
+      .toBeVisible();
     await checkA11y();
-    await expect(page).toHaveScreenshot('create.png', {fullPage: true});
+    await expect(page)
+      .toHaveScreenshot('scrape-leagues.png', {fullPage: true});
 
-    // Submit and check Edit page
-    const createPage = new CreatePage(page);
-    await createPage.homeTeamInput.fill('A11y Test');
-    await createPage.guestTeamInput.fill('A11y Opponent');
-    await createPage.originalMatchDateTimeInput.fill('08/29/2026 04:00 pm');
+    // Drill down and mint, then check the Edit page.
+    await scrapePage.pickLeague('MTTV 2026/27');
+    await scrapePage.pickGroup('O40 1. Liga');
+    await scrapePage.pickTeam('Ostermundigen');
+    await expect(scrapePage.matchesHeading)
+      .toBeVisible();
     await Promise.all([
       page.waitForURL(/\/edit\/.+/),
-      createPage.submitButton.click(),
+      scrapePage.selectButton('29.08.2026')
+        .click(),
     ]);
+    const editPage = new EditPage(page);
+    await expect(editPage.heading)
+      .toBeVisible();
     await checkA11y();
   });
 });

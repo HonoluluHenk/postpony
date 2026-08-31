@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { CreatePage, EditPage, JoinPage } from './pages';
+import { EditPage, JoinPage } from './pages';
 import type { SessionFixture } from './test-session';
 
 test.describe('Postponement Editing', () => {
@@ -56,8 +56,8 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.proposedDateDisplays())
       .resolves
       .toEqual([
-        expect.stringContaining('03/05'),
-        expect.stringContaining('03/12'),
+        expect.stringContaining('Mar 5'),
+        expect.stringContaining('Mar 12'),
       ]);
 
     const joinPage = await new JoinPage(page)
@@ -263,41 +263,31 @@ test.describe('Postponement Editing', () => {
     await expect(ownTeam.getByRole('heading', {level: 3}))
       .toContainText('Your Team Votes');
 
-    const bodyRows = ownTeam.getByRole('rowgroup')
-      .last()
-      .getByRole('row');
+    // Roster: 3 scraped players + John Doe + Jane Smith = 5. Only John Doe
+    // votes, so every date reports 1 of 5 voted.
+    await expect(ownTeam.getByRole('table')
+      .getByText('1/5 voted'))
+      .toHaveCount(2);
 
-    // Date 1: John Doe voted Yes, Jane Smith has no vote, 1/2 voted.
-    const dateRow1 = bodyRows.nth(0);
-    await expect(dateRow1.getByRole('cell')
-      .nth(0))
-      .toHaveText('Yes');
-    await expect(dateRow1.getByRole('cell')
-      .nth(1))
-      .toContainText('No vote');
-    await expect(dateRow1.getByRole('cell')
-      .nth(2))
-      .toHaveText('1/2 voted');
+    // John Doe's per-player cells: a Yes on date 1 and a No on date 2. The
+    // other four players' cells are all "No vote".
+    await expect(ownTeam.getByRole('cell', {name: 'Yes', exact: true}))
+      .toHaveCount(1);
+    await expect(ownTeam.getByRole('cell', {name: 'No', exact: true}))
+      .toHaveCount(1);
+    await expect(ownTeam.getByRole('cell', {name: 'No vote', exact: true}))
+      .toHaveCount(8);
 
-    // The non-voter row marks Jane Smith as not joined.
-    await expect(bodyRows.nth(1)
-      .getByRole('cell')
-      .first())
+    // The non-voter rows (one per date) mark the never-joining players (incl.
+    // Jane Smith) as not joined.
+    const nonVotersRows = ownTeam.getByRole('row')
+      .filter({hasText: 'Not voted yet:'});
+    await expect(nonVotersRows)
+      .toHaveCount(2);
+    await expect(nonVotersRows.first())
       .toContainText('Jane Smith');
-    await expect(bodyRows.nth(1)
-      .getByRole('cell')
-      .first())
+    await expect(nonVotersRows.first())
       .toContainText('not joined');
-
-    // Date 2: John Doe voted No, still 1/2 voted.
-    await expect(bodyRows.nth(2)
-      .getByRole('cell')
-      .nth(0))
-      .toHaveText('No');
-    await expect(bodyRows.nth(2)
-      .getByRole('cell')
-      .nth(2))
-      .toHaveText('1/2 voted');
 
     await checkA11y();
   });
@@ -501,42 +491,21 @@ test.describe('Postponement Editing', () => {
   });
 
 
-  test('change match details in place preserves the session id and its players', async ({page, checkA11y}) => {
+  test('edit page shows the referenced Match read-only with no change action', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
-    await editPage.addPlayer('Keep Me');
-    await expect(editPage.playerItem('Keep Me'))
-      .toBeVisible();
 
-    const originalId = session.id;
+    // The scraped match (Ostermundigen vs Thun, 14.01.2027) is shown read-only.
+    await expect(editPage.matchSummary)
+      .toContainText('Match: Ostermundigen vs Thun');
+    await expect(editPage.matchSummary)
+      .toContainText('01/14/2027');
 
-    // The match summary offers a change link into the manual form.
-    await editPage.changeMatchDetailsLink.click();
-    const createPage = new CreatePage(page);
-    await expect(createPage.changeHeading)
-      .toBeVisible();
-
-    // The form is prefilled with the current match; correct the guest team
-    // and the original date/time.
-    await expect(createPage.homeTeamInput)
-      .toHaveValue('Home Team');
-    await expect(createPage.guestTeamInput)
-      .toHaveValue('Guest Team');
-    await createPage.guestTeamInput.fill('New Guest');
-    await createPage.originalMatchDateTimeInput.fill('08/29/2026 04:00 pm');
-    await createPage.changeSubmitButton.click();
-    await page.waitForURL(/\/edit\/.+/);
-
-    // Same session id, updated match details, and the players untouched.
-    expect(page.url())
-      .toContain(`/edit/${originalId}`);
-    await expect(editPage.heading)
-      .toContainText('Editing Postponement');
-    await expect(editPage.heading)
-      .toContainText('Home Team vs New Guest');
-    await expect(editPage.heading)
-      .toContainText('08/29/2026 04:00 pm');
-    await expect(editPage.playerItem('Keep Me'))
-      .toBeVisible();
+    // No change-match affordance remains: no "change match details" link and
+    // no path back into the wizard from the edit page.
+    await expect(editPage.changeMatchDetailsLink)
+      .toHaveCount(0);
+    await expect(page.getByRole('link', {name: 'Find the match on click-tt.ch instead'}))
+      .toHaveCount(0);
 
     await checkA11y();
   });
