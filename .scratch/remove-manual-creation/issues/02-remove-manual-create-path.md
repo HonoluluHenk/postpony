@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] The manual create route no longer exists: a request to it renders no hand-entry form and mints no Postponement
-- [ ] The start page offers exactly one creation entry — the click-tt scrape wizard
-- [ ] The manual form component, its route handlers, and their unit specs are deleted
-- [ ] No route accepts hand-typed home/guest team or date/time to mint a Postponement
+- [x] The manual create route no longer exists: a request to it renders no hand-entry form and mints no Postponement
+- [x] The start page offers exactly one creation entry — the click-tt scrape wizard
+- [x] The manual form component, its route handlers, and their unit specs are deleted
+- [x] No route accepts hand-typed home/guest team or date/time to mint a Postponement
 - [ ] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%

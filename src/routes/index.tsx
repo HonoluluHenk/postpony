@@ -15,7 +15,6 @@ export function IndexContent(props: { t: ViewContext['t'] }): JSX.Element {
       </header>
 
       <nav class="center-align mt-4" aria-label={props.t('main_actions')}>
-        <a class="button" href="/create">{props.t('create_new')}</a>
         <a class="button" href="/create/scrape">{props.t('scrape_start_wizard')}</a>
         <a class="button outline" href="/edit">{props.t('edit_existing')}</a>
       </nav>
