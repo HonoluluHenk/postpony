@@ -94,14 +94,6 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   const guestTeamIdentity =
     selectedTeamId === 'home' ? teamIdentity(m.opponentTeamtable) : teamIdentity(m.teamtable);
 
-  const metadata = {
-    source: 'click-tt.ch',
-    league: m.leagueName,
-    group: m.groupName,
-    championship: m.championship,
-    groupId: m.group,
-  };
-
   let id: string;
   let redirectOwnerPassword: string;
   let session: Postponement;
@@ -126,7 +118,6 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
       homeTeamIdentity,
       guestTeamIdentity,
       players,
-      metadata,
     };
   } else {
     id = generateId();
@@ -153,7 +144,6 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
       votes: [],
       originalMatchDateTime,
       createdAt: app.timestamp.now(),
-      metadata,
     };
   }
 

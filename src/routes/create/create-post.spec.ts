@@ -124,7 +124,6 @@ describe('handleCreatePost change mode', () => {
       players: [aPlayer({id: 'p1', name: 'Keep Me'})],
       proposedDates: [aProposedDate()],
       votes: [aVote()],
-      metadata: {source: 'click-tt.ch', league: 'Old League'},
       homeTeamIdentity: {championship: 'Old', group: 'Old', teamtable: 'old-1'},
       guestTeamIdentity: {championship: 'Old', group: 'Old', teamtable: 'old-2'},
     });
@@ -151,9 +150,7 @@ describe('handleCreatePost change mode', () => {
     expect(stored?.players).toEqual(session.players);
     expect(stored?.proposedDates).toEqual(session.proposedDates);
     expect(stored?.votes).toEqual(session.votes);
-    // The scrape-only provenance no longer applies to a hand-entered match.
-    expect(stored?.metadata).toBeUndefined();
-    // Nor do the click-tt team identities (ADR-0022).
+    // The hand-entered match carries no click-tt identities (ADR-0022).
     expect(stored?.homeTeamIdentity).toBeUndefined();
     expect(stored?.guestTeamIdentity).toBeUndefined();
 

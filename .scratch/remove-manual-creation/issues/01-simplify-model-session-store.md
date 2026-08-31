@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] The `metadata` field is gone from the Postponement model and from all creation-write sites (both create paths stop writing it)
-- [ ] Reading a stored Postponement no longer applies the legacy `metadata.match` → typed home/guest field migration
-- [ ] `homeTeamIdentity` / `guestTeamIdentity` remain on the model untouched
-- [ ] Unit specs for model builders and session-store normalization updated to the simplified shape
+- [x] The `metadata` field is gone from the Postponement model and from all creation-write sites (both create paths stop writing it)
+- [x] Reading a stored Postponement no longer applies the legacy `metadata.match` → typed home/guest field migration
+- [x] `homeTeamIdentity` / `guestTeamIdentity` remain on the model untouched
+- [x] Unit specs for model builders and session-store normalization updated to the simplified shape
 - [ ] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
