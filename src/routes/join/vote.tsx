@@ -1,19 +1,15 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../app';
-import type { DateClashes } from '../../lib/clashes';
 import type { Venue, Vote, VoteTallyItem } from '../../lib/models';
 import type { VenueOccupancy } from '../../lib/venue-occupancy';
 import { pageLayout } from '../layouts/main';
-import { ClashInfo } from '../partials/clash-info';
-import { VenueBadge } from '../partials/venue-badge';
-import { VenueOccupancyInfo } from '../partials/venue-occupancy-info';
+import { venueLegendLabel } from '../partials/venue-badge';
 import { VotePlayerResults } from '../partials/vote-player-results';
 import type { Team } from './join-utils';
 
 export interface VotePageDate extends VoteTallyItem {
   currentVote: string;
-  clashes?: DateClashes;
   /** venue number the date applies to; absent means venue 1 (legacy dates predate venues). */
   venueNumber?: number;
   /** Venue Occupancy snapshot from the last check; absent when never checked, the scrape failed, or the session has no club id. */
@@ -34,7 +30,6 @@ export interface VotePageProps extends ViewContext {
   playerName: string;
   proposedDates: readonly VotePageDate[];
   playerVoteRows: readonly PlayerVoteRow[];
-  clashCheckable: boolean;
   venues: readonly Venue[];
   updated?: boolean;
   globalError?: string;
@@ -70,19 +65,13 @@ export function VotePage(props: VotePageProps): JSX.Element {
           >
             {props.proposedDates.map((pd) => (
               <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
-                <legend>{pd.display} <VenueBadge venueNumber={pd.venueNumber} venues={props.venues}/></legend>
-                <ClashInfo
-                  clashes={pd.clashes}
-                  clashCheckable={props.clashCheckable}
-                  t={props.t}
-                  locale={props.locale}
-                />
-                <VenueOccupancyInfo
-                  id={pd.id}
-                  occupancy={pd.venueOccupancy}
-                  t={props.t}
-                  locale={props.locale}
-                />
+                <legend>
+                  {pd.display}{' '}
+                  {venueLegendLabel(pd.venueNumber, props.venues)}
+                  {pd.venueOccupancy !== undefined && pd.venueOccupancy.count > 0
+                    ? `, ${props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})}`
+                    : null}
+                </legend>
                 <label class="radio">
                   <input
                     type="radio"

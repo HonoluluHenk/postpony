@@ -114,6 +114,7 @@
   "skip_to_main": "Skip to main content",
   "status_label": "Status: <%= it.status %>",
   "tagline": "Postponing games as quick and easy as the Pony Express.",
+  "venue_legend_occupancy": "<%= it.count %> other games",
   "venue_occupancy_clean": "Venue checked, no other games",
   "venue_occupancy_conflicts_title": "Conflicting games at this venue",
   "venue_occupancy_line": "<%= it.count %> other games at this venue",

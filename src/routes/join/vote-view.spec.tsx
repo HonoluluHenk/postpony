@@ -336,7 +336,7 @@ describe('renderVoteStep', () => {
       .toContain('Sep 1, 2025');
   });
 
-  test('renders the venue badge next to each proposed date in the poll', async () => {
+  test('renders the venue number and name next to each proposed date in the poll legend', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -347,7 +347,7 @@ describe('renderVoteStep', () => {
       players: [player],
       proposedDates: [
         aProposedDate({id: 'date-1', venueNumber: 2, votable: true}),
-        // legacy date without a stored venue number defaults to the V1 badge
+        // legacy date without a stored venue number defaults to the V1 legend
         {...aProposedDate({id: 'date-2', votable: true}), venueNumber: undefined},
       ],
     });
@@ -363,14 +363,15 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>V2</span>');
+      .toContain('V2 – Turnhalle grün');
     expect(body)
-      .toContain('title="2 – Turnhalle grün"');
+      .toContain('V1 – Turnhalle orange');
     expect(body)
-      .toContain('>V1</span>');
+      .not
+      .toContain('class="chip venue-badge"');
   });
 
-  test('renders the venue badge tooltip with just the number when no venue name is known', async () => {
+  test('renders just the venue number when no venue name is known', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -391,14 +392,42 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('title="4"');
+      .toContain('V4</legend>');
+  });
+
+  test('truncates a multi-line venue name at the first comma in the legend', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      venues: [
+        {venueNumber: 1, name: 'Turnhalle orange, UG, Schule Dennigkofen', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+      ],
+      players: [player],
+      proposedDates: [
+        aProposedDate({id: 'date-1', votable: true, venueNumber: 1}),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
     expect(body)
-      .toContain('>V4</span>');
+      .toContain('V1 – Turnhalle orange</legend>');
+    expect(body)
+      .not
+      .toContain('Schule Dennigkofen');
   });
 });
 
-describe('renderVoteStep clash info', () => {
-  test('renders one line per affected team with the localized time and opponent', async () => {
+describe('renderVoteStep hides clash info', () => {
+  test('renders no clash lines for a date with home and away clashes', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -427,41 +456,17 @@ describe('renderVoteStep clash info', () => {
     const body = await response.text();
 
     expect(body)
+      .not
       .toContain('Home: 5:00 PM vs Thun');
     expect(body)
+      .not
       .toContain('Away: 9:30 PM vs Burgdorf');
-  });
-
-  test('renders the 24-hour localized clash time for de-CH', async () => {
-    const player = aPlayer();
-    const session = aSession({
-      status: 'Voting',
-      homeTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't1'},
-      guestTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't2'},
-      players: [player],
-      proposedDates: [
-        aProposedDate({
-          votable: true,
-          clashes: {home: [{opponent: 'Thun', start: '2025-09-01T17:00'}], away: []},
-        }),
-      ],
-    });
-    const app = createApp('de-CH');
-    await app.store.save(session);
-
-    const response = renderVoteStep(app, {
-      session,
-      team: 'home',
-      token: 'token',
-      player,
-    });
-    const body = await response.text();
-
     expect(body)
-      .toContain('Heim: 17:00 gegen Thun');
+      .not
+      .toContain('vs ');
   });
 
-  test('renders "checked, no clashes" when a check ran clean', async () => {
+  test('renders no clean-check chip when a check ran clean', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -487,10 +492,11 @@ describe('renderVoteStep clash info', () => {
     const body = await response.text();
 
     expect(body)
+      .not
       .toContain('Schedule checked, no clashes');
   });
 
-  test('renders "not checked" for a hand-entered match without team identities', async () => {
+  test('renders no "not checked" chip for a hand-entered match without team identities', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -509,41 +515,11 @@ describe('renderVoteStep clash info', () => {
     const body = await response.text();
 
     expect(body)
+      .not
       .toContain('Not checked');
   });
 
-  test('renders nothing when the check failed (identities exist, no clash data)', async () => {
-    const player = aPlayer();
-    const session = aSession({
-      status: 'Voting',
-      homeTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't1'},
-      guestTeamIdentity: {championship: 'MTTV 2026/27', group: '1. Liga', teamtable: 't2'},
-      players: [player],
-      proposedDates: [aProposedDate({votable: true})],
-    });
-    const app = createApp();
-    await app.store.save(session);
-
-    const response = renderVoteStep(app, {
-      session,
-      team: 'home',
-      token: 'token',
-      player,
-    });
-    const body = await response.text();
-
-    expect(body)
-      .not
-      .toContain('Not checked');
-    expect(body)
-      .not
-      .toContain('Schedule checked, no clashes');
-    expect(body)
-      .not
-      .toContain('vs ');
-  });
-
-  test('clash lines do not disturb the voting radios', async () => {
+  test('a clashing date the organizer re-enabled still renders its vote radios', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -580,10 +556,13 @@ describe('renderVoteStep clash info', () => {
 });
 
 describe('renderVoteStep venue occupancy info', () => {
-  test('renders the count line when other home matches occupy the date\'s venue', async () => {
+  test('renders the occupancy count beside the venue in the legend', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
+      venues: [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+      ],
       players: [player],
       proposedDates: [
         aProposedDate({
@@ -610,25 +589,21 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
+      .toContain('V1 – Turnhalle orange, 2 other games');
+    expect(body)
+      .not
       .toContain('2 other games at this venue');
   });
 
-  test('renders the conflicting matches in an accessible tooltip popup', async () => {
+  test('renders no occupancy button or tooltip on the vote page', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
       players: [player],
       proposedDates: [
         aProposedDate({
-          id: 'date-1',
           votable: true,
-          venueOccupancy: {
-            count: 2,
-            matches: [
-              {opponent: 'Port', start: '2025-09-01T20:15'},
-              {opponent: 'Bern', start: '2025-09-01T19:30'},
-            ],
-          },
+          venueOccupancy: {count: 2, matches: [{opponent: 'Port', start: '2025-09-01T20:15'}]},
         }),
       ],
     });
@@ -644,19 +619,23 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('aria-describedby="occupancy-tooltip-date-1"');
-    expect(body)
+      .not
       .toContain('role="tooltip"');
     expect(body)
-      .toContain('8:15 PM vs Port');
+      .not
+      .toContain('data-occupancy-trigger');
     expect(body)
-      .toContain('7:30 PM vs Bern');
+      .not
+      .toContain('aria-describedby');
   });
 
-  test('renders the clean line for a zero-count occupancy', async () => {
+  test('omits the count clause from the legend when the occupancy check ran clean', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
+      venues: [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+      ],
       players: [player],
       proposedDates: [
         aProposedDate({
@@ -677,13 +656,16 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('Venue checked, no other games');
+      .toContain('V1 – Turnhalle orange');
     expect(body)
       .not
-      .toContain('other games at this venue');
+      .toContain('other games');
+    expect(body)
+      .not
+      .toContain('Venue checked');
   });
 
-  test('renders nothing when occupancy is absent (hand-entered match or failed scrape)', async () => {
+  test('omits the count clause when occupancy data is absent (hand-entered match or failed scrape)', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -703,16 +685,19 @@ describe('renderVoteStep venue occupancy info', () => {
 
     expect(body)
       .not
-      .toContain('other games at this venue');
+      .toContain('other games');
     expect(body)
       .not
       .toContain('Venue checked');
   });
 
-  test('renders the localized de-CH occupancy lines', async () => {
+  test('renders the localized de-CH occupancy count in the legend', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
+      venues: [
+        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+      ],
       players: [player],
       proposedDates: [
         aProposedDate({id: 'date-1', votable: true, venueOccupancy: {count: 2, matches: []}}),
@@ -731,8 +716,9 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('2 weitere Spiele an dieser Halle');
+      .toContain('2 weitere Spiele');
     expect(body)
+      .not
       .toContain('Halle geprüft, keine weiteren Spiele');
   });
 });
