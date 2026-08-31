@@ -5,7 +5,9 @@ import { isoToLocaleTokens } from './pages/locale-tokens';
 /**
  * Full-flow tests for the schedule clash feature (issue 07): a scrape-created
  * match shows clash lines and the clean-check state on both the edit and the
- * vote page; a hand-entered match shows "not checked" on both pages.
+ * vote page. Every Postponement is now minted through the scrape wizard, so
+ * no session lacks click-tt identities — there is no reachable "not checked"
+ * state to assert.
  *
  * The failed-schedule-check degradation (a scrape error must never block
  * adding dates) is NOT covered here: the Playwright webServer env
@@ -82,27 +84,6 @@ test.describe('Clash checks', () => {
     await expect(joinPage.voteForm.getByText('Home: 7:30 PM vs Burgdorf'))
       .toHaveCount(0);
     await expect(joinPage.voteForm.getByText('Schedule checked, no clashes'))
-      .toBeVisible();
-
-    await checkA11y();
-  });
-
-  test('hand-entered match shows "not checked" on edit and vote pages', async ({page, checkA11y}) => {
-    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
-
-    // Hand-entered matches carry no click-tt identities, so the date is
-    // rendered "not checked" and no refresh action is offered.
-    const editPage = new EditPage(page);
-    await expect(editPage.proposedDateList.getByText('Not checked'))
-      .toBeVisible();
-    await expect(page.getByRole('button', {name: 'Refresh schedule check'}))
-      .toHaveCount(0);
-
-    // The vote page mirrors the "not checked" state.
-    const joinPage = await new JoinPage(page)
-      .goto(session.homeHref);
-    await joinPage.join('Manual Watcher');
-    await expect(joinPage.voteForm.getByText('Not checked'))
       .toBeVisible();
 
     await checkA11y();

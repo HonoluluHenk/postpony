@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { CreatePage, EditPage, ScrapePage } from './pages';
+import { EditPage, ScrapePage } from './pages';
 
 /**
  * Drives the full click-tt.ch scraping drilldown (leagues → groups → teams →
@@ -242,64 +242,86 @@ test.describe('Scraping Flow', () => {
     await checkA11y();
   });
 
-  test('change the match via the wizard: rosters replaced, session id preserved', async ({page, checkA11y}) => {
-    // Mint a manual session with a manually added player.
-    const createPage = await new CreatePage(page)
+  test('a scrape submission carrying leftover change parameters behaves as a fresh mint', async ({page, checkA11y}) => {
+    // Mint a Postponement first; its match is Ostermundigen vs Thun (the
+    // createSession fixture drilldown picks the 14.01.2027 return match).
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    // Drive the wizard to the matches page and harvest the match-form fields.
+    const scrapePage = await new ScrapePage(page)
       .goto();
-    let editPage = await createPage.create({
-      homeTeam: 'Aarberg',
-      guestTeam: 'Bern',
-      originalMatchDateTime: '08/29/2026 04:00 pm',
-    });
-    await editPage.addPlayer('Old Player');
-    await expect(editPage.playerItem('Old Player'))
-      .toBeVisible();
-    const originalId = new URL(page.url()).pathname.split('/')[2] ?? '';
-
-    // Change match details → cross-link into the wizard.
-    await editPage.changeMatchDetailsLink.click();
-    await page.getByRole('link', {name: 'Find the match on click-tt.ch instead'})
-      .click();
-    const scrapePage = new ScrapePage(page);
-    await expect(scrapePage.heading)
-      .toBeVisible();
-
-    // Back-navigation in change mode returns to the edit page.
-    await scrapePage.clickBack();
-    await expect(page)
-      .toHaveURL(/\/edit\/.+/);
-
-    // Re-enter the wizard for the actual change.
-    await editPage.changeMatchDetailsLink.click();
-    await page.getByRole('link', {name: 'Find the match on click-tt.ch instead'})
-      .click();
-    await expect(scrapePage.heading)
-      .toBeVisible();
-
-    // Drill down and pick the new match via the single Select button,
-    // selecting the guest side.
     await scrapePage.pickLeague('MTTV 2026/27');
     await scrapePage.pickGroup('O40 1. Liga');
     await scrapePage.pickTeam('Ostermundigen');
     await expect(scrapePage.matchesHeading)
       .toBeVisible();
-    await Promise.all([
-      page.waitForURL(/\/edit\/.+/),
-      scrapePage.selectButton('29.08.2026')
-        .click(),
-    ]);
+    const formValues = await page.locator('form[action="/create/scrape/match"]')
+      .first()
+      .evaluate((form): Record<string, string | string[]> => {
+        const data: Record<string, string | string[]> = {};
+        for (const el of form.querySelectorAll('input[type="hidden"]')) {
+          const name = el.getAttribute('name') ?? '';
+          const value = el.getAttribute('value') ?? '';
+          if (name === 'playerName') {
+            const existing = data[name];
+            data[name] = Array.isArray(existing) ? [...existing, value] : [value];
+          } else {
+            data[name] = value;
+          }
+        }
+        return data;
+      });
 
-    // Same session id, new match details, and the rosters replaced (the
-    // manually added player is gone, the scraped rosters are in).
-    expect(page.url())
-      .toContain(`/edit/${originalId}`);
-    editPage = new EditPage(page);
-    await expect(editPage.heading)
-      .toContainText('Thun vs Ostermundigen');
-    await expect(page.getByText('Old Player'))
-      .toHaveCount(0);
-    await expect(editPage.playerItems)
-      .toHaveCount(6);
+    // Submit the same match with leftover change-mode parameters
+    // (sessionId + ownerPassword). The wizard is mint-only: a brand-new
+    // Postponement is created and the existing one is left untouched.
+    const ownerPassword = new URL(session.editUrl).searchParams.get('ownerPassword') ?? '';
+    const response = await page.request.post('/create/scrape/match', {
+      form: {
+        ...formValues,
+        sessionId: session.id,
+        ownerPassword,
+      },
+      // Do not follow the mint redirect: the Location header carries the fresh
+      // session id we assert on.
+      maxRedirects: 0,
+      headers: {'Accept': 'text/html', 'Accept-Language': 'en-US'},
+    });
+
+    expect(response.status())
+      .toBe(302);
+    const location = response.headers()['location'] ?? '';
+    const newId = new URL(location, page.url()).pathname.split('/')[2] ?? '';
+    expect(newId.length)
+      .toBeGreaterThan(0);
+    expect(newId)
+      .not
+      .toBe(session.id);
+
+    // The fresh mint is a live Draft on its own edit page. The harvested form
+    // is the first match row (29.08.2026, Thun hosts Ostermundigen), so the
+    // new Postponement shows that match.
+    const freshResponse = await page.request.get(location, {
+      headers: {'Accept-Language': 'en-US'},
+    });
+    expect(freshResponse.status())
+      .toBe(200);
+    const freshHtml = await freshResponse.text();
+    expect(freshHtml)
+      .toContain('Thun vs Ostermundigen');
+
+    // The original Postponement is untouched: same match, still in its
+    // pre-submission state (Voting, because createSession added a date), and
+    // its proposed date is still in the list.
+    await page.goto(session.editUrl);
+    await expect(page.getByRole('heading', {name: 'Editing Postponement', level: 1}))
+      .toBeVisible();
+    await expect(page.locator('.match-summary'))
+      .toContainText('Ostermundigen vs Thun');
+    await expect(page.locator('#status-chip'))
+      .toContainText('Voting');
+    await expect(page.locator('#proposed-date-list .proposed-date-card'))
+      .toHaveCount(1);
 
     await checkA11y();
   });

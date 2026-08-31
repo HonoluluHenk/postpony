@@ -1,12 +1,11 @@
 import { expect, test } from './fixtures';
-import { CreatePage } from './pages';
+import { EditPage } from './pages';
 
 test.describe('Invitation Link', () => {
   test('should display absolute URLs for both team invitation links', async ({page, baseURL, checkA11y}) => {
-    // 1. Create a new postponing-session
-    const createPage = await new CreatePage(page)
-      .goto();
-    const editPage = await createPage.create();
+    // 1. Mint a new postponing-session via the scrape wizard (Ostermundigen
+    //    hosts Thun on the return fixture match, so the organizer claims home).
+    const {editPage} = await EditPage.createSession(page);
 
     // baseURL in playwright.config.ts is https://game-scheduler.localhost:<E2E_APP_PORT> (default 3001)
     if (!baseURL) {
@@ -28,12 +27,12 @@ test.describe('Invitation Link', () => {
     expect(awayHref)
       .toMatch(new RegExp(`^${expectedBase}/join/.+/away\\?token=.+`));
 
-    // 3. Labels follow the organizer perspective; the default session is created
-    //    from the home side with team names "Home Team" / "Guest Team".
+    // 3. Labels follow the organizer perspective; the session is created from
+    //    the home side with the scraped team names Ostermundigen / Thun.
     await expect(editPage.homeInviteLink)
-      .toHaveText('My team invitation link (Home Team)');
+      .toHaveText('My team invitation link (Ostermundigen)');
     await expect(editPage.awayInviteLink)
-      .toHaveText('Opponent team invitation link (Guest Team)');
+      .toHaveText('Opponent team invitation link (Thun)');
 
     await checkA11y();
   });

@@ -132,8 +132,9 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
-  // ponytail: EditPage.createSession() navigates to /create first, so if page was on
-  // the editUrl it will navigate away. Call goto() on editPage before asserting.
+  // ponytail: EditPage.createSession() navigates to the scrape wizard first, so
+  // if page was on the editUrl it will navigate away. Call goto() on editPage
+  // before asserting.
   test('vote tally shows only own-team votes', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
@@ -296,14 +297,16 @@ test.describe('Join and Voting', () => {
     await homeJoinPage.castVote(0, 'Yes');
     await homeJoinPage.submitVotes();
 
-    // Edit view: per-player votes by name + "N/M voted" count.
+    // Edit view: per-player votes by name + "N/M voted" count. Two of the
+    // five home-team players (3 scraped + Alice + Bob) vote, so the single
+    // proposed date reads 2/5 voted.
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
     await expect(editPage.ownTeamTable())
       .toContainText('Alice');
     await expect(editPage.ownTeamTable())
       .toContainText('Bob');
-    await expect(editPage.ownTeamTable().getByText('2/2 voted'))
+    await expect(editPage.ownTeamTable().getByText('2/5 voted'))
       .toBeVisible();
 
     // The proposed date is votable by both teams out of the box; have the
