@@ -10,3 +10,8 @@
 - [x] No "change match details" action or affordance is rendered on the edit page
 - [x] Unit specs and e2e for the edit page updated so the read-only summary is asserted and the change action asserted absent
 - [x] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
+
+## Comments
+
+- `d3c5e08` ticket done: read-only Match summary (`<p class="match-summary">` via new `homeTeam`/`guestTeam`/`matchDateTime` props), `change_match_details` link removed; new unit spec + scrape-driven e2e asserting summary present and change action absent. lint/test/build green (581 tests, coverage ≥80%); e2e red only from parallel tickets 02/03 manual-create removal (owned by ticket 05).
+- `e56a1dd` review: 0 standards findings, 0 spec findings; only caveat is e2e criterion blocked by parallel churn, no code defect, no fixes needed.
