@@ -5,7 +5,6 @@ import { generateId, generateRandomPassword, hashPassword } from '../../../lib/c
 import { DEFAULT_CLUB_ID, type ClickTtTeamIdentity, type Player, type Postponement, type Venue } from '../../../lib/models';
 import { derivePostponementName } from '../../../lib/postponement';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
-import { requireChangeSession } from '../change-utils';
 
 const MatchSchema = v.object({
   day: v.optional(v.string(), ''),
@@ -46,10 +45,6 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     app.failure(app.t('missing_param', {name: 'match'}));
   }
   const m = validation.output;
-
-  const sessionId = typeof body['sessionId'] === 'string' ? body['sessionId'] : undefined;
-  const ownerPassword = typeof body['ownerPassword'] === 'string' ? body['ownerPassword'] : undefined;
-  const changeMode = !!sessionId;
 
   const originalMatchDateTime = parseClickTtDateTime(m.date, m.time);
   const name = derivePostponementName(m.homeTeam, m.guestTeam, originalMatchDateTime, app.locale);
@@ -94,58 +89,30 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   const guestTeamIdentity =
     selectedTeamId === 'home' ? teamIdentity(m.opponentTeamtable) : teamIdentity(m.teamtable);
 
-  let id: string;
-  let redirectOwnerPassword: string;
-  let session: Postponement;
-
-  if (changeMode) {
-    if (!ownerPassword) {
-      app.failure(app.t('invalid_owner_password'), 403);
-    }
-    const existing = await requireChangeSession(app, sessionId, ownerPassword);
-    id = existing.id;
-    redirectOwnerPassword = ownerPassword;
-    // A re-scrape replaces the rosters with the new match's players; the rest
-    // of the session (id, passwords, votes, proposed dates) is preserved.
-    session = {
-      ...existing,
-      name,
-      clubId: clubId ?? existing.clubId,
-      homeTeam: m.homeTeam,
-      guestTeam: m.guestTeam,
-      originalMatchDateTime,
-      organizerTeam: selectedTeamId,
-      homeTeamIdentity,
-      guestTeamIdentity,
-      players,
-    };
-  } else {
-    id = generateId();
-    redirectOwnerPassword = generateRandomPassword();
-    const invitationPassword = generateRandomPassword();
-
-    session = {
-      id,
-      clubId: clubId ?? DEFAULT_CLUB_ID,
-      name,
-      homeTeam: m.homeTeam,
-      guestTeam: m.guestTeam,
-      ownerPasswordHash: await hashPassword(redirectOwnerPassword),
-      invitationPasswordHash: await hashPassword(invitationPassword),
-      invitationPassword,
-      status: 'Draft',
-      organizerTeam: selectedTeamId,
-      homeTeamIdentity,
-      guestTeamIdentity,
-      reopenCount: 0,
-      players,
-      venues,
-      proposedDates: [],
-      votes: [],
-      originalMatchDateTime,
-      createdAt: app.timestamp.now(),
-    };
-  }
+  const id = generateId();
+  const redirectOwnerPassword = generateRandomPassword();
+  const invitationPassword = generateRandomPassword();
+  const session: Postponement = {
+    id,
+    clubId: clubId ?? DEFAULT_CLUB_ID,
+    name,
+    homeTeam: m.homeTeam,
+    guestTeam: m.guestTeam,
+    ownerPasswordHash: await hashPassword(redirectOwnerPassword),
+    invitationPasswordHash: await hashPassword(invitationPassword),
+    invitationPassword,
+    status: 'Draft',
+    organizerTeam: selectedTeamId,
+    homeTeamIdentity,
+    guestTeamIdentity,
+    reopenCount: 0,
+    players,
+    venues,
+    proposedDates: [],
+    votes: [],
+    originalMatchDateTime,
+    createdAt: app.timestamp.now(),
+  };
 
   await app.store.save(session);
 

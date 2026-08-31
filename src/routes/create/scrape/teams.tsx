@@ -2,9 +2,8 @@ import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { ViewContext } from '../../../app';
 import type { Team } from '../../../lib/click-tt-scraper';
 import { pageLayout } from '../../layouts/main';
-import type { WizardChangeMode } from '../change-utils';
 
-export interface ScrapeTeamsPageProps extends ViewContext, WizardChangeMode {
+export interface ScrapeTeamsPageProps extends ViewContext {
   title?: string;
   teams: readonly Team[];
   leagueName: string;
@@ -31,7 +30,7 @@ export function ScrapeTeamsPage(props: ScrapeTeamsPageProps): JSX.Element {
           {props.teams.map((team) => (
             <li>
               <a
-                href={`/create/scrape/matches?championship=${encodeURIComponent(team.championship)}&group=${encodeURIComponent(team.group)}&teamtable=${encodeURIComponent(team.teamtable)}&teamName=${encodeURIComponent(team.name)}&groupName=${encodeURIComponent(props.groupName)}&leagueName=${encodeURIComponent(props.leagueName)}${props.changeSuffix}`}
+                href={`/create/scrape/matches?championship=${encodeURIComponent(team.championship)}&group=${encodeURIComponent(team.group)}&teamtable=${encodeURIComponent(team.teamtable)}&teamName=${encodeURIComponent(team.name)}&groupName=${encodeURIComponent(props.groupName)}&leagueName=${encodeURIComponent(props.leagueName)}`}
               >
                 {team.name}
               </a>
@@ -41,15 +40,9 @@ export function ScrapeTeamsPage(props: ScrapeTeamsPageProps): JSX.Element {
       )}
 
       <div class="right-align">
-        {props.changeMode ? (
-          <a href={`/edit/${props.sessionId}?ownerPassword=${props.ownerPassword}`}>
-            {props.t('scrape_back')}
-          </a>
-        ) : (
-          <a href={`/create/scrape/groups?championship=${encodeURIComponent(props.championship)}&leagueName=${encodeURIComponent(props.leagueName)}`}>
-            {props.t('scrape_back')}
-          </a>
-        )}
+        <a href={`/create/scrape/groups?championship=${encodeURIComponent(props.championship)}&leagueName=${encodeURIComponent(props.leagueName)}`}>
+          {props.t('scrape_back')}
+        </a>
       </div>
     </section>
   );

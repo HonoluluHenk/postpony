@@ -2,9 +2,8 @@ import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { ViewContext } from '../../../app';
 import type { Group } from '../../../lib/click-tt-scraper';
 import { pageLayout } from '../../layouts/main';
-import type { WizardChangeMode } from '../change-utils';
 
-export interface ScrapeGroupsPageProps extends ViewContext, WizardChangeMode {
+export interface ScrapeGroupsPageProps extends ViewContext {
   title?: string;
   groups: readonly Group[];
   leagueName: string;
@@ -25,7 +24,7 @@ export function ScrapeGroupsPage(props: ScrapeGroupsPageProps): JSX.Element {
           {props.groups.map((group) => (
             <li>
               <a
-                href={`/create/scrape/teams?championship=${encodeURIComponent(group.championship)}&group=${encodeURIComponent(group.group)}&groupName=${encodeURIComponent(group.name)}&leagueName=${encodeURIComponent(props.leagueName)}${props.changeSuffix}`}
+                href={`/create/scrape/teams?championship=${encodeURIComponent(group.championship)}&group=${encodeURIComponent(group.group)}&groupName=${encodeURIComponent(group.name)}&leagueName=${encodeURIComponent(props.leagueName)}`}
               >
                 {group.name}
               </a>
@@ -35,15 +34,9 @@ export function ScrapeGroupsPage(props: ScrapeGroupsPageProps): JSX.Element {
       )}
 
       <div class="right-align">
-        {props.changeMode ? (
-          <a href={`/edit/${props.sessionId}?ownerPassword=${props.ownerPassword}`}>
-            {props.t('scrape_back')}
-          </a>
-        ) : (
-          <a href="/create/scrape">
-            {props.t('scrape_back')}
-          </a>
-        )}
+        <a href="/create/scrape">
+          {props.t('scrape_back')}
+        </a>
       </div>
     </section>
   );

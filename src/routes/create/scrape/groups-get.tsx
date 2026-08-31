@@ -1,6 +1,5 @@
 import type { App } from '../../../app';
 import { fetchGroups } from '../../../lib/click-tt-scraper';
-import { changeQuerySuffix } from '../change-utils';
 import { ScrapeGroupsPage } from './groups';
 
 export const handleScrapeGroupsGet = async (app: App): Promise<Response> => {
@@ -9,9 +8,6 @@ export const handleScrapeGroupsGet = async (app: App): Promise<Response> => {
     app.failure(app.t('missing_param', {name: 'championship'}));
   }
   const leagueName = app.c.req.query('leagueName') ?? '';
-  const sessionId = app.c.req.query('sessionId');
-  const ownerPassword = app.c.req.query('ownerPassword');
-  const changeMode = !!sessionId;
 
   const groups = await fetchGroups(championship);
 
@@ -20,10 +16,6 @@ export const handleScrapeGroupsGet = async (app: App): Promise<Response> => {
       {...app.view}
       groups={groups}
       leagueName={leagueName}
-      changeMode={changeMode}
-      changeSuffix={changeQuerySuffix(sessionId, ownerPassword)}
-      sessionId={sessionId}
-      ownerPassword={ownerPassword}
     />,
   );
   return app.c.html(html);
