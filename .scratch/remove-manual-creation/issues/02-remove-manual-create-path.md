@@ -10,4 +10,8 @@
 - [x] The start page offers exactly one creation entry — the click-tt scrape wizard
 - [x] The manual form component, its route handlers, and their unit specs are deleted
 - [x] No route accepts hand-typed home/guest team or date/time to mint a Postponement
-- [ ] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
+- [x] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
+
+## Comments
+
+Implementation: `904cbc1` (manual create route/components/specs deleted; start page scrape-only; verify gate green via the e2e sweep in 05).
