@@ -20,6 +20,8 @@ export interface ProposedDateTallyItem extends VoteTallyItem {
   venueNumber?: number;
   /** Venue Occupancy snapshot from the last check; absent when never checked, the scrape failed, or the session has no club id. */
   venueOccupancy?: VenueOccupancy;
+  /** Compact date+time for the card header (no weekday prefix), e.g. `08.09.2026 19:30`. */
+  shortDisplay?: string;
 }
 
 /**
@@ -251,7 +253,8 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                      <div class="proposed-date-header">
                        <div class="proposed-date-info">
                          <i aria-hidden="true">event</i>
-                         <span class="max">{proposedDate.display}</span>
+                         <span class="max" title={proposedDate.display}>{proposedDate.shortDisplay ??
+                           proposedDate.display}</span>
                          <VenueBadge venueNumber={proposedDate.venueNumber} venues={props.venues}/>
                        </div>
                        <div class="proposed-date-actions">

@@ -139,18 +139,31 @@
   .proposed-date-card {
     display: grid;
     grid-template-columns: 1fr auto;
+    grid-template-rows: auto 1fr;
     gap: var(--space-2);
     padding: var(--space-3);
     border-radius: var(--border-radius);
     background: var(--surface-container-lowest);
     border: 1px solid var(--outline-variant);
+    height: 7rem;
   }
 
   .proposed-date-header {
     grid-column: 1 / -1;
+    grid-row: 1;
     display: flex;
     align-items: center;
     gap: var(--space-2);
+  }
+
+  .proposed-date-details {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-content: flex-end;
+    overflow: hidden;
   }
 
   .proposed-date-info {
@@ -161,6 +174,8 @@
   }
 
   .proposed-date-info > .max {
+    max-width: 12.5rem;
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -171,13 +186,6 @@
     align-items: center;
     gap: var(--space-2);
     flex-shrink: 0;
-  }
-
-  .proposed-date-details {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
   }
 
   .proposed-date-details > * {

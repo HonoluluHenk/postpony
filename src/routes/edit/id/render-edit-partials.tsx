@@ -2,7 +2,7 @@ import type { App } from '../../../app';
 import type { AppLocale } from '../../../locales';
 import type { Postponement, ProposedDate, VoteTallyItem } from '../../../lib/models';
 import { PostponementRules, sortedProposedDates, type VoteTally } from '../../../lib/postponement';
-import { formatProposedDateDisplay } from '../../../lib/temporal-utils';
+import { formatProposedDateDisplay, formatProposedDateDisplayShort } from '../../../lib/temporal-utils';
 import { buildOwnTeamView } from './own-team-view';
 import {
   ProposedDatesSectionPartial,
@@ -44,6 +44,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
     return {
       id: pd.id,
       display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
+      shortDisplay: formatProposedDateDisplayShort(pd.dateTimeRange.start, locale),
       votable: pd.votable,
       yes: counts.yes,
       no: counts.no,
