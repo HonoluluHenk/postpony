@@ -128,28 +128,73 @@
     flex-wrap: wrap;
   }
 
-  /* Icon-only BeerCSS switch inside the proposed-dates table: the track and
-     knob are absolute pseudo-elements drawn to the LEFT of the (empty) label's
-     box, and they need a positioned ancestor a table cell doesn't provide.
-     Pin the switch to itself and push its box 3.25rem right (BeerCSS's track
-     width) so the visual lands inside the cell instead of on the date. */
-  #proposed-date-list .switch {
-    position: relative;
-    margin-inline-start: 3.25rem;
+  /* Proposed-date card list: each date is a card with a header row (date/venue | actions)
+     and a details row (clashes/occupancy). CSS grid replaces the old table layout. */
+  .proposed-date-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
   }
 
-  /* The proposed-dates table is a real table at every width: it never stacks
-     into labelled cards and its rows never wrap. It sizes to its content (so
-     the long "Proposed Date & Time" column cannot absorb card slack); when
-     that content is wider than the card — small screens — the surrounding
-     `.scroll` wrapper pans sideways instead of clipping. */
-  #proposed-date-list {
-    width: fit-content;
+  .proposed-date-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--border-radius);
+    background: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
   }
 
-  #proposed-date-list th,
-  #proposed-date-list td {
+  .proposed-date-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .proposed-date-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .proposed-date-info > .max {
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .proposed-date-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+  }
+
+  .proposed-date-details {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .proposed-date-details > * {
+    margin: 0;
+  }
+
+  /* Proposed-date cards with clashes: left error border + subtle tint.
+     Reduce left padding by the border width so content aligns with clean rows. */
+  .proposed-date-card.clash-row {
+    border-inline-start: 4px solid var(--error);
+    background: var(--error-container);
+    padding-inline-start: calc(var(--space-3) - 4px);
+  }
+
+  /* Switch inside proposed-date card header. BeerCSS switch needs a positioned ancestor. */
+  .proposed-date-actions .switch {
+    position: relative;
   }
 
   /* Below 600px the header row may wrap so the page title drops onto its
@@ -293,17 +338,6 @@
   .vote-radio-group {
     flex-direction: row;
     gap: var(--space-4);
-  }
-
-  /* Proposed-date rows with clashes: left error border + subtle tint so the
-     conflict is visible at a glance without drowning the rest of the table. */
-  #proposed-date-list tr.clash-row {
-    border-inline-start: 4px solid var(--error);
-    background: var(--error-container);
-  }
-
-  #proposed-date-list tr.clash-row th[scope="row"] {
-    padding-inline-start: calc(var(--space-3) - 4px);
   }
 
   /* air-datepicker themed to the BeerCSS/Material palette (design layer beats vendor). */

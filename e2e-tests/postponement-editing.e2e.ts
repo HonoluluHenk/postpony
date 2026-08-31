@@ -147,7 +147,7 @@ test.describe('Postponement Editing', () => {
     const editPage = new EditPage(page);
     // Add a proposed date
     await editPage.addProposedDate('2026-03-05T20:00');
-    await expect(page.locator('#proposed-date-list tbody tr'))
+    await expect(page.locator('#proposed-date-list > .proposed-date-card'))
       .toHaveCount(1);
 
     // Dates are votable by both teams out of the box.

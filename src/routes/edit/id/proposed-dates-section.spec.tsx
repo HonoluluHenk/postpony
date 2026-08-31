@@ -91,27 +91,26 @@ describe('ProposedDatesSection component', () => {
       .toContain('hx-post="/edit/session-1/proposed-date-visibility?proposedDateId=pd-2&amp;votable=true"');
   });
 
-  it('renders the proposed dates as a scrollable table with column headings', () => {
+  it('renders the proposed dates as a grid of cards', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
-    // The table is a real table at every width (no responsive card-stacking):
-    // wrapped in a `.scroll` pan container and carrying no `data-label`s (the
-    // marker the global stacking rule keys on).
+    // The list is a flex column of proposed-date cards, each with a header
+    // (date/venue + actions) and a details row (clash/occupancy info).
     expect(html)
-      .toContain('<div class="scroll">');
+      .toContain('class="proposed-date-list" id="proposed-date-list"');
     expect(html)
-      .toContain('<table id="proposed-date-list">');
+      .toContain('class="proposed-date-card');
     expect(html)
-      .toContain('<caption class="visually-hidden">Proposed Dates</caption>');
+      .toContain('class="proposed-date-header"');
     expect(html)
-      .toContain('<th scope="col">Proposed Date &amp; Time</th>');
+      .toContain('class="proposed-date-info"');
     expect(html)
-      .toContain('<th scope="col">Votable</th>');
+      .toContain('class="proposed-date-actions"');
     expect(html)
-      .toContain('<th scope="col">Actions</th>');
+      .toContain('class="proposed-date-details"');
     expect(html)
       .not
-      .toContain('data-label=');
+      .toContain('<table');
   });
 
   it('keeps the votable switch and delete button label-less but a11y-named', () => {

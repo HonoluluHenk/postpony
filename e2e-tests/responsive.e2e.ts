@@ -65,12 +65,10 @@ test.describe('Responsive Layout', () => {
     await expect(editPage.awayCopyButton())
       .toBeEnabled();
 
-    // The proposed-dates table stays a real table on phones (no card-stacking):
-    // its thead keeps a static position and the `.scroll` wrapper pans
-    // sideways, so the "Votable" switch stays reachable.
-    await expect(editPage.proposedDateList.locator('thead'))
-      .not
-      .toHaveCSS('position', 'absolute');
+    // The proposed-dates list is a flex column of cards (not a table), so
+    // it wraps naturally on phones. The votable toggle stays reachable.
+    await expect(editPage.votableToggle(0))
+      .toBeVisible();
     await expectFullyInViewport(editPage.votableToggle(0));
   });
 

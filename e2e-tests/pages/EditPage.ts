@@ -129,16 +129,14 @@ export class EditPage {
   get proposedDateList(): Locator {
     // ponytail: the generator's <ol> also has aria-label "Generate Proposed
     // Dates" which would collide with the fuzzy "Proposed Dates" substring
-    // match; scope to exact so the proposal table stays singular.
-    return this.page.getByRole('table', {name: 'Proposed Dates'});
+    // match; scope to the card container id so the proposal list stays singular.
+    return this.page.locator('#proposed-date-list');
   }
 
-  // The proposal table's data rows (its `<tbody>`), excluding the header row
-  // — the index space every per-date control (toggle, confirm, delete) uses.
+  // The proposal card list's data cards — the index space every per-date
+  // control (toggle, confirm, delete) uses.
   get proposedDateRows(): Locator {
-    return this.proposedDateList.getByRole('rowgroup')
-      .last()
-      .getByRole('row');
+    return this.proposedDateList.locator('.proposed-date-card');
   }
 
   get generateForm(): Locator {
