@@ -13,10 +13,6 @@ export class StartPage {
     return this.page.getByRole('heading', {level: 2});
   }
 
-  get createLink(): Locator {
-    return this.page.getByRole('link', {name: 'Create a new Postponement'});
-  }
-
   get scrapeLink(): Locator {
     return this.page.getByRole('link', {name: 'Find your match (click-tt.ch)'});
   }
