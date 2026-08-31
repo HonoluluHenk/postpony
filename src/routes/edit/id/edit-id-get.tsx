@@ -30,6 +30,9 @@ export const handleEditGet = async (app: App): Promise<Response> => {
       session={session}
       ownerPassword={ownerPassword ?? undefined}
       proposedDateTime={originalMatchDateTime}
+      homeTeam={session.homeTeam}
+      guestTeam={session.guestTeam}
+      matchDateTime={originalMatchDateTime}
       fromDate={defaultFromDate}
       toDate={defaultToDate}
       {...buildEditPartialsData(session, locale)}

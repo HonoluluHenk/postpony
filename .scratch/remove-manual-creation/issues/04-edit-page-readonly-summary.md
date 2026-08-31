@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] The edit page renders the referenced Match's identity (home vs guest, original date/time) read-only
-- [ ] No "change match details" action or affordance is rendered on the edit page
-- [ ] Unit specs and e2e for the edit page updated so the read-only summary is asserted and the change action asserted absent
-- [ ] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
+- [x] The edit page renders the referenced Match's identity (home vs guest, original date/time) read-only
+- [x] No "change match details" action or affordance is rendered on the edit page
+- [x] Unit specs and e2e for the edit page updated so the read-only summary is asserted and the change action asserted absent
+- [x] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%

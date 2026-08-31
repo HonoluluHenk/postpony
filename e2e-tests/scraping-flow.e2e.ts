@@ -197,6 +197,39 @@ test.describe('Scraping Flow', () => {
     await checkA11y();
   });
 
+  test('edit page shows the referenced Match read-only and no change action', async ({page, checkA11y}) => {
+    await scrapePage.pickLeague('MTTV 2026/27');
+    await scrapePage.pickGroup('O40 1. Liga');
+    await scrapePage.pickTeam('Ostermundigen');
+
+    await expect(scrapePage.matchesHeading)
+      .toBeVisible();
+    await Promise.all([
+      page.waitForURL(/\/edit\/.+/),
+      scrapePage.selectButton('29.08.2026')
+        .click(),
+    ]);
+
+    const editPage = new EditPage(page);
+    await expect(editPage.heading)
+      .toBeVisible();
+
+    // The referenced Match (home vs guest, original date/time) is shown
+    // read-only — Thun hosts Ostermundigen on 29.08.2026 16:00.
+    await expect(editPage.matchSummary)
+      .toContainText('Match: Thun vs Ostermundigen');
+    await expect(editPage.matchSummary)
+      .toContainText('08/29/2026 04:00 pm');
+
+    // No change-match affordance remains.
+    await expect(editPage.changeMatchDetailsLink)
+      .toHaveCount(0);
+    await expect(page.getByRole('link', {name: 'Find the match on click-tt.ch instead'}))
+      .toHaveCount(0);
+
+    await checkA11y();
+  });
+
   test('should navigate back from groups to leagues', async ({checkA11y}) => {
     await scrapePage.pickLeague('MTTV 2026/27');
     await expect(scrapePage.groupsHeading)

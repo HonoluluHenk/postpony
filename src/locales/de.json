@@ -54,6 +54,7 @@
   "language_selection": "Sprachauswahl",
   "loading": "Wird geladen…",
   "main_actions": "Hauptaktionen",
+  "match_summary": "Match: <%= it.home %> vs. <%= it.guest %> – <%= it.datetime %>",
   "missing_param": "Erforderlicher Parameter fehlt: <%= it.name %>",
   "new_player_name": "Name des neuen Spielers",
   "no_vote": "Keine Stimme",
