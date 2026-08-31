@@ -69,14 +69,10 @@ export function EditPage(props: EditPageProps): JSX.Element {
 
   const headingTitle = (
     <>
-      {props.t('edit_postponement_heading')}
-      <br/>
-      {matchUpLine(props.session.homeTeam ?? '', props.session.guestTeam ?? '')}
+      <span class="heading-row">{props.t('edit_postponement_heading')}</span>
+      <span class="heading-row">{matchUpLine(props.session.homeTeam ?? '', props.session.guestTeam ?? '')}</span>
       {props.proposedDateTime ? (
-        <>
-          <br/>
-          {props.proposedDateTime}
-        </>
+        <span class="heading-row">{props.proposedDateTime}</span>
       ) : null}
     </>
   );

@@ -31,11 +31,11 @@ export class CreatePage {
   }
 
   get homeTeamInput(): Locator {
-    return this.page.getByLabel('Home Team');
+    return this.page.getByLabel('Home Team', {exact: true});
   }
 
   get guestTeamInput(): Locator {
-    return this.page.getByLabel('Guest Team');
+    return this.page.getByLabel('Guest Team', {exact: true});
   }
 
   get originalMatchDateTimeInput(): Locator {

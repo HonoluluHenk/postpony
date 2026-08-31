@@ -43,7 +43,9 @@ export function Layout(props: LayoutProps): JSX.Element {
             <a href="/" class="shrink" aria-label="PostPony home">
               <img src="/assets/logos/wordmark.svg" alt="PostPony" height="40"/>
             </a>
-            <h1 class="max center-align">{props.headingTitle ?? props.title}</h1>
+            <h1 class="max center-align" aria-label={props.headingTitle ? props.title : undefined}>
+              {props.headingTitle ?? props.title}
+            </h1>
             <nav class="row no-wrap shrink" aria-label={props.t('language_selection')}>
               <form class="no-margin">
                 <label class="visually-hidden" for="language-select">{props.t('language_selection')}</label>
