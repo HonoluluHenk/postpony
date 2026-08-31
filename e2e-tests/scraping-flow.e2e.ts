@@ -313,14 +313,15 @@ test.describe('Scraping Flow', () => {
     // The original Postponement is untouched: same match, still in its
     // pre-submission state (Voting, because createSession added a date), and
     // its proposed date is still in the list.
-    await page.goto(session.editUrl);
-    await expect(page.getByRole('heading', {name: 'Editing Postponement', level: 1}))
+    const editPage = new EditPage(page);
+    await editPage.goto(session.editUrl);
+    await expect(editPage.heading)
       .toBeVisible();
-    await expect(page.locator('.match-summary'))
+    await expect(editPage.matchSummary)
       .toContainText('Ostermundigen vs Thun');
-    await expect(page.locator('#status-chip'))
+    await expect(editPage.status)
       .toContainText('Voting');
-    await expect(page.locator('#proposed-date-list .proposed-date-card'))
+    await expect(editPage.proposedDateRows)
       .toHaveCount(1);
 
     await checkA11y();
