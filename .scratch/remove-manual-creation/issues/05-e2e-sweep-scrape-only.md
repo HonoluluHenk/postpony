@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] A full e2e flow scrapes a Match, mints a Postponement, and lands on its edit page with a read-only Match summary
-- [ ] An e2e error path submits a scrape with leftover change parameters → fresh mint, existing Postponement untouched
-- [ ] An e2e path confirms the edit page offers no change action
-- [ ] e2e passing for the reworked creation/scraping/start-page flows
-- [ ] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
+- [x] A full e2e flow scrapes a Match, mints a Postponement, and lands on its edit page with a read-only Match summary
+- [x] An e2e error path submits a scrape with leftover change parameters → fresh mint, existing Postponement untouched
+- [x] An e2e path confirms the edit page offers no change action
+- [x] e2e passing for the reworked creation/scraping/start-page flows
+- [x] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
