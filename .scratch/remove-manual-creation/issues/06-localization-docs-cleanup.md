@@ -8,5 +8,5 @@
 
 - [x] Orphaned translation keys (manual-create and change-match-details strings) removed from en and de locale files; fr-CH/it-CH continue to mirror English per ADR-0016
 - [x] Glossary (`CONTEXT.md`): the `Match` entry states the Match is scraped from click-tt.ch at creation and not editable afterwards
-- [ ] ADR-0017 (two-path match creation with in-place change) recorded as superseded by the scrape-only decision
+- [x] ADR-0017 (two-path match creation with in-place change) recorded as superseded by the scrape-only decision
 - [ ] `verify` gate (lint → test → build → e2e) green with all coverage ≥ 80%
