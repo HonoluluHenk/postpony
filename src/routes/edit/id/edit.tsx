@@ -2,6 +2,7 @@ import type { JSX } from 'hono/jsx/jsx-runtime';
 import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../../app';
 import type { Postponement } from '../../../lib/models';
+import { matchUpLine } from '../../../lib/postponement';
 import { pageLayout } from '../../layouts/main';
 import { inviteLinkLabels } from './invite-link-labels';
 import { OwnTeamVotes } from './own-team-votes';
@@ -65,6 +66,20 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
 
 export function EditPage(props: EditPageProps): JSX.Element {
   const title = props.title ?? props.t('app_title');
+
+  const headingTitle = (
+    <>
+      {props.t('edit_postponement_heading')}
+      <br/>
+      {matchUpLine(props.session.homeTeam ?? '', props.session.guestTeam ?? '')}
+      {props.proposedDateTime ? (
+        <>
+          <br/>
+          {props.proposedDateTime}
+        </>
+      ) : null}
+    </>
+  );
 
   const content = (
     <>
@@ -144,5 +159,5 @@ export function EditPage(props: EditPageProps): JSX.Element {
     </>
   );
 
-  return pageLayout(props, content, title, props.globalError);
+  return pageLayout(props, content, title, props.globalError, headingTitle);
 }

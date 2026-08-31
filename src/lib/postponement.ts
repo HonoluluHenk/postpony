@@ -18,6 +18,14 @@ export interface VoteTally {
 }
 
 /**
+ * The shared "Home vs Guest" matchup line, used by the derived display name and
+ * the edit-page header so the separator never drifts between them.
+ */
+export function matchUpLine(homeTeam: string, guestTeam: string): string {
+  return `${homeTeam} vs ${guestTeam}`;
+}
+
+/**
  * Derives a Postponement's display name from its typed match details:
  * "Home vs Guest – <original date/time>" in the given locale's input tokens
  * (e.g. `Thun vs Ostermundigen – 29.08.2026 16:00`). Shared by the manual and
@@ -32,7 +40,7 @@ export function derivePostponementName(
   const dateTime = originalMatchDateTime
                    ? formatIsoToLocaleTokens(originalMatchDateTime, locale)
                    : '';
-  const base = `${homeTeam} vs ${guestTeam}`;
+  const base = matchUpLine(homeTeam, guestTeam);
   return dateTime ? `${base} – ${dateTime}` : base;
 }
 

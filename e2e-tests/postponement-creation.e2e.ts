@@ -27,7 +27,11 @@ test.describe('Postponement Creation', () => {
 
     // 4. The name is derived from the match details in the creator's locale.
     await expect(editPage.heading)
-      .toContainText('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
+      .toContainText('Editing Postponement');
+    await expect(editPage.heading)
+      .toContainText('Thun vs Ostermundigen');
+    await expect(editPage.heading)
+      .toContainText('08/29/2026 04:00 pm');
 
     // 5. Verify the owner password is displayed
     await expect(editPage.ownerPasswordAlert)

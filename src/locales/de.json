@@ -30,6 +30,7 @@
   "delete_proposed_date_confirm_message": "Vorgeschlagenen Termin <%= it.date %> löschen? Alle Stimmen dazu werden entfernt.",
   "delete_proposed_date_confirm_title": "Vorgeschlagenen Termin löschen?",
   "edit_existing": "Bestehende Verschiebung bearbeiten",
+  "edit_postponement_heading": "Bearbeite Verschiebung",
   "edit_postponement_title": "Bearbeite Verschiebung: <%= it.name %>",
   "error_title": "Fehler",
   "guest_team": "Gast",

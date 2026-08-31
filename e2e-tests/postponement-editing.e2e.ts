@@ -530,7 +530,11 @@ test.describe('Postponement Editing', () => {
     expect(page.url())
       .toContain(`/edit/${originalId}`);
     await expect(editPage.heading)
-      .toContainText('Home Team vs New Guest – 08/29/2026 04:00 pm');
+      .toContainText('Editing Postponement');
+    await expect(editPage.heading)
+      .toContainText('Home Team vs New Guest');
+    await expect(editPage.heading)
+      .toContainText('08/29/2026 04:00 pm');
     await expect(editPage.playerItem('Keep Me'))
       .toBeVisible();
 

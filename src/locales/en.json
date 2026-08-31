@@ -30,6 +30,7 @@
   "delete_proposed_date_confirm_message": "Delete the proposed date <%= it.date %>? All votes on it will be removed.",
   "delete_proposed_date_confirm_title": "Delete proposed date?",
   "edit_existing": "Edit an existing Postponement",
+  "edit_postponement_heading": "Editing Postponement",
   "edit_postponement_title": "Editing Postponement: <%= it.name %>",
   "error_title": "Error",
   "guest_team": "Guest Team",
