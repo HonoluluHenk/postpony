@@ -128,6 +128,5 @@
   "vote_yes": "Yes",
   "voted_column": "Voted",
   "voted_count": "<%= it.voted %>/<%= it.total %> voted",
-  "welcome": "Welcome to PostPony",
-  "your_team_votes": "Your Team's Votes"
+  "welcome": "Welcome to PostPony"
 }

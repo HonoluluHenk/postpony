@@ -1,11 +1,11 @@
 import type { App } from '../../app';
 import type { AppLocale } from '../../locales';
-import type { Player, Postponement, ProposedDate } from '../../lib/models';
+import type { Player, Postponement } from '../../lib/models';
 import { PostponementRules } from '../../lib/postponement';
 import { formatProposedDateDisplay } from '../../lib/temporal-utils';
 import { ConfirmedInfoPage } from './confirmed-info';
 import type { Team } from './join-utils';
-import { VotePage, type PlayerVoteRow, type VotePageDate } from './vote';
+import { VotePage, type VotePageDate } from './vote';
 
 export interface VoteViewOptions {
   session: Postponement;
@@ -35,24 +35,6 @@ export function renderConfirmedInfo(app: App, session: Postponement): Response {
   return app.c.html(html);
 }
 
-export function buildPlayerVoteRows(
-  session: Postponement,
-  team: Team,
-  dates: ProposedDate[],
-): PlayerVoteRow[] {
-  return session.players
-    .filter((p) => p.teamId === team)
-    .map((player) => ({
-      playerName: player.name,
-      votes: dates.map((pd) => {
-        const vote = session.votes.find(
-          (v) => v.proposedDateId === pd.id && v.participantId === player.id,
-        );
-        return vote?.type ?? null;
-      }),
-    }));
-}
-
 export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const {session, team, token, player, updated = false} = options;
   const locale = app.locale;
@@ -65,7 +47,6 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const tallies = rules.tally(session, team);
 
   const visibleDates = rules.votableDates(session);
-  const playerVoteRows = buildPlayerVoteRows(session, team, visibleDates);
 
   const proposedDates: VotePageDate[] = visibleDates.map((pd) => {
     const current = session.votes.find((vt) => vt.proposedDateId === pd.id && vt.participantId === player.id);
@@ -90,9 +71,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
       team={team}
       token={token}
       playerId={player.id}
-      playerName={player.name}
       proposedDates={proposedDates}
-      playerVoteRows={playerVoteRows}
       venues={session.venues}
       updated={updated}
     />,

@@ -1,11 +1,11 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../app';
-import type { Venue, Vote, VoteTallyItem } from '../../lib/models';
+import type { Venue, VoteTallyItem } from '../../lib/models';
 import type { VenueOccupancy } from '../../lib/venue-occupancy';
 import { pageLayout } from '../layouts/main';
 import { VenueBadge, venuePillLabel } from '../partials/venue-badge';
-import { VotePlayerResults } from '../partials/vote-player-results';
+import { VoteTally } from '../partials/vote-tally';
 import type { Team } from './join-utils';
 
 export interface VotePageDate extends VoteTallyItem {
@@ -16,20 +16,13 @@ export interface VotePageDate extends VoteTallyItem {
   venueOccupancy?: VenueOccupancy;
 }
 
-export interface PlayerVoteRow {
-  playerName: string;
-  votes: readonly (Vote['type'] | null)[];
-}
-
 export interface VotePageProps extends ViewContext {
   title?: string;
   sessionId: string;
   team: Team;
   token: string;
   playerId: string;
-  playerName: string;
   proposedDates: readonly VotePageDate[];
-  playerVoteRows: readonly PlayerVoteRow[];
   venues: readonly Venue[];
   updated?: boolean;
   globalError?: string;
@@ -115,14 +108,12 @@ export function VotePage(props: VotePageProps): JSX.Element {
             </div>
           </form>
 
-          <section aria-labelledby="vote-results-title">
-            <VotePlayerResults
+          <section aria-labelledby="vote-summary-title">
+            <VoteTally
               proposedDates={props.proposedDates}
-              playerVoteRows={props.playerVoteRows}
               t={props.t}
               headingLevel={3}
-              titleId="vote-results-title"
-              title={props.t('your_team_votes')}
+              titleId="vote-summary-title"
             />
           </section>
         </>

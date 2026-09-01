@@ -302,7 +302,7 @@ describe('join handlers', () => {
         .toContain('name="vote-');
       expect(body)
         .not
-        .toContain("Your Team's Votes");
+        .toContain('Vote Summary');
     });
 
     test('renders the confirmed-info view on the vote route when the session is Confirmed', async () => {
@@ -335,7 +335,7 @@ describe('join handlers', () => {
         .toContain('name="vote-');
       expect(body)
         .not
-        .toContain("Your Team's Votes");
+        .toContain('Vote Summary');
     });
 
     test('renders the confirmed-info view on the join route when the session is Confirmed', async () => {

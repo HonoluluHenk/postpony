@@ -4,11 +4,7 @@ import { aPlayer, aProposedDate, aSession, aVote } from '../../lib/__test-utils_
 import { LOCALE_KEY } from '../../locales';
 import { MemorySessionStore } from '../../lib/session-store';
 import { formatProposedDateDisplay } from '../../lib/temporal-utils';
-import {
-  buildPlayerVoteRows,
-  renderConfirmedInfo,
-  renderVoteStep,
-} from './vote-view';
+import { renderConfirmedInfo, renderVoteStep } from './vote-view';
 
 function createApp(locale = 'en-US'): App {
   const store = new MemorySessionStore();
@@ -107,98 +103,7 @@ describe('renderVoteStep date visibility', () => {
       .toContain('name="vote-');
     expect(body)
       .not
-      .toContain("Your Team's Votes");
-  });
-});
-
-describe('buildPlayerVoteRows', () => {
-  const dates = [
-    aProposedDate({id: 'date-1'}),
-    aProposedDate({id: 'date-2'}),
-  ];
-
-  test('home voter sees only home player names', () => {
-    const session = aSession({
-      players: [
-        aPlayer({id: 'home-1', name: 'Alice', teamId: 'home'}),
-        aPlayer({id: 'away-1', name: 'Bob', teamId: 'away'}),
-      ],
-    });
-
-    const rows = buildPlayerVoteRows(session, 'home', dates);
-
-    expect(rows.map((row) => row.playerName))
-      .toEqual(['Alice']);
-  });
-
-  test('away voter sees only away player names', () => {
-    const session = aSession({
-      players: [
-        aPlayer({id: 'home-1', name: 'Alice', teamId: 'home'}),
-        aPlayer({id: 'away-1', name: 'Bob', teamId: 'away'}),
-        aPlayer({id: 'away-2', name: 'Carol', teamId: 'away'}),
-      ],
-    });
-
-    const rows = buildPlayerVoteRows(session, 'away', dates);
-
-    expect(rows.map((row) => row.playerName))
-      .toEqual(['Bob', 'Carol']);
-  });
-
-  test('a player without a vote shows null for that date', () => {
-    const session = aSession({
-      players: [
-        aPlayer({id: 'home-1', name: 'Alice', teamId: 'home'}),
-      ],
-      votes: [
-        aVote({participantId: 'home-1', proposedDateId: 'date-1', type: 'Yes'}),
-      ],
-    });
-
-    const rows = buildPlayerVoteRows(session, 'home', dates);
-
-    expect(rows[0]?.votes)
-      .toEqual(['Yes', null]);
-  });
-
-  test('votes align with their date position', () => {
-    const session = aSession({
-      players: [
-        aPlayer({id: 'home-1', name: 'Alice', teamId: 'home'}),
-      ],
-      votes: [
-        aVote({participantId: 'home-1', proposedDateId: 'date-2', type: 'Maybe'}),
-      ],
-    });
-
-    const rows = buildPlayerVoteRows(session, 'home', dates);
-
-    expect(rows[0]?.votes)
-      .toEqual([null, 'Maybe']);
-  });
-
-  test('re-voting updates the cell in place', () => {
-    const session = aSession({
-      players: [
-        aPlayer({id: 'home-1', name: 'Alice', teamId: 'home'}),
-      ],
-      votes: [
-        aVote({participantId: 'home-1', proposedDateId: 'date-1', type: 'No'}),
-      ],
-    });
-
-    const rows = buildPlayerVoteRows(session, 'home', dates);
-
-    expect(rows[0]?.votes)
-      .toEqual(['No', null]);
-  });
-
-  test('returns an empty list when the team has no players', () => {
-    const session = aSession({players: []});
-
-    expect(buildPlayerVoteRows(session, 'home', dates))
-      .toEqual([]);
+      .toContain('Vote Summary');
   });
 });
 
@@ -232,11 +137,7 @@ describe('renderVoteStep', () => {
     expect(body)
       .toContain('value="Yes" checked=""');
     expect(body)
-      .toContain('Alice');
-    expect(body)
-      .toContain('<h3 id="vote-results-title">Your Team&#39;s Votes</h3>');
-    expect(body)
-      .toContain('<h4 id="vote-tally-title">Vote Summary</h4>');
+      .toContain('<h3 id="vote-summary-title">Vote Summary</h3>');
   });
 
   test('renders the votable dates chronologically and keeps the results table aligned', async () => {
@@ -274,8 +175,8 @@ describe('renderVoteStep', () => {
     expect(laterRadio)
       .toBeGreaterThan(earlierRadio);
 
-    expect(body.indexOf(`data-label="${earlier}">Yes</td>`))
-      .toBeLessThan(body.indexOf(`data-label="${later}">Maybe</td>`));
+    expect(body.indexOf(`>${earlier}</td>`))
+      .toBeLessThan(body.indexOf(`>${later}</td>`));
   });
 
   test('renders the confirmed-info view when the session is Confirmed', async () => {

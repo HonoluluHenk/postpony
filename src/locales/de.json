@@ -128,6 +128,5 @@
   "vote_yes": "Ja",
   "voted_column": "Abgestimmt",
   "voted_count": "<%= it.voted %>/<%= it.total %> abgestimmt",
-  "welcome": "Willkommen bei PostPony",
-  "your_team_votes": "Stimmen Ihrer Mannschaft"
+  "welcome": "Willkommen bei PostPony"
 }
