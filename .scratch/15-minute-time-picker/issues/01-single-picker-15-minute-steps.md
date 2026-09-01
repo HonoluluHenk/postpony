@@ -12,3 +12,10 @@
 - [x] Browser unit test asserts `minutesStep: 15` on the picker constructor via a recording `AirDatepicker` fake.
 - [x] E2E asserts the minute slider moves 15 minutes per step and the a11y scan still passes.
 - [x] Existing date/time parsing and edit-handler tests remain green.
+
+## Comments
+
+- Implementation: `c5e41cb`
+- Review: `5f08961`
+
+Single Proposed Date picker now passes `minutesStep: 15` (hour step left at vendor default 1); free text and server parsing unchanged. Browser unit tests assert the option/rebind/button-open behavior via a recording AirDatepicker fake; e2e asserts rendered minute/hour slider steps and stays-live-after-HTMX-swap.
