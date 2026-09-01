@@ -16,7 +16,7 @@ A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framewo
 * Keep coverage >= 80% for all metrics
 * Implement E2E tests for the happy path and some likely error-paths
 * Whe implementing issues: use subagents and commit after each issue
-* Ask questions using the `question`, `ask_user` or another equivalent tool.
+* Ask questions using the `question` tool.
 
 ## Quick reference
 
