@@ -61,6 +61,22 @@ function stripWeekdayPrefix(displayText: string): string {
   return displayText.replace(/^[A-Za-z]{2}, /, '');
 }
 
+// The from/to window is bounded below by max(today, anchor − 8w), so a fixed
+// ISO string rots the day the wall clock passes it (2026-09-01 did). Build the
+// fill values relative to today, anchored at local noon to dodge UTC day-roll.
+function isoDate(offsetDays: number): string {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() + offsetDays);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+const FROM = isoDate(1); // tomorrow
+const TO = isoDate(22); // ~3 weeks after FROM
+
 test.describe('Proposed Date Generator', () => {
   test('generates the matching datetimes, dedupes re-submissions, and keeps deletion in sync',
     async ({
@@ -216,9 +232,9 @@ test.describe('Proposed Date Generator', () => {
 
     // Fill from/to with a valid range inside the allowed window
     // Anchor is the scraped match (2027-01-14), cap is 2027-02-11 (4 weeks after)
-    // Use from=2026-09-01, to=2026-09-30
-    await editPage.fillFromDate('2026-09-01');
-    await editPage.fillToDate('2026-09-30');
+    // from=tomorrow, to=FROM+21d — both ≥ today, both ≤ cap until early 2027.
+    await editPage.fillFromDate(FROM);
+    await editPage.fillToDate(TO);
     await editPage.generateProposedDates([...TUPLES]);
 
     const successToast = page.getByRole('alert')
@@ -233,8 +249,8 @@ test.describe('Proposed Date Generator', () => {
 
     // All generated dates must fall within [from, to]
     const dateTexts = await editPage.proposedDateDisplays();
-    const fromDate = new Date('2026-09-01T00:00');
-    const toDate = new Date('2026-09-30T23:59');
+    const fromDate = new Date(`${FROM}T00:00`);
+    const toDate = new Date(`${TO}T23:59`);
     for (const dateText of dateTexts) {
       const date = new Date(stripWeekdayPrefix(dateText)
         .replace(' at ', ', '));
@@ -290,7 +306,7 @@ test.describe('Proposed Date Generator', () => {
 
     // Anchor is the scraped match (2027-01-14), cap is 2027-02-11 (4 weeks after)
     // Set to beyond the cap
-    await editPage.fillFromDate('2026-09-01');
+    await editPage.fillFromDate(FROM);
     await editPage.fillToDate('2027-03-01');
     await editPage.generateProposedDates([...TUPLES]);
 
