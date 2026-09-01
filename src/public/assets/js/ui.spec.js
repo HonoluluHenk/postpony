@@ -370,3 +370,85 @@ describe('vendor init no-ops', () => {
     expect(() => initHtmx(mockSpinner)).not.toThrow();
   });
 });
+
+describe('initProposedDateTimePicker with a recording AirDatepicker fake', () => {
+  const fakeInstances = [];
+
+  class FakeAirDatepicker {
+    constructor(input, options) {
+      this.input = input;
+      this.opts = options;
+      this.$datepicker = document.createElement('div');
+      this.shows = 0;
+      this.destroyed = false;
+      fakeInstances.push(this);
+    }
+
+    destroy() {
+      this.destroyed = true;
+    }
+
+    show() {
+      this.shows += 1;
+    }
+  }
+
+  function installPickerDom() {
+    const input = document.createElement('input');
+    input.id = 'proposedDateTime';
+    const button = document.createElement('button');
+    button.id = 'proposedDateTimePicker';
+    document.body.appendChild(input);
+    document.body.appendChild(button);
+    return {input, button};
+  }
+
+  let realAirDatepicker;
+  let realLocale;
+
+  beforeEach(() => {
+    realAirDatepicker = window.AirDatepicker;
+    realLocale = window.AirDatepickerLocale;
+    window.AirDatepicker = FakeAirDatepicker;
+    window.AirDatepickerLocale = {
+      'en-US': {dateFormat: 'MM/dd/yyyy', timeFormat: 'hh:mm aa', hours: 'Hours', minutes: 'Minutes'},
+    };
+    document.documentElement.lang = 'en-US';
+    fakeInstances.length = 0;
+  });
+
+  afterEach(() => {
+    window.AirDatepicker = realAirDatepicker;
+    window.AirDatepickerLocale = realLocale;
+    document.body.innerHTML = '';
+  });
+
+  it('steps minutes in 15-minute increments and does not override the 1-hour hour step', () => {
+    installPickerDom();
+    initProposedDateTimePicker();
+    expect(fakeInstances).toHaveLength(1);
+    expect(fakeInstances[0].opts.minutesStep).toBe(15);
+    expect(fakeInstances[0].opts.hoursStep).toBeUndefined();
+  });
+
+  it('binds the input and opens the picker only via the calendar button', () => {
+    const {button} = installPickerDom();
+    initProposedDateTimePicker();
+    expect(fakeInstances).toHaveLength(1);
+    expect(fakeInstances[0].input.id).toBe('proposedDateTime');
+    expect(fakeInstances[0].shows).toBe(0);
+    button.click();
+    expect(fakeInstances[0].shows).toBe(1);
+  });
+
+  it('destroys the previous instance and rebinds on re-init (HTMX swap)', () => {
+    installPickerDom();
+    initProposedDateTimePicker();
+    initProposedDateTimePicker();
+    expect(fakeInstances).toHaveLength(2);
+    expect(fakeInstances[0].destroyed).toBe(true);
+    document.getElementById('proposedDateTimePicker').click();
+    expect(fakeInstances[0].shows).toBe(0);
+    expect(fakeInstances[1].shows).toBe(1);
+  });
+});

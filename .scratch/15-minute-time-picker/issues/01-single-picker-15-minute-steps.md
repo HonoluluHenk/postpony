@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Minute slider of the Proposed Date picker steps in 15-minute increments (0/15/30/45); hour slider keeps 1-hour steps.
-- [ ] Free-text typing and server-side parsing are unchanged: any minute 00–59 still validates.
-- [ ] Picker still opens only via the calendar button (never on focus) and stays live after an HTMX partial swap.
-- [ ] Browser unit test asserts `minutesStep: 15` on the picker constructor via a recording `AirDatepicker` fake.
-- [ ] E2E asserts the minute slider moves 15 minutes per step and the a11y scan still passes.
-- [ ] Existing date/time parsing and edit-handler tests remain green.
+- [x] Minute slider of the Proposed Date picker steps in 15-minute increments (0/15/30/45); hour slider keeps 1-hour steps.
+- [x] Free-text typing and server-side parsing are unchanged: any minute 00–59 still validates.
+- [x] Picker still opens only via the calendar button (never on focus) and stays live after an HTMX partial swap.
+- [x] Browser unit test asserts `minutesStep: 15` on the picker constructor via a recording `AirDatepicker` fake.
+- [x] E2E asserts the minute slider moves 15 minutes per step and the a11y scan still passes.
+- [x] Existing date/time parsing and edit-handler tests remain green.

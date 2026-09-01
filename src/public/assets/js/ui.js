@@ -193,6 +193,10 @@ export function initProposedDateTimePicker() {
     timeFormat: locale.timeFormat,
     dateTimeSeparator: ' ',
     timepicker: true,
+    // Only quarter-hour proposals are offered; free-text typing of any minute
+    // stays untouched (the server grammar stays tolerant). hoursStep keeps the
+    // vendor default of 1.
+    minutesStep: 15,
     // ponytail: a never-fired event keeps the picker closed until the explicit
     // button calls show(); `''` would also work but the string event is clearer.
     showEvent: 'adp-never-fire',

@@ -23,6 +23,13 @@ test.describe('Proposed date picker', () => {
     await expect(picker)
       .toBeVisible();
 
+    // The picker only offers quarter-hour slots: the minute slider steps by 15
+    // while the hour slider keeps its 1-hour steps.
+    await expect(picker.locator('input[name="minutes"]'))
+      .toHaveAttribute('step', '15');
+    await expect(picker.locator('input[name="hours"]'))
+      .toHaveAttribute('step', '1');
+
     // The Material dynamic-color theme applies its tonal palette asynchronously;
     // wait for it to settle before the axe scan — a mid-transition tone can sit
     // just under the 4.5:1 contrast bar and flake the scan.
@@ -50,6 +57,24 @@ test.describe('Proposed date picker', () => {
     // The picker writes the locale's token format (en-US default in e2e).
     await expect(input)
       .toHaveValue(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2} (am|pm)$/);
+  });
+
+  test('stays live after an HTMX error re-render of the section', async ({page}) => {
+    await EditPage.createSession(page);
+
+    const editPage = new EditPage(page);
+
+    // An invalid datetime submission swaps the section back with a re-initted
+    // picker; the fresh calendar button must still open it.
+    await editPage.proposedDateTimeInput.fill('not-a-date');
+    await editPage.addProposedDateButton.click();
+    await expect(page.getByRole('alert')
+      .filter({hasText: 'Please provide a valid date and time'}))
+      .toBeVisible();
+
+    await editPage.pickerButton.click();
+    await expect(page.locator('.air-datepicker.-active-'))
+      .toBeVisible();
   });
 });
 
