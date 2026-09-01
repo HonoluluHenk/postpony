@@ -23,6 +23,8 @@ export interface LocaleConfig {
   dayFirst: boolean;
   /** Native name shown in the header language dropdown. */
   label: string;
+  /** Flag emoji shown in the header language dropdown, keyed by the language of that locale. */
+  flag: string;
 }
 
 export const localeConfigs: Record<AppLocale, LocaleConfig> = {
@@ -33,6 +35,7 @@ export const localeConfigs: Record<AppLocale, LocaleConfig> = {
     clock24: true,
     dayFirst: true,
     label: 'Deutsch',
+    flag: '🇩🇪',
   },
   'fr-CH': {
     intlTag: 'fr-CH',
@@ -41,6 +44,7 @@ export const localeConfigs: Record<AppLocale, LocaleConfig> = {
     clock24: true,
     dayFirst: true,
     label: 'Français',
+    flag: '🇫🇷',
   },
   'it-CH': {
     intlTag: 'it-CH',
@@ -49,6 +53,7 @@ export const localeConfigs: Record<AppLocale, LocaleConfig> = {
     clock24: true,
     dayFirst: true,
     label: 'Italiano',
+    flag: '🇮🇹',
   },
   'en-US': {
     intlTag: 'en-US',
@@ -57,6 +62,7 @@ export const localeConfigs: Record<AppLocale, LocaleConfig> = {
     clock24: false,
     dayFirst: false,
     label: 'English',
+    flag: '🇬🇧',
   },
 };
 
@@ -76,11 +82,12 @@ export function inputFormat(locale: AppLocale): string {
 export interface LanguageOption {
   code: AppLocale;
   label: string;
+  flag: string;
 }
 
 /**
  * The options for the header language dropdown.
  */
 export function languageOptions(): LanguageOption[] {
-  return AppLocales.map((code) => ({code, label: localeConfigs[code].label}));
+  return AppLocales.map((code) => ({code, label: localeConfigs[code].label, flag: localeConfigs[code].flag}));
 }

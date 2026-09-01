@@ -10,9 +10,17 @@ test.describe('Localization', () => {
     await expect(startPage.welcomeHeading)
       .toContainText('Welcome to PostPony');
 
-    // The dropdown lists all four locales.
+    // The dropdown lists all four locales, each with its language-country flag.
     await expect(page.locator('#language-select option'))
       .toHaveCount(4);
+    await expect(page.locator('#language-select option[value="de-CH"]'))
+      .toContainText('🇩🇪');
+    await expect(page.locator('#language-select option[value="fr-CH"]'))
+      .toContainText('🇫🇷');
+    await expect(page.locator('#language-select option[value="it-CH"]'))
+      .toContainText('🇮🇹');
+    await expect(page.locator('#language-select option[value="en-US"]'))
+      .toContainText('🇬🇧');
 
     // Switch to German
     await startPage.switchLanguage('de-CH');

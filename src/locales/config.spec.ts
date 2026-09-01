@@ -21,6 +21,8 @@ describe('locale config', () => {
       .toBe('boolean');
     expect(config.label)
       .toBeTruthy();
+    expect(config.flag)
+      .toBeTruthy();
   });
 
   it('gives the CH locales a day-first 24h format and en-US a month-first 12h format', () => {
@@ -54,6 +56,19 @@ describe('locale config', () => {
     for (const option of options) {
       expect(option.label)
         .toBe(localeConfigs[option.code].label);
+      expect(option.flag)
+        .toBe(localeConfigs[option.code].flag);
     }
+  });
+
+  it('maps each locale to the flag of its language country', () => {
+    expect(localeConfig('de-CH').flag)
+      .toBe('🇩🇪');
+    expect(localeConfig('fr-CH').flag)
+      .toBe('🇫🇷');
+    expect(localeConfig('it-CH').flag)
+      .toBe('🇮🇹');
+    expect(localeConfig('en-US').flag)
+      .toBe('🇬🇧');
   });
 });

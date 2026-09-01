@@ -53,7 +53,7 @@ export function Layout(props: LayoutProps): JSX.Element {
                         onchange="const p=new URLSearchParams(window.location.search);p.set('lang',this.value);window.location.search=p.toString()">
                   {props.languageOptions.map((option) => (
                     <option value={option.code} selected={props.locale === option.code}>
-                      {option.label}
+                      {option.flag} {option.label}
                     </option>
                   ))}
                 </select>
