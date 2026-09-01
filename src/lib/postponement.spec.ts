@@ -152,12 +152,12 @@ describe('postponement', () => {
 
   describe('proposeDate', () => {
     test('adds a proposed date with matching start and end, votable by default', () => {
-      const {session, proposedDate} = new FakePostponementRules().proposeDate(aSession(), '2025-09-01T20:00', 'owner');
+      const {session, proposedDate} = new FakePostponementRules().proposeDate(aSession(), '2025-09-01T20:00', 'organizer');
 
       expect(proposedDate.dateTimeRange.start)
         .toBe(proposedDate.dateTimeRange.end);
       expect(proposedDate.proposerId)
-        .toBe('owner');
+        .toBe('organizer');
       expect(proposedDate.votable)
         .toBe(true);
       expect(session.status)
@@ -167,7 +167,7 @@ describe('postponement', () => {
     });
 
     test('moves a Draft session to Voting on the first add', () => {
-      const {session} = new FakePostponementRules().proposeDate(aSession({status: 'Draft'}), '2025-09-01T20:00', 'owner');
+      const {session} = new FakePostponementRules().proposeDate(aSession({status: 'Draft'}), '2025-09-01T20:00', 'organizer');
 
       expect(session.status)
         .toBe('Voting');
@@ -179,7 +179,7 @@ describe('postponement', () => {
         proposedDates: [aProposedDate()],
       });
 
-      const {session, proposedDate} = new FakePostponementRules().proposeDate(before, '2025-09-02T20:00', 'owner');
+      const {session, proposedDate} = new FakePostponementRules().proposeDate(before, '2025-09-02T20:00', 'organizer');
 
       expect(session.status)
         .toBe('Voting');

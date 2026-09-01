@@ -23,5 +23,5 @@ export const handleConfirmDatePost = async (app: App): Promise<Response> => {
     const html = renderEditPartials(app, updated, hasClashes ? {confirmClashWarning: true} : {});
     return app.c.html(html);
   }
-  return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
+  return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);
 };

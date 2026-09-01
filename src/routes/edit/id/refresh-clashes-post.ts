@@ -22,5 +22,5 @@ export const handleRefreshClashesPost = async (app: App): Promise<Response> => {
       : {});
     return app.c.html(html);
   }
-  return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
+  return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);
 };

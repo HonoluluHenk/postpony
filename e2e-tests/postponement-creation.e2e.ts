@@ -46,10 +46,10 @@ test.describe('Postponement Creation', () => {
     await expect(editPage.matchSummary)
       .toContainText('08/29/2026 04:00 pm');
 
-    // 6. Verify the owner password is displayed.
-    await expect(editPage.ownerPasswordAlert)
+    // 6. Verify the organizer password is displayed.
+    await expect(editPage.organizerPasswordAlert)
       .toBeVisible();
-    const password = await editPage.ownerPassword;
+    const password = await editPage.organizerPassword;
     expect(password)
       .toBeTruthy();
     expect(password?.length)

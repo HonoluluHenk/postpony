@@ -14,12 +14,12 @@ import { FALLBACK_VENUE_COUNT } from './proposed-dates-section';
 
 const TUPLE_DISCRIMINATOR = 'tuple';
 
-function ownerQuery(app: App): string {
-  return app.c.req.query('ownerPassword') ?? '';
+function organizerQuery(app: App): string {
+  return app.c.req.query('organizerPassword') ?? '';
 }
 
 function redirectAfterEdit(app: App, session: Postponement): Response {
-  return app.c.redirect(`/edit/${session.id}?ownerPassword=${ownerQuery(app)}`);
+  return app.c.redirect(`/edit/${session.id}?organizerPassword=${organizerQuery(app)}`);
 }
 
 interface ParsedTuples {
@@ -390,7 +390,7 @@ async function handleTupleSubmit(
   let updated = session;
   const addedIds: string[] = [];
   for (const startIso of generated.added) {
-    const proposed = rules.proposeDate(updated, startIso, 'owner', venueNumber);
+    const proposed = rules.proposeDate(updated, startIso, 'organizer', venueNumber);
     updated = proposed.session;
     addedIds.push(proposed.proposedDate.id);
   }
@@ -428,7 +428,7 @@ async function handleSingleSubmit(
         globalError: errors.fields['venueNumber'] ?? errors.global,
       }), {status: 400});
     }
-    return app.c.redirect(`/edit/${id}?ownerPassword=${ownerQuery(app)}`);
+    return app.c.redirect(`/edit/${id}?organizerPassword=${organizerQuery(app)}`);
   }
 
   const proposedDateTime = validation.output.proposedDateTime;
@@ -437,7 +437,7 @@ async function handleSingleSubmit(
   // ponytail: the schema's `check` predicate already guarantees `parsed` is defined.
   // Use ?-chained parse so the lint ban on non-null assertions stays clean.
   const parsedOrFail = parsed ?? app.failure(app.t('proposed_date_time_invalid'));
-  const proposed = new PostponementRules().proposeDate(session, parsedOrFail.toString(), 'owner', venueNumber);
+  const proposed = new PostponementRules().proposeDate(session, parsedOrFail.toString(), 'organizer', venueNumber);
   const updated = await saveWithClashCheck(app, proposed.session, [proposed.proposedDate.id]);
 
   if (app.isPartial) {

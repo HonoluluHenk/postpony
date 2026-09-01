@@ -22,7 +22,7 @@ function occupancyTime(start: string, locale: AppLocale): string {
  * is a button whose `role="tooltip"` popup lists the conflicting Matches
  * (opponent + localized start time); shown on hover/focus/tap by
  * `initOccupancyTooltips` in ui.js, dismissed by pointer leave, focus loss, or
- * Escape. Shared by the owner edit page and the participant vote page so both
+ * Escape. Shared by the organizer edit page and the participant vote page so both
  * sides always decide on the same snapshot.
  */
 export function VenueOccupancyInfo(props: VenueOccupancyInfoProps): JSX.Element {

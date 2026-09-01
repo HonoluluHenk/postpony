@@ -3,7 +3,7 @@ import { comparePassword, generateId, generateRandomPassword, hashPassword } fro
 
 describe('crypto-utils (Web Crypto PBKDF2)', () => {
   it('hashes and verifies a password (round-trip)', async () => {
-    const password = 'owner-secret';
+    const password = 'organizer-secret';
     const hash = await hashPassword(password);
 
     expect(hash.startsWith('pbkdf2$')).toBe(true);

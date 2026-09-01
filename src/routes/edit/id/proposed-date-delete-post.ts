@@ -19,5 +19,5 @@ export const handleProposedDateDeletePost = async (app: App): Promise<Response> 
     const html = renderEditPartials(app, updated);
     return app.c.html(html);
   }
-  return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
+  return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);
 };

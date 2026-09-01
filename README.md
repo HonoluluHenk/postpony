@@ -103,7 +103,7 @@ npm run verify
 ## Guidelines & Standards
 
 - **Accessibility**: All UI changes must adhere to **WCAG 2.2 AA**. Automated checks are integrated into Playwright tests.
-- **Security**: The application uses a **Dual-Password System** (Owner Password & Invitation Password). No traditional user accounts are required for players.
+- **Security**: The application uses a **Dual-Password System** (Organizer Password & Invitation Password). No traditional user accounts are required for players.
 - **Multi-Tenancy**: Architecture supports multiple clubs using logical separation (`club_id`).
 - **Code Style**:
     - Use 2-space indentation (4 for Markdown).

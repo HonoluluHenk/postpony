@@ -25,9 +25,13 @@ The primary entity: one postponed match, from draft to a confirmed new date. Per
 
 The scheduled fixture being postponed. A Postponement postpones exactly one Match; its original start is stored as `originalMatchDateTime`, and its two sides as typed `homeTeam` and `guestTeam` fields. Scraped from click-tt.ch at creation and bound permanently: a Match is never editable afterwards — a Postponement cannot be re-pointed at a different fixture (ADR-0017 superseded by the scrape-only decision). click-tt calls it a "meeting", wording that survives only in the outbound click-tt URLs. _Avoid_: Meeting, fixture, game
 
+## Organizer
+
+The person who creates and manages a Postponement. Holds administrative control through the **organizer password** (edit access, ADR-0002): no account, no recovery in the initial version. Manages the organizer's own team (`organizerTeam`), proposes dates, flips the `votable` switch, confirms and reopens. The organizer may also join their team as a Participant via the invitation link. Identity is implicit — nothing on the Postponement names the organizer beyond `organizerTeam` and the password. _Avoid_: owner, admin
+
 ## Player
 
-A raw player from the roster, scraped from click-tt.ch or added by the owner: `{id, name, teamId}` with `teamId` `'home' | 'away'`. No login; identity is per-postponement, held client-side in `localStorage` (see ADR-0013). _Avoid_: member, user
+A raw player from the roster, scraped from click-tt.ch or added by the organizer: `{id, name, teamId}` with `teamId` `'home' | 'away'`. No login; identity is per-postponement, held client-side in `localStorage` (see ADR-0013). _Avoid_: member, user
 
 ## Participant
 
@@ -35,7 +39,7 @@ A Player taking part in a Postponement — joined via the invitation link and ab
 
 ## Proposed Date
 
-A candidate new date/time for the postponed Match, proposed by the owner. Carries a `dateTimeRange` and a `votable` flag — a pure access toggle deciding whether either team may vote on it, flipped by the organizer. New dates are votable by default; non-votable dates are hidden from both teams' polls and cannot be confirmed.
+A candidate new date/time for the postponed Match, proposed by the organizer. Carries a `dateTimeRange` and a `votable` flag — a pure access toggle deciding whether either team may vote on it, flipped by the organizer. New dates are votable by default; non-votable dates are hidden from both teams' polls and cannot be confirmed.
 
 ## Clash
 

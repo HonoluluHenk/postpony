@@ -22,7 +22,7 @@ The Game Re-scheduler is a software solution designed to streamline the process 
   [Use Cases: Rescheduling Initialization](use_cases.md#1-rescheduling-initialization-main-use-case)
   for the detailed process.
 * **Security**: (See [ADR 0002: Security Model - Dual-Password System](adr/0002-security-model-dual-password.md))
-    * **Owner Password**: A random password generated for the owner (initiator) of the Reschedule.
+    * **Organizer Password**: A random password generated for the organizer (initiator) of the Reschedule.
     * **Invitation Password**: A password for participants (players, opponent captains/players) to access the specific Reschedule instance via an invitation link. For the MVP, the invitation link itself is sufficient for access as it includes the invitation password as a token (see [ADR 0011](adr/0011-token-security-and-structure.md)).
 
 ### 2.2. Scheduling Engine
@@ -34,7 +34,7 @@ The system suggests possible dates and times based on the following restrictions
 * **Overlapping Matches**: By default, unlimited overlapping matches are allowed at a venue. Club Managers or Team Captains can optionally specify a maximum number of allowed overlaps for a venue or a specific rescheduling event.
 * **Opponent Schedule**: (Future Feature) Known constraints or games already scheduled for the opposing team. If the opponent team's data (e.g., venue availability, existing matches) is already present in the system, it will be automatically integrated.
 * **Holidays**: (Out of Scope) Public or school holidays that might affect participation.
-* **Team Management**: The owner can add and manage players for their own team.
+* **Team Management**: The organizer can add and manage players for their own team.
 * **Player Availability**: (Future Feature)
     * Home team players must provide their availability.
     * Captains can enter availability on behalf of players.
@@ -43,7 +43,7 @@ The system suggests possible dates and times based on the following restrictions
 
 ### 2.3. Voting & Decision Making
 
-* **Date & Time Proposal**: Based on the suggestions, the owner or participants can propose one or more specific dates and times.
+* **Date & Time Proposal**: Based on the suggestions, the organizer or participants can propose one or more specific dates and times.
 * **Voting**: Participants (players, opponent captains) can vote for their preferred date (s) and time (s) from the proposed options.
 * **Approval Workflow**:
     1. **Opponent Confirmation**: The invited (opponent) captain must confirm one or more of the proposed dates and times.
@@ -74,6 +74,6 @@ The system suggests possible dates and times based on the following restrictions
 * **Frontend**: Plain HTML with the **Eta** templating engine, **Beer.css** (Material Design 3) for components and layout, and a custom design system via CSS custom properties (`design-tokens.css`).
 * **Data Store**: **SQLite via `@libsql/client`** (local file for development, [Turso](https://turso.tech) for production). Sessions stored as JSON blobs in a `sessions` table. See [ADR-0014](adr/0014-sqlite-session-store.md).
 * **Localized UI**: Framework-level support for i18n.
-* **Security**: Password-protected access to specific rescheduling events. No permanent accounts for players. No password recovery mechanism for session owners in the initial version.
+* **Security**: Password-protected access to specific rescheduling events. No permanent accounts for players. No password recovery mechanism for session organizers in the initial version.
 
 ---

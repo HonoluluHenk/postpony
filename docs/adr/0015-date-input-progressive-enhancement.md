@@ -4,7 +4,7 @@
 Superseded by ADR-0016
 
 ## Context
-The edit page lets the owner add proposed dates via a single `<input type="datetime-local">`. That native control is excellent on mobile/touch (platform keyboard, scroll wheels, locale-aware) but poor on desktop: collapsed into two cramped text fields, no calendar, and inconsistent time entry across browsers.
+The edit page lets the organizer add proposed dates via a single `<input type="datetime-local">`. That native control is excellent on mobile/touch (platform keyboard, scroll wheels, locale-aware) but poor on desktop: collapsed into two cramped text fields, no calendar, and inconsistent time entry across browsers.
 
 We wanted one field that is the best picker for the device: keep the native control where it shines (touch), add a calendar + time picker on desktop.
 

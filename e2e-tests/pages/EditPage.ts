@@ -91,13 +91,13 @@ export class EditPage {
     return this.page.locator('.match-summary');
   }
 
-  get ownerPasswordAlert(): Locator {
+  get organizerPasswordAlert(): Locator {
     return this.page.getByRole('alert')
-      .filter({hasText: 'Your Owner Password is'});
+      .filter({hasText: 'Your Organizer Password is'});
   }
 
-  get ownerPassword(): Promise<string | null> {
-    return this.page.getByText('Your Owner Password is')
+  get organizerPassword(): Promise<string | null> {
+    return this.page.getByText('Your Organizer Password is')
       .locator('span')
       .textContent();
   }

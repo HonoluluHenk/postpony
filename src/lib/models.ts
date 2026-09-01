@@ -45,7 +45,7 @@ export interface Postponement {
   guestTeam?: string;
   homeTeamIdentity?: ClickTtTeamIdentity;
   guestTeamIdentity?: ClickTtTeamIdentity;
-  ownerPasswordHash: string;
+  organizerPasswordHash: string;
   invitationPasswordHash: string;
   invitationPassword: string;
   status: PostponementStatus;

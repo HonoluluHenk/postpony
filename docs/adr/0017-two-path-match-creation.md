@@ -24,7 +24,7 @@ Creation only collected a free-form name, so a freshly created Postponement had 
 ### Edit page: summary instead of scrape button
 
 - The scrape button is removed from the edit page. The freed cell shows a match summary (home vs guest, date/time) plus a "change match details" link.
-- **Change mode**: the link reopens the manual form or the wizard, carrying `sessionId` + `ownerPassword`; the final POST mutates that session in place — same id, passwords, votes, and proposed dates. Ownership is guarded by the existing `ownerPassword` check. Without a session context the same forms mint a new session.
+- **Change mode**: the link reopens the manual form or the wizard, carrying `sessionId` + `organizerPassword`; the final POST mutates that session in place — same id, passwords, votes, and proposed dates. Ownership is guarded by the existing `organizerPassword` check. Without a session context the same forms mint a new session.
 - A manual change leaves existing players untouched; a re-scrape replaces the rosters with the newly scraped ones.
 
 ## Considered Options

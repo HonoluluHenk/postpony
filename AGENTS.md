@@ -127,7 +127,7 @@ Unit and e2e conventions live in the `testing` skill: Page Objects and `createSe
 
 ## Security model
 
-Dual-password: owner password (edit access) + invitation password (join access, passed as `?token=`). No traditional login. See ADR-0002.
+Dual-password: organizer password (edit access) + invitation password (join access, passed as `?token=`). No traditional login. See ADR-0002.
 
 ## Skills tooling
 

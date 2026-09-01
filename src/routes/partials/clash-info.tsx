@@ -18,7 +18,7 @@ export interface ClashInfoProps {
  * Renders the stored schedule-check state of one Proposed Date: one line per
  * affected team for Clashes, "checked, no clashes" when the check ran clean,
  * "not checked" for hand-entered matches (no team identities), nothing when a
- * scrape failed. Shared by the owner edit page and the participant vote page
+ * scrape failed. Shared by the organizer edit page and the participant vote page
  * so both sides always decide on the same snapshot.
  */
 export function ClashInfo(props: ClashInfoProps): JSX.Element {

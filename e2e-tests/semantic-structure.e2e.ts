@@ -31,7 +31,7 @@ test.describe('Semantic structure', () => {
     await checkA11y();
   });
 
-  test('edit page (owner)', async ({page, checkA11y}) => {
+  test('edit page (organizer)', async ({page, checkA11y}) => {
     await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     await expectNoSkippedHeadings(page);

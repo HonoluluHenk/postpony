@@ -273,14 +273,14 @@ test.describe('Scraping Flow', () => {
       });
 
     // Submit the same match with leftover change-mode parameters
-    // (sessionId + ownerPassword). The wizard is mint-only: a brand-new
+    // (sessionId + organizerPassword). The wizard is mint-only: a brand-new
     // Postponement is created and the existing one is left untouched.
-    const ownerPassword = new URL(session.editUrl).searchParams.get('ownerPassword') ?? '';
+    const organizerPassword = new URL(session.editUrl).searchParams.get('organizerPassword') ?? '';
     const response = await page.request.post('/create/scrape/match', {
       form: {
         ...formValues,
         sessionId: session.id,
-        ownerPassword,
+        organizerPassword,
       },
       // Do not follow the mint redirect: the Location header carries the fresh
       // session id we assert on.

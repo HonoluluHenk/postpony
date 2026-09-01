@@ -12,7 +12,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     app.notFound(app.t('session_not_found'));
   }
 
-  const ownerPassword = app.c.req.query('ownerPassword') ?? null;
+  const organizerPassword = app.c.req.query('organizerPassword') ?? null;
   const locale = app.locale;
 
   const originalMatchDateTime = session.originalMatchDateTime
@@ -28,7 +28,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
       {...app.view}
       title={app.t('edit_postponement_title', {name: session.name})}
       session={session}
-      ownerPassword={ownerPassword ?? undefined}
+      organizerPassword={organizerPassword ?? undefined}
       proposedDateTime={originalMatchDateTime}
       homeTeam={session.homeTeam}
       guestTeam={session.guestTeam}

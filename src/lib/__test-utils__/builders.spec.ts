@@ -75,7 +75,7 @@ describe('builders', () => {
           name: 'Test Postponement',
           homeTeam: 'Home Team',
           guestTeam: 'Guest Team',
-          ownerPasswordHash: 'hashed-owner-pw',
+          organizerPasswordHash: 'hashed-organizer-pw',
           invitationPasswordHash: 'hashed-invitation-pw',
           invitationPassword: 'invitation-pw',
           status: 'Draft',

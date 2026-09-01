@@ -138,7 +138,7 @@ describe('scrape wizard GET handlers', () => {
         queries: {
           championship: 'MTTV 26/27',
           sessionId: 'sess-1',
-          ownerPassword: 'owner-secret',
+          organizerPassword: 'organizer-secret',
         },
       });
 
@@ -147,7 +147,7 @@ describe('scrape wizard GET handlers', () => {
 
       expect(html).toContain('No groups found for this league.');
       expect(html).not.toContain('<ul class="list border">');
-      expect(html).not.toContain('href="/edit/sess-1?ownerPassword=owner-secret"');
+      expect(html).not.toContain('href="/edit/sess-1?organizerPassword=organizer-secret"');
       expect(html).toContain('href="/create/scrape"');
     });
 
@@ -188,7 +188,7 @@ describe('scrape wizard GET handlers', () => {
           championship: 'MTTV 26/27',
           group: '219397',
           sessionId: 'sess-1',
-          ownerPassword: 'owner-secret',
+          organizerPassword: 'organizer-secret',
         },
       });
 
@@ -197,7 +197,7 @@ describe('scrape wizard GET handlers', () => {
 
       expect(html).toContain('No teams found for this group.');
       expect(html).not.toContain('<ul class="list border">');
-      expect(html).not.toContain('href="/edit/sess-1?ownerPassword=owner-secret"');
+      expect(html).not.toContain('href="/edit/sess-1?organizerPassword=organizer-secret"');
       expect(html).toContain('href="/create/scrape/groups');
     });
 
@@ -265,7 +265,7 @@ describe('scrape wizard GET handlers', () => {
           groupName: 'O40 1. Liga',
           teamName: 'Ostermundigen',
           sessionId: 'sess-1',
-          ownerPassword: 'owner-secret',
+          organizerPassword: 'organizer-secret',
         },
       });
 
@@ -273,8 +273,8 @@ describe('scrape wizard GET handlers', () => {
       const html = await response.text();
 
       expect(html).not.toContain('name="sessionId"');
-      expect(html).not.toContain('name="ownerPassword"');
-      expect(html).not.toContain('href="/edit/sess-1?ownerPassword=owner-secret"');
+      expect(html).not.toContain('name="organizerPassword"');
+      expect(html).not.toContain('href="/edit/sess-1?organizerPassword=organizer-secret"');
       // Mint back link is threaded as before.
       expect(html).toContain('href="/create/scrape/teams');
     });

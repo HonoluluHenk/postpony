@@ -217,15 +217,15 @@ describe('handleScrapeMatchPost', () => {
 });
 
 describe('handleScrapeMatchPost ignores leftover change parameters', () => {
-  const ownerPassword = 'owner-secret';
+  const organizerPassword = 'organizer-secret';
 
-  test('carrying sessionId/ownerPassword mints a fresh Postponement and never mutates the referenced one', async () => {
+  test('carrying sessionId/organizerPassword mints a fresh Postponement and never mutates the referenced one', async () => {
     const session = aSession({
-      ownerPasswordHash: await hashPassword(ownerPassword),
+      organizerPasswordHash: await hashPassword(organizerPassword),
       players: [aPlayer({id: 'old-p', name: 'Old Player'})],
       proposedDates: [aProposedDate()],
     });
-    const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: session.id, ownerPassword}});
+    const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: session.id, organizerPassword}});
     await app.store.save(session);
 
     const response = await handleScrapeMatchPost(app);
@@ -239,7 +239,7 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
       name: session.name,
       homeTeam: session.homeTeam,
       guestTeam: session.guestTeam,
-      ownerPasswordHash: session.ownerPasswordHash,
+      organizerPasswordHash: session.organizerPasswordHash,
       proposedDates: session.proposedDates,
       votes: session.votes,
     });
@@ -249,15 +249,15 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
     // A brand-new Postponement was minted with a new id.
     expect(minted?.id).toBeDefined();
     expect(minted?.id).not.toBe(session.id);
-    expect(minted?.ownerPasswordHash).not.toBe(session.ownerPasswordHash);
+    expect(minted?.organizerPasswordHash).not.toBe(session.organizerPasswordHash);
     expect(minted?.name).toBe('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
     expect(minted?.homeTeam).toBe('Thun');
     expect(minted?.guestTeam).toBe('Ostermundigen');
   });
 
-  test('a wrong owner password does not block the mint', async () => {
-    const session = aSession({ownerPasswordHash: await hashPassword('real-pw')});
-    const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: session.id, ownerPassword: 'wrong'}});
+  test('a wrong organizer password does not block the mint', async () => {
+    const session = aSession({organizerPasswordHash: await hashPassword('real-pw')});
+    const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: session.id, organizerPassword: 'wrong'}});
     await app.store.save(session);
 
     const minted = await storedSession(app);
@@ -268,7 +268,7 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
   });
 
   test('a missing session does not block the mint', async () => {
-    const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: 'missing', ownerPassword}});
+    const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: 'missing', organizerPassword}});
 
     const minted = await storedSession(app);
 

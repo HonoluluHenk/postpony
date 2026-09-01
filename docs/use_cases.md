@@ -16,11 +16,11 @@ This use case describes how a Team Captain starts the process of rescheduling a 
     * The system asks for a **ReSchedule name**.
     * Once entered, the system:
         * Creates the `Reschedule` entity.
-        * Generates a random **Owner Password** (see [ADR 0002](adr/0002-security-model-dual-password.md)).
+        * Generates a random **Organizer Password** (see [ADR 0002](adr/0002-security-model-dual-password.md)).
         * Presents the password to the user.
         * Proceeds to the **Editing Step**.
 4. **Edit Existing ReSchedule**:
-    * The system asks for the **ReSchedule Admin (Owner) Password**.
+    * The system asks for the **ReSchedule Admin (Organizer) Password**.
     * The user enters the password.
     * If the password is correct, the system proceeds to the **Editing Step**.
     * If incorrect, the system displays an error and allows the user to retry.

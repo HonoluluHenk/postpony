@@ -90,7 +90,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     selectedTeamId === 'home' ? teamIdentity(m.opponentTeamtable) : teamIdentity(m.teamtable);
 
   const id = generateId();
-  const redirectOwnerPassword = generateRandomPassword();
+  const redirectOrganizerPassword = generateRandomPassword();
   const invitationPassword = generateRandomPassword();
   const session: Postponement = {
     id,
@@ -98,7 +98,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     name,
     homeTeam: m.homeTeam,
     guestTeam: m.guestTeam,
-    ownerPasswordHash: await hashPassword(redirectOwnerPassword),
+    organizerPasswordHash: await hashPassword(redirectOrganizerPassword),
     invitationPasswordHash: await hashPassword(invitationPassword),
     invitationPassword,
     status: 'Draft',
@@ -116,7 +116,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
 
   await app.store.save(session);
 
-  const redirectUrl = `/edit/${id}?ownerPassword=${redirectOwnerPassword}`;
+  const redirectUrl = `/edit/${id}?organizerPassword=${redirectOrganizerPassword}`;
   if (app.isPartial) {
     app.c.header('HX-Redirect', redirectUrl);
     return app.c.text('', 200);

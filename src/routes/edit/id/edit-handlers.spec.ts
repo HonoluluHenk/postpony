@@ -147,7 +147,7 @@ describe('edit handlers', () => {
       expect(proposedDate?.sessionId)
         .toBe(session.id);
       expect(proposedDate?.proposerId)
-        .toBe('owner');
+        .toBe('organizer');
       expect(proposedDate?.dateTimeRange.start)
         .toBe(proposedDate?.dateTimeRange.end);
       expect(proposedDate?.dateTimeRange.start.toString())
@@ -1651,7 +1651,7 @@ describe('edit handlers', () => {
       expect(response.status)
         .toBe(302);
       expect(response.headers.get('location'))
-        .toBe(`/edit/${session.id}?ownerPassword=`);
+        .toBe(`/edit/${session.id}?organizerPassword=`);
     });
   });
 
@@ -1726,7 +1726,7 @@ describe('edit handlers', () => {
       expect(response.status)
         .toBe(302);
       expect(response.headers.get('location'))
-        .toBe(`/edit/${session.id}?ownerPassword=`);
+        .toBe(`/edit/${session.id}?organizerPassword=`);
     });
   });
 
@@ -1874,7 +1874,7 @@ describe('edit handlers', () => {
       expect(response.status)
         .toBe(302);
       expect(response.headers.get('location'))
-        .toBe(`/edit/${session.id}?ownerPassword=`);
+        .toBe(`/edit/${session.id}?organizerPassword=`);
     });
   });
 
@@ -1957,7 +1957,7 @@ describe('edit handlers', () => {
         .toEqual({home: [{opponent: 'Old Opp', start: '2025-09-01T08:00'}], away: []});
       expect(saveSpy)
         .toHaveBeenCalledTimes(1);
-      // The stale snapshot still renders, and the owner sees the failure notice.
+      // The stale snapshot still renders, and the organizer sees the failure notice.
       expect(html)
         .toContain('Home: 8:00 AM vs Old Opp');
       expect(html)

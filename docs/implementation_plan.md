@@ -39,7 +39,7 @@ An earlier plan modelled Firestore sub-collections for `ProposedDate` and `Vote`
 * **Data Protection**: Ensure GDPR/CCPA compliance, especially since player availability can be sensitive.
 * **Authentication**: Defining the "Password-only" access flow vs. traditional "Email/Login" accounts.
     * Club Manager: Secure login (password).
-    * Reschedule Sessions: Dual-password model (Owner vs. Invitation). Invitation access is tokenized via the link using the `invitationPassword` as the token.
+    * Reschedule Sessions: Dual-password model (Organizer vs. Invitation). Invitation access is tokenized via the link using the `invitationPassword` as the token.
     * Onboarding: Token-based onboarding for Team Captains (single-use, time-bound). (See [ADR 0002](adr/0002-security-model-dual-password.md) and [ADR 0011](adr/0011-token-security-and-structure.md))
 
 ## 6. Design & UX

@@ -11,7 +11,7 @@ The click-tt.ch scrape wizard is the **only** way to create a Postponement. Each
 
 - The manual creation form and its route handlers are removed; `/create` no longer renders a hand-entry form.
 - The scrape wizard is the single creation entry point and the only place a `Postponement` is minted; its final POST always creates a new Postponement (never an in-place update).
-- All "change mode" plumbing is removed: `sessionId` + `ownerPassword` threading through create/scrape views, the owner-guard for mutating an existing session, and the "change match details" / "change via scrape" affordances.
+- All "change mode" plumbing is removed: `sessionId` + `organizerPassword` threading through create/scrape views, the organizer-guard for mutating an existing session, and the "change match details" / "change via scrape" affordances.
 - The edit page keeps a read-only Match summary so the Postponement's identity stays visible, but offers no way to change it.
 - The `metadata` provenance field and the legacy `metadata.match.*` session migration are removed; `homeTeamIdentity`/`guestTeamIdentity` are retained for clash and venue-occupancy checks.
 

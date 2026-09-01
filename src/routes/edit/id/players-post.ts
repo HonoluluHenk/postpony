@@ -32,7 +32,7 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
       }), {status: 400});
     }
 
-    return app.c.redirect(`/edit/${id}?ownerPassword=${app.c.req.query('ownerPassword') ?? ''}`);
+    return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);
   }
 
   const {playerName, teamId} = validation.output;
