@@ -56,8 +56,8 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.proposedDateDisplays())
       .resolves
       .toEqual([
-        expect.stringContaining('Mar 5'),
-        expect.stringContaining('Mar 12'),
+        expect.stringContaining('03/05'),
+        expect.stringContaining('03/12'),
       ]);
 
     const joinPage = await new JoinPage(page)
