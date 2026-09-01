@@ -82,6 +82,7 @@
   "proposed_dates_generate_to_invalid": "Date must be after 'From' and at most 4 weeks after the original match",
   "proposed_dates_generate_to_invalid_no_anchor": "Date must be after 'From' and at most 4 weeks from today",
   "proposed_dates_generate_time_label": "Time",
+  "proposed_dates_generate_time_picker_label": "Open time picker",
   "proposed_dates_management": "Proposed Dates",
   "reopen": "Reopen",
   "reopened_count": "Reopened <%= it.count %> time(s)",

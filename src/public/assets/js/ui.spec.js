@@ -8,6 +8,7 @@ import {
   initClipboard,
   initDeleteDialogs,
   initFocusManagement,
+  initGeneratorTimePickers,
   initOccupancyTooltips,
 } from './ui.js';
 
@@ -361,6 +362,10 @@ describe('vendor init no-ops', () => {
     expect(() => initProposedDateTimePicker()).not.toThrow();
   });
 
+  it('initGeneratorTimePickers is a no-op when AirDatepicker is absent', () => {
+    expect(() => initGeneratorTimePickers()).not.toThrow();
+  });
+
   it('initHtmx is a no-op when htmx is absent', () => {
     const mockSpinner = {
       show() {
@@ -450,5 +455,129 @@ describe('initProposedDateTimePicker with a recording AirDatepicker fake', () =>
     document.getElementById('proposedDateTimePicker').click();
     expect(fakeInstances[0].shows).toBe(0);
     expect(fakeInstances[1].shows).toBe(1);
+  });
+});
+
+describe('initGeneratorTimePickers with a recording AirDatepicker fake', () => {
+  const fakeInstances = [];
+
+  class FakeAirDatepicker {
+    constructor(input, options) {
+      this.input = input;
+      this.opts = options;
+      this.$datepicker = document.createElement('div');
+      this.shows = 0;
+      this.destroyed = false;
+      fakeInstances.push(this);
+    }
+
+    destroy() {
+      this.destroyed = true;
+    }
+
+    show() {
+      this.shows += 1;
+    }
+  }
+
+  function installGeneratorDom() {
+    const buttons = [];
+    const inputs = [];
+    for (let i = 0; i < 7; i += 1) {
+      const input = document.createElement('input');
+      input.id = `time-${i}`;
+      input.setAttribute('name', 'time[]');
+      const button = document.createElement('button');
+      button.id = `time-${i}-picker`;
+      document.body.appendChild(input);
+      document.body.appendChild(button);
+      inputs.push(input);
+      buttons.push(button);
+    }
+    return {inputs, buttons};
+  }
+
+  function installSinglePickerDom() {
+    const input = document.createElement('input');
+    input.id = 'proposedDateTime';
+    const button = document.createElement('button');
+    button.id = 'proposedDateTimePicker';
+    document.body.appendChild(input);
+    document.body.appendChild(button);
+    return {input, button};
+  }
+
+  let realAirDatepicker;
+  let realLocale;
+
+  beforeEach(() => {
+    realAirDatepicker = window.AirDatepicker;
+    realLocale = window.AirDatepickerLocale;
+    window.AirDatepicker = FakeAirDatepicker;
+    window.AirDatepickerLocale = {
+      'en-US': {dateFormat: 'MM/dd/yyyy', timeFormat: 'hh:mm aa', hours: 'Hours', minutes: 'Minutes'},
+    };
+    document.documentElement.lang = 'en-US';
+    fakeInstances.length = 0;
+  });
+
+  afterEach(() => {
+    window.AirDatepicker = realAirDatepicker;
+    window.AirDatepickerLocale = realLocale;
+    document.body.innerHTML = '';
+  });
+
+  it('mounts one time-only picker per row with 15-minute steps and never-on-focus', () => {
+    installGeneratorDom();
+    initGeneratorTimePickers();
+    expect(fakeInstances).toHaveLength(7);
+    for (const instance of fakeInstances) {
+      // onlyTimepicker alone does not build the time sliders; the vendor gates
+      // _addTimepicker() on `timepicker`, so both must be set.
+      expect(instance.opts.timepicker).toBe(true);
+      expect(instance.opts.onlyTimepicker).toBe(true);
+      expect(instance.opts.minutesStep).toBe(15);
+      expect(instance.opts.hoursStep).toBeUndefined();
+      // the picker is wired to a never-fired show event, so it never opens on
+      // input focus — only via the explicit row button.
+      expect(instance.opts.showEvent).toBe('adp-never-fire');
+    }
+  });
+
+  it('each row button opens exactly its own picker', () => {
+    const {buttons} = installGeneratorDom();
+    initGeneratorTimePickers();
+    buttons.forEach((button, i) => {
+      expect(fakeInstances[i].shows).toBe(0);
+      button.click();
+      expect(fakeInstances[i].shows).toBe(1);
+    });
+  });
+
+  it('destroys stale instances on an HTMX swap and rebinds every re-rendered input once', () => {
+    installSinglePickerDom();
+    installGeneratorDom();
+    initProposedDateTimePicker();
+    initGeneratorTimePickers();
+    expect(fakeInstances).toHaveLength(8);
+
+    // Simulate a partial swap: the whole section is replaced by fresh DOM.
+    document.body.innerHTML = '';
+    const freshSingle = installSinglePickerDom();
+    installGeneratorDom();
+    initProposedDateTimePicker();
+    initGeneratorTimePickers();
+
+    expect(fakeInstances).toHaveLength(16);
+    // every pre-swap instance is destroyed, no stale instance survives
+    expect(fakeInstances.slice(0, 8).every((instance) => instance.destroyed)).toBe(true);
+    // every fresh input has exactly one live picker (none bound twice)
+    expect(fakeInstances.slice(8).length).toBe(8);
+    expect(fakeInstances.slice(8).every((instance) => !instance.destroyed)).toBe(true);
+
+    // the rebound buttons open the fresh instances, not the destroyed ones
+    freshSingle.button.click();
+    expect(fakeInstances[8].shows).toBe(1);
+    expect(fakeInstances[0].shows).toBe(0);
   });
 });

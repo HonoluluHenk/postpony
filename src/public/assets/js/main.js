@@ -7,6 +7,7 @@ import {
   initDeleteDialogs,
   initFocusManagement,
   initOccupancyTooltips,
+  initGeneratorTimePickers,
   initProposedDateTimePicker
 } from './ui.js';
 
@@ -22,4 +23,5 @@ window.addEventListener('load', () => {
   initFocusManagement();
   initOccupancyTooltips();
   initProposedDateTimePicker();
+  initGeneratorTimePickers();
 });

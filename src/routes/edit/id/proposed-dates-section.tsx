@@ -162,6 +162,18 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
                   <span id={`time-${index}-error`} class="error" role="alert">{t('proposed_date_time_invalid')}</span>
                 ) : null}
               </div>
+              {/* ponytail: the row picker is a pure enhancement — the button
+                  opens a time-only air-datepicker, never on input focus, so
+                  free typing of a custom time stays untouched. */}
+              <button
+                type="button"
+                id={`time-${index}-picker`}
+                class="button"
+                aria-label={t('proposed_dates_generate_time_picker_label')}
+                title={t('proposed_dates_generate_time_picker_label')}
+              >
+                <i aria-hidden="true">schedule</i>
+              </button>
             </li>
           );
         })}

@@ -93,12 +93,14 @@ test.describe('Proposed Date Generator', () => {
       // the new section surface first.
       await checkA11y();
 
-      // The fixed Monday–Sunday grid ships as seven time inputs with no row
-      // add/remove controls — only the Generate submit button.
+      // The fixed Monday–Sunday grid ships as seven time inputs (each with a
+      // time-only picker trigger) and exactly one submit button.
       await expect(editPage.generateForm.locator('input[name="time[]"]'))
         .toHaveCount(7);
+      await expect(editPage.generateTimePickerButtons)
+        .toHaveCount(7);
       await expect(editPage.generateForm.getByRole('button'))
-        .toHaveCount(1);
+        .toHaveCount(8);
 
       await editPage.generateProposedDates([...TUPLES]);
 
@@ -352,6 +354,63 @@ test.describe('Proposed Date Generator', () => {
       .replace(' at ', ', '))));
     expect([...new Set(weekdays)].sort((a: number, b: number): number => a - b))
       .toEqual([3, 6]);
+  });
+
+  test('row time pickers open via their buttons, step 15 minutes, and write the locale token', async ({page, checkA11y}) => {
+    const {editPage} = await EditPage.createSession(page);
+
+    // Focusing a row input never opens a picker — free typing stays available.
+    await editPage.generateTimeInput(0)
+      .focus();
+    await expect(page.locator('.air-datepicker'))
+      .toHaveCount(0);
+
+    // Only the row's own button opens its picker.
+    await editPage.generateTimePickerButton(0)
+      .click();
+    const picker = page.locator('.air-datepicker.-active-');
+    await expect(picker)
+      .toHaveCount(1);
+    await expect(picker)
+      .toBeVisible();
+
+    // The picker is time-only: the calendar view is hidden, the minute slider
+    // steps in 15-minute increments, the hour slider keeps whole hours.
+    await expect(picker.locator('.air-datepicker--content'))
+      .toBeHidden();
+    await expect(picker.locator('input[name="minutes"]'))
+      .toHaveAttribute('step', '15');
+    await expect(picker.locator('input[name="hours"]'))
+      .toHaveAttribute('step', '1');
+
+    // Dragging the sliders to a quarter-hour slot writes the en-US 'hh:mm aa'
+    // token into the row input (the server grammar accepts it verbatim).
+    await picker.locator('input[name="hours"]')
+      .fill('10');
+    await picker.locator('input[name="minutes"]')
+      .fill('30');
+    await expect(editPage.generateTimeInput(0))
+      .toHaveValue(/^\d{1,2}:\d{2} (am|pm)$/);
+
+    // The open picker's time sliders carry the patched localized aria-labels.
+    await checkA11y();
+  });
+
+  test('row inputs stay plain text: typed off-grid times are untouched by the picker', async ({page}) => {
+    const {editPage} = await EditPage.createSession(page);
+
+    // Simulate an echoed/validation-error value that is off-grid (19:37 is not
+    // a quarter-hour step). Opening and interacting with the picker must never
+    // rewrite it — the row keeps whatever the user typed.
+    const rowInput = editPage.generateTimeInput(0);
+    await rowInput.fill('19:37');
+    await editPage.generateTimePickerButton(0)
+      .click();
+    const picker = page.locator('.air-datepicker.-active-');
+    await expect(picker)
+      .toBeVisible();
+    await expect(rowInput)
+      .toHaveValue('19:37');
   });
 
   test('proposes dates with a chosen venue and shows the venue badge in the list', async ({page, checkA11y}) => {

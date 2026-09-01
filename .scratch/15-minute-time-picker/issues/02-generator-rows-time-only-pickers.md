@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] Each of the seven weekday rows shows a picker trigger button with a localized accessible name (`en` and `de`; `fr`/`it` reuse English).
-- [ ] Clicking a row's button opens a time-only picker (no date view) whose minute slider steps in 15-minute increments and hour slider in 1-hour steps.
-- [ ] Picking a time writes the locale time token (`HH:mm` or `hh:mm aa`) into that row's input, matching its placeholder.
-- [ ] Row inputs stay plain text: the picker never opens on focus, and typed off-grid values are never rewritten.
-- [ ] Multiple pickers coexist on the page; after an HTMX partial swap no stale instance survives and every re-rendered input gets a live picker.
-- [ ] Buttons and picker time sliders are labelled and keyboard-operable; the a11y scan on the generator section passes.
-- [ ] Browser unit test records `onlyTimepicker: true`, `minutesStep: 15`, and never-on-focus behaviour for the row pickers via a recording `AirDatepicker` fake, and verifies each button opens its picker.
-- [ ] E2E covers the generator rows pickers (button, stepping, written value) and confirms the main picker is not regressed.
+- [x] Each of the seven weekday rows shows a picker trigger button with a localized accessible name (`en` and `de`; `fr`/`it` reuse English).
+- [x] Clicking a row's button opens a time-only picker (no date view) whose minute slider steps in 15-minute increments and hour slider in 1-hour steps.
+- [x] Picking a time writes the locale time token (`HH:mm` or `hh:mm aa`) into that row's input, matching its placeholder.
+- [x] Row inputs stay plain text: the picker never opens on focus, and typed off-grid values are never rewritten.
+- [x] Multiple pickers coexist on the page; after an HTMX partial swap no stale instance survives and every re-rendered input gets a live picker.
+- [x] Buttons and picker time sliders are labelled and keyboard-operable; the a11y scan on the generator section passes.
+- [x] Browser unit test records `onlyTimepicker: true`, `minutesStep: 15`, and never-on-focus behaviour for the row pickers via a recording `AirDatepicker` fake, and verifies each button opens its picker.
+- [x] E2E covers the generator rows pickers (button, stepping, written value) and confirms the main picker is not regressed.

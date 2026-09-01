@@ -164,74 +164,160 @@ export function initClipboard() {
   });
 }
 
-// ponytail: single proposed-date picker per page; destroyed and recreated on
-// every HTMX swap so the fresh input always gets a live instance.
-let activeDatePicker = null;
+// Generalised air-datepicker lifecycle: a page hosts up to eight pickers — the
+// single Proposed Date picker plus one time-only picker per generator weekday
+// row. Instances are keyed by their input element; every HTMX swap both prunes
+// pickers whose input left the DOM and re-mounts re-rendered inputs, so no
+// stale instance survives and a live input is never bound by two pickers.
+const pickerInstances = new Map();
 
 /**
- * Progressively enhances the proposed-date input with air-datepicker on every
- * device. The picker is opened only via the explicit calendar button, never on
- * focus (the input is a plain text field the server parses tolerantly). The
- * picker writes the locale's token format, which matches the input placeholder
- * and the server grammar, e.g. `02.08.2026 20:00` or `08/02/2026 08:00 pm`.
+ * Resolves the active air-datepicker locale from the document language.
+ * Returns null when the vendored bundle is absent so callers can no-op.
+ * @returns {object|null}
  */
-export function initProposedDateTimePicker() {
-  const input = document.getElementById('proposedDateTime');
-  if (!input || typeof AirDatepicker === 'undefined') return;
-
+function resolvePickerLocale() {
+  if (typeof AirDatepicker === 'undefined') return null;
   const locales = window.AirDatepickerLocale || {};
-  const locale = locales[document.documentElement.lang] || locales['de-CH'];
-  if (!locale) return;
+  return locales[document.documentElement.lang] || locales['de-CH'] || null;
+}
 
-  if (activeDatePicker) {
-    activeDatePicker.destroy();
+/**
+ * Destroys instances whose input left the DOM (no stale instance survives an
+ * HTMX partial swap; detached inputs are never re-queued).
+ */
+function pruneDetachedPickers() {
+  for (const [input, agent] of pickerInstances) {
+    if (!input.isConnected) {
+      agent.destroy();
+      pickerInstances.delete(input);
+    }
   }
+}
 
-  const options = {
-    locale: locale,
-    dateFormat: locale.dateFormat,
-    timeFormat: locale.timeFormat,
-    dateTimeSeparator: ' ',
-    timepicker: true,
-    // Only quarter-hour proposals are offered; free-text typing of any minute
-    // stays untouched (the server grammar stays tolerant). hoursStep keeps the
-    // vendor default of 1.
-    minutesStep: 15,
-    // ponytail: a never-fired event keeps the picker closed until the explicit
-    // button calls show(); `''` would also work but the string event is clearer.
-    showEvent: 'adp-never-fire',
-    position: 'top center',
-    onShow: patchTimeSliderLabels,
+/**
+ * Mounts one air-datepicker on `input`, wired to open only via the explicit
+ * `button` (never on focus) and to keep the field a plain text input. A
+ * re-mount of the same input destroys the previous instance first, so repeated
+ * init calls leave exactly one live picker per input.
+ * @param {HTMLInputElement} input
+ * @param {HTMLButtonElement|null} button
+ * @param {object} options
+ */
+function mountPicker(input, button, options) {
+  pickerInstances.get(input)?.destroy();
+  pickerInstances.delete(input);
+
+  let picker = null;
+  const agent = {
+    show() {
+      picker?.show();
+    },
+    destroy() {
+      picker?.destroy();
+      picker = null;
+    },
   };
 
+  const build = (selectedDates) => new AirDatepicker(input, {
+    ...options,
+    onShow: () => patchTimeSliderLabels(picker),
+    selectedDates,
+  });
   try {
-    activeDatePicker = new AirDatepicker(input, {
-      ...options,
-      selectedDates: input.value ? [input.value] : [],
-    });
+    picker = build(input.value ? [input.value] : []);
   } catch {
     // ponytail: an unparseable echoed value (validation error) must not kill
     // the picker; retry without a selection so it still opens for picking.
-    activeDatePicker = new AirDatepicker(input, {...options, selectedDates: []});
+    picker = build([]);
   }
 
-  const button = document.getElementById('proposedDateTimePicker');
   if (button) {
     button.onclick = (e) => {
       e.preventDefault();
-      activeDatePicker?.show();
+      agent.show();
     };
   }
+  pickerInstances.set(input, agent);
+}
+
+/**
+ * Progressively enhances the proposed-date input with air-datepicker. The
+ * picker is opened only via the explicit calendar button, never on focus, and
+ * writes the locale's token format, which matches the input placeholder and
+ * the server grammar, e.g. `02.08.2026 20:00` or `08/02/2026 08:00 pm`.
+ */
+export function initProposedDateTimePicker() {
+  const locale = resolvePickerLocale();
+  const input = document.getElementById('proposedDateTime');
+  if (!input || !locale) return;
+  pruneDetachedPickers();
+
+  mountPicker(
+    input,
+    document.getElementById('proposedDateTimePicker'),
+    {
+      locale,
+      dateFormat: locale.dateFormat,
+      timeFormat: locale.timeFormat,
+      dateTimeSeparator: ' ',
+      timepicker: true,
+      // Only quarter-hour proposals are offered; free-text typing of any minute
+      // stays untouched (the server grammar stays tolerant). hoursStep keeps the
+      // vendor default of 1.
+      minutesStep: 15,
+      // ponytail: a never-fired event keeps the picker closed until the explicit
+      // button calls show(); `''` would also work but the string event is clearer.
+      showEvent: 'adp-never-fire',
+      position: 'top center',
+    },
+  );
+}
+
+/**
+ * Progressively enhances every weekday row of the Proposed Dates Generator
+ * with a time-only air-datepicker (`onlyTimepicker` → no date view). The picker
+ * opens only via each row's button, steps minutes in 15-minute increments, and
+ * writes the locale's time token (`HH:mm` / `hh:mm aa`) into the row input —
+ * which matches the row's placeholder, leaving typed off-grid values untouched.
+ */
+export function initGeneratorTimePickers() {
+  const locale = resolvePickerLocale();
+  if (!locale) return;
+  pruneDetachedPickers();
+
+  // The generator's fixed Monday–Sunday grid; one time-only picker per row.
+  document.querySelectorAll('input[name="time[]"]')
+    .forEach((input) => {
+      mountPicker(
+        input,
+        document.getElementById(`${input.id}-picker`),
+        {
+          locale,
+          // onlyTimepicker hides the date view but does NOT build the time
+          // sliders by itself — the vendor gates _addTimepicker() on `timepicker`.
+          timepicker: true,
+          onlyTimepicker: true,
+          timeFormat: locale.timeFormat,
+          // Quarter-hour increments on the minute slider; hoursStep keeps the
+          // vendor default of 1.
+          minutesStep: 15,
+          showEvent: 'adp-never-fire',
+          position: 'top center',
+        },
+      );
+    });
 }
 
 // ponytail: air-datepicker ships no ARIA labels on its time sliders; patch
 // them with localized names so axe (and screen readers) see labelled fields.
-// The picker builds its DOM lazily on first show, hence this runs per open.
-function patchTimeSliderLabels() {
-  if (!activeDatePicker) return;
-  const locale = activeDatePicker.opts.locale;
+// The picker builds its DOM lazily on first show, hence this runs per open. The
+// full datetime picker and every time-only picker expose the same two ranges.
+function patchTimeSliderLabels(picker) {
+  if (!picker) return;
+  const locale = picker.opts.locale;
   const sliderLabels = [locale.hours, locale.minutes];
-  activeDatePicker.$datepicker.querySelectorAll('input[type="range"]')
+  picker.$datepicker.querySelectorAll('input[type="range"]')
     .forEach((slider, i) => {
       slider.setAttribute('aria-label', sliderLabels[i] ?? '');
     });
@@ -272,6 +358,7 @@ export function initFocusManagement() {
     if (!el || el.nodeType !== 1) return;
 
     initProposedDateTimePicker();
+    initGeneratorTimePickers();
 
     if (el.matches('#main-content')) {
       var h = el.querySelector('h2, h3, h4');

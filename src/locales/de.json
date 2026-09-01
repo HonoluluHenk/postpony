@@ -82,6 +82,7 @@
   "proposed_dates_generate_to_invalid": "Datum muss nach 'Von' und höchstens 4 Wochen nach dem Originalspiel sein",
   "proposed_dates_generate_to_invalid_no_anchor": "Datum muss nach 'Von' und höchstens 4 weeks ab heute sein",
   "proposed_dates_generate_time_label": "Uhrzeit",
+  "proposed_dates_generate_time_picker_label": "Uhrzeit-Picker öffnen",
   "proposed_dates_management": "Vorgeschlagene Termine",
   "reopen": "Wieder eröffnen",
   "reopened_count": "Wieder eröffnet: <%= it.count %> Mal",

@@ -176,6 +176,15 @@ export class EditPage {
     return this.generateForm.locator(`input#time-${String(index)}`);
   }
 
+  // One time-only picker trigger per weekday row (aria-label set per locale).
+  get generateTimePickerButtons(): Locator {
+    return this.generateForm.getByRole('button', {name: 'Open time picker'});
+  }
+
+  generateTimePickerButton(index: number): Locator {
+    return this.generateTimePickerButtons.nth(index);
+  }
+
   get generateSubmitButton(): Locator {
     // ponytail: "Generate" matches two buttons (the submit and a future nav
     // breadcrumb) — scope to the generator form to disambiguate.
