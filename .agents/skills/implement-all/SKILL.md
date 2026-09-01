@@ -44,6 +44,10 @@ Done when: every ticket is ticked and committed on the feature branch.
 
 ## 5. Final gate
 
-Merge the feature branch into the current branch — ask first if the current worktree has uncommitted changes; resolve small conflicts yourself, ask the user on anything non-trivial; confirm the ticked ticket files came back. Then run `npm run verify` once and report the result. On failure, report and ask the user whether to fix or stop. Offer to remove the feature worktree.
+If the source branch (usually `main`) changed in the meantime:
+
+- reintegrate it into the feature branch
+- resolve merge conflicts
+- verify using `npm run verify`. Merge the feature branch into the current branch — ask first if the current worktree has uncommitted changes; resolve small conflicts yourself, ask the user on anything non-trivial; confirm the ticked ticket files came back. Then run `npm run verify` once and report the result. On failure, report and ask the user whether to fix or stop. Offer to remove the feture worktree.
 
 Done when: verify passed, or its failure is reported and the user decided.
