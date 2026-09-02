@@ -4,9 +4,9 @@
 
 **Blocked by:** 04 (localized From/To fields and pickers in the generator)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The generator e2e's valid-range and error-path cases fill From/To as locale tokens (en-US month-first) and pass.
-- [ ] The date-picker e2e opens each of From and To pickers via its button and asserts locale-token output.
-- [ ] An open From/To picker passes the accessibility check.
-- [ ] The full e2e suite is green with the localized fields.
+- [x] The generator e2e's valid-range and error-path cases fill From/To as locale tokens (en-US month-first) and pass.
+- [x] The date-picker e2e opens each of From and To pickers via its button and asserts locale-token output.
+- [x] An open From/To picker passes the accessibility check.
+- [x] The full e2e suite is green with the localized fields.

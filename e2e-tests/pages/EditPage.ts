@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import type { SessionFixture } from '../test-session';
-import { isoToLocaleTokens } from './locale-tokens';
+import { isoToLocaleDateTokens, isoToLocaleTokens } from './locale-tokens';
 import { ScrapePage } from './ScrapePage';
 
 // The fixture drilldown that backs every e2e session: MTTV 2026/27 → O40
@@ -192,11 +192,19 @@ export class EditPage {
   }
 
   get fromDateInput(): Locator {
-    return this.generateForm.getByLabel('From');
+    return this.generateForm.getByLabel('From', {exact: true});
   }
 
   get toDateInput(): Locator {
-    return this.generateForm.getByLabel('To');
+    return this.generateForm.getByLabel('To', {exact: true});
+  }
+
+  get fromDatePickerButton(): Locator {
+    return this.generateForm.getByRole('button', {name: 'Open calendar for the From date'});
+  }
+
+  get toDatePickerButton(): Locator {
+    return this.generateForm.getByRole('button', {name: 'Open calendar for the To date'});
   }
 
   get fromDateError(): Locator {
@@ -207,12 +215,21 @@ export class EditPage {
     return this.page.locator('#toDate-error');
   }
 
+  // The generator's From/To are locale-token text fields; convert the ISO date
+  // argument to the page's date tokens (en-US month-first default) before
+  // filling, so callers keep passing plain ISO dates.
+  private async dateTokens(isoDate: string): Promise<string> {
+    const lang = await this.page.locator('html')
+      .getAttribute('lang');
+    return isoToLocaleDateTokens(lang, isoDate);
+  }
+
   async fillFromDate(isoDate: string): Promise<void> {
-    await this.fromDateInput.fill(isoDate);
+    await this.fromDateInput.fill(await this.dateTokens(isoDate));
   }
 
   async fillToDate(isoDate: string): Promise<void> {
-    await this.toDateInput.fill(isoDate);
+    await this.toDateInput.fill(await this.dateTokens(isoDate));
   }
 
   // The generator form's venue dropdown (the single-date form carries a second

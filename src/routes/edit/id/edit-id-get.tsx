@@ -1,8 +1,7 @@
 import type { App } from '../../../app';
-import { formatIsoToDateOnlyLocaleTokens, formatIsoToLocaleTokens, nowPlainDateTimeIso } from '../../../lib/temporal-utils';
-import { Temporal } from '@js-temporal/polyfill';
-import { MAX_FORWARD_WEEKS_FROM_ORIGINAL } from '../../../lib/proposed-dates-generator';
+import { formatIsoToLocaleTokens } from '../../../lib/temporal-utils';
 import { EditPage } from './edit';
+import { defaultGeneratorDateRange } from './proposed-dates-post';
 import { buildEditPartialsData } from './render-edit-partials';
 
 export const handleEditGet = async (app: App): Promise<Response> => {
@@ -19,12 +18,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     ? formatIsoToLocaleTokens(session.originalMatchDateTime, locale)
     : '';
 
-  const todayDate = Temporal.PlainDate.from(nowPlainDateTimeIso());
-  const defaultFromDate = formatIsoToDateOnlyLocaleTokens(todayDate.toString(), locale);
-  const defaultToDateRaw = session.originalMatchDateTime !== undefined
-    ? Temporal.PlainDate.from(session.originalMatchDateTime).add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL})
-    : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL});
-  const defaultToDate = formatIsoToDateOnlyLocaleTokens(defaultToDateRaw.toString(), locale);
+  const {fromDate, toDate} = defaultGeneratorDateRange(locale, session.originalMatchDateTime);
 
   const html = app.render(
     <EditPage
@@ -36,8 +30,8 @@ export const handleEditGet = async (app: App): Promise<Response> => {
       homeTeam={session.homeTeam}
       guestTeam={session.guestTeam}
       matchDateTime={originalMatchDateTime}
-      fromDate={defaultFromDate}
-      toDate={defaultToDate}
+      fromDate={fromDate}
+      toDate={toDate}
       {...buildEditPartialsData(session, locale)}
     />,
   );

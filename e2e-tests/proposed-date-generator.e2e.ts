@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import { EditPage } from './pages';
+import { isoToLocaleDateTokens } from './pages/locale-tokens';
 
 // The session's anchor is the scraped fixture match (14.01.2027, the
 // createSession default), so the generator's
@@ -83,6 +84,12 @@ test.describe('Proposed Date Generator', () => {
              page,
              checkA11y,
            }) => {
+      // The heaviest test in the suite: scrape session + three a11y scans + two
+      // submissions + a deletion. Runs ~8s of the default 10s budget in
+      // isolation, so under full-suite parallel contention (91 tests) axe's
+      // scan can exceed it. Tripled to 30s.
+      test.slow();
+
       await EditPage.createSession(page);
       const editPage = new EditPage(page);
 
@@ -94,13 +101,14 @@ test.describe('Proposed Date Generator', () => {
       await checkA11y();
 
       // The fixed Monday–Sunday grid ships as seven time inputs (each with a
-      // time-only picker trigger) and exactly one submit button.
+      // time-only picker trigger), the two From/To picker buttons, and exactly
+      // one submit button.
       await expect(editPage.generateForm.locator('input[name="time[]"]'))
         .toHaveCount(7);
       await expect(editPage.generateTimePickerButtons)
         .toHaveCount(7);
       await expect(editPage.generateForm.getByRole('button'))
-        .toHaveCount(8);
+        .toHaveCount(10);
 
       await editPage.generateProposedDates([...TUPLES]);
 
@@ -244,6 +252,13 @@ test.describe('Proposed Date Generator', () => {
     await expect(successToast)
       .toBeVisible();
 
+    // The generator echoes the picked window back as en-US locale tokens
+    // (MM/dd/yyyy), not ISO strings.
+    await expect(editPage.fromDateInput)
+      .toHaveValue(isoToLocaleDateTokens('en-US', FROM));
+    await expect(editPage.toDateInput)
+      .toHaveValue(isoToLocaleDateTokens('en-US', TO));
+
     const items = editPage.proposedDateRows;
     const count = await items.count();
     expect(count)
@@ -277,6 +292,9 @@ test.describe('Proposed Date Generator', () => {
       .toBeVisible();
     await expect(editPage.fromDateError)
       .toContainText('Date must be today or later');
+    // The invalid from stays in the field as the submitted en-US token.
+    await expect(editPage.fromDateInput)
+      .toHaveValue('01/01/2020');
 
     const finalCount = await editPage.proposedDateRows.count();
     expect(finalCount)
@@ -295,6 +313,11 @@ test.describe('Proposed Date Generator', () => {
 
     await expect(editPage.toDateError)
       .toBeVisible();
+    // Both values stay as the submitted en-US tokens, flagged on To.
+    await expect(editPage.fromDateInput)
+      .toHaveValue('09/10/2026');
+    await expect(editPage.toDateInput)
+      .toHaveValue('09/05/2026');
 
     const finalCount = await editPage.proposedDateRows.count();
     expect(finalCount)
@@ -316,6 +339,9 @@ test.describe('Proposed Date Generator', () => {
       .toBeVisible();
     await expect(editPage.toDateError)
       .toContainText('at most 4 weeks after the original match');
+    // The too-late to stays in the field as the submitted en-US token.
+    await expect(editPage.toDateInput)
+      .toHaveValue('03/01/2027');
 
     const finalCount = await editPage.proposedDateRows.count();
     expect(finalCount)

@@ -1,4 +1,4 @@
-import { devices } from '@playwright/test';
+import { devices, type Locator } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { EditPage } from './pages';
 
@@ -75,6 +75,68 @@ test.describe('Proposed date picker', () => {
     await editPage.pickerButton.click();
     await expect(page.locator('.air-datepicker.-active-'))
       .toBeVisible();
+  });
+
+  test('From and To pickers open via their buttons and write locale tokens', async ({page, checkA11y}) => {
+    const {editPage} = await EditPage.createSession(page);
+
+    // Each of the generator's From/To fields gets its own explicit calendar
+    // button with a distinct accessible name.
+    const pickers: {button: Locator; input: Locator}[] = [
+      {button: editPage.fromDatePickerButton, input: editPage.fromDateInput},
+      {button: editPage.toDatePickerButton, input: editPage.toDateInput},
+    ];
+    for (const {button, input} of pickers) {
+      // Focusing the text field must not open the picker on its own.
+      await input.focus();
+      await expect(page.locator('.air-datepicker.-active-'))
+        .not
+        .toBeVisible();
+
+      // The explicit calendar button opens the date-only picker.
+      await button.click();
+      const picker = page.locator('.air-datepicker.-active-');
+      await expect(picker)
+        .toBeVisible();
+
+      // Date-only pickers have no time sliders.
+      await expect(picker.locator('input[name="hours"]'))
+        .toHaveCount(0);
+      await expect(picker.locator('input[name="minutes"]'))
+        .toHaveCount(0);
+
+      // The Material dynamic-color theme applies its tonal palette
+      // asynchronously; wait for it to settle before the axe scan.
+      await expect.poll(async () => {
+        const sample = (): Promise<string> =>
+          picker.locator('.air-datepicker-body--day-name')
+            .first()
+            .evaluate((el) => getComputedStyle(el).color);
+        const first = await sample();
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        const second = await sample();
+        return first === second ? first : '';
+      }).toBeDefined();
+
+      // An open From/To picker passes the accessibility check.
+      await checkA11y();
+
+      // Click an in-month day (exclude -other-month- filler cells); From/To
+      // prefill to today/this week's range, so an in-month day exists.
+      await picker.locator('[data-iso-date]:not(.-other-month-)')
+        .first()
+        .click();
+
+      // The picker writes the locale's date-only token format (en-US MM/dd/yyyy).
+      await expect(input)
+        .toHaveValue(/^\d{2}\/\d{2}\/\d{4}$/);
+
+      // Close the picker before opening the next one.
+      await page.keyboard.press('Escape');
+      await expect(picker)
+        .not
+        .toBeVisible();
+    }
   });
 });
 

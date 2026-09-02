@@ -20,6 +20,25 @@ import { FALLBACK_VENUE_COUNT } from './proposed-dates-section';
 
 const TUPLE_DISCRIMINATOR = 'tuple';
 
+/**
+ * Locale-token defaults for the generator's From/To fields: today and
+ * today+4w, or (when an anchor exists) the original match + 4 weeks. Mirrors
+ * the edit-page GET prefill so every partial re-render of the generator keeps
+ * a populated (never empty) range.
+ */
+export function defaultGeneratorDateRange(
+  locale: App['locale'],
+  originalMatchDateTime: string | undefined,
+): {fromDate: string; toDate: string} {
+  const todayDate = Temporal.PlainDate.from(nowPlainDateTimeIso());
+  const fromDate = formatIsoToDateOnlyLocaleTokens(todayDate.toString(), locale);
+  const toDateRaw = originalMatchDateTime !== undefined
+    ? Temporal.PlainDate.from(originalMatchDateTime).add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL})
+    : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL});
+  const toDate = formatIsoToDateOnlyLocaleTokens(toDateRaw.toString(), locale);
+  return {fromDate, toDate};
+}
+
 function organizerQuery(app: App): string {
   return app.c.req.query('organizerPassword') ?? '';
 }
@@ -450,6 +469,7 @@ async function handleSingleSubmit(
         proposedDateTime: rawDateTime,
         error: errors.fields['proposedDateTime'],
         globalError: errors.fields['venueNumber'] ?? errors.global,
+        ...defaultGeneratorDateRange(locale, session.originalMatchDateTime),
       }), {status: 400});
     }
     return app.c.redirect(`/edit/${id}?organizerPassword=${organizerQuery(app)}`);
@@ -465,7 +485,10 @@ async function handleSingleSubmit(
   const updated = await saveWithClashCheck(app, proposed.session, [proposed.proposedDate.id]);
 
   if (app.isPartial) {
-    return app.c.html(renderEditPartials(app, updated, {success: true}));
+    return app.c.html(renderEditPartials(app, updated, {
+      success: true,
+      ...defaultGeneratorDateRange(locale, session.originalMatchDateTime),
+    }));
   }
   return app.c.redirect(`/edit/${id}`);
 }

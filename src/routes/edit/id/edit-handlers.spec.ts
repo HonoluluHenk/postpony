@@ -1531,6 +1531,13 @@ describe('edit handlers', () => {
         .toContain('toast success');
       expect(html)
         .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+      // The re-rendered generator keeps a populated (never empty) From/To
+      // range formatted as locale tokens — today and today+4w for an anchorless
+      // session under the fixed test clock.
+      expect(html)
+        .toContain('id="fromDate" type="text" name="fromDate" value="08/25/2026"');
+      expect(html)
+        .toContain('id="toDate" type="text" name="toDate" value="09/22/2026"');
     });
 
     test('proposed dates: renders the error-container on an invalid datetime', async () => {
@@ -1551,6 +1558,10 @@ describe('edit handlers', () => {
         .toContain('id="error-container" hx-swap-oob="true"');
       expect(html)
         .toContain('invalid');
+      expect(html)
+        .toContain('id="fromDate" type="text" name="fromDate" value="08/25/2026"');
+      expect(html)
+        .toContain('id="toDate" type="text" name="toDate" value="09/22/2026"');
     });
   });
 
