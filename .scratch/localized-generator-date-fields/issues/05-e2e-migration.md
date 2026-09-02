@@ -10,3 +10,7 @@
 - [x] The date-picker e2e opens each of From and To pickers via its button and asserts locale-token output.
 - [x] An open From/To picker passes the accessibility check.
 - [x] The full e2e suite is green with the localized fields.
+
+## Comments
+
+- `dbdca14` — all four criteria. Generator e2e fills From/To via en-US `MM/dd/yyyy` tokens (`EditPage.fillFromDate/fillToDate` → `isoToLocaleDateTokens`) with the valid-range window and each error path asserting echoed token values; date-picker e2e opens From and To via their buttons, asserts date-only pickers write `MM/dd/yyyy`, runs `checkA11y()` with each picker open, then closes them. Full suite: 91/91 (5 green full runs; one transient load-induced infra flake on run C, no retries configured). Supporting server change: `defaultGeneratorDateRange` in `proposed-dates-post.ts` keeps the generator From/To populated on every single-add/error partial re-render (shared with the GET prefill), which was the root cause of a deterministic axe white-on-white flag on empty `.field.label` inputs in the responsive e2e.
