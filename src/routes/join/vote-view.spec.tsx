@@ -1,9 +1,9 @@
 import { describe, expect, test, vi } from 'vitest';
 import { App } from '../../app';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../lib/__test-utils__/builders';
-import { LOCALE_KEY } from '../../locales';
 import { MemorySessionStore } from '../../lib/session-store';
 import { formatProposedDateDisplay } from '../../lib/temporal-utils';
+import { LOCALE_KEY } from '../../locales';
 import { renderConfirmedInfo, renderVoteStep } from './vote-view';
 
 function createApp(locale = 'en-US'): App {
@@ -78,7 +78,10 @@ describe('renderVoteStep date visibility', () => {
       .toContain('name="vote-date-2"');
   });
 
-  test.each(['home', 'away'] as const)('renders the empty-state hint for the %s team when no dates are votable', async (team) => {
+  test.each([
+    'home',
+    'away',
+  ] as const)('renders the empty-state hint for the %s team when no dates are votable', async (team) => {
     const player = aPlayer({teamId: team});
     const session = aSession({
       status: 'Draft',
@@ -242,8 +245,22 @@ describe('renderVoteStep', () => {
     const session = aSession({
       status: 'Voting',
       venues: [
-        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
-        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
+        {
+          venueNumber: 2,
+          name: 'Turnhalle grün',
+          shortName: 'Turnhalle grün',
+          address: 'Dennigkofenweg 170',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ],
       players: [player],
       proposedDates: [
@@ -298,7 +315,14 @@ describe('renderVoteStep', () => {
     const session = aSession({
       status: 'Voting',
       venues: [
-        {venueNumber: 1, name: 'Turnhalle orange, UG, Schule Dennigkofen', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange, UG, Schule Dennigkofen',
+          shortName: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ],
       players: [player],
       proposedDates: [
@@ -462,7 +486,14 @@ describe('renderVoteStep venue occupancy info', () => {
     const session = aSession({
       status: 'Voting',
       venues: [
-        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ],
       players: [player],
       proposedDates: [
@@ -535,7 +566,14 @@ describe('renderVoteStep venue occupancy info', () => {
     const session = aSession({
       status: 'Voting',
       venues: [
-        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ],
       players: [player],
       proposedDates: [
@@ -597,7 +635,14 @@ describe('renderVoteStep venue occupancy info', () => {
     const session = aSession({
       status: 'Voting',
       venues: [
-        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ],
       players: [player],
       proposedDates: [

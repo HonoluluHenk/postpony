@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
-import { hashPassword } from '../../../lib/crypto-utils';
 import { fetchClubId, fetchVenues } from '../../../lib/click-tt-scraper';
-import { LOCALE_KEY } from '../../../locales';
-import { MemorySessionStore } from '../../../lib/session-store';
+import { hashPassword } from '../../../lib/crypto-utils';
 import { DEFAULT_CLUB_ID } from '../../../lib/models';
+import { MemorySessionStore } from '../../../lib/session-store';
+import { LOCALE_KEY } from '../../../locales';
 import { handleScrapeMatchPost } from './match-post';
 
 vi.mock('../../../lib/click-tt-scraper', () => ({
@@ -163,10 +163,19 @@ describe('handleScrapeMatchPost', () => {
   });
 
   test('stores the scraped venues and home club id when the team page resolves one', async () => {
-    vi.mocked(fetchClubId).mockResolvedValueOnce('33132');
-    vi.mocked(fetchVenues).mockResolvedValueOnce([
-      {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
-    ]);
+    vi.mocked(fetchClubId)
+      .mockResolvedValueOnce('33132');
+    vi.mocked(fetchVenues)
+      .mockResolvedValueOnce([
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
+      ]);
     const app = createApp({body: {...MATCH, teamName: 'Thun', teamtable: 'tt-own'}});
 
     const stored = await storedSession(app);
@@ -182,12 +191,20 @@ describe('handleScrapeMatchPost', () => {
       .toBe('33132');
     expect(stored?.venues)
       .toEqual([
-        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ]);
   });
 
   test('keeps venues empty and clubId unset when no club id is resolvable', async () => {
-    vi.mocked(fetchClubId).mockResolvedValueOnce(undefined);
+    vi.mocked(fetchClubId)
+      .mockResolvedValueOnce(undefined);
     const app = createApp({body: {...MATCH, teamName: 'Thun', teamtable: 'tt-own'}});
 
     const stored = await storedSession(app);
@@ -234,25 +251,35 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
 
     const existing = await app.store.get(session.id);
     // The referenced Postponement is untouched.
-    expect(existing).toMatchObject({
-      id: session.id,
-      name: session.name,
-      homeTeam: session.homeTeam,
-      guestTeam: session.guestTeam,
-      organizerPasswordHash: session.organizerPasswordHash,
-      proposedDates: session.proposedDates,
-      votes: session.votes,
-    });
-    expect(existing?.players).toEqual(session.players);
+    expect(existing)
+      .toMatchObject({
+        id: session.id,
+        name: session.name,
+        homeTeam: session.homeTeam,
+        guestTeam: session.guestTeam,
+        organizerPasswordHash: session.organizerPasswordHash,
+        proposedDates: session.proposedDates,
+        votes: session.votes,
+      });
+    expect(existing?.players)
+      .toEqual(session.players);
 
     const minted = await app.store.get(mintedId);
     // A brand-new Postponement was minted with a new id.
-    expect(minted?.id).toBeDefined();
-    expect(minted?.id).not.toBe(session.id);
-    expect(minted?.organizerPasswordHash).not.toBe(session.organizerPasswordHash);
-    expect(minted?.name).toBe('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
-    expect(minted?.homeTeam).toBe('Thun');
-    expect(minted?.guestTeam).toBe('Ostermundigen');
+    expect(minted?.id)
+      .toBeDefined();
+    expect(minted?.id)
+      .not
+      .toBe(session.id);
+    expect(minted?.organizerPasswordHash)
+      .not
+      .toBe(session.organizerPasswordHash);
+    expect(minted?.name)
+      .toBe('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
+    expect(minted?.homeTeam)
+      .toBe('Thun');
+    expect(minted?.guestTeam)
+      .toBe('Ostermundigen');
   });
 
   test('a wrong organizer password does not block the mint', async () => {
@@ -262,9 +289,12 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
 
     const minted = await storedSession(app);
 
-    expect(minted?.id).not.toBe(session.id);
+    expect(minted?.id)
+      .not
+      .toBe(session.id);
     const existing = await app.store.get(session.id);
-    expect(existing?.name).toBe(session.name);
+    expect(existing?.name)
+      .toBe(session.name);
   });
 
   test('a missing session does not block the mint', async () => {
@@ -272,7 +302,9 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
 
     const minted = await storedSession(app);
 
-    expect(minted?.id).toBeDefined();
-    expect(minted?.homeTeam).toBe('Thun');
+    expect(minted?.id)
+      .toBeDefined();
+    expect(minted?.homeTeam)
+      .toBe('Thun');
   });
 });

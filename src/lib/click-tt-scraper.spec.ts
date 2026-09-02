@@ -340,6 +340,7 @@ describe('click-tt-scraper', () => {
             {
               venueNumber: 1,
               name: 'Turnhalle orange, UG, Schule Dennigkofen',
+              shortName: 'Turnhalle orange',
               address: 'Dennigkofenweg 169',
               postalCode: '3072',
               city: 'Ostermundigen',
@@ -347,6 +348,7 @@ describe('click-tt-scraper', () => {
             {
               venueNumber: 3,
               name: 'Turnhalle Weiher',
+              shortName: 'Turnhalle Weiher',
               address: 'Weiherweg 2',
               postalCode: '3072',
               city: 'Ostermundigen',

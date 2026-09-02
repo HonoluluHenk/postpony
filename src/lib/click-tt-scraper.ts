@@ -379,10 +379,12 @@ export function extractClubId(root: HTMLElement, identity: MatchIdentity): strin
     if (
       date !== identity.date || time !== identity.time ||
       homeTeam !== identity.homeTeam || guestTeam !== identity.guestTeam
-    ) {
+    )
+    {
       continue;
     }
-    const href = cells[3]?.querySelector('a[href*="clubInfoDisplay"]')?.getAttribute('href');
+    const href = cells[3]?.querySelector('a[href*="clubInfoDisplay"]')
+      ?.getAttribute('href');
     if (!href) {
       return undefined;
     }
@@ -414,8 +416,15 @@ export async function fetchClubId(
  * Schweiz" into address / postalCode / city. A trailing country token
  * (Schweiz/Swiss/Suisse/Svizzera) is dropped.
  */
-function parseVenueAddress(line: string): {address: string; postalCode: string; city: string} | null {
-  const parts = line.split(',').map((part) => part.trim()).filter((part) => part.length > 0);
+function parseVenueAddress(line: string): {
+  address: string;
+  postalCode: string;
+  city: string
+} | null
+{
+  const parts = line.split(',')
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
   if (parts.length < 2) {
     return null;
   }
@@ -455,12 +464,18 @@ export async function fetchVenues(clubId: string): Promise<Venue[]> {
     // the venue <p> is the wrapper's next sibling, not the heading's.
     const venueP = heading.nextElementSibling ?? heading.parentNode.nextElementSibling;
     const lines = (venueP?.text ?? '')
-      .split('\n').map((line) => line.trim()).filter((line) => line.length > 0);
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
     const parsed = parseVenueAddress(lines[1] ?? '');
     if (!lines[0] || !parsed) {
       continue;
     }
-    venues.push({venueNumber: Number(match[1]), name: lines[0], ...parsed});
+    venues.push({
+      venueNumber: Number(match[1]),
+      name: lines[0],
+      shortName: lines[0].split(', ')[0] ?? lines[0], ...parsed,
+    });
   }
   venues.sort((a, b) => a.venueNumber - b.venueNumber);
   return venues;
@@ -471,7 +486,11 @@ export async function fetchVenues(clubId: string): Promise<Venue[]> {
  * the season occupies, `01.07.<first>` to `30.06.<second>` (seasons run
  * Aug→Jul). Returns undefined when the championship carries no `YY/YY` year pair.
  */
-export function seasonWindow(championship: string): {from: string; to: string} | undefined {
+export function seasonWindow(championship: string): {
+  from: string;
+  to: string
+} | undefined
+{
   const m = /(\d{2})\/(\d{2})$/.exec(championship);
   const first = m?.[1];
   const second = m?.[2];
@@ -495,7 +514,8 @@ function venueNumberFromOrtCell(cell: HTMLElement): number | undefined {
  * at the home club but click-tt assigns no hall.
  */
 function isClubHomeMeeting(ortCell: HTMLElement, clubId: string): boolean {
-  const href = ortCell.querySelector('a[href*="clubInfoDisplay"]')?.getAttribute('href');
+  const href = ortCell.querySelector('a[href*="clubInfoDisplay"]')
+    ?.getAttribute('href');
   if (!href) {
     return true;
   }

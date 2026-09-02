@@ -15,7 +15,7 @@ function findVenue(venueNumber: number | undefined, venues: readonly Venue[]): V
 }
 
 /**
- * Tooltip text for the venue badge: "1 – Turnhalle orange" when the venue's
+ * Tooltip text for the venue badge: "1 – Turnhalle orange, UG, Schule Dennigkofen" when the venue's
  * name is known, otherwise just the number.
  */
 export function venueTooltip(venueNumber: number | undefined, venues: readonly Venue[]): string {
@@ -43,7 +43,7 @@ export function VenueBadge(props: { venueNumber?: number; venues: readonly Venue
  * venue number is unknown.
  */
 export function venueShortName(venueNumber: number | undefined, venues: readonly Venue[]): string | undefined {
-  return findVenue(venueNumber, venues)?.name.split(',')[0]?.trim();
+  return findVenue(venueNumber, venues)?.shortName;
 }
 
 /**

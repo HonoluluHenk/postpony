@@ -27,6 +27,8 @@ export interface Player {
 export interface Venue {
   venueNumber: number;
   name: string;
+  /** Short display name for dropdowns, e.g. "Turnhalle orange". Computed from `name` at creation. */
+  shortName: string;
   address: string;
   postalCode: string;
   city: string;

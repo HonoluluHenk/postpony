@@ -98,8 +98,8 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
       <h4 id={headingId}>{t('proposed_dates_generate_section')}</h4>
       <p>{t('proposed_dates_generate_help')}</p>
       <input type="hidden" name="generate" value="tuple"/>
-      <div class="row items-center gap mt-2">
-        <div class={`field label border${fromError ? ' invalid' : ''}`}>
+      <div class="generate-controls mt-2">
+        <div class={`date-field field label border${fromError ? ' invalid' : ''}`}>
           <input
             id="fromDate"
             type="text"
@@ -125,7 +125,7 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
         >
           <i aria-hidden="true">calendar_today</i>
         </button>
-        <div class={`field label border${toError ? ' invalid' : ''}`}>
+        <div class={`date-field field label border${toError ? ' invalid' : ''}`}>
           <input
             id="toDate"
             type="text"
@@ -151,7 +151,7 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
         >
           <i aria-hidden="true">calendar_today</i>
         </button>
-        <div class="field label border">
+        <div class="venue-field field label border">
           <select id="generateVenueNumber" name="venueNumber">
             {props.venueOptions}
           </select>
@@ -164,13 +164,13 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
           const rawValue = submitted[index];
           const value = rawValue !== undefined && rawValue.length > 0 ? rawValue : undefined;
           return (
-            <li key={weekday} class="row items-center gap mt-2">
+            <li key={weekday} class="row items-center gap mt-2 generate-time-row">
               {/* ponytail: the weekday text doubles as the input's label (its
                `for` points at the time input), so the accessible name of each
                time input is "Mo Time", "Tu Time", ... — association without a
                separate invisible label. */}
               <label for={`time-${index}`}>{weekday}</label>
-              <div class={`field label border fill max${invalid ? ' invalid' : ''}`}>
+              <div class={`time-field field label border${invalid ? ' invalid' : ''}`}>
                 <input
                   id={`time-${index}`}
                   type="text"
@@ -188,8 +188,8 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
                 ) : null}
               </div>
               {/* ponytail: the row picker is a pure enhancement — the button
-                  opens a time-only air-datepicker, never on input focus, so
-                  free typing of a custom time stays untouched. */}
+               opens a time-only air-datepicker, never on input focus, so
+               free typing of a custom time stays untouched. */}
               <button
                 type="button"
                 id={`time-${index}-picker`}
@@ -227,7 +227,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
   const venueOptions = props.venues.length > 0
                        ? props.venues.map((venue) => (
       <option key={venue.venueNumber} value={venue.venueNumber}>
-        {venue.venueNumber} – {venue.name}
+        ({venue.venueNumber}) - {venue.shortName}
       </option>
     ))
                        : // ponytail: without scraped venues the organizer still picks a hall 1–10;

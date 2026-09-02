@@ -3,8 +3,8 @@ import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../../lib/__test-utils__/builders';
 import { fetchClubMeetings, fetchMatches } from '../../../lib/click-tt-scraper';
 import { ClickTTError } from '../../../lib/errors';
-import { generateProposedDates } from '../../../lib/proposed-dates-generator';
 import type { Postponement } from '../../../lib/models';
+import { generateProposedDates } from '../../../lib/proposed-dates-generator';
 import { MemorySessionStore } from '../../../lib/session-store';
 import * as temporalUtils from '../../../lib/temporal-utils';
 import { LOCALE_KEY } from '../../../locales';
@@ -12,8 +12,8 @@ import { handleConfirmDatePost } from './confirm-date-post';
 import { buildOwnTeamView } from './own-team-view';
 import { handleEditPlayersPost } from './players-post';
 import { handleProposedDateDeletePost } from './proposed-date-delete-post';
-import { handleEditProposedDatesPost } from './proposed-dates-post';
 import { handleProposedDateVisibilityPost } from './proposed-date-visibility-post';
+import { handleEditProposedDatesPost } from './proposed-dates-post';
 import { handleRefreshClashesPost } from './refresh-clashes-post';
 import { handleReopenPost } from './reopen-post';
 
@@ -215,8 +215,22 @@ describe('edit handlers', () => {
 
     describe('single-date venue number', () => {
       const twoVenues = [
-        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
-        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
+        {
+          venueNumber: 2,
+          name: 'Turnhalle grün',
+          shortName: 'Turnhalle grün',
+          address: 'Dennigkofenweg 170',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ];
 
       test('single add with a valid venue number stores it on the ProposedDate', async () => {
@@ -337,8 +351,22 @@ describe('edit handlers', () => {
 
     describe('generator venue number', () => {
       const twoVenues = [
-        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
-        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
+        {
+          venueNumber: 2,
+          name: 'Turnhalle grün',
+          shortName: 'Turnhalle grün',
+          address: 'Dennigkofenweg 170',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ];
 
       test('generator with a valid venue number stores it on every generated date', async () => {
@@ -351,7 +379,13 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm', '9:00 pm'], venueNumber: '2', fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
+          body: {
+            generate: 'tuple',
+            'time[]': ['8:00 pm', '9:00 pm'],
+            venueNumber: '2',
+            fromDate: FROM_TOKEN,
+            toDate: TO_TOKEN_ANCHOR,
+          },
         });
         await app.store.save(session);
 
@@ -376,7 +410,13 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm', '9:00 pm'], venueNumber: '3', fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
+          body: {
+            generate: 'tuple',
+            'time[]': ['8:00 pm', '9:00 pm'],
+            venueNumber: '3',
+            fromDate: FROM_TOKEN,
+            toDate: TO_TOKEN_ANCHOR,
+          },
         });
         await app.store.save(session);
 
@@ -422,7 +462,13 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm'], venueNumber: '1', fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
+          body: {
+            generate: 'tuple',
+            'time[]': ['8:00 pm'],
+            venueNumber: '1',
+            fromDate: FROM_TOKEN,
+            toDate: TO_TOKEN_ANCHOR,
+          },
         });
         await app.store.save(session);
 
@@ -444,7 +490,13 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm'], venueNumber: '2', fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
+          body: {
+            generate: 'tuple',
+            'time[]': ['8:00 pm'],
+            venueNumber: '2',
+            fromDate: FROM_TOKEN,
+            toDate: TO_TOKEN_ANCHOR,
+          },
         });
         await app.store.save(session);
 
@@ -1064,7 +1116,7 @@ describe('edit handlers', () => {
         session.status = 'Draft';
         const expected = generateProposedDates({
           fromIso: '2026-08-25T08:00',
-        toIso: '2026-09-30T16:00',
+          toIso: '2026-09-30T16:00',
           todayIso: FIXED_TODAY_ISO,
           tuples: [{weekday: 1, hour: 20, minute: 0}],
           existingStarts: [],
@@ -1164,7 +1216,7 @@ describe('edit handlers', () => {
         session.status = 'Draft';
         const expected = generateProposedDates({
           fromIso: '2026-08-25T08:00',
-        toIso: '2026-09-30T16:00',
+          toIso: '2026-09-30T16:00',
           todayIso: FIXED_TODAY_ISO,
           tuples: [
             {weekday: 1, hour: 20, minute: 0},
@@ -1330,7 +1382,14 @@ describe('edit handlers', () => {
           const session = occupancySession();
           mockFetchMatches.mockResolvedValue([]);
           mockFetchClubMeetings.mockResolvedValue([
-            {day: 'Di', date: '01.09.2025', time: '19:30', homeTeam: 'Ostermundigen', guestTeam: 'Köniz II', venueNumber: 1},
+            {
+              day: 'Di',
+              date: '01.09.2025',
+              time: '19:30',
+              homeTeam: 'Ostermundigen',
+              guestTeam: 'Köniz II',
+              venueNumber: 1,
+            },
           ]);
           const app = createApp({
             params: {id: session.id},
@@ -1422,7 +1481,14 @@ describe('edit handlers', () => {
           const session = occupancySession();
           mockFetchMatches.mockResolvedValue([]);
           mockFetchClubMeetings.mockResolvedValue([
-            {day: 'Fr', date: '05.09.2025', time: '10:00', homeTeam: 'Ostermundigen', guestTeam: 'Bern', venueNumber: 1},
+            {
+              day: 'Fr',
+              date: '05.09.2025',
+              time: '10:00',
+              homeTeam: 'Ostermundigen',
+              guestTeam: 'Bern',
+              venueNumber: 1,
+            },
           ]);
           const app = createApp({
             params: {id: session.id},
@@ -2117,7 +2183,14 @@ describe('edit handlers', () => {
       });
       mockFetchMatches.mockResolvedValue([]);
       mockFetchClubMeetings.mockResolvedValue([
-        {day: 'Di', date: '01.09.2025', time: '19:30', homeTeam: 'Ostermundigen', guestTeam: 'Köniz II', venueNumber: 1},
+        {
+          day: 'Di',
+          date: '01.09.2025',
+          time: '19:30',
+          homeTeam: 'Ostermundigen',
+          guestTeam: 'Köniz II',
+          venueNumber: 1,
+        },
       ]);
       const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
       await app.store.save(session);

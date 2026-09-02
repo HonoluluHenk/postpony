@@ -460,4 +460,25 @@
     margin: 0;
     padding-inline-start: var(--space-4);
   }
+
+  /* Generate proposed dates form: grid layout for From/To/Venue row. */
+  .generate-controls {
+    display: grid;
+    grid-template-columns: auto auto auto auto auto auto 1fr;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .generate-controls .date-field {
+    width: 9rem;
+  }
+
+  .generate-controls .venue-field {
+    width: 12.5rem;
+  }
+
+  /* Time inputs in generate form: constrain to ~80px. */
+  .generate-time-row .time-field {
+    width: 5rem;
+  }
 }

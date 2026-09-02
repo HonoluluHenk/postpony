@@ -200,6 +200,7 @@ describe('ProposedDatesSection component', () => {
         {
           venueNumber: 1,
           name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
           address: 'Dennigkofenweg 169',
           postalCode: '3072',
           city: 'Ostermundigen',
@@ -207,6 +208,7 @@ describe('ProposedDatesSection component', () => {
         {
           venueNumber: 2,
           name: 'Turnhalle grün',
+          shortName: 'Turnhalle grün',
           address: 'Dennigkofenweg 170',
           postalCode: '3072',
           city: 'Ostermundigen',
@@ -215,9 +217,9 @@ describe('ProposedDatesSection component', () => {
     }));
 
     expect(html)
-      .toContain('<option value="1">1 – Turnhalle orange</option>');
+      .toContain('<option value="1">(1) - Turnhalle orange</option>');
     expect(html)
-      .toContain('<option value="2">2 – Turnhalle grün</option>');
+      .toContain('<option value="2">(2) - Turnhalle grün</option>');
     expect(html)
       .not
       .toContain('<option value="3">3</option>');
@@ -264,6 +266,7 @@ describe('ProposedDatesSection component', () => {
         {
           venueNumber: 1,
           name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
           address: 'Dennigkofenweg 169',
           postalCode: '3072',
           city: 'Ostermundigen',
@@ -271,6 +274,7 @@ describe('ProposedDatesSection component', () => {
         {
           venueNumber: 2,
           name: 'Turnhalle grün',
+          shortName: 'Turnhalle grün',
           address: 'Dennigkofenweg 170',
           postalCode: '3072',
           city: 'Ostermundigen',
@@ -808,6 +812,7 @@ describe('ProposedDatesSection generator block', () => {
         {
           venueNumber: 1,
           name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
           address: 'Dennigkofenweg 169',
           postalCode: '3072',
           city: 'Ostermundigen',
@@ -815,6 +820,7 @@ describe('ProposedDatesSection generator block', () => {
         {
           venueNumber: 2,
           name: 'Turnhalle grün',
+          shortName: 'Turnhalle grün',
           address: 'Dennigkofenweg 170',
           postalCode: '3072',
           city: 'Ostermundigen',
@@ -823,9 +829,9 @@ describe('ProposedDatesSection generator block', () => {
     }));
 
     expect(html)
-      .toContain('<option value="1">1 – Turnhalle orange</option>');
+      .toContain('<option value="1">(1) - Turnhalle orange</option>');
     expect(html)
-      .toContain('<option value="2">2 – Turnhalle grün</option>');
+      .toContain('<option value="2">(2) - Turnhalle grün</option>');
     expect(html)
       .not
       .toContain('<option value="3">3</option>');
