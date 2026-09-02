@@ -11,3 +11,6 @@
 - [x] The picker writes locale tokens into the field, which round-trip through the server's locale-aware validation.
 - [x] The pickers stay live after an HTMX partial swap of the generator form.
 - [x] Each calendar button has a distinct accessible name identifying its field, and the axe checks pass with a picker open.
+
+## Comments
+- 1488b45: localized From/To as locale-token text fields with own date-only air-datepicker each, wired across HTMX partial swaps; note: `EditPage.pickerButton` locator needed `exact: true` so the date-picker e2e stays green against the new distinct From/To labels.
