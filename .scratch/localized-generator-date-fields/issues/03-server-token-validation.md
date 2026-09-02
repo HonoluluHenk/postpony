@@ -10,3 +10,7 @@
 - [x] An empty From or To is rejected with the required-message shown on the correct field, and no Proposed Dates are added.
 - [x] The get-route prefills From (today) and To (today+4w, or the Match anchor +4w) as locale tokens, not ISO.
 - [x] The removed silent default changes no persistence or window semantics when both fields are filled.
+
+## Comments
+
+99dbce4 — `dateOnlyFieldSchema` (required message on empty, locale parse, ISO transform) wired into tuple schema; removed silent today/window defaults; schema-failure + success re-renders echo token values with `generatorFromError`/`generatorToError`; get-route prefill anchor-aware tokens; new key in en/de; handler tests submit en-US tokens + empty From/To cases. Lint + 609 unit/browser tests green.
