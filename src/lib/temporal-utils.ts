@@ -186,10 +186,7 @@ export function formatIsoToDateOnlyLocaleTokens(isoDate: string, locale: AppLoca
 export function formatIsoToLocaleTokens(isoString: string, locale: AppLocale): string {
   const dateTime = parseIsoToPlainDateTime(isoString);
   const config = localeConfig(locale);
-  const datePart = config.dateFormat
-    .replace('yyyy', String(dateTime.year))
-    .replace('dd', pad2(dateTime.day))
-    .replace('MM', pad2(dateTime.month));
+  const datePart = formatIsoToDateOnlyLocaleTokens(isoString, locale);
   const hours = config.clock24 ? dateTime.hour : dateTime.hour % 12 || 12;
   const timePart = config.timeFormat
     .replace('HH', pad2(dateTime.hour))
