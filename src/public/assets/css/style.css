@@ -397,6 +397,37 @@
     margin-bottom: 24px;
   }
 
+  /* Picker buttons inline inside field wrappers */
+  .field:has(.picker-btn) {
+    position: relative;
+  }
+
+  .field:has(.picker-btn) > input,
+  .field:has(.picker-btn) > select {
+    padding-right: 3rem;
+    position: relative;
+    z-index: 0;
+  }
+
+  .picker-btn {
+    position: absolute !important;
+    right: 0.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+    padding: 0;
+    min-width: auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: transparent !important;
+    border: none !important;
+    z-index: 1;
+  }
+
+  .picker-btn > i {
+    font-size: 1.5rem;
+  }
+
   /* Confirm-clash warning: a persistent, high-visual-weight banner (vs the
      throwaway red `.error` text it used to be). Solid error surface with the
      on-error text makes it the strongest thing on the edit card; it stays in
@@ -464,9 +495,10 @@
   /* Generate proposed dates form: grid layout for From/To/Venue row. */
   .generate-controls {
     display: grid;
-    grid-template-columns: auto auto auto auto auto auto 1fr;
+    grid-template-columns: auto auto 1fr;
     align-items: center;
     gap: var(--space-2);
+    margin-bottom: 3rem;
   }
 
   .generate-controls .date-field {
@@ -479,6 +511,6 @@
 
   /* Time inputs in generate form: constrain to ~80px. */
   .generate-time-row .time-field {
-    width: 5rem;
+    width: 9rem;
   }
 }

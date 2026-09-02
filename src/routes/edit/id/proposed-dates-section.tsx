@@ -115,16 +115,16 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
           {fromError ? (
             <span id="fromDate-error" class="error" role="alert">{fromError}</span>
           ) : null}
+          <button
+            type="button"
+            id="fromDate-picker"
+            class="button picker-btn"
+            aria-label={t('proposed_dates_generate_from_picker_label')}
+            title={t('proposed_dates_generate_from_picker_label')}
+          >
+            <i aria-hidden="true">calendar_today</i>
+          </button>
         </div>
-        <button
-          type="button"
-          id="fromDate-picker"
-          class="button"
-          aria-label={t('proposed_dates_generate_from_picker_label')}
-          title={t('proposed_dates_generate_from_picker_label')}
-        >
-          <i aria-hidden="true">calendar_today</i>
-        </button>
         <div class={`date-field field label border${toError ? ' invalid' : ''}`}>
           <input
             id="toDate"
@@ -141,16 +141,16 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
           {toError ? (
             <span id="toDate-error" class="error" role="alert">{toError}</span>
           ) : null}
+          <button
+            type="button"
+            id="toDate-picker"
+            class="button picker-btn"
+            aria-label={t('proposed_dates_generate_to_picker_label')}
+            title={t('proposed_dates_generate_to_picker_label')}
+          >
+            <i aria-hidden="true">calendar_today</i>
+          </button>
         </div>
-        <button
-          type="button"
-          id="toDate-picker"
-          class="button"
-          aria-label={t('proposed_dates_generate_to_picker_label')}
-          title={t('proposed_dates_generate_to_picker_label')}
-        >
-          <i aria-hidden="true">calendar_today</i>
-        </button>
         <div class="venue-field field label border">
           <select id="generateVenueNumber" name="venueNumber">
             {props.venueOptions}
@@ -186,19 +186,16 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
                 {invalid ? (
                   <span id={`time-${index}-error`} class="error" role="alert">{t('proposed_date_time_invalid')}</span>
                 ) : null}
+                <button
+                  type="button"
+                  id={`time-${index}-picker`}
+                  class="button picker-btn"
+                  aria-label={t('proposed_dates_generate_time_picker_label')}
+                  title={t('proposed_dates_generate_time_picker_label')}
+                >
+                  <i aria-hidden="true">schedule</i>
+                </button>
               </div>
-              {/* ponytail: the row picker is a pure enhancement — the button
-               opens a time-only air-datepicker, never on input focus, so
-               free typing of a custom time stays untouched. */}
-              <button
-                type="button"
-                id={`time-${index}-picker`}
-                class="button"
-                aria-label={t('proposed_dates_generate_time_picker_label')}
-                title={t('proposed_dates_generate_time_picker_label')}
-              >
-                <i aria-hidden="true">schedule</i>
-              </button>
             </li>
           );
         })}
@@ -406,16 +403,16 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                  {props.error ? (
                    <span id="proposedDateTime-error" class="error" role="alert">{props.error}</span>
                  ) : null}
+                 <button
+                   type="button"
+                   id="proposedDateTimePicker"
+                   class="button picker-btn"
+                   aria-label={props.t('proposed_date_time_picker_label')}
+                   title={props.t('proposed_date_time_picker_label')}
+                 >
+                   <i aria-hidden="true">calendar_today</i>
+                 </button>
                </div>
-               <button
-                 type="button"
-                 id="proposedDateTimePicker"
-                 class="button"
-                 aria-label={props.t('proposed_date_time_picker_label')}
-                 title={props.t('proposed_date_time_picker_label')}
-               >
-                 <i aria-hidden="true">calendar_today</i>
-               </button>
                <div class="field label border">
                  <select id="venueNumber" name="venueNumber">
                    {venueOptions}
