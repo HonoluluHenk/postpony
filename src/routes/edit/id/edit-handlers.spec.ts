@@ -343,7 +343,7 @@ describe('edit handlers', () => {
         expect(response.status)
           .toBe(200);
         expect(html)
-          .toContain('>V2</span>');
+          .toContain('>(2)</span>');
         expect(html)
           .toContain('title="2 – Turnhalle grün"');
       });

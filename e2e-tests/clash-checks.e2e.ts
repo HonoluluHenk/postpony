@@ -138,7 +138,7 @@ test.describe('Clash checks', () => {
       .goto(homeHref);
     await joinPage.join('Occupancy Watcher');
     // The legend carries the venue number and the count as static text.
-    await expect(joinPage.voteForm.getByText('V3'))
+    await expect(joinPage.voteForm.getByText('(3)'))
       .toBeVisible();
     await expect(joinPage.voteForm.getByText('1 other games'))
       .toBeVisible();

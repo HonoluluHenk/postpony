@@ -265,7 +265,7 @@ describe('renderVoteStep', () => {
       players: [player],
       proposedDates: [
         aProposedDate({id: 'date-1', venueNumber: 2, votable: true}),
-        // legacy date without a stored venue number defaults to the V1 badge
+        // legacy date without a stored venue number defaults to the (1) badge
         {...aProposedDate({id: 'date-2', votable: true}), venueNumber: undefined},
       ],
     });
@@ -281,9 +281,9 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>V2 – Turnhalle grün</span></legend>');
+      .toContain('>(2) – Turnhalle grün</span></legend>');
     expect(body)
-      .toContain('>V1 – Turnhalle orange</span></legend>');
+      .toContain('>(1) – Turnhalle orange</span></legend>');
   });
 
   test('renders just the venue number in the pill when no venue name is known', async () => {
@@ -307,7 +307,7 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>V4</span></legend>');
+      .toContain('>(4)</span></legend>');
   });
 
   test('truncates a multi-line venue name at the first comma in the vote pill', async () => {
@@ -342,7 +342,7 @@ describe('renderVoteStep', () => {
 
     // Visible pill text is the first comma-segment; the pill's tooltip keeps the full name.
     expect(body)
-      .toContain('>V1 – Turnhalle orange</span></legend>');
+      .toContain('>(1) – Turnhalle orange</span></legend>');
     expect(body)
       .toContain('title="1 – Turnhalle orange, UG, Schule Dennigkofen"');
     expect(body)
@@ -521,7 +521,7 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>V1 – Turnhalle orange, 2 other games</span></legend>');
+      .toContain('>(1) – Turnhalle orange, 2 other games</span></legend>');
     expect(body)
       .not
       .toContain('2 other games at this venue');
@@ -595,7 +595,7 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>V1 – Turnhalle orange</span></legend>');
+      .toContain('>(1) – Turnhalle orange</span></legend>');
     expect(body)
       .not
       .toContain('other games');

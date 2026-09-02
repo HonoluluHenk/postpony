@@ -235,12 +235,12 @@ describe('ProposedDatesSection component', () => {
       .toContain('id="venueNumber"');
   });
 
-  it('defaults dates without a venue number to the V1 badge (legacy dates)', () => {
+  it('defaults dates without a venue number to the (1) badge (legacy dates)', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
     expect(html)
-      .toContain('>V1</span>');
-    expect((html.match(/>V1<\/span>/g) ?? []))
+      .toContain('>(1)</span>');
+    expect((html.match(/>\(1\)<\/span>/g) ?? []))
       .toHaveLength(2);
   });
 
@@ -254,9 +254,9 @@ describe('ProposedDatesSection component', () => {
     }));
 
     expect(html)
-      .toContain('>V1</span>');
+      .toContain('>(1)</span>');
     expect(html)
-      .toContain('>V2</span>');
+      .toContain('>(2)</span>');
   });
 
   it('shows the venue name and number in the badge tooltip when venues are known', () => {
@@ -288,7 +288,7 @@ describe('ProposedDatesSection component', () => {
     expect(html)
       .toContain('title="2 – Turnhalle grün"');
     expect(html)
-      .toContain('>V2</span>');
+      .toContain('>(2)</span>');
   });
 
   it('falls back to just the number in the badge tooltip when the venue is unknown', () => {
@@ -302,7 +302,7 @@ describe('ProposedDatesSection component', () => {
     expect(html)
       .toContain('title="3"');
     expect(html)
-      .toContain('>V3</span>');
+      .toContain('>(3)</span>');
   });
 });
 

@@ -471,7 +471,7 @@ test.describe('Proposed Date Generator', () => {
     await expect(venueBadges)
       .toHaveCount(count);
     await expect(venueBadges.first())
-      .toHaveText('V2');
+      .toHaveText('(2)');
 
     await checkA11y();
   });

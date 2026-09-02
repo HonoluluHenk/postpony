@@ -6,7 +6,7 @@ import type { Venue } from '../../lib/models';
  * `venueNumber` means venue 1 — legacy dates predate the venues feature.
  */
 export function venueNumberToken(venueNumber: number | undefined): string {
-  return `V${venueNumber ?? 1}`;
+  return `(${venueNumber ?? 1})`;
 }
 
 /** Looks up a venue by its number; absent `venueNumber` means venue 1 (legacy dates predate venues). */
@@ -25,7 +25,7 @@ export function venueTooltip(venueNumber: number | undefined, venues: readonly V
 }
 
 /**
- * The "V1" pill shown next to a proposed date; `title` carries the full venue
+ * The "(1)" pill shown next to a proposed date; `title` carries the full venue
  * name when known. `label` overrides the visible text (the vote page shows the
  * number, short name, and occupancy count inside the pill).
  */
@@ -47,7 +47,7 @@ export function venueShortName(venueNumber: number | undefined, venues: readonly
 }
 
 /**
- * The vote pill label: "V1 – Turnhalle orange" (short name only, so the pill
+ * The vote pill label: "(1) – Turnhalle orange" (short name only, so the pill
  * stays short) plus the occupancy suffix when the hall is busy. The pill's
  * tooltip still carries the full name.
  */
