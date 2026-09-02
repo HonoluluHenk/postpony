@@ -9,3 +9,8 @@
 - [x] A reviewer can unit-test `parseLocaleDateOnly` across all four locales: day-first vs month-first ordering, tolerant separators, impossible-date rejection, and empty input, without throwing.
 - [x] A date-only formatter renders an ISO date into each locale's date tokens, round-tripping correctly.
 - [x] The new grammar follows the existing tolerant, strict-round-trip strategy of the current time-only/datetime parsers.
+
+## Comments
+
+- `84b925c` ticket done: parseLocaleDateOnly + formatIsoToDateOnlyLocaleTokens in temporal-utils with unit tests across all four locales; formatIsoToLocaleTokens now delegates its date part to the new formatter.
+- `6783ee5` refactor: dedup date-token formatting via date-only formatter.
