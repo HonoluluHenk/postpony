@@ -645,6 +645,19 @@ describe('initGeneratorTimePickers with a recording AirDatepicker fake', () => {
     }
   });
 
+  it('seeds the picker time to 20:00 via startDate instead of the current time', () => {
+    installGeneratorDom();
+    initGeneratorTimePickers();
+    expect(fakeInstances).toHaveLength(7);
+    for (const instance of fakeInstances) {
+      // The sliders seed from viewDate (= startDate) when nothing is selected,
+      // so an empty row opens at the evening default, not the wall clock. The
+      // input itself stays empty — startDate never writes into the field.
+      expect(instance.opts.startDate.getHours()).toBe(20);
+      expect(instance.opts.startDate.getMinutes()).toBe(0);
+    }
+  });
+
   it('each row button opens exactly its own picker', () => {
     const {buttons} = installGeneratorDom();
     initGeneratorTimePickers();

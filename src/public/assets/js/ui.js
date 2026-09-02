@@ -300,6 +300,8 @@ export function initGeneratorTimePickers() {
   pruneDetachedPickers();
 
   // The generator's fixed Monday–Sunday grid; one time-only picker per row.
+  const defaultTime = new Date();
+  defaultTime.setHours(20, 0, 0, 0);
   document.querySelectorAll('input[name="time[]"]')
     .forEach((input) => {
       mountPicker(
@@ -315,6 +317,10 @@ export function initGeneratorTimePickers() {
           // Quarter-hour increments on the minute slider; hoursStep keeps the
           // vendor default of 1.
           minutesStep: 15,
+          // The sliders seed from viewDate (= startDate) when nothing is
+          // selected, so an empty row opens at the evening default (20:00)
+          // instead of the wall clock. startDate never writes into the field.
+          startDate: defaultTime,
           showEvent: 'adp-never-fire',
           position: 'top center',
         },

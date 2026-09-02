@@ -256,7 +256,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
         </form>
       ) : (
          <>
-           {props.clashCheckable ? (
+           {props.clashCheckable && props.proposedDates.length > 0 ? (
              <div class="row items-center gap mt-2">
                <button
                  type="button"

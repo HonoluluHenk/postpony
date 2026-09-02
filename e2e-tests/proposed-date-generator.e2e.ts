@@ -409,6 +409,15 @@ test.describe('Proposed Date Generator', () => {
     await expect(picker.locator('input[name="hours"]'))
       .toHaveAttribute('step', '1');
 
+    // An empty row opens at the evening default (20:00 / 08:00 PM), not the
+    // current wall-clock time, and the input itself stays empty until picked.
+    await expect(picker.locator('input[name="hours"]'))
+      .toHaveValue('20');
+    await expect(picker.locator('input[name="minutes"]'))
+      .toHaveValue('0');
+    await expect(editPage.generateTimeInput(0))
+      .toHaveValue('');
+
     // Dragging the sliders to a quarter-hour slot writes the en-US 'hh:mm aa'
     // token into the row input (the server grammar accepts it verbatim).
     await picker.locator('input[name="hours"]')

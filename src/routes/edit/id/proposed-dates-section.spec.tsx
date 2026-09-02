@@ -197,8 +197,20 @@ describe('ProposedDatesSection component', () => {
     const html = renderToString(ProposedDatesSection({
       ...baseProps(),
       venues: [
-        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
-        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
+        {
+          venueNumber: 2,
+          name: 'Turnhalle grün',
+          address: 'Dennigkofenweg 170',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ],
     }));
 
@@ -249,8 +261,20 @@ describe('ProposedDatesSection component', () => {
     const html = renderToString(ProposedDatesSection({
       ...baseProps(),
       venues: [
-        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
-        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
+        {
+          venueNumber: 2,
+          name: 'Turnhalle grün',
+          address: 'Dennigkofenweg 170',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ],
       proposedDates: [
         {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, maybe: 0, no: 0, venueNumber: 2},
@@ -299,8 +323,10 @@ describe('ProposedDatesSection clash info', () => {
       ],
     }));
 
-    expect(html).toContain('Home: 5:00 PM vs Thun');
-    expect(html).toContain('Away: 9:30 PM vs Burgdorf');
+    expect(html)
+      .toContain('Home: 5:00 PM vs Thun');
+    expect(html)
+      .toContain('Away: 9:30 PM vs Burgdorf');
   });
 
   it('renders the 24-hour localized time for de-CH', () => {
@@ -323,7 +349,8 @@ describe('ProposedDatesSection clash info', () => {
       ],
     }));
 
-    expect(html).toContain('Heim: 17:00 gegen Thun');
+    expect(html)
+      .toContain('Heim: 17:00 gegen Thun');
   });
 
   it('renders "checked, no clashes" when a check ran clean', () => {
@@ -343,13 +370,15 @@ describe('ProposedDatesSection clash info', () => {
       ],
     }));
 
-    expect(html).toContain('Schedule checked, no clashes');
+    expect(html)
+      .toContain('Schedule checked, no clashes');
   });
 
   it('renders "not checked" for a hand-entered match without team identities', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
-    expect(html).toContain('Not checked');
+    expect(html)
+      .toContain('Not checked');
   });
 
   it('renders nothing when the check failed (identities exist, no clash data)', () => {
@@ -358,25 +387,51 @@ describe('ProposedDatesSection clash info', () => {
       clashCheckable: true,
     }));
 
-    expect(html).not.toContain('Not checked');
-    expect(html).not.toContain('Schedule checked, no clashes');
-    expect(html).not.toContain('vs ');
+    expect(html)
+      .not
+      .toContain('Not checked');
+    expect(html)
+      .not
+      .toContain('Schedule checked, no clashes');
+    expect(html)
+      .not
+      .toContain('vs ');
   });
 
   it('offers the refresh action only for clash-checkable postponements', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
-    expect(html).not.toContain('refresh-clashes');
-    expect(html).not.toContain('Refresh schedule check');
+    expect(html)
+      .not
+      .toContain('refresh-clashes');
+    expect(html)
+      .not
+      .toContain('Refresh schedule check');
   });
 
   it('offers the refresh action for a clash-checkable postponement', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), clashCheckable: true}));
 
-    expect(html).toContain('hx-post="/edit/session-1/refresh-clashes"');
-    expect(html).toContain('hx-target="#proposed-dates-management"');
-    expect(html).toContain('>Refresh schedule check</button>');
-    expect(html).not.toContain('showing the previous results');
+    expect(html)
+      .toContain('hx-post="/edit/session-1/refresh-clashes"');
+    expect(html)
+      .toContain('hx-target="#proposed-dates-management"');
+    expect(html)
+      .toContain('>Refresh schedule check</button>');
+    expect(html)
+      .not
+      .toContain('showing the previous results');
+  });
+
+  it('hides the refresh action for a clash-checkable postponement with no proposed dates', () => {
+    const html = renderToString(ProposedDatesSection({...baseProps(), clashCheckable: true, proposedDates: []}));
+
+    expect(html)
+      .not
+      .toContain('refresh-clashes');
+    expect(html)
+      .not
+      .toContain('Refresh schedule check');
   });
 
   it('renders the refresh failure notice when a refresh failed', () => {
@@ -386,7 +441,8 @@ describe('ProposedDatesSection clash info', () => {
       refreshError: true,
     }));
 
-    expect(html).toContain('Couldn&#39;t refresh the schedule check — showing the previous results.');
+    expect(html)
+      .toContain('Couldn&#39;t refresh the schedule check — showing the previous results.');
   });
 
   it('hides the refresh action when the session is Confirmed', () => {
@@ -396,7 +452,9 @@ describe('ProposedDatesSection clash info', () => {
       clashCheckable: true,
     }));
 
-    expect(html).not.toContain('refresh-clashes');
+    expect(html)
+      .not
+      .toContain('refresh-clashes');
   });
 
   it('renders the confirm clash warning with the persistent high-visibility notice when the flag is set', () => {
@@ -406,15 +464,20 @@ describe('ProposedDatesSection clash info', () => {
       confirmClashWarning: true,
     }));
 
-    expect(html).toContain('A scheduled game clashes with this date.');
-    expect(html).toContain('class="confirm-clash-warning mt-2"');
-    expect(html).toContain('role="alert"');
+    expect(html)
+      .toContain('A scheduled game clashes with this date.');
+    expect(html)
+      .toContain('class="confirm-clash-warning mt-2"');
+    expect(html)
+      .toContain('role="alert"');
   });
 
   it('renders no confirm clash warning by default', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), status: 'Confirmed'}));
 
-    expect(html).not.toContain('A scheduled game clashes with this date.');
+    expect(html)
+      .not
+      .toContain('A scheduled game clashes with this date.');
   });
 });
 
@@ -441,7 +504,8 @@ describe('ProposedDatesSection venue occupancy info', () => {
       ],
     }));
 
-    expect(html).toContain('3 other games at this venue');
+    expect(html)
+      .toContain('3 other games at this venue');
   });
 
   it('renders the conflicting matches in an accessible tooltip popup', () => {
@@ -466,12 +530,18 @@ describe('ProposedDatesSection venue occupancy info', () => {
       ],
     }));
 
-    expect(html).toContain('role="tooltip"');
-    expect(html).toContain('aria-describedby="occupancy-tooltip-pd-1"');
-    expect(html).toContain('id="occupancy-tooltip-pd-1"');
-    expect(html).toContain('Conflicting games at this venue');
-    expect(html).toContain('8:15 PM vs Port');
-    expect(html).toContain('7:30 PM vs Bern');
+    expect(html)
+      .toContain('role="tooltip"');
+    expect(html)
+      .toContain('aria-describedby="occupancy-tooltip-pd-1"');
+    expect(html)
+      .toContain('id="occupancy-tooltip-pd-1"');
+    expect(html)
+      .toContain('Conflicting games at this venue');
+    expect(html)
+      .toContain('8:15 PM vs Port');
+    expect(html)
+      .toContain('7:30 PM vs Bern');
   });
 
   it('renders the clean line for a zero-count occupancy', () => {
@@ -490,15 +560,22 @@ describe('ProposedDatesSection venue occupancy info', () => {
       ],
     }));
 
-    expect(html).toContain('Venue checked, no other games');
-    expect(html).not.toContain('other games at this venue');
+    expect(html)
+      .toContain('Venue checked, no other games');
+    expect(html)
+      .not
+      .toContain('other games at this venue');
   });
 
   it('renders nothing when occupancy is absent (hand-entered match or failed scrape)', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
-    expect(html).not.toContain('other games at this venue');
-    expect(html).not.toContain('Venue checked');
+    expect(html)
+      .not
+      .toContain('other games at this venue');
+    expect(html)
+      .not
+      .toContain('Venue checked');
   });
 
   it('renders the localized de-CH occupancy lines', () => {
@@ -528,8 +605,10 @@ describe('ProposedDatesSection venue occupancy info', () => {
       ],
     }));
 
-    expect(html).toContain('2 weitere Spiele an dieser Halle');
-    expect(html).toContain('Halle geprüft, keine weiteren Spiele');
+    expect(html)
+      .toContain('2 weitere Spiele an dieser Halle');
+    expect(html)
+      .toContain('Halle geprüft, keine weiteren Spiele');
   });
 });
 
@@ -726,8 +805,20 @@ describe('ProposedDatesSection generator block', () => {
     const html = renderToString(ProposedDatesSection({
       ...baseProps(),
       venues: [
-        {venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
-        {venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
+        {
+          venueNumber: 2,
+          name: 'Turnhalle grün',
+          address: 'Dennigkofenweg 170',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ],
     }));
 
@@ -764,16 +855,26 @@ describe('ProposedDatesSection generator block', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
     // From and To are plain text inputs, not native ISO date controls.
-    expect(html).toContain('id="fromDate" type="text"');
-    expect(html).toContain('id="toDate" type="text"');
-    expect(html).not.toContain('id="fromDate" type="date"');
-    expect(html).not.toContain('id="toDate" type="date"');
+    expect(html)
+      .toContain('id="fromDate" type="text"');
+    expect(html)
+      .toContain('id="toDate" type="text"');
+    expect(html)
+      .not
+      .toContain('id="fromDate" type="date"');
+    expect(html)
+      .not
+      .toContain('id="toDate" type="date"');
     // The placeholder shows the locale's date token format (MM/dd/yyyy for en-US).
-    expect(html).toMatch(/id="fromDate" type="text" name="fromDate"[^>]*placeholder="MM\/dd\/yyyy"/);
-    expect(html).toMatch(/id="toDate" type="text" name="toDate"[^>]*placeholder="MM\/dd\/yyyy"/);
+    expect(html)
+      .toMatch(/id="fromDate" type="text" name="fromDate"[^>]*placeholder="MM\/dd\/yyyy"/);
+    expect(html)
+      .toMatch(/id="toDate" type="text" name="toDate"[^>]*placeholder="MM\/dd\/yyyy"/);
     // Both carry the locale's lang and autocomplete off.
-    expect(html).toMatch(/id="fromDate"[^>]*lang="en-US"[^>]*autocomplete="off"/);
-    expect(html).toMatch(/id="toDate"[^>]*lang="en-US"[^>]*autocomplete="off"/);
+    expect(html)
+      .toMatch(/id="fromDate"[^>]*lang="en-US"[^>]*autocomplete="off"/);
+    expect(html)
+      .toMatch(/id="toDate"[^>]*lang="en-US"[^>]*autocomplete="off"/);
   });
 
   it('renders the dd.MM.yyyy token placeholder for de-CH From/To fields', () => {
@@ -785,21 +886,30 @@ describe('ProposedDatesSection generator block', () => {
       inputFormat: 'dd.MM.yyyy HH:mm',
     }));
 
-    expect(html).toMatch(/id="fromDate"[^>]*placeholder="dd\.MM\.yyyy"/);
-    expect(html).toMatch(/id="toDate"[^>]*placeholder="dd\.MM\.yyyy"/);
-    expect(html).toMatch(/id="fromDate"[^>]*lang="de-CH"/);
-    expect(html).toMatch(/id="toDate"[^>]*lang="de-CH"/);
+    expect(html)
+      .toMatch(/id="fromDate"[^>]*placeholder="dd\.MM\.yyyy"/);
+    expect(html)
+      .toMatch(/id="toDate"[^>]*placeholder="dd\.MM\.yyyy"/);
+    expect(html)
+      .toMatch(/id="fromDate"[^>]*lang="de-CH"/);
+    expect(html)
+      .toMatch(/id="toDate"[^>]*lang="de-CH"/);
   });
 
   it('gives each From/To field its own calendar button with a distinct accessible name', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 
-    expect(html).toContain('id="fromDate-picker"');
-    expect(html).toContain('id="toDate-picker"');
-    expect(html).toContain('aria-label="Open calendar for the From date"');
-    expect(html).toContain('aria-label="Open calendar for the To date"');
+    expect(html)
+      .toContain('id="fromDate-picker"');
+    expect(html)
+      .toContain('id="toDate-picker"');
+    expect(html)
+      .toContain('aria-label="Open calendar for the From date"');
+    expect(html)
+      .toContain('aria-label="Open calendar for the To date"');
     // The datetime field keeps its existing single label.
-    expect(html).toContain('aria-label="Open calendar"');
+    expect(html)
+      .toContain('aria-label="Open calendar"');
   });
 
   it('round-trips locale-token From/To values on re-render', () => {
@@ -809,8 +919,10 @@ describe('ProposedDatesSection generator block', () => {
       toDate: '09/23/2026',
     }));
 
-    expect(html).toMatch(/id="fromDate"[^>]*value="08\/26\/2026"/);
-    expect(html).toMatch(/id="toDate"[^>]*value="09\/23\/2026"/);
+    expect(html)
+      .toMatch(/id="fromDate"[^>]*value="08\/26\/2026"/);
+    expect(html)
+      .toMatch(/id="toDate"[^>]*value="09\/23\/2026"/);
   });
 
   it('marks From/To invalid with the shared required message and keeps raw values', () => {
@@ -822,14 +934,22 @@ describe('ProposedDatesSection generator block', () => {
       toDate: 'also-bad',
     }));
 
-    expect(html).toMatch(/id="fromDate"[^>]*aria-invalid="true"/);
-    expect(html).toMatch(/id="fromDate"[^>]*aria-describedby="fromDate-error"/);
-    expect(html).toContain('id="fromDate-error"');
-    expect(html).toMatch(/id="toDate"[^>]*aria-invalid="true"/);
-    expect(html).toMatch(/id="toDate"[^>]*aria-describedby="toDate-error"/);
-    expect(html).toContain('id="toDate-error"');
-    expect(html).toMatch(/id="fromDate"[^>]*value="bad-token"/);
-    expect(html).toMatch(/id="toDate"[^>]*value="also-bad"/);
+    expect(html)
+      .toMatch(/id="fromDate"[^>]*aria-invalid="true"/);
+    expect(html)
+      .toMatch(/id="fromDate"[^>]*aria-describedby="fromDate-error"/);
+    expect(html)
+      .toContain('id="fromDate-error"');
+    expect(html)
+      .toMatch(/id="toDate"[^>]*aria-invalid="true"/);
+    expect(html)
+      .toMatch(/id="toDate"[^>]*aria-describedby="toDate-error"/);
+    expect(html)
+      .toContain('id="toDate-error"');
+    expect(html)
+      .toMatch(/id="fromDate"[^>]*value="bad-token"/);
+    expect(html)
+      .toMatch(/id="toDate"[^>]*value="also-bad"/);
   });
 });
 
