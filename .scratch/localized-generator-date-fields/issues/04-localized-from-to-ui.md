@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] An organizer sees From and To as text fields showing their locale's date tokens with the token-format placeholder.
-- [ ] Each field has its own calendar button that opens a localized date-only grid; the grid opens only via that button and never on focus.
-- [ ] The picker writes locale tokens into the field, which round-trip through the server's locale-aware validation.
-- [ ] The pickers stay live after an HTMX partial swap of the generator form.
-- [ ] Each calendar button has a distinct accessible name identifying its field, and the axe checks pass with a picker open.
+- [x] An organizer sees From and To as text fields showing their locale's date tokens with the token-format placeholder.
+- [x] Each field has its own calendar button that opens a localized date-only grid; the grid opens only via that button and never on focus.
+- [x] The picker writes locale tokens into the field, which round-trip through the server's locale-aware validation.
+- [x] The pickers stay live after an HTMX partial swap of the generator form.
+- [x] Each calendar button has a distinct accessible name identifying its field, and the axe checks pass with a picker open.

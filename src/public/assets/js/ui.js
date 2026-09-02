@@ -322,6 +322,27 @@ export function initGeneratorTimePickers() {
     });
 }
 
+/**
+ * Progressively enhances the generator's From and To date fields with a
+ * date-only air-datepicker each (no time picker). Each picker opens only via
+ * its own explicit calendar button, never on input focus, and writes the
+ * locale's date tokens into the field — matching the field placeholder and the
+ * server's locale-aware date-only grammar. The fields stay free-form text
+ * inputs, so a picker is a pure enhancement.
+ */
+export function initGeneratorDatePickers() {
+  const locale = resolvePickerLocale();
+  if (!locale) return;
+  pruneDetachedPickers();
+
+  [['fromDate', 'fromDate-picker'], ['toDate', 'toDate-picker']]
+    .forEach(([inputId, buttonId]) => {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      initDatePicker(input, document.getElementById(buttonId), {showTime: false});
+    });
+}
+
 // ponytail: air-datepicker ships no ARIA labels on its time sliders; patch
 // them with localized names so axe (and screen readers) see labelled fields.
 // The picker builds its DOM lazily on first show, hence this runs per open. The
@@ -372,6 +393,7 @@ export function initFocusManagement() {
 
     initProposedDateTimePicker();
     initGeneratorTimePickers();
+    initGeneratorDatePickers();
 
     if (el.matches('#main-content')) {
       var h = el.querySelector('h2, h3, h4');

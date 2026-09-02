@@ -759,6 +759,78 @@ describe('ProposedDatesSection generator block', () => {
     expect(html)
       .toContain('No match anchor — using today as window start.');
   });
+
+  it('renders From and To as text fields with the locale date-token placeholder and lang', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    // From and To are plain text inputs, not native ISO date controls.
+    expect(html).toContain('id="fromDate" type="text"');
+    expect(html).toContain('id="toDate" type="text"');
+    expect(html).not.toContain('id="fromDate" type="date"');
+    expect(html).not.toContain('id="toDate" type="date"');
+    // The placeholder shows the locale's date token format (MM/dd/yyyy for en-US).
+    expect(html).toMatch(/id="fromDate" type="text" name="fromDate"[^>]*placeholder="MM\/dd\/yyyy"/);
+    expect(html).toMatch(/id="toDate" type="text" name="toDate"[^>]*placeholder="MM\/dd\/yyyy"/);
+    // Both carry the locale's lang and autocomplete off.
+    expect(html).toMatch(/id="fromDate"[^>]*lang="en-US"[^>]*autocomplete="off"/);
+    expect(html).toMatch(/id="toDate"[^>]*lang="en-US"[^>]*autocomplete="off"/);
+  });
+
+  it('renders the dd.MM.yyyy token placeholder for de-CH From/To fields', () => {
+    const tDe = (key: any, params?: any): string => getTranslation('de-CH', key, params);
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      t: tDe,
+      locale: 'de-CH' as const,
+      inputFormat: 'dd.MM.yyyy HH:mm',
+    }));
+
+    expect(html).toMatch(/id="fromDate"[^>]*placeholder="dd\.MM\.yyyy"/);
+    expect(html).toMatch(/id="toDate"[^>]*placeholder="dd\.MM\.yyyy"/);
+    expect(html).toMatch(/id="fromDate"[^>]*lang="de-CH"/);
+    expect(html).toMatch(/id="toDate"[^>]*lang="de-CH"/);
+  });
+
+  it('gives each From/To field its own calendar button with a distinct accessible name', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html).toContain('id="fromDate-picker"');
+    expect(html).toContain('id="toDate-picker"');
+    expect(html).toContain('aria-label="Open calendar for the From date"');
+    expect(html).toContain('aria-label="Open calendar for the To date"');
+    // The datetime field keeps its existing single label.
+    expect(html).toContain('aria-label="Open calendar"');
+  });
+
+  it('round-trips locale-token From/To values on re-render', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      fromDate: '08/26/2026',
+      toDate: '09/23/2026',
+    }));
+
+    expect(html).toMatch(/id="fromDate"[^>]*value="08\/26\/2026"/);
+    expect(html).toMatch(/id="toDate"[^>]*value="09\/23\/2026"/);
+  });
+
+  it('marks From/To invalid with the shared required message and keeps raw values', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      generatorFromError: 'Please enter a date',
+      generatorToError: 'Please enter a date',
+      fromDate: 'bad-token',
+      toDate: 'also-bad',
+    }));
+
+    expect(html).toMatch(/id="fromDate"[^>]*aria-invalid="true"/);
+    expect(html).toMatch(/id="fromDate"[^>]*aria-describedby="fromDate-error"/);
+    expect(html).toContain('id="fromDate-error"');
+    expect(html).toMatch(/id="toDate"[^>]*aria-invalid="true"/);
+    expect(html).toMatch(/id="toDate"[^>]*aria-describedby="toDate-error"/);
+    expect(html).toContain('id="toDate-error"');
+    expect(html).toMatch(/id="fromDate"[^>]*value="bad-token"/);
+    expect(html).toMatch(/id="toDate"[^>]*value="also-bad"/);
+  });
 });
 
 describe('ProposedDatesSectionPartial', () => {

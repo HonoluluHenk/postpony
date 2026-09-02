@@ -10,6 +10,7 @@ import {
   initDeleteDialogs,
   initFocusManagement,
   initGeneratorTimePickers,
+  initGeneratorDatePickers,
   initOccupancyTooltips,
 } from './ui.js';
 
@@ -367,6 +368,10 @@ describe('vendor init no-ops', () => {
     expect(() => initGeneratorTimePickers()).not.toThrow();
   });
 
+  it('initGeneratorDatePickers is a no-op when AirDatepicker is absent', () => {
+    expect(() => initGeneratorDatePickers()).not.toThrow();
+  });
+
   it('initDatePicker is a no-op when AirDatepicker is absent', () => {
     const input = document.createElement('input');
     const button = document.createElement('button');
@@ -674,6 +679,110 @@ describe('initGeneratorTimePickers with a recording AirDatepicker fake', () => {
     // the rebound buttons open the fresh instances, not the destroyed ones
     freshSingle.button.click();
     expect(fakeInstances[8].shows).toBe(1);
+    expect(fakeInstances[0].shows).toBe(0);
+  });
+});
+
+describe('initGeneratorDatePickers with a recording AirDatepicker fake', () => {
+  const fakeInstances = [];
+
+  class FakeAirDatepicker {
+    constructor(input, options) {
+      this.input = input;
+      this.opts = options;
+      this.$datepicker = document.createElement('div');
+      this.shows = 0;
+      this.destroyed = false;
+      fakeInstances.push(this);
+    }
+
+    destroy() {
+      this.destroyed = true;
+    }
+
+    show() {
+      this.shows += 1;
+    }
+  }
+
+  function installGeneratorDateDom() {
+    const fromInput = document.createElement('input');
+    fromInput.id = 'fromDate';
+    const fromButton = document.createElement('button');
+    fromButton.id = 'fromDate-picker';
+    const toInput = document.createElement('input');
+    toInput.id = 'toDate';
+    const toButton = document.createElement('button');
+    toButton.id = 'toDate-picker';
+    document.body.appendChild(fromInput);
+    document.body.appendChild(fromButton);
+    document.body.appendChild(toInput);
+    document.body.appendChild(toButton);
+    return {fromInput, fromButton, toInput, toButton};
+  }
+
+  let realAirDatepicker;
+  let realLocale;
+
+  beforeEach(() => {
+    realAirDatepicker = window.AirDatepicker;
+    realLocale = window.AirDatepickerLocale;
+    window.AirDatepicker = FakeAirDatepicker;
+    window.AirDatepickerLocale = {
+      'en-US': {dateFormat: 'MM/dd/yyyy', timeFormat: 'hh:mm aa', hours: 'Hours', minutes: 'Minutes'},
+    };
+    document.documentElement.lang = 'en-US';
+    fakeInstances.length = 0;
+  });
+
+  afterEach(() => {
+    window.AirDatepicker = realAirDatepicker;
+    window.AirDatepickerLocale = realLocale;
+    document.body.innerHTML = '';
+  });
+
+  it('mounts one date-only picker per From/To field with no timepicker', () => {
+    installGeneratorDateDom();
+    initGeneratorDatePickers();
+    expect(fakeInstances).toHaveLength(2);
+    expect(fakeInstances[0].input.id).toBe('fromDate');
+    expect(fakeInstances[1].input.id).toBe('toDate');
+    for (const instance of fakeInstances) {
+      // date-only mode: no timepicker, opens only via the explicit button.
+      expect(instance.opts.timepicker).toBeUndefined();
+      expect(instance.opts.showEvent).toBe('adp-never-fire');
+    }
+  });
+
+  it('each From/To button opens exactly its own picker', () => {
+    const {fromButton, toButton} = installGeneratorDateDom();
+    initGeneratorDatePickers();
+    expect(fakeInstances[0].shows).toBe(0);
+    expect(fakeInstances[1].shows).toBe(0);
+    fromButton.click();
+    expect(fakeInstances[0].shows).toBe(1);
+    expect(fakeInstances[1].shows).toBe(0);
+    toButton.click();
+    expect(fakeInstances[0].shows).toBe(1);
+    expect(fakeInstances[1].shows).toBe(1);
+  });
+
+  it('destroys stale instances on an HTMX swap and rebinds every re-rendered input once', () => {
+    installGeneratorDateDom();
+    initGeneratorDatePickers();
+    expect(fakeInstances).toHaveLength(2);
+
+    // Simulate a partial swap: the section is replaced by fresh DOM.
+    document.body.innerHTML = '';
+    installGeneratorDateDom();
+    initGeneratorDatePickers();
+
+    expect(fakeInstances).toHaveLength(4);
+    expect(fakeInstances.slice(0, 2).every((instance) => instance.destroyed)).toBe(true);
+    expect(fakeInstances.slice(2).every((instance) => !instance.destroyed)).toBe(true);
+    fakeInstances[0].show = () => { fakeInstances[0].shows += 1; };
+    document.getElementById('fromDate-picker').click();
+    expect(fakeInstances[2].shows).toBe(1);
     expect(fakeInstances[0].shows).toBe(0);
   });
 });

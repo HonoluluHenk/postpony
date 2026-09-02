@@ -139,7 +139,7 @@ export class EditPage {
   }
 
   get pickerButton(): Locator {
-    return this.page.getByRole('button', {name: 'Open calendar'});
+    return this.page.getByRole('button', {name: 'Open calendar', exact: true});
   }
 
   get proposedDateList(): Locator {

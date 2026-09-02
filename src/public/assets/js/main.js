@@ -8,6 +8,7 @@ import {
   initFocusManagement,
   initOccupancyTooltips,
   initGeneratorTimePickers,
+  initGeneratorDatePickers,
   initProposedDateTimePicker
 } from './ui.js';
 
@@ -24,4 +25,5 @@ window.addEventListener('load', () => {
   initOccupancyTooltips();
   initProposedDateTimePicker();
   initGeneratorTimePickers();
+  initGeneratorDatePickers();
 });

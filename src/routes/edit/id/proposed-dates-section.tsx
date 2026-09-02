@@ -81,6 +81,7 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
   const rowAction = `/edit/${sessionId}/proposed-dates`;
   const headingId = 'generate-tuple-heading';
   const timeFormat = localeConfig(locale).timeFormat;
+  const dateFormat = localeConfig(locale).dateFormat;
   const timeLabel = t('proposed_dates_generate_time_label');
   const submitted = times ?? [];
   const fromValue = fromDate ?? '';
@@ -101,9 +102,12 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
         <div class={`field label border${fromError ? ' invalid' : ''}`}>
           <input
             id="fromDate"
-            type="date"
+            type="text"
             name="fromDate"
             value={fromValue}
+            placeholder={dateFormat}
+            lang={locale}
+            autocomplete="off"
             aria-invalid={fromError ? 'true' : undefined}
             aria-describedby={fromError ? 'fromDate-error' : undefined}
           />
@@ -112,12 +116,24 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
             <span id="fromDate-error" class="error" role="alert">{fromError}</span>
           ) : null}
         </div>
+        <button
+          type="button"
+          id="fromDate-picker"
+          class="button"
+          aria-label={t('proposed_dates_generate_from_picker_label')}
+          title={t('proposed_dates_generate_from_picker_label')}
+        >
+          <i aria-hidden="true">calendar_today</i>
+        </button>
         <div class={`field label border${toError ? ' invalid' : ''}`}>
           <input
             id="toDate"
-            type="date"
+            type="text"
             name="toDate"
             value={toValue}
+            placeholder={dateFormat}
+            lang={locale}
+            autocomplete="off"
             aria-invalid={toError ? 'true' : undefined}
             aria-describedby={toError ? 'toDate-error' : undefined}
           />
@@ -126,6 +142,15 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
             <span id="toDate-error" class="error" role="alert">{toError}</span>
           ) : null}
         </div>
+        <button
+          type="button"
+          id="toDate-picker"
+          class="button"
+          aria-label={t('proposed_dates_generate_to_picker_label')}
+          title={t('proposed_dates_generate_to_picker_label')}
+        >
+          <i aria-hidden="true">calendar_today</i>
+        </button>
         <div class="field label border">
           <select id="generateVenueNumber" name="venueNumber">
             {props.venueOptions}
