@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Submitting From/To as locale tokens (day-first for CH, month-first for en-US) parses deterministically under the rendering locale and generates Proposed Dates as before.
-- [ ] An empty From or To is rejected with the required-message shown on the correct field, and no Proposed Dates are added.
-- [ ] The get-route prefills From (today) and To (today+4w, or the Match anchor +4w) as locale tokens, not ISO.
-- [ ] The removed silent default changes no persistence or window semantics when both fields are filled.
+- [x] Submitting From/To as locale tokens (day-first for CH, month-first for en-US) parses deterministically under the rendering locale and generates Proposed Dates as before.
+- [x] An empty From or To is rejected with the required-message shown on the correct field, and no Proposed Dates are added.
+- [x] The get-route prefills From (today) and To (today+4w, or the Match anchor +4w) as locale tokens, not ISO.
+- [x] The removed silent default changes no persistence or window semantics when both fields are filled.

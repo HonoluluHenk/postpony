@@ -1,5 +1,5 @@
 import type { App } from '../../../app';
-import { formatIsoToLocaleTokens, nowPlainDateTimeIso } from '../../../lib/temporal-utils';
+import { formatIsoToDateOnlyLocaleTokens, formatIsoToLocaleTokens, nowPlainDateTimeIso } from '../../../lib/temporal-utils';
 import { Temporal } from '@js-temporal/polyfill';
 import { MAX_FORWARD_WEEKS_FROM_ORIGINAL } from '../../../lib/proposed-dates-generator';
 import { EditPage } from './edit';
@@ -20,8 +20,11 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     : '';
 
   const todayDate = Temporal.PlainDate.from(nowPlainDateTimeIso());
-  const defaultFromDate = todayDate.toString();
-  const defaultToDate = todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL}).toString();
+  const defaultFromDate = formatIsoToDateOnlyLocaleTokens(todayDate.toString(), locale);
+  const defaultToDateRaw = session.originalMatchDateTime !== undefined
+    ? Temporal.PlainDate.from(session.originalMatchDateTime).add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL})
+    : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL});
+  const defaultToDate = formatIsoToDateOnlyLocaleTokens(defaultToDateRaw.toString(), locale);
 
   const html = app.render(
     <EditPage

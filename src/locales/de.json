@@ -75,6 +75,7 @@
   "proposed_dates_generate_section": "Termine vorschlagen (Generator)",
   "proposed_dates_generate_help": "Tragen Sie die gewünschte Uhrzeit pro Tag ein; Tage ohne Uhrzeit werden übersprungen.",
   "proposed_dates_generate_button": "Generieren",
+  "proposed_dates_generate_date_required": "Bitte geben Sie ein Datum ein",
   "proposed_dates_generate_added": "<%= it.count %> Termine hinzugefügt",
   "proposed_dates_generate_none": "Keine Termine hinzugefügt. Tragen Sie eine Uhrzeit für die Tage ein, die Sie vorschlagen möchten.",
   "proposed_dates_generate_no_anchor": "Kein Spiel-Anker — heute wird als Start des Fensters verwendet.",

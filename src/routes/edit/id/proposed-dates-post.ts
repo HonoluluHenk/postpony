@@ -5,7 +5,13 @@ import { fetchClubMeetings, fetchMatches, seasonWindow, type Match } from '../..
 import { MAX_TUPLES, MAX_FORWARD_WEEKS_FROM_ORIGINAL, generateProposedDates, type ProposedDateTuple } from '../../../lib/proposed-dates-generator';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import { PostponementRules } from '../../../lib/postponement';
-import { nowPlainDateTimeIso, parseLocaleDateTime, parseLocaleTimeOnly } from '../../../lib/temporal-utils';
+import {
+  formatIsoToDateOnlyLocaleTokens,
+  nowPlainDateTimeIso,
+  parseLocaleDateOnly,
+  parseLocaleDateTime,
+  parseLocaleTimeOnly,
+} from '../../../lib/temporal-utils';
 import { DEFAULT_CLUB_ID, type Postponement, type Venue } from '../../../lib/models';
 import { computeVenueOccupancy, type VenueOccupancyByProposedDate } from '../../../lib/venue-occupancy';
 import { Temporal } from '@js-temporal/polyfill';
@@ -64,13 +70,36 @@ function maxVenueNumber(venues: readonly Venue[]): number {
 interface TupleOutput {
   generate: typeof TUPLE_DISCRIMINATOR;
   'time[]': string[];
-  fromDate?: string;
-  toDate?: string;
+  fromDate: string;
+  toDate: string;
   venueNumber?: number;
   proposedDateTime?: never;
 }
 
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+/**
+ * Shared From/To date-only field schema: required, parsed under the rendering
+ * locale so `dd.MM.yyyy` (CH) or `MM/dd/yyyy` (en-US) submissions are
+ * deterministic (ADR-0016). An empty value is a required error surfaced on the
+ * offending field; a non-empty value that fails the locale grammar keeps the
+ * generic invalid-datetime message. The transformed output is the ISO date.
+ */
+function dateOnlyFieldSchema(app: App): v.BaseSchema<unknown, string, v.BaseIssue<unknown>> {
+  const requiredMsg = app.t('proposed_dates_generate_date_required');
+  const invalidMsg = app.t('proposed_date_time_invalid');
+  return v.pipe(
+    v.string(requiredMsg),
+    // Required: an empty (or missing) value is a required error. Guarded so
+    // the two checks stay mutually exclusive — mapValidationToErrors keeps the
+    // last issue, so a required failure must not also emit a parse issue.
+    v.check((val: string): boolean => val.length > 0, requiredMsg),
+    v.check(
+      (val: string): boolean => val.length === 0 || parseLocaleDateOnly(val, app.locale) !== undefined,
+      invalidMsg,
+    ),
+    // ponytail: `?? ''` avoids a non-null assertion; the check above guarantees defined.
+    v.transform((val: string): string => parseLocaleDateOnly(val, app.locale) ?? ''),
+  );
+}
 
 /**
  * Shared venue-number field for the single-date and generator schemas: absent
@@ -94,8 +123,8 @@ function buildTupleSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unkn
   return v.object({
     generate: v.literal(TUPLE_DISCRIMINATOR, app.t('proposed_date_time_invalid')),
     'time[]': v.array(v.string()),
-    fromDate: v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))),
-    toDate: v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))),
+    fromDate: dateOnlyFieldSchema(app),
+    toDate: dateOnlyFieldSchema(app),
     venueNumber: venueNumberSchema(app, venues),
     // ponytail: rogue POST combining the generator branch with the single-date
     // field is explicitly rejected. The schema encodes it via the `never`
@@ -269,6 +298,8 @@ async function handleTupleSubmit(
       return app.c.html(renderEditPartials(app, session, {
         times: rawTimes,
         generatorError: errors.fields['venueNumber'] ?? errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
+        generatorFromError: errors.fields['fromDate'],
+        generatorToError: errors.fields['toDate'],
         fromDate: typeof values['fromDate'] === 'string' ? values['fromDate'] : '',
         toDate: typeof values['toDate'] === 'string' ? values['toDate'] : '',
       }), {status: 400});
@@ -277,16 +308,18 @@ async function handleTupleSubmit(
   }
 
   const times = validation.output['time[]'];
-  const rawFromDate = validation.output.fromDate;
-  const rawToDate = validation.output.toDate;
+  const fromDate = validation.output.fromDate;
+  const toDate = validation.output.toDate;
+  const fromDateToken = formatIsoToDateOnlyLocaleTokens(fromDate, locale);
+  const toDateToken = formatIsoToDateOnlyLocaleTokens(toDate, locale);
   if (times.length > MAX_TUPLES) {
     // ponytail: the fixed 7-row form can never exceed MAX_TUPLES; this is a
     // security guard against a hand-crafted oversized time[] array.
     if (app.isPartial) {
       return app.c.html(renderEditPartials(app, session, {
         generatorError: app.t('proposed_date_time_invalid'),
-        fromDate: rawFromDate ?? '',
-        toDate: rawToDate ?? '',
+        fromDate: fromDateToken,
+        toDate: toDateToken,
       }), {status: 400});
     }
     return redirectAfterEdit(app, session);
@@ -298,29 +331,20 @@ async function handleTupleSubmit(
       return app.c.html(renderEditPartials(app, session, {
         times,
         generatorInvalidRow: parsed.invalidRowIndex,
-        fromDate: rawFromDate ?? '',
-        toDate: rawToDate ?? '',
+        fromDate: fromDateToken,
+        toDate: toDateToken,
       }), {status: 400});
     }
     return redirectAfterEdit(app, session);
   }
 
   if (parsed.tuples.length === 0) {
-    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate: rawFromDate ?? '', toDate: rawToDate ?? ''});
+    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate: fromDateToken, toDate: toDateToken});
   }
 
   // Validate from/to date constraints
   const nowIso = nowPlainDateTimeIso();
-  const _now = Temporal.PlainDateTime.from(nowIso);
   const todayDate = Temporal.PlainDate.from(nowIso);
-
-  // Defaults: when no anchor, use today/today+4w; when anchor exists, use today/anchor+4w
-  const defaultToDate = session.originalMatchDateTime !== undefined
-    ? Temporal.PlainDate.from(session.originalMatchDateTime).add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL}).toString()
-    : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL}).toString();
-
-  const fromDate = rawFromDate ?? todayDate.toString();
-  const toDate = rawToDate ?? defaultToDate;
 
   const fromDatePlain = Temporal.PlainDate.from(fromDate);
   const toDatePlain = Temporal.PlainDate.from(toDate);
@@ -330,8 +354,8 @@ async function handleTupleSubmit(
     return renderPartial(app, session, {
       times,
       generatorFromError: app.t('proposed_dates_generate_from_invalid'),
-      fromDate,
-      toDate,
+      fromDate: fromDateToken,
+      toDate: toDateToken,
     });
   }
 
@@ -340,8 +364,8 @@ async function handleTupleSubmit(
     return renderPartial(app, session, {
       times,
       generatorToError: app.t('proposed_dates_generate_to_invalid'),
-      fromDate,
-      toDate,
+      fromDate: fromDateToken,
+      toDate: toDateToken,
     });
   }
 
@@ -357,8 +381,8 @@ async function handleTupleSubmit(
     return renderPartial(app, session, {
       times,
       generatorToError: app.t(toErrorKey),
-      fromDate,
-      toDate,
+      fromDate: fromDateToken,
+      toDate: toDateToken,
     });
   }
 
@@ -383,7 +407,7 @@ async function handleTupleSubmit(
   });
 
   if (generated.added.length === 0) {
-    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate, toDate});
+    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate: fromDateToken, toDate: toDateToken});
   }
 
   const rules = new PostponementRules();
@@ -399,8 +423,8 @@ async function handleTupleSubmit(
   const extras: {times: string[]; generatorSuccessCount: number; generatorError?: string; generatorFromError?: string; generatorToError?: string; fromDate?: string; toDate?: string} = {
     times,
     generatorSuccessCount: generated.added.length,
-    fromDate,
-    toDate,
+    fromDate: fromDateToken,
+    toDate: toDateToken,
   };
   return renderPartial(app, session, extras, updated);
 }

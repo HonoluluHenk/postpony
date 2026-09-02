@@ -56,6 +56,11 @@ function createApp(options: MockOptions = {}): App {
 }
 
 const FIXED_TODAY_ISO = '2026-08-25T08:00';
+// en-US date tokens the generator's From/To fields submit for the fixed "today"
+// (2026-08-25) and the default windows: anchor+4w and today+4w respectively.
+const FROM_TOKEN = '08/25/2026';
+const TO_TOKEN_ANCHOR = '09/30/2026';
+const TO_TOKEN_TODAY = '09/22/2026';
 
 describe('edit handlers', () => {
 
@@ -346,7 +351,7 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm', '9:00 pm'], venueNumber: '2'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm', '9:00 pm'], venueNumber: '2', fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
         });
         await app.store.save(session);
 
@@ -371,7 +376,7 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm', '9:00 pm'], venueNumber: '3'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm', '9:00 pm'], venueNumber: '3', fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
         });
         await app.store.save(session);
 
@@ -417,7 +422,7 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm'], venueNumber: '1'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm'], venueNumber: '1', fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
         });
         await app.store.save(session);
 
@@ -439,7 +444,7 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm'], venueNumber: '2'},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm'], venueNumber: '2', fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
         });
         await app.store.save(session);
 
@@ -499,6 +504,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': ['8:00 pm'],
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_ANCHOR,
         },
       });
       await app.store.save(session);
@@ -541,6 +548,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': ['8:00 pm', '', '9:00 pm'],
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_ANCHOR,
         },
       });
       await app.store.save(session);
@@ -580,6 +589,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': ['8:00 pm', 'not-a-time', '9:00 pm'],
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_ANCHOR,
         },
       });
       await app.store.save(session);
@@ -624,6 +635,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': ['', '', '', '', '', '', ''],
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_ANCHOR,
         },
       });
       await app.store.save(session);
@@ -652,6 +665,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': times,
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_ANCHOR,
         },
       });
       await app.store.save(session);
@@ -679,6 +694,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': ['8:00 pm'],
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_TODAY,
         },
       });
       await app.store.save(session);
@@ -712,8 +729,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': ['8:00 pm'],
-          fromDate: FIXED_TODAY_ISO.slice(0, 10),
-          toDate: '2026-08-26',
+          fromDate: FROM_TOKEN,
+          toDate: '08/26/2026',
         },
       });
       await app.store.save(session);
@@ -741,6 +758,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': [],
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_ANCHOR,
         },
       });
       await app.store.save(session);
@@ -754,6 +773,70 @@ describe('edit handlers', () => {
         .toContain('No dates were added');
     });
 
+    test('tuple branch empty From: required message on the From field, no Proposed Dates added', async () => {
+      const session = aSession({originalMatchDateTime: '2026-09-02T16:00', proposedDates: [], status: 'Draft'});
+      const app = createApp({
+        params: {id: session.id},
+        headers: {'HX-Request': 'true'},
+        body: {
+          generate: 'tuple',
+          'time[]': ['8:00 pm'],
+          fromDate: '',
+          toDate: TO_TOKEN_ANCHOR,
+        },
+      });
+      await app.store.save(session);
+
+      const response = await handleEditProposedDatesPost(app);
+      const html = await response.text();
+
+      expect(response.status)
+        .toBe(400);
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+      expect(html)
+        .toMatch(/id="fromDate"[^>]*aria-invalid="true"/);
+      expect(html)
+        .toMatch(/id="fromDate"[^>]*aria-describedby="fromDate-error"/);
+      expect(html)
+        .toContain('id="fromDate-error"');
+      expect(html)
+        .toContain('>Please enter a date</span>');
+    });
+
+    test('tuple branch empty To: required message on the To field, no Proposed Dates added', async () => {
+      const session = aSession({originalMatchDateTime: '2026-09-02T16:00', proposedDates: [], status: 'Draft'});
+      const app = createApp({
+        params: {id: session.id},
+        headers: {'HX-Request': 'true'},
+        body: {
+          generate: 'tuple',
+          'time[]': ['8:00 pm'],
+          fromDate: FROM_TOKEN,
+          toDate: '',
+        },
+      });
+      await app.store.save(session);
+
+      const response = await handleEditProposedDatesPost(app);
+      const html = await response.text();
+
+      expect(response.status)
+        .toBe(400);
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+      expect(html)
+        .toMatch(/id="toDate"[^>]*aria-invalid="true"/);
+      expect(html)
+        .toMatch(/id="toDate"[^>]*aria-describedby="toDate-error"/);
+      expect(html)
+        .toContain('id="toDate-error"');
+      expect(html)
+        .toContain('>Please enter a date</span>');
+    });
+
     test('non-partial tuple submit: redirects to the edit page rather than rendering html', async () => {
       const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
       const app = createApp({
@@ -761,6 +844,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': ['8:00 pm'],
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_ANCHOR,
         },
       });
       await app.store.save(session);
@@ -792,6 +877,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': ['not-a-time'],
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_ANCHOR,
         },
       });
       await app.store.save(session);
@@ -813,6 +900,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': times,
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_ANCHOR,
         },
       });
       await app.store.save(session);
@@ -843,6 +932,8 @@ describe('edit handlers', () => {
         body: {
           generate: 'tuple',
           'time[]': ['8:00 pm'],
+          fromDate: FROM_TOKEN,
+          toDate: TO_TOKEN_ANCHOR,
         },
       });
       await app.store.save(session);
@@ -998,7 +1089,7 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm']},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
         });
         await app.store.save(session);
         const saveSpy = vi.spyOn(app.store, 'save');
@@ -1101,7 +1192,7 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm', '8:00 pm']},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm', '8:00 pm'], fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
         });
         await app.store.save(session);
 
@@ -1191,7 +1282,7 @@ describe('edit handlers', () => {
         const app = createApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
-          body: {generate: 'tuple', 'time[]': ['8:00 pm']},
+          body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
         });
         await app.store.save(session);
         const saveSpy = vi.spyOn(app.store, 'save');
