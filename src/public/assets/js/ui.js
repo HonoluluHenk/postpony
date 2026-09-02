@@ -242,35 +242,48 @@ function mountPicker(input, button, options) {
 }
 
 /**
+ * Progressively enhances an input with an air-datepicker calendar. The picker
+ * opens only via the explicit calendar button (never on focus) and writes the
+ * locale's token format. `showTime` controls whether a time picker is included
+ * (datetime mode) or omitted (date-only mode, ready for From/To fields).
+ * @param {HTMLInputElement} input
+ * @param {HTMLButtonElement|null} button
+ * @param {{ showTime?: boolean }} [config]
+ */
+export function initDatePicker(input, button, config) {
+  const locale = resolvePickerLocale();
+  if (!input || !locale) return;
+  pruneDetachedPickers();
+  const showTime = config?.showTime ?? false;
+
+  mountPicker(
+    input,
+    button,
+    {
+      locale,
+      dateFormat: locale.dateFormat,
+      ...(showTime
+        ? {timeFormat: locale.timeFormat, dateTimeSeparator: ' ', timepicker: true, minutesStep: 15}
+        : {}),
+      // ponytail: a never-fired event keeps the picker closed until the explicit
+      // button calls show(); `''` would also work but the string event is clearer.
+      showEvent: 'adp-never-fire',
+      position: 'top center',
+    },
+  );
+}
+
+/**
  * Progressively enhances the proposed-date input with air-datepicker. The
  * picker is opened only via the explicit calendar button, never on focus, and
  * writes the locale's token format, which matches the input placeholder and
  * the server grammar, e.g. `02.08.2026 20:00` or `08/02/2026 08:00 pm`.
  */
 export function initProposedDateTimePicker() {
-  const locale = resolvePickerLocale();
-  const input = document.getElementById('proposedDateTime');
-  if (!input || !locale) return;
-  pruneDetachedPickers();
-
-  mountPicker(
-    input,
+  initDatePicker(
+    document.getElementById('proposedDateTime'),
     document.getElementById('proposedDateTimePicker'),
-    {
-      locale,
-      dateFormat: locale.dateFormat,
-      timeFormat: locale.timeFormat,
-      dateTimeSeparator: ' ',
-      timepicker: true,
-      // Only quarter-hour proposals are offered; free-text typing of any minute
-      // stays untouched (the server grammar stays tolerant). hoursStep keeps the
-      // vendor default of 1.
-      minutesStep: 15,
-      // ponytail: a never-fired event keeps the picker closed until the explicit
-      // button calls show(); `''` would also work but the string event is clearer.
-      showEvent: 'adp-never-fire',
-      position: 'top center',
-    },
+    {showTime: true},
   );
 }
 

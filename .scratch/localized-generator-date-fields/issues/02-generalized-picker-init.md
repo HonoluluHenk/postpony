@@ -6,6 +6,6 @@
 
 **Status:** ready-for-agent
 
-- [ ] The existing single Proposed Date picker still opens via its button, writes locale tokens, and survives HTMX swaps exactly as before (regression-guarded by the existing browser no-op spec and the date-picker e2e).
-- [ ] The initializer accepts a date-only mode (no time picker) as a distinct configuration, ready for the From/To fields.
-- [ ] The client is a no-op when AirDatepicker is absent, preserving the current defensive behavior.
+- [x] The existing single Proposed Date picker still opens via its button, writes locale tokens, and survives HTMX swaps exactly as before (regression-guarded by the existing browser no-op spec and the date-picker e2e).
+- [x] The initializer accepts a date-only mode (no time picker) as a distinct configuration, ready for the From/To fields.
+- [x] The client is a no-op when AirDatepicker is absent, preserving the current defensive behavior.

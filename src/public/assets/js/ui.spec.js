@@ -5,6 +5,7 @@ import {
   initHtmx,
   initTheme,
   initProposedDateTimePicker,
+  initDatePicker,
   initClipboard,
   initDeleteDialogs,
   initFocusManagement,
@@ -366,6 +367,12 @@ describe('vendor init no-ops', () => {
     expect(() => initGeneratorTimePickers()).not.toThrow();
   });
 
+  it('initDatePicker is a no-op when AirDatepicker is absent', () => {
+    const input = document.createElement('input');
+    const button = document.createElement('button');
+    expect(() => initDatePicker(input, button)).not.toThrow();
+  });
+
   it('initHtmx is a no-op when htmx is absent', () => {
     const mockSpinner = {
       show() {
@@ -454,6 +461,95 @@ describe('initProposedDateTimePicker with a recording AirDatepicker fake', () =>
     expect(fakeInstances[0].destroyed).toBe(true);
     document.getElementById('proposedDateTimePicker').click();
     expect(fakeInstances[0].shows).toBe(0);
+    expect(fakeInstances[1].shows).toBe(1);
+  });
+});
+
+describe('initDatePicker with a recording AirDatepicker fake', () => {
+  const fakeInstances = [];
+
+  class FakeAirDatepicker {
+    constructor(input, options) {
+      this.input = input;
+      this.opts = options;
+      this.$datepicker = document.createElement('div');
+      this.shows = 0;
+      this.destroyed = false;
+      fakeInstances.push(this);
+    }
+
+    destroy() {
+      this.destroyed = true;
+    }
+
+    show() {
+      this.shows += 1;
+    }
+  }
+
+  function installPickerDom() {
+    const input = document.createElement('input');
+    input.id = 'test-field';
+    const button = document.createElement('button');
+    button.id = 'test-field-picker';
+    document.body.appendChild(input);
+    document.body.appendChild(button);
+    return {input, button};
+  }
+
+  let realAirDatepicker;
+  let realLocale;
+
+  beforeEach(() => {
+    realAirDatepicker = window.AirDatepicker;
+    realLocale = window.AirDatepickerLocale;
+    window.AirDatepicker = FakeAirDatepicker;
+    window.AirDatepickerLocale = {
+      'en-US': {dateFormat: 'MM/dd/yyyy', timeFormat: 'hh:mm aa', hours: 'Hours', minutes: 'Minutes'},
+    };
+    document.documentElement.lang = 'en-US';
+    fakeInstances.length = 0;
+  });
+
+  afterEach(() => {
+    window.AirDatepicker = realAirDatepicker;
+    window.AirDatepickerLocale = realLocale;
+    document.body.innerHTML = '';
+  });
+
+  it('is a no-op when input is absent', () => {
+    initDatePicker(null, document.createElement('button'));
+    expect(fakeInstances).toHaveLength(0);
+  });
+
+  it('wires datetime mode (showTime: true) with timepicker enabled', () => {
+    const {input, button} = installPickerDom();
+    initDatePicker(input, button, {showTime: true});
+    expect(fakeInstances).toHaveLength(1);
+    expect(fakeInstances[0].opts.timepicker).toBe(true);
+    expect(fakeInstances[0].opts.minutesStep).toBe(15);
+    expect(fakeInstances[0].opts.showEvent).toBe('adp-never-fire');
+    button.click();
+    expect(fakeInstances[0].shows).toBe(1);
+  });
+
+  it('wires date-only mode (no showTime) without timepicker', () => {
+    const {input, button} = installPickerDom();
+    initDatePicker(input, button);
+    expect(fakeInstances).toHaveLength(1);
+    expect(fakeInstances[0].opts.timepicker).toBeUndefined();
+    expect(fakeInstances[0].opts.showEvent).toBe('adp-never-fire');
+    button.click();
+    expect(fakeInstances[0].shows).toBe(1);
+  });
+
+  it('destroys previous instance on re-init (HTMX swap)', () => {
+    const {input, button} = installPickerDom();
+    initDatePicker(input, button);
+    initDatePicker(input, button);
+    expect(fakeInstances).toHaveLength(2);
+    expect(fakeInstances[0].destroyed).toBe(true);
+    button.click();
     expect(fakeInstances[1].shows).toBe(1);
   });
 });
