@@ -130,6 +130,55 @@ const pad2 = (value: number | string): string => String(value)
   .padStart(2, '0');
 
 /**
+ * Parses a user-typed date in the locale's input format into an ISO date
+ * string (e.g. `2026-08-02`). Tolerant: leading zeros are optional,
+ * `.` `/` `-` are all accepted as date separators. Impossible dates (e.g.
+ * Feb 30) are rejected via a strict ISO round-trip. Returns undefined
+ * on failure instead of throwing.
+ */
+export function parseLocaleDateOnly(value: string, locale: AppLocale): string | undefined {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const config = localeConfig(locale);
+  const match = DATE_ONLY_PATTERN.exec(trimmed);
+  if (!match) {
+    return undefined;
+  }
+  const [, first = '', , second = '', year = ''] = match;
+  const day = config.dayFirst ? first : second;
+  const month = config.dayFirst ? second : first;
+  // ponytail: strict ISO string round-trip rejects impossible dates
+  // (2026-02-30, month 13, day 32) via RangeError.
+  const iso = `${year}-${pad2(month)}-${pad2(day)}`;
+  try {
+    Temporal.PlainDate.from(iso);
+  } catch {
+    return undefined;
+  }
+  return iso;
+}
+
+// Matches `dd.MM.yyyy` or `MM/dd/yyyy` etc. — three digits groups separated
+// by `.`, `/`, or `-`. The backreference \2 rejects mixed separators.
+const DATE_ONLY_PATTERN = /^(\d{1,2})([./-])(\d{1,2})\2(\d{4})$/;
+
+/**
+ * Formats an ISO date string (e.g. `2026-08-02`) into the locale's
+ * date-only input-format tokens (e.g. `02.08.2026` or `08/02/2026`).
+ * Mirrors the date portion of `formatIsoToLocaleTokens`.
+ */
+export function formatIsoToDateOnlyLocaleTokens(isoDate: string, locale: AppLocale): string {
+  const date = Temporal.PlainDate.from(isoDate);
+  const config = localeConfig(locale);
+  return config.dateFormat
+    .replace('yyyy', String(date.year))
+    .replace('dd', pad2(date.day))
+    .replace('MM', pad2(date.month));
+}
+
+/**
  * Formats a stored ISO datetime string (which may carry second precision,
  * e.g. `2026-08-02T20:00:00`) into the locale's input-format tokens at minute
  * precision, e.g. `02.08.2026 20:00` or `08/02/2026 08:00 pm`.

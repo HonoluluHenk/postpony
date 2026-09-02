@@ -4,12 +4,14 @@ import { weekdayLabels } from '../locales';
 import {
   DateTimeRange,
   doRangesOverlap,
+  formatIsoToDateOnlyLocaleTokens,
   formatIsoToLocaleTokens,
   formatLocalizedDateTime,
   formatProposedDateDisplay,
   intersectDateTimeRanges,
   intersectRanges,
   parseClickTtDateTime,
+  parseLocaleDateOnly,
   parseLocaleDateTime,
   parseLocaleTimeOnly,
 } from './temporal-utils';
@@ -351,6 +353,119 @@ describe('Temporal Utils', () => {
         expect(parseLocaleTimeOnly('', locale)).toBeUndefined();
         expect(parseLocaleTimeOnly('   ', locale)).toBeUndefined();
       }
+    });
+  });
+
+  describe('parseLocaleDateOnly', () => {
+    it.each(['de-CH', 'fr-CH', 'it-CH'] as const)(
+      'parses a canonical %s day-first input',
+      (locale) => {
+        expect(parseLocaleDateOnly('02.08.2026', locale))
+          .toBe('2026-08-02');
+      },
+    );
+
+    it('parses a canonical en-US month-first input', () => {
+      expect(parseLocaleDateOnly('08/02/2026', 'en-US'))
+        .toBe('2026-08-02');
+    });
+
+    it.each(['de-CH', 'fr-CH', 'it-CH'] as const)(
+      'tolerates missing leading zeros in %s',
+      (locale) => {
+        expect(parseLocaleDateOnly('2.8.2026', locale))
+          .toBe('2026-08-02');
+      },
+    );
+
+    it('tolerates missing leading zeros in en-US', () => {
+      expect(parseLocaleDateOnly('8/2/2026', 'en-US'))
+        .toBe('2026-08-02');
+    });
+
+    it.each(['de-CH', 'fr-CH', 'it-CH'] as const)(
+      'accepts / and - as date separators in %s',
+      (locale) => {
+        expect(parseLocaleDateOnly('02/08/2026', locale))
+          .toBe('2026-08-02');
+        expect(parseLocaleDateOnly('02-08-2026', locale))
+          .toBe('2026-08-02');
+      },
+    );
+
+    it('accepts . and - as date separators in en-US', () => {
+      expect(parseLocaleDateOnly('08.02.2026', 'en-US'))
+        .toBe('2026-08-02');
+      expect(parseLocaleDateOnly('08-02-2026', 'en-US'))
+        .toBe('2026-08-02');
+    });
+
+    it('rejects a mixed separator date in de-CH', () => {
+      expect(parseLocaleDateOnly('02.08/2026', 'de-CH'))
+        .toBeUndefined();
+    });
+
+    it('rejects an impossible date (Feb 30) in de-CH', () => {
+      expect(parseLocaleDateOnly('30.02.2026', 'de-CH'))
+        .toBeUndefined();
+    });
+
+    it('rejects an impossible date (Feb 30) in en-US', () => {
+      expect(parseLocaleDateOnly('02/30/2026', 'en-US'))
+        .toBeUndefined();
+    });
+
+    it('rejects day 32 in de-CH', () => {
+      expect(parseLocaleDateOnly('32.08.2026', 'de-CH'))
+        .toBeUndefined();
+    });
+
+    it('rejects month 13 in de-CH', () => {
+      expect(parseLocaleDateOnly('02.13.2026', 'de-CH'))
+        .toBeUndefined();
+    });
+
+    it('rejects empty or whitespace-only input across all locales', () => {
+      for (const locale of ['de-CH', 'fr-CH', 'it-CH', 'en-US'] as const) {
+        expect(parseLocaleDateOnly('', locale)).toBeUndefined();
+        expect(parseLocaleDateOnly('   ', locale)).toBeUndefined();
+      }
+    });
+  });
+
+  describe('formatIsoToDateOnlyLocaleTokens', () => {
+    it('formats ISO date into de-CH day-first tokens', () => {
+      expect(formatIsoToDateOnlyLocaleTokens('2026-08-02', 'de-CH'))
+        .toBe('02.08.2026');
+    });
+
+    it('formats ISO date into en-US month-first tokens', () => {
+      expect(formatIsoToDateOnlyLocaleTokens('2026-08-02', 'en-US'))
+        .toBe('08/02/2026');
+    });
+
+    it('formats ISO date into fr-CH day-first tokens', () => {
+      expect(formatIsoToDateOnlyLocaleTokens('2026-03-05', 'fr-CH'))
+        .toBe('05.03.2026');
+    });
+
+    it('formats ISO date into it-CH day-first tokens', () => {
+      expect(formatIsoToDateOnlyLocaleTokens('2026-12-25', 'it-CH'))
+        .toBe('25.12.2026');
+    });
+
+    it('round-trips de-CH: format then parse', () => {
+      const iso = '2026-08-02';
+      const formatted = formatIsoToDateOnlyLocaleTokens(iso, 'de-CH');
+      expect(parseLocaleDateOnly(formatted, 'de-CH'))
+        .toBe(iso);
+    });
+
+    it('round-trips en-US: format then parse', () => {
+      const iso = '2026-08-02';
+      const formatted = formatIsoToDateOnlyLocaleTokens(iso, 'en-US');
+      expect(parseLocaleDateOnly(formatted, 'en-US'))
+        .toBe(iso);
     });
   });
 });
