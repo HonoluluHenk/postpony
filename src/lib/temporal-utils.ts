@@ -55,14 +55,14 @@ export function formatProposedDateDisplay(isoStart: string, locale: AppLocale = 
 
 /**
  * Formats a Proposed Date's ISO start into the compact card display: the short
- * weekday label (from `weekdayLabels`) followed by the locale's date + time
- * tokens, e.g. `Tu, 09/01/2026 07:30 pm`. Used in the proposed-date card
- * header where horizontal space is tight.
+ * weekday label (from `weekdayLabels`) followed by the locale's Intl short
+ * date + short time, e.g. `Tu, 9/1/26, 7:30 PM`. Used in the proposed-date
+ * card header where horizontal space is tight.
  */
 export function formatProposedDateDisplayShort(isoStart: string, locale: AppLocale = defaultLocale): string {
   const dateTime = parseIsoToPlainDateTime(isoStart);
   const weekday = weekdayLabels[locale][dateTime.dayOfWeek - 1] ?? '';
-  return `${weekday}, ${formatIsoToLocaleTokens(isoStart, locale)}`;
+  return `${weekday}, ${formatLocalizedDateTime(dateTime, locale, {dateStyle: 'short', timeStyle: 'short'})}`;
 }
 
 /**

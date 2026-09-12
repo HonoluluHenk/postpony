@@ -8,6 +8,7 @@ import {
   formatIsoToLocaleTokens,
   formatLocalizedDateTime,
   formatProposedDateDisplay,
+  formatProposedDateDisplayShort,
   intersectDateTimeRanges,
   intersectRanges,
   parseClickTtDateTime,
@@ -103,6 +104,19 @@ describe('Temporal Utils', () => {
       .toBe(`${weekday}, ${formatLocalizedDateTime(dt, 'en-US')}`);
     expect(formatProposedDateDisplay(iso, 'de-CH'))
       .toBe(`${weekdayLabels['de-CH'][dt.dayOfWeek - 1]}, ${formatLocalizedDateTime(dt, 'de-CH')}`);
+  });
+
+  test('formatProposedDateDisplayShort prefixes the weekday and uses the Intl short date + short time', () => {
+    const iso = '2026-05-10T10:30:00';
+    const dt = Temporal.PlainDateTime.from(iso);
+    const weekday = weekdayLabels['en-US'][dt.dayOfWeek - 1];
+    const short = formatLocalizedDateTime(dt, 'en-US', {dateStyle: 'short', timeStyle: 'short'});
+    expect(formatProposedDateDisplayShort(iso, 'en-US'))
+      .toBe(`${weekday}, ${short}`);
+    // de-CH short: 10.05.2026 → Intl short date, clock stays 24h.
+    const deShort = formatLocalizedDateTime(dt, 'de-CH', {dateStyle: 'short', timeStyle: 'short'});
+    expect(formatProposedDateDisplayShort(iso, 'de-CH'))
+      .toBe(`${weekdayLabels['de-CH'][dt.dayOfWeek - 1]}, ${deShort}`);
   });
 
   test('parseClickTtDateTime should convert a well-formed date and time', () => {

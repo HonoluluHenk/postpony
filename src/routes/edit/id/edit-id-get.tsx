@@ -1,5 +1,5 @@
 import type { App } from '../../../app';
-import { formatIsoToLocaleTokens } from '../../../lib/temporal-utils';
+import { formatIsoToLocaleTokens, formatProposedDateDisplay } from '../../../lib/temporal-utils';
 import { EditPage } from './edit';
 import { defaultGeneratorDateRange } from './proposed-dates-post';
 import { buildEditPartialsData } from './render-edit-partials';
@@ -17,6 +17,9 @@ export const handleEditGet = async (app: App): Promise<Response> => {
   const originalMatchDateTime = session.originalMatchDateTime
     ? formatIsoToLocaleTokens(session.originalMatchDateTime, locale)
     : '';
+  const originalMatchDateTimeDisplay = session.originalMatchDateTime
+    ? formatProposedDateDisplay(session.originalMatchDateTime, locale)
+    : '';
 
   const {fromDate, toDate} = defaultGeneratorDateRange(locale, session.originalMatchDateTime);
 
@@ -27,9 +30,10 @@ export const handleEditGet = async (app: App): Promise<Response> => {
       session={session}
       organizerPassword={organizerPassword ?? undefined}
       proposedDateTime={originalMatchDateTime}
+      proposedDateTimeDisplay={originalMatchDateTimeDisplay}
       homeTeam={session.homeTeam}
       guestTeam={session.guestTeam}
-      matchDateTime={originalMatchDateTime}
+      matchDateTime={originalMatchDateTimeDisplay}
       fromDate={fromDate}
       toDate={toDate}
       {...buildEditPartialsData(session, locale)}

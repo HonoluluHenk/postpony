@@ -38,13 +38,13 @@ test.describe('Postponement Creation', () => {
     await expect(editPage.heading)
       .toContainText('Thun vs Ostermundigen');
     await expect(editPage.heading)
-      .toContainText('08/29/2026 04:00 pm');
+      .toContainText('Sa, Aug 29, 2026, 4:00 PM');
 
     // 5. The edit page shows the referenced Match read-only.
     await expect(editPage.matchSummary)
       .toContainText('Match: Thun vs Ostermundigen');
     await expect(editPage.matchSummary)
-      .toContainText('08/29/2026 04:00 pm');
+      .toContainText('Sa, Aug 29, 2026, 4:00 PM');
 
     // 6. Verify the organizer password is displayed.
     await expect(editPage.organizerPasswordToast)

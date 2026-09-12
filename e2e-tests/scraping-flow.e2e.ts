@@ -126,7 +126,7 @@ test.describe('Scraping Flow', () => {
     await expect(editPage.heading)
       .toContainText('Thun vs Ostermundigen');
     await expect(editPage.heading)
-      .toContainText('08/29/2026 04:00 pm');
+      .toContainText('Sa, Aug 29, 2026, 4:00 PM');
     await expect(page.getByRole('link', {name: 'Find your match (click-tt.ch)'}))
       .toHaveCount(0);
 
@@ -219,7 +219,7 @@ test.describe('Scraping Flow', () => {
     await expect(editPage.matchSummary)
       .toContainText('Match: Thun vs Ostermundigen');
     await expect(editPage.matchSummary)
-      .toContainText('08/29/2026 04:00 pm');
+      .toContainText('Sa, Aug 29, 2026, 4:00 PM');
 
     // No change-match affordance remains.
     await expect(editPage.changeMatchDetailsLink)

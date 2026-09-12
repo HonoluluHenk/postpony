@@ -20,7 +20,7 @@ export interface ProposedDateTallyItem extends VoteTallyItem {
   venueNumber?: number;
   /** Venue Occupancy snapshot from the last check; absent when never checked, the scrape failed, or the session has no club id. */
   venueOccupancy?: VenueOccupancy;
-  /** Compact date+time for the card header (no weekday prefix), e.g. `08.09.2026 19:30`. */
+  /** Compact date+time for the card header (weekday prefix retained), e.g. `Sa, 8/29/26, 4:00 PM`. */
   shortDisplay?: string;
 }
 

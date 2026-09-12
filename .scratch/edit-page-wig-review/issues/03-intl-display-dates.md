@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Page heading's date line and the match summary render via the locale-aware `Intl` formatter, not the token formatter
-- [ ] The prop currently feeding both the heading and the add-date input prefill is split: display value is Intl-formatted, input prefill stays token-formatted
-- [ ] Proposed Date card short display uses `Intl` short date + short time (weekday prefix retained); its JSDoc example updated
-- [ ] Add-date input placeholder and prefill are unchanged (token format)
-- [ ] Component specs for the edit page and proposed-dates section assert the new display format; temporal-utils spec updated
-- [ ] E2E assertions that hard-code the old `07:30 pm` display style are updated; generator e2e still types token format into inputs
+- [x] Page heading's date line and the match summary render via the locale-aware `Intl` formatter, not the token formatter
+- [x] The prop currently feeding both the heading and the add-date input prefill is split: display value is Intl-formatted, input prefill stays token-formatted
+- [x] Proposed Date card short display uses `Intl` short date + short time (weekday prefix retained); its JSDoc example updated
+- [x] Add-date input placeholder and prefill are unchanged (token format)
+- [x] Component specs for the edit page and proposed-dates section assert the new display format; temporal-utils spec updated
+- [x] E2E assertions that hard-code the old `07:30 pm` display style are updated; generator e2e still types token format into inputs

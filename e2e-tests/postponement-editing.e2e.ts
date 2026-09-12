@@ -56,8 +56,8 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.proposedDateDisplays())
       .resolves
       .toEqual([
-        expect.stringContaining('03/05'),
-        expect.stringContaining('03/12'),
+        expect.stringContaining('3/5/26'),
+        expect.stringContaining('3/12/26'),
       ]);
 
     const joinPage = await new JoinPage(page)
@@ -498,7 +498,7 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.matchSummary)
       .toContainText('Match: Ostermundigen vs Thun');
     await expect(editPage.matchSummary)
-      .toContainText('01/14/2027');
+      .toContainText('Jan 14, 2027');
 
     // No change-match affordance remains: no "change match details" link and
     // no path back into the wizard from the edit page.

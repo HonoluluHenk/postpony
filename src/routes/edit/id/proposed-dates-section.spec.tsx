@@ -113,6 +113,36 @@ describe('ProposedDatesSection component', () => {
       .toContain('<table');
   });
 
+  it('shows the Intl short date+time in the card header when shortDisplay is present', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: 'Sa, Oct 10, 2026, 7:00 PM',
+          shortDisplay: 'Sa, 10/10/26, 7:00 PM',
+          votable: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+        },
+      ],
+    }));
+
+    expect(html)
+      .toContain('>Sa, 10/10/26, 7:00 PM</span>');
+    expect(html)
+      .not
+      .toContain('>Sa, Oct 10, 2026, 7:00 PM</span>');
+  });
+
+  it('falls back to the full display for the card header when shortDisplay is absent', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html)
+      .toContain('>10.10.2026 19:00</span>');
+  });
+
   it('keeps the votable switch and delete button label-less but a11y-named', () => {
     const html = renderToString(ProposedDatesSection(baseProps()));
 

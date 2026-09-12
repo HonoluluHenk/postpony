@@ -15,6 +15,9 @@ export interface EditPageProps extends ViewContext, EditPartialsData {
   title?: string;
   session: Postponement;
   organizerPassword?: string;
+  /** Original match datetime in the locale's Intl reading format (page heading). */
+  proposedDateTimeDisplay?: string;
+  /** Original match datetime in the locale's input token format (add-date prefill). */
   proposedDateTime?: string;
   globalError?: string;
   fromDate?: string;
@@ -76,8 +79,8 @@ export function EditPage(props: EditPageProps): JSX.Element {
     <>
       <span class="heading-row">{props.t('edit_postponement_heading')}</span>
       <span class="heading-row">{matchUpLine(props.session.homeTeam ?? '', props.session.guestTeam ?? '')}</span>
-      {props.proposedDateTime ? (
-        <span class="heading-row">{props.proposedDateTime}</span>
+      {props.proposedDateTimeDisplay ? (
+        <span class="heading-row">{props.proposedDateTimeDisplay}</span>
       ) : null}
     </>
   );
