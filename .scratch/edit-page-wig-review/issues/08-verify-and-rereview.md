@@ -10,3 +10,7 @@
 - [x] Coverage stays at or above 80% for all metrics
 - [x] Re-run the web-design-guidelines review against the edit page URL; remaining findings are limited to: language select as links, shared single delete dialog, `beforeunload` guard for the generator form
 - [x] Spec's Out of Scope section still matches the remaining findings; update it if anything else was consciously deferred
+
+## Comments
+
+- `90dd979` ticket done: 08-verify-and-rereview — fixed the two date-rotted e2e tests in `proposed-date-generator.e2e.ts` (`to ≤ from` now uses `isoDate(1)`/`isoDate(0)`; the anchor-window test uses `isoDate(0)`/`isoDate(6)`, which guarantees one Wed + one Sat on any wall-clock date) and updated their stale comments/token assertions; `npm run verify` passes end to end (lint, test with coverage, build, 92/92 e2e). Fresh web-design-guidelines re-review of the live edit page (code read + live DOM + axe/Lighthouse a11y=100): the three deferred items hold, and two additional minor AT-facing findings were found and added to the spec's Out of Scope — (1) add-date/generator success toasts stay `role="alert"` (assertive) alongside the polite `role="status"` announcement (same short outcome announced twice); (2) the edit-page `<h1>`'s accessible name (page title) embeds the original match datetime in input-token format while the visible heading reads Intl. Coverage: statements 89.4%, branches 81.72%, functions 92.44%, lines 89.78%.
