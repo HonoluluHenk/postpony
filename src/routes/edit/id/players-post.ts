@@ -40,7 +40,9 @@ export const handleEditPlayersPost = async (app: App): Promise<Response> => {
   await app.store.save(updated);
 
   if (app.isPartial) {
-    return app.c.html(renderTeamSection(app, updated));
+    return app.c.html(renderTeamSection(app, updated, {
+      statusMessage: app.t('player_added'),
+    }));
   }
   return app.c.redirect(`/edit/${id}`);
 };

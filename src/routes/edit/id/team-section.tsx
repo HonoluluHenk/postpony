@@ -3,6 +3,7 @@ import type { App } from '../../../app';
 import type { Player, Postponement, Team } from '../../../lib/models';
 import type { TranslateFn } from '../../../locales';
 import { ErrorContainer } from '../../partials/error-container';
+import { StatusAnnouncement } from '../../partials/status-announcement';
 import { buildOwnTeamView, type OwnTeamView } from './own-team-view';
 import { OwnTeamVotes } from './own-team-votes';
 
@@ -20,7 +21,7 @@ export function TeamSection(props: TeamSectionProps): JSX.Element {
   const awayInvalid = props.teamId === 'away' && !!props.error;
 
   return (
-    <section id="team-management" class="padding small-round surface-variant s12 m4" aria-live="polite">
+    <section id="team-management" class="padding small-round surface-variant s12 m4">
       <header>
         <h3 tabindex={-1}>{props.t('players')}</h3>
       </header>
@@ -112,12 +113,14 @@ export function TeamSection(props: TeamSectionProps): JSX.Element {
 
 export interface TeamSectionPartialProps extends TeamSectionProps {
   globalError?: string;
+  statusMessage?: string;
 }
 
 export function TeamSectionPartial(props: TeamSectionPartialProps): JSX.Element {
   return (
     <>
       <ErrorContainer globalError={props.globalError} isOob={true} />
+      <StatusAnnouncement message={props.statusMessage} isOob={true} />
       <TeamSection {...props} />
       <OwnTeamVotes
         organizerPlayers={props.organizerPlayers}
@@ -134,6 +137,7 @@ export interface TeamSectionExtras {
   teamId?: Team;
   error?: string;
   globalError?: string;
+  statusMessage?: string;
 }
 
 export function renderTeamSection(
@@ -154,6 +158,7 @@ export function renderTeamSection(
       teamId={extra.teamId}
       error={extra.error}
       globalError={extra.globalError}
+      statusMessage={extra.statusMessage}
     />,
   );
 }

@@ -583,6 +583,9 @@ describe('edit handlers', () => {
         .toContain('id="proposed-dates-management"');
       expect(html)
         .toContain(`>${expected.added.length} dates added<`);
+      // The generator outcome is announced via the shared OOB status element too.
+      expect(html)
+        .toContain(`<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">${expected.added.length} dates added</p>`);
       // US 14: the submitted time survives the success re-render.
       expect(html)
         .toContain('value="8:00 pm"');
@@ -1560,6 +1563,9 @@ describe('edit handlers', () => {
       expect(html)
         .not
         .toContain('Your Team Votes');
+      // The success outcome is announced once via the shared OOB status element.
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Player added</p>');
     });
 
     test('players: renders the error-container and keeps the invalid input on failure', async () => {
@@ -1578,6 +1584,10 @@ describe('edit handlers', () => {
         .toContain('Player name is required');
       expect(html)
         .toContain('invalid');
+      // Errors stay in the error container; the status element is not touched.
+      expect(html)
+        .not
+        .toContain('id="clipboard-status"');
     });
 
     test('proposed dates: renders the section and a success toast on success', async () => {
@@ -1597,6 +1607,9 @@ describe('edit handlers', () => {
         .toContain('toast success');
       expect(html)
         .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+      // The success outcome is announced once via the shared OOB status element.
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Proposed date added!</p>');
       // The re-rendered generator keeps a populated (never empty) From/To
       // range formatted as locale tokens — today and today+4w for an anchorless
       // session under the fixed test clock.
@@ -1628,6 +1641,10 @@ describe('edit handlers', () => {
         .toContain('id="fromDate" type="text" name="fromDate" value="08/25/2026"');
       expect(html)
         .toContain('id="toDate" type="text" name="toDate" value="09/22/2026"');
+      // Errors stay in the error container; the status element is not touched.
+      expect(html)
+        .not
+        .toContain('id="clipboard-status"');
     });
   });
 
@@ -1804,6 +1821,9 @@ describe('edit handlers', () => {
         .toContain('id="status-chip" hx-swap-oob="true"');
       expect(html)
         .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+      // The confirmed outcome is announced via the shared OOB status element.
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Date confirmed</p>');
     });
 
     test('redirects to the edit page when not partial', async () => {
@@ -1879,6 +1899,9 @@ describe('edit handlers', () => {
         .toContain('proposedDateId=pd-2');
       expect(html)
         .toContain('id="status-chip" hx-swap-oob="true"');
+      // The deleted outcome is announced via the shared OOB status element.
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Proposed date deleted</p>');
     });
 
     test('redirects to the edit page when not partial', async () => {

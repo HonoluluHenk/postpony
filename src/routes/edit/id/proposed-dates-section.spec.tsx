@@ -71,6 +71,11 @@ describe('ProposedDatesSection component', () => {
       .toContain('hx-post="/edit/session-1/proposed-dates"');
     expect(html)
       .toContain('id="proposedDateTime"');
+    // The section is no longer a live region; announcements come from the
+    // shared out-of-band status element instead.
+    expect(html)
+      .not
+      .toContain('aria-live');
   });
 
   it('renders the reopen-count chip once the reopen count is non-zero', () => {
@@ -1108,6 +1113,34 @@ describe('ProposedDatesSectionPartial', () => {
     expect(html)
       .not
       .toContain('<html');
+    // None of the swapped sections (proposed dates, vote tally, own-team votes)
+    // are live regions anymore.
+    expect(html)
+      .not
+      .toContain('aria-live');
+  });
+
+  it('announces the outcome via the out-of-band status element when the handler supplies a message', () => {
+    const html = renderToString(ProposedDatesSectionPartial({
+      ...baseProps(),
+      statusMessage: 'Proposed date deleted',
+    }));
+
+    expect(html)
+      .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Proposed date deleted</p>');
+  });
+
+  it('emits no status element on an error swap, so errors stay in the error container', () => {
+    const html = renderToString(ProposedDatesSectionPartial({
+      ...baseProps(),
+      globalError: 'Something went wrong',
+    }));
+
+    expect(html)
+      .toContain('Something went wrong');
+    expect(html)
+      .not
+      .toContain('id="clipboard-status"');
   });
 
   it('surfaces the global error inside the out-of-band error container', () => {

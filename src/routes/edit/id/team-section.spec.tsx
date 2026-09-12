@@ -53,6 +53,11 @@ describe('TeamSection component', () => {
       .toContain('hx-post="/edit/session-1/players"');
     expect(html)
       .toContain('hx-target="#team-management"');
+    // The section is no longer a live region; announcements come from the
+    // shared out-of-band status element instead.
+    expect(html)
+      .not
+      .toContain('aria-live');
   });
 
   it('turns off autofill on the valid home and away name inputs', () => {
@@ -135,5 +140,28 @@ describe('TeamSectionPartial', () => {
       .toContain('id="team-management"');
     expect(html)
       .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+  });
+
+  it('announces the outcome via the out-of-band status element when the handler supplies a message', () => {
+    const html = renderToString(TeamSectionPartial({
+      ...baseProps(),
+      statusMessage: 'Player added',
+    }));
+
+    expect(html)
+      .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Player added</p>');
+  });
+
+  it('emits no status element on an error swap, so errors stay in the error container', () => {
+    const html = renderToString(TeamSectionPartial({
+      ...baseProps(),
+      globalError: 'Something went wrong',
+    }));
+
+    expect(html)
+      .toContain('Something went wrong');
+    expect(html)
+      .not
+      .toContain('id="clipboard-status"');
   });
 });

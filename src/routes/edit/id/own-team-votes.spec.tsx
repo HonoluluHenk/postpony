@@ -55,6 +55,9 @@ describe('OwnTeamVotes component', () => {
     expect(html).toContain('<th scope="col">Voter</th>');
     expect(html).toContain('<th scope="col">SitsOut</th>');
     expect(html).toContain('<th scope="col" class="num">Voted</th>');
+    // The section is no longer a live region; announcements come from the
+    // shared out-of-band status element instead.
+    expect(html).not.toContain('aria-live');
   });
 
   it('renders the vote cells, the N/M voted count, and the non-voter row', () => {

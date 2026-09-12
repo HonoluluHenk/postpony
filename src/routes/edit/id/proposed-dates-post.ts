@@ -439,9 +439,10 @@ async function handleTupleSubmit(
   }
   updated = await saveWithClashCheck(app, updated, addedIds);
 
-  const extras: {times: string[]; generatorSuccessCount: number; generatorError?: string; generatorFromError?: string; generatorToError?: string; fromDate?: string; toDate?: string} = {
+  const extras: {times: string[]; generatorSuccessCount: number; statusMessage?: string; generatorError?: string; generatorFromError?: string; generatorToError?: string; fromDate?: string; toDate?: string} = {
     times,
     generatorSuccessCount: generated.added.length,
+    statusMessage: app.t('proposed_dates_generate_added', {count: String(generated.added.length)}),
     fromDate: fromDateToken,
     toDate: toDateToken,
   };
@@ -487,6 +488,7 @@ async function handleSingleSubmit(
   if (app.isPartial) {
     return app.c.html(renderEditPartials(app, updated, {
       success: true,
+      statusMessage: app.t('proposed_date_added'),
       ...defaultGeneratorDateRange(locale, session.originalMatchDateTime),
     }));
   }

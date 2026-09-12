@@ -13,6 +13,10 @@ test.describe('Postponement Editing', () => {
     const editPage = new EditPage(page);
     await editPage.addPlayer('John Doe');
 
+    // The shared visually-hidden status element announces the short outcome.
+    await expect(editPage.clipboardStatus)
+      .toHaveText('Player added');
+
     // Verify player is in the list
     await expect(editPage.playerItem('John Doe'))
       .toBeVisible();
@@ -28,6 +32,10 @@ test.describe('Postponement Editing', () => {
   test('should add proposed postponement dates', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-03-05T20:00');
+
+    // The shared visually-hidden status element announces the short outcome.
+    await expect(editPage.clipboardStatus)
+      .toHaveText('Proposed date added!');
 
     // Verify the proposed date is in the list
     await expect(editPage.proposedDateList)

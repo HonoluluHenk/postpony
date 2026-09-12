@@ -20,7 +20,10 @@ export const handleConfirmDatePost = async (app: App): Promise<Response> => {
   const hasClashes = clashes !== undefined && (clashes.home.length > 0 || clashes.away.length > 0);
 
   if (app.isPartial) {
-    const html = renderEditPartials(app, updated, hasClashes ? {confirmClashWarning: true} : {});
+    const html = renderEditPartials(app, updated, {
+      statusMessage: app.t('date_confirmed'),
+      ...(hasClashes ? {confirmClashWarning: true} : {}),
+    });
     return app.c.html(html);
   }
   return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);

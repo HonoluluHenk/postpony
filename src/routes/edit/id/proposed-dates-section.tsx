@@ -6,6 +6,7 @@ import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
 import { ClashInfo } from '../../partials/clash-info';
 import { ErrorContainer } from '../../partials/error-container';
+import { StatusAnnouncement } from '../../partials/status-announcement';
 import { VenueBadge } from '../../partials/venue-badge';
 import { VenueOccupancyInfo } from '../../partials/venue-occupancy-info';
 import type { OwnTeamView } from './own-team-view';
@@ -240,7 +241,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                        ));
 
   return (
-    <section id="proposed-dates-management" class="padding small-round surface-variant s12 m8" aria-live="polite">
+    <section id="proposed-dates-management" class="padding small-round surface-variant s12 m8">
       <header>
         <h3 tabindex={-1}>{props.t('proposed_dates_management')}</h3>
       </header>
@@ -447,12 +448,14 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
 
 export interface ProposedDatesSectionPartialProps extends ProposedDatesSectionProps {
   globalError?: string;
+  statusMessage?: string;
 }
 
 export function ProposedDatesSectionPartial(props: ProposedDatesSectionPartialProps): JSX.Element {
   return (
     <>
       <ErrorContainer globalError={props.globalError} isOob={true}/>
+      <StatusAnnouncement message={props.statusMessage} isOob={true}/>
       <StatusChip status={props.status} t={props.t} oob={true}/>
       <ProposedDatesSection {...props} />
       <VoteTallySection

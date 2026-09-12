@@ -78,6 +78,7 @@ export interface EditPartialExtras {
   generatorToError?: string;
   refreshError?: boolean;
   confirmClashWarning?: boolean;
+  statusMessage?: string;
   fromDate?: string;
   toDate?: string;
 }
@@ -115,6 +116,7 @@ export function renderEditPartials(
     generatorToError: extra.generatorToError,
     refreshError: extra.refreshError,
     confirmClashWarning: extra.confirmClashWarning,
+    statusMessage: extra.statusMessage,
     globalError: extra.globalError,
     fromDate: extra.fromDate,
     toDate: extra.toDate,

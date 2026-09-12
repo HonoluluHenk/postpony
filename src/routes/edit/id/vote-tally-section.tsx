@@ -15,7 +15,7 @@ export interface VoteTallySectionProps {
 // would leave a stale tally on screen after deleting the last proposed date.
 export function VoteTallySection(props: VoteTallySectionProps): JSX.Element {
   return (
-    <div id="vote-tally-section" hx-swap-oob={props.oob ? 'true' : undefined} class="grid" aria-live="polite">
+    <div id="vote-tally-section" hx-swap-oob={props.oob ? 'true' : undefined} class="grid">
       {props.homeProposedDates.length > 0 ? (
         <section class="padding small-round surface-variant s12 m6" aria-labelledby="vote-summary-home-title">
           <VoteTally

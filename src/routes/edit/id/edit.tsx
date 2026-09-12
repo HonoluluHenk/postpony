@@ -4,6 +4,7 @@ import type { ViewContext } from '../../../app';
 import type { Postponement } from '../../../lib/models';
 import { matchUpLine } from '../../../lib/postponement';
 import { pageLayout } from '../../layouts/main';
+import { StatusAnnouncement } from '../../partials/status-announcement';
 import { inviteLinkLabels } from './invite-link-labels';
 import { OwnTeamVotes } from './own-team-votes';
 import { ProposedDatesSection, type EditPartialsData } from './proposed-dates-section';
@@ -109,7 +110,7 @@ export function EditPage(props: EditPageProps): JSX.Element {
         </p>
       </div>
 
-      <p id="clipboard-status" class="visually-hidden" role="status"></p>
+      <StatusAnnouncement />
 
       <InviteLinks
         baseUrl={props.baseUrl}
