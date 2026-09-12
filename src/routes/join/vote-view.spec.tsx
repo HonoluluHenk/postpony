@@ -154,7 +154,7 @@ describe('renderVoteStep', () => {
       ],
       votes: [
         aVote({proposedDateId: 'date-earlier', participantId: 'player-1', type: 'Yes'}),
-        aVote({proposedDateId: 'date-later', participantId: 'player-1', type: 'Maybe'}),
+        aVote({proposedDateId: 'date-later', participantId: 'player-1', type: 'IfNecessary'}),
       ],
     });
     const app = createApp();
@@ -474,7 +474,7 @@ describe('renderVoteStep hides clash info', () => {
     expect(body)
       .toContain('value="Yes"');
     expect(body)
-      .toContain('value="Maybe"');
+      .toContain('value="IfNecessary"');
     expect(body)
       .toContain('value="No"');
   });

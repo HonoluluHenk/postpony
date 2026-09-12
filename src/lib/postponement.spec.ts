@@ -246,12 +246,12 @@ describe('postponement', () => {
           aVote({id: 'v1', proposedDateId: 'pd-1', participantId: 'a', type: 'Yes'}),
           aVote({id: 'v2', proposedDateId: 'pd-1', participantId: 'b', type: 'Yes'}),
           aVote({id: 'v3', proposedDateId: 'pd-1', participantId: 'c', type: 'No'}),
-          aVote({id: 'v4', proposedDateId: 'pd-1', participantId: 'd', type: 'Maybe'}),
+          aVote({id: 'v4', proposedDateId: 'pd-1', participantId: 'd', type: 'IfNecessary'}),
         ],
       });
 
       expect(new FakePostponementRules().tally(session)['pd-1'])
-        .toEqual({yes: 2, no: 1, maybe: 1});
+        .toEqual({yes: 2, no: 1, ifNecessary: 1});
     });
 
     test('filters votes by home team', () => {
@@ -268,7 +268,7 @@ describe('postponement', () => {
       });
 
       expect(new FakePostponementRules().tally(session, 'home')['pd-1'])
-        .toEqual({yes: 1, no: 0, maybe: 0});
+        .toEqual({yes: 1, no: 0, ifNecessary: 0});
     });
 
     test('filters votes by away team', () => {
@@ -285,7 +285,7 @@ describe('postponement', () => {
       });
 
       expect(new FakePostponementRules().tally(session, 'away')['pd-1'])
-        .toEqual({yes: 0, no: 1, maybe: 0});
+        .toEqual({yes: 0, no: 1, ifNecessary: 0});
     });
 
     test('returns all votes when no team filter is passed', () => {
@@ -302,7 +302,7 @@ describe('postponement', () => {
       });
 
       expect(new FakePostponementRules().tally(session)['pd-1'])
-        .toEqual({yes: 1, no: 1, maybe: 0});
+        .toEqual({yes: 1, no: 1, ifNecessary: 0});
     });
   });
 
@@ -323,9 +323,9 @@ describe('postponement', () => {
       const {home, away} = new FakePostponementRules().splitTallies(session);
 
       expect(home['pd-1'])
-        .toEqual({yes: 1, no: 0, maybe: 0});
+        .toEqual({yes: 1, no: 0, ifNecessary: 0});
       expect(away['pd-1'])
-        .toEqual({yes: 0, no: 1, maybe: 0});
+        .toEqual({yes: 0, no: 1, ifNecessary: 0});
     });
   });
 
@@ -519,7 +519,7 @@ describe('postponement', () => {
         votes: [
           aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'}),
           aVote({proposedDateId: 'pd-1', participantId: 'player-2', type: 'No'}),
-          aVote({proposedDateId: 'pd-2', participantId: 'player-1', type: 'Maybe'}),
+          aVote({proposedDateId: 'pd-2', participantId: 'player-1', type: 'IfNecessary'}),
         ],
       });
 
@@ -639,7 +639,7 @@ describe('postponement', () => {
         proposedDates: [aProposedDate({id: 'pd-1'}), aProposedDate({id: 'pd-2'})],
         votes: [
           aVote({proposedDateId: 'pd-1', participantId: 'p1', type: 'Yes'}),
-          aVote({proposedDateId: 'pd-2', participantId: 'p1', type: 'Maybe'}),
+          aVote({proposedDateId: 'pd-2', participantId: 'p1', type: 'IfNecessary'}),
         ],
       });
 
@@ -660,7 +660,7 @@ describe('postponement', () => {
           {
             dateId: 'pd-2',
             votes: [
-              {playerId: 'p1', playerName: 'Voter', vote: 'Maybe'},
+              {playerId: 'p1', playerName: 'Voter', vote: 'IfNecessary'},
               {playerId: 'p2', playerName: 'SitsOut', vote: null},
             ],
             voted: 1,

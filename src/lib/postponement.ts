@@ -14,7 +14,7 @@ const firstBy = (thenby as {
 export interface VoteTally {
   yes: number;
   no: number;
-  maybe: number;
+  ifNecessary: number;
 }
 
 /**
@@ -206,7 +206,7 @@ export class PostponementRules {
       result[pd.id] = {
         yes: dateVotes.filter((v) => v.type === 'Yes').length,
         no: dateVotes.filter((v) => v.type === 'No').length,
-        maybe: dateVotes.filter((v) => v.type === 'Maybe').length,
+        ifNecessary: dateVotes.filter((v) => v.type === 'IfNecessary').length,
       };
     }
     return result;

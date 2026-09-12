@@ -94,7 +94,7 @@ test.describe('Postponement Editing', () => {
       .goto(session.homeHref);
     await joinPage.join('Alice');
     await joinPage.castVote(0, 'Yes');
-    await joinPage.castVote(1, 'Maybe');
+    await joinPage.castVote(1, 'IfNecessary');
     await joinPage.submitVotes();
 
     // Return to edit page and check home team tally
@@ -113,7 +113,7 @@ test.describe('Postponement Editing', () => {
     await expect(homeRows)
       .toHaveCount(2);
 
-    // First date: Yes=1, Maybe=0, No=0
+    // First date: Yes=1, IfNecessary=0, No=0
     await expect(homeRows.first()
       .getByRole('cell')
       .nth(1))
@@ -127,7 +127,7 @@ test.describe('Postponement Editing', () => {
       .nth(3))
       .toHaveText('0');
 
-    // Second date: Yes=0, Maybe=1, No=0
+    // Second date: Yes=0, IfNecessary=1, No=0
     await expect(homeRows.nth(1)
       .getByRole('cell')
       .nth(1))

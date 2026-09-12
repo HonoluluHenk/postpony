@@ -55,7 +55,7 @@ The number of the home club's home Matches scheduled at a Venue whose start fall
 
 ## Vote
 
-A Participant's `Yes` / `No` / `Maybe` on one Proposed Date. At most one Vote per Participant per Proposed Date; re-voting updates the existing Vote.
+A Participant's `Yes` / `No` / `IfNecessary` on one Proposed Date. At most one Vote per Participant per Proposed Date; re-voting updates the existing Vote. `IfNecessary` reads "I'll make it work if needed" (displayed as "if necessary" / "notfalls") — distinct from an undecided abstention.
 
 ## Proposed Dates Generator
 

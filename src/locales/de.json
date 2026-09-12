@@ -125,7 +125,7 @@
   "venue_occupancy_match": "<%= it.time %> gegen <%= it.opponent %>",
   "votable_short": "Abstimmbar",
   "votable_toggle": "Abstimmung zulassen",
-  "vote_maybe": "Vielleicht",
+  "vote_if_necessary": "notfalls",
   "vote_no": "Nein",
   "vote_no_dates": "Es wurden noch keine Termine vorgeschlagen. Der Organisator entscheidet noch, welche Termine vorgeschlagen werden.",
   "vote_submit": "Stimmen abschicken",

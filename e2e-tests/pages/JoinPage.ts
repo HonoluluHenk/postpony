@@ -1,6 +1,14 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 
+export type VoteType = 'Yes' | 'No' | 'IfNecessary';
+
+const VOTE_LABELS: Record<VoteType, string> = {
+  Yes: 'Yes',
+  No: 'No',
+  IfNecessary: 'if necessary',
+};
+
 export class JoinPage {
   constructor(private readonly page: Page) {
   }
@@ -42,8 +50,8 @@ export class JoinPage {
     return this.page.getByText('No dates have been proposed yet');
   }
 
-  voteRadio(vote: 'Yes' | 'No' | 'Maybe'): Locator {
-    return this.page.getByRole('radio', {name: vote});
+  voteRadio(vote: VoteType): Locator {
+    return this.page.getByRole('radio', {name: VOTE_LABELS[vote]});
   }
 
   voteSummarySection(): Locator {
@@ -74,11 +82,11 @@ export class JoinPage {
       .toBeVisible();
   }
 
-  async castVote(dateIndex: number, vote: 'Yes' | 'No' | 'Maybe'): Promise<void> {
+  async castVote(dateIndex: number, vote: VoteType): Promise<void> {
     // ponytail: beer.css hides native radio inputs; toggle via label text
     await this.voteForm.getByRole('group')
       .nth(dateIndex)
-      .getByText(vote, {exact: true})
+      .getByText(VOTE_LABELS[vote], {exact: true})
       .click();
   }
 

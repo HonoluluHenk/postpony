@@ -84,7 +84,7 @@ export interface Vote {
   id: string;
   proposedDateId: string;
   participantId: string;
-  type: 'Yes' | 'No' | 'Maybe';
+  type: 'Yes' | 'No' | 'IfNecessary';
 }
 
 export interface VoteTallyItem {
@@ -92,5 +92,5 @@ export interface VoteTallyItem {
   display: string;
   yes: number;
   no: number;
-  maybe: number;
+  ifNecessary: number;
 }

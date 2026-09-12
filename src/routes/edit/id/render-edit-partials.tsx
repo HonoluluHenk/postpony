@@ -16,13 +16,13 @@ function toVoteTallyItems(
   locale: AppLocale,
 ): VoteTallyItem[] {
   return proposedDates.map((pd) => {
-    const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
+    const counts = tallies[pd.id] ?? {yes: 0, no: 0, ifNecessary: 0};
     return {
       id: pd.id,
       display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
       yes: counts.yes,
       no: counts.no,
-      maybe: counts.maybe,
+      ifNecessary: counts.ifNecessary,
     };
   });
 }
@@ -40,7 +40,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
   const dates = sortedProposedDates(session.proposedDates);
 
   const proposedDates: EditPartialsData['proposedDates'] = dates.map((pd) => {
-    const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
+    const counts = tallies[pd.id] ?? {yes: 0, no: 0, ifNecessary: 0};
     return {
       id: pd.id,
       display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
@@ -48,7 +48,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
       votable: pd.votable,
       yes: counts.yes,
       no: counts.no,
-      maybe: counts.maybe,
+      ifNecessary: counts.ifNecessary,
       clashes: pd.clashes,
       venueNumber: pd.venueNumber,
       venueOccupancy: pd.venueOccupancy,

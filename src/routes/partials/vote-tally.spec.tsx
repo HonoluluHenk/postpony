@@ -5,8 +5,8 @@ import { VoteTally, type ProposedDateTally } from './vote-tally';
 const t = (key: any, params?: any): string => getTranslation('en-US', key, params);
 
 const sampleDates: ProposedDateTally[] = [
-  { display: '10.10.2026 19:00', yes: 3, maybe: 1, no: 0 },
-  { display: '12.10.2026 20:00', yes: 1, maybe: 2, no: 2 },
+  { display: '10.10.2026 19:00', yes: 3, ifNecessary: 1, no: 0 },
+  { display: '12.10.2026 20:00', yes: 1, ifNecessary: 2, no: 2 },
 ];
 
 function renderToString(node: unknown): string {
@@ -58,17 +58,17 @@ describe('VoteTally component', () => {
 
     expect(html).toContain('<th scope="col">Proposed Date &amp; Time</th>');
     expect(html).toContain('<th scope="col" class="num">Yes</th>');
-    expect(html).toContain('<th scope="col" class="num">Maybe</th>');
+    expect(html).toContain('<th scope="col" class="num">if necessary</th>');
     expect(html).toContain('<th scope="col" class="num">No</th>');
 
     expect(html).toContain('<td data-label="Proposed Date &amp; Time">10.10.2026 19:00</td>');
     expect(html).toContain('<td data-label="Yes" class="num">3</td>');
-    expect(html).toContain('<td data-label="Maybe" class="num">1</td>');
+    expect(html).toContain('<td data-label="if necessary" class="num">1</td>');
     expect(html).toContain('<td data-label="No" class="num">0</td>');
 
     expect(html).toContain('<td data-label="Proposed Date &amp; Time">12.10.2026 20:00</td>');
     expect(html).toContain('<td data-label="Yes" class="num">1</td>');
-    expect(html).toContain('<td data-label="Maybe" class="num">2</td>');
+    expect(html).toContain('<td data-label="if necessary" class="num">2</td>');
     expect(html).toContain('<td data-label="No" class="num">2</td>');
   });
 });

@@ -5,7 +5,7 @@ import { requireSessionAndToken, requireTeam } from './join-utils';
 import { renderVoteStep } from './vote-view';
 
 function isVoteType(value: unknown): value is Vote['type'] {
-  return value === 'Yes' || value === 'No' || value === 'Maybe';
+  return value === 'Yes' || value === 'No' || value === 'IfNecessary';
 }
 
 export const handleJoinVotePost = async (app: App): Promise<Response> => {

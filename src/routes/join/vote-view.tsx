@@ -50,13 +50,13 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
 
   const proposedDates: VotePageDate[] = visibleDates.map((pd) => {
     const current = session.votes.find((vt) => vt.proposedDateId === pd.id && vt.participantId === player.id);
-    const counts = tallies[pd.id] ?? {yes: 0, no: 0, maybe: 0};
+    const counts = tallies[pd.id] ?? {yes: 0, no: 0, ifNecessary: 0};
     return {
       id: pd.id,
       display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
       currentVote: current?.type ?? '',
       yes: counts.yes,
-      maybe: counts.maybe,
+      ifNecessary: counts.ifNecessary,
       no: counts.no,
       venueNumber: pd.venueNumber,
       venueOccupancy: pd.venueOccupancy,

@@ -14,11 +14,11 @@ function baseProps(): ProposedDatesSectionProps {
     status: 'Voting',
     reopenCount: 0,
     proposedDates: [
-      {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, maybe: 0, no: 0},
-      {id: 'pd-2', display: '12.10.2026 20:00', votable: false, yes: 0, maybe: 0, no: 0},
+      {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, ifNecessary: 0, no: 0},
+      {id: 'pd-2', display: '12.10.2026 20:00', votable: false, yes: 0, ifNecessary: 0, no: 0},
     ],
     homeProposedDates: [
-      {id: 'pd-1', display: '10.10.2026 19:00', yes: 1, maybe: 0, no: 0},
+      {id: 'pd-1', display: '10.10.2026 19:00', yes: 1, ifNecessary: 0, no: 0},
     ],
     awayProposedDates: [],
     organizerPlayers: [],
@@ -123,7 +123,7 @@ describe('ProposedDatesSection component', () => {
           shortDisplay: 'Sa, 10/10/26, 7:00 PM',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
         },
       ],
@@ -278,8 +278,8 @@ describe('ProposedDatesSection component', () => {
     const html = renderToString(ProposedDatesSection({
       ...baseProps(),
       proposedDates: [
-        {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, maybe: 0, no: 0, venueNumber: 1},
-        {id: 'pd-2', display: '12.10.2026 20:00', votable: false, yes: 0, maybe: 0, no: 0, venueNumber: 2},
+        {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, ifNecessary: 0, no: 0, venueNumber: 1},
+        {id: 'pd-2', display: '12.10.2026 20:00', votable: false, yes: 0, ifNecessary: 0, no: 0, venueNumber: 2},
       ],
     }));
 
@@ -311,7 +311,7 @@ describe('ProposedDatesSection component', () => {
         },
       ],
       proposedDates: [
-        {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, maybe: 0, no: 0, venueNumber: 2},
+        {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, ifNecessary: 0, no: 0, venueNumber: 2},
       ],
     }));
 
@@ -325,7 +325,7 @@ describe('ProposedDatesSection component', () => {
     const html = renderToString(ProposedDatesSection({
       ...baseProps(),
       proposedDates: [
-        {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, maybe: 0, no: 0, venueNumber: 3},
+        {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, ifNecessary: 0, no: 0, venueNumber: 3},
       ],
     }));
 
@@ -347,7 +347,7 @@ describe('ProposedDatesSection clash info', () => {
           display: '10.10.2026 19:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           clashes: {
             home: [{opponent: 'Thun', start: '2026-10-10T17:00'}],
@@ -376,7 +376,7 @@ describe('ProposedDatesSection clash info', () => {
           display: '10.10.2026 19:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           clashes: {home: [{opponent: 'Thun', start: '2026-10-10T17:00'}], away: []},
         },
@@ -397,7 +397,7 @@ describe('ProposedDatesSection clash info', () => {
           display: '10.10.2026 19:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           clashes: {home: [], away: []},
         },
@@ -425,11 +425,11 @@ describe('ProposedDatesSection clash info', () => {
           display: '10.10.2026 19:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           clashes: {home: [{opponent: 'Thun', start: '2026-10-10T17:00'}], away: []},
         },
-        {id: 'pd-2', display: '12.10.2026 20:00', votable: false, yes: 0, maybe: 0, no: 0},
+        {id: 'pd-2', display: '12.10.2026 20:00', votable: false, yes: 0, ifNecessary: 0, no: 0},
       ],
     }));
 
@@ -552,7 +552,7 @@ describe('ProposedDatesSection venue occupancy info', () => {
           display: '10.10.2026 19:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           venueOccupancy: {
             count: 3,
@@ -578,7 +578,7 @@ describe('ProposedDatesSection venue occupancy info', () => {
           display: '10.10.2026 19:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           venueOccupancy: {count: 1, matches: [{opponent: 'Port', start: '2026-10-10T20:15'}]},
         },
@@ -603,7 +603,7 @@ describe('ProposedDatesSection venue occupancy info', () => {
           display: '10.10.2026 19:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           venueOccupancy: {count: 1, matches: [{opponent: 'Port', start: '2026-10-10T20:15'}]},
         },
@@ -623,7 +623,7 @@ describe('ProposedDatesSection venue occupancy info', () => {
           display: '10.10.2026 19:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           venueOccupancy: {
             count: 2,
@@ -659,7 +659,7 @@ describe('ProposedDatesSection venue occupancy info', () => {
           display: '10.10.2026 19:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           venueOccupancy: {count: 0, matches: []},
         },
@@ -695,7 +695,7 @@ describe('ProposedDatesSection venue occupancy info', () => {
           display: '10.10.2026 19:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           venueOccupancy: {count: 2, matches: []},
         },
@@ -704,7 +704,7 @@ describe('ProposedDatesSection venue occupancy info', () => {
           display: '12.10.2026 20:00',
           votable: true,
           yes: 0,
-          maybe: 0,
+          ifNecessary: 0,
           no: 0,
           venueOccupancy: {count: 0, matches: []},
         },

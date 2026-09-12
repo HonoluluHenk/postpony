@@ -172,7 +172,7 @@ test.describe('Join and Voting', () => {
     await awayJoinPage.castVote(0, 'No');
     await awayJoinPage.submitVotes();
 
-    // Now away team tally should show 1 No (0 Yes, 0 Maybe)
+    // Now away team tally should show 1 No (0 Yes, 0 if necessary)
     tallyTable = awayJoinPage.voteSummaryTable();
     await expect(tallyTable.getByRole('rowgroup')
       .last()
@@ -187,7 +187,7 @@ test.describe('Join and Voting', () => {
       .first()
       .getByRole('cell')
       .nth(2))
-      .toHaveText('0'); // maybe
+      .toHaveText('0'); // if necessary
     await expect(tallyTable.getByRole('rowgroup')
       .last()
       .getByRole('row')

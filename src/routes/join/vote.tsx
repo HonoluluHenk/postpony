@@ -86,10 +86,10 @@ export function VotePage(props: VotePageProps): JSX.Element {
                   <input
                     type="radio"
                     name={`vote-${pd.id}`}
-                    value="Maybe"
-                    checked={pd.currentVote === 'Maybe'}
+                    value="IfNecessary"
+                    checked={pd.currentVote === 'IfNecessary'}
                   />
-                  <span>{props.t('vote_maybe')}</span>
+                  <span>{props.t('vote_if_necessary')}</span>
                 </label>
                 <label class="radio">
                   <input

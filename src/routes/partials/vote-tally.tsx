@@ -4,7 +4,7 @@ import type { TranslateFn } from '../../locales';
 export interface ProposedDateTally {
   display: string;
   yes: number;
-  maybe: number;
+  ifNecessary: number;
   no: number;
 }
 
@@ -35,7 +35,7 @@ export function VoteTally(props: VoteTallyProps): JSX.Element | null {
           <tr>
             <th scope="col">{props.t('proposed_date_time_label')}</th>
             <th scope="col" class="num">{props.t('vote_yes')}</th>
-            <th scope="col" class="num">{props.t('vote_maybe')}</th>
+            <th scope="col" class="num">{props.t('vote_if_necessary')}</th>
             <th scope="col" class="num">{props.t('vote_no')}</th>
           </tr>
         </thead>
@@ -44,7 +44,7 @@ export function VoteTally(props: VoteTallyProps): JSX.Element | null {
             <tr>
               <td data-label={props.t('proposed_date_time_label')}>{pd.display}</td>
               <td data-label={props.t('vote_yes')} class="num">{pd.yes}</td>
-              <td data-label={props.t('vote_maybe')} class="num">{pd.maybe}</td>
+              <td data-label={props.t('vote_if_necessary')} class="num">{pd.ifNecessary}</td>
               <td data-label={props.t('vote_no')} class="num">{pd.no}</td>
             </tr>
           ))}

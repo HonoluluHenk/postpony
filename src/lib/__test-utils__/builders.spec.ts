@@ -61,8 +61,8 @@ describe('builders', () => {
     });
 
     test('applies literal-union overrides', () => {
-      expect(aVote({type: 'Maybe'}).type)
-        .toBe('Maybe');
+      expect(aVote({type: 'IfNecessary'}).type)
+        .toBe('IfNecessary');
     });
   });
 
