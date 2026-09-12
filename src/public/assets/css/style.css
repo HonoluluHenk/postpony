@@ -134,10 +134,12 @@
   /* List rows inherit BeerCSS `white-space: nowrap`, which stops long
      proposed-date strings and player names from wrapping. Let the flex
      `.max` box shrink and wrap so it stays inside its row instead of
-     pushing the row's switch out of view. */
+     pushing the row's switch out of view. `overflow-wrap: anywhere` breaks
+     long unbreakable names (e.g. a 60-character name) mid-word. */
   .list .max {
     min-width: 0;
     white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   /* BeerCSS `.list > li` is `flex-wrap: nowrap`; when a long proposed date
@@ -344,6 +346,7 @@
   dialog {
     border: 1px solid var(--outline-variant);
     transition: none;
+    overscroll-behavior: contain;
   }
 
   dialog::backdrop {

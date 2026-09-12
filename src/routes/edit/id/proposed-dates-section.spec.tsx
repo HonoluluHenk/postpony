@@ -415,6 +415,33 @@ describe('ProposedDatesSection clash info', () => {
       .toContain('Not checked');
   });
 
+  it('exposes clash-labelled cards as a named group and leaves plain cards ungrouped', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      clashCheckable: true,
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: '10.10.2026 19:00',
+          votable: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          clashes: {home: [{opponent: 'Thun', start: '2026-10-10T17:00'}], away: []},
+        },
+        {id: 'pd-2', display: '12.10.2026 20:00', votable: false, yes: 0, maybe: 0, no: 0},
+      ],
+    }));
+
+    // The clash card keeps its aria-label and gains role="group" so the label
+    // is exposed to assistive tech.
+    expect(html)
+      .toMatch(/class="proposed-date-card clash-row" role="group" aria-label="Schedule clash: 10\.10\.2026 19:00"/);
+    // A card with no check has no aria-label, so it gets no role="group" either.
+    expect((html.match(/role="group"/g) ?? []))
+      .toHaveLength(1);
+  });
+
   it('renders nothing when the check failed (identities exist, no clash data)', () => {
     const html = renderToString(ProposedDatesSection({
       ...baseProps(),
@@ -727,6 +754,9 @@ describe('ProposedDatesSection generator block', () => {
     // not the full datetime placeholder, so the user knows they enter a time.
     expect(html.match(/<input[^>]*name="time\[\]"[^>]*placeholder="dd\.MM\.yyyy[^"]*"/g))
       .toBeNull();
+    // 24-hour locales open a numeric keypad on the time inputs.
+    expect((html.match(/<input[^>]*name="time\[\]"[^>]*inputmode="numeric"/g) ?? []))
+      .toHaveLength(7);
   });
 
   it('uses the hh:mm aa placeholder and en-US lang per row for en-US', () => {
@@ -737,6 +767,9 @@ describe('ProposedDatesSection generator block', () => {
     expect((html.match(/<input[^>]*name="time\[\]"[^>]*lang="en-US"/g) ?? []))
       .toHaveLength(7);
     expect(html.match(/<input[^>]*name="time\[\]"[^>]*placeholder="MM\/dd\/yyyy[^"]*"/g))
+      .toBeNull();
+    // 12-hour locales keep the default keypad so users can type the am/pm letter.
+    expect(html.match(/<input[^>]*name="time\[\]"[^>]*inputmode=/g))
       .toBeNull();
   });
 
@@ -906,11 +939,16 @@ describe('ProposedDatesSection generator block', () => {
       .toMatch(/id="fromDate" type="text" name="fromDate"[^>]*placeholder="MM\/dd\/yyyy"/);
     expect(html)
       .toMatch(/id="toDate" type="text" name="toDate"[^>]*placeholder="MM\/dd\/yyyy"/);
-    // Both carry the locale's lang and autocomplete off.
+    // Both carry the locale's lang and autocomplete off, and a numeric keypad
+    // in every locale (the From/To date is pure digits in all supported ones).
     expect(html)
       .toMatch(/id="fromDate"[^>]*lang="en-US"[^>]*autocomplete="off"/);
     expect(html)
       .toMatch(/id="toDate"[^>]*lang="en-US"[^>]*autocomplete="off"/);
+    expect(html)
+      .toMatch(/id="fromDate"[^>]*inputmode="numeric"/);
+    expect(html)
+      .toMatch(/id="toDate"[^>]*inputmode="numeric"/);
   });
 
   it('renders the dd.MM.yyyy token placeholder for de-CH From/To fields', () => {
@@ -930,6 +968,10 @@ describe('ProposedDatesSection generator block', () => {
       .toMatch(/id="fromDate"[^>]*lang="de-CH"/);
     expect(html)
       .toMatch(/id="toDate"[^>]*lang="de-CH"/);
+    expect(html)
+      .toMatch(/id="fromDate"[^>]*inputmode="numeric"/);
+    expect(html)
+      .toMatch(/id="toDate"[^>]*inputmode="numeric"/);
   });
 
   it('gives each From/To field its own calendar button with a distinct accessible name', () => {

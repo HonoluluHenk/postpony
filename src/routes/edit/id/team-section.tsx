@@ -49,11 +49,12 @@ export function TeamSection(props: TeamSectionProps): JSX.Element {
               id="playerName"
               name="playerName"
               value={props.playerName}
+              autocomplete="off"
               aria-invalid="true"
               aria-describedby="playerName-error"
             />
           ) : (
-            <input type="text" id="playerName" name="playerName" required />
+            <input type="text" id="playerName" name="playerName" required autocomplete="off" />
           )}
           <label for="playerName">{props.t('new_player_name')}</label>
           {homeInvalid ? (
@@ -89,11 +90,12 @@ export function TeamSection(props: TeamSectionProps): JSX.Element {
               id="playerNameAway"
               name="playerName"
               value={props.playerName}
+              autocomplete="off"
               aria-invalid="true"
               aria-describedby="playerNameAway-error"
             />
           ) : (
-            <input type="text" id="playerNameAway" name="playerName" required />
+            <input type="text" id="playerNameAway" name="playerName" required autocomplete="off" />
           )}
           <label for="playerNameAway">{props.t('new_player_name')}</label>
           {awayInvalid ? (

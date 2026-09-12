@@ -82,6 +82,9 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
   const headingId = 'generate-tuple-heading';
   const timeFormat = localeConfig(locale).timeFormat;
   const dateFormat = localeConfig(locale).dateFormat;
+  // ponytail: 24-hour locales open a numeric keypad on phones; 12-hour locales
+  // keep the default letter keypad because users type an `a`/`p` for am/pm.
+  const timeInputMode = localeConfig(locale).clock24 ? 'numeric' : undefined;
   const timeLabel = t('proposed_dates_generate_time_label');
   const submitted = times ?? [];
   const fromValue = fromDate ?? '';
@@ -108,6 +111,7 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
             placeholder={dateFormat}
             lang={locale}
             autocomplete="off"
+            inputmode="numeric"
             aria-invalid={fromError ? 'true' : undefined}
             aria-describedby={fromError ? 'fromDate-error' : undefined}
           />
@@ -134,6 +138,7 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
             placeholder={dateFormat}
             lang={locale}
             autocomplete="off"
+            inputmode="numeric"
             aria-invalid={toError ? 'true' : undefined}
             aria-describedby={toError ? 'toDate-error' : undefined}
           />
@@ -178,6 +183,7 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
                   placeholder={timeFormat}
                   lang={locale}
                   autocomplete="off"
+                  inputmode={timeInputMode}
                   value={value}
                   aria-invalid={invalid ? 'true' : undefined}
                   aria-describedby={invalid ? `time-${index}-error` : undefined}
@@ -282,6 +288,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                    <div
                      key={proposedDate.id}
                      class={`proposed-date-card${hasClashes ? ' clash-row' : ''}`}
+                     role={ariaLabel ? 'group' : undefined}
                      aria-label={ariaLabel}
                    >
                      <div class="proposed-date-header">

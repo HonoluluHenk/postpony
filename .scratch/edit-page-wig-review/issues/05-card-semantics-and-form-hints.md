@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] Proposed Date card wrapper has `role="group"` alongside its existing `aria-label`
-- [ ] Generator time inputs have `inputmode="numeric"` in 24-hour locales and no `inputmode` in en-US, decided by a typed property on the locale config (no inline locale comparison in the view)
-- [ ] Generator From/To date inputs have `inputmode="numeric"` in all locales
-- [ ] Delete-confirmation dialogs have `overscroll-behavior: contain`
-- [ ] All player-name input variants (valid and invalid, home and away) have `autocomplete="off"`
-- [ ] Player-name list cells allow wrapping (`min-width: 0`, `overflow-wrap: anywhere`); a 60-character name stays inside the card
-- [ ] Component specs assert `role`, `inputmode` per locale, and `autocomplete`; existing e2e locators on cards still resolve
+- [x] Proposed Date card wrapper has `role="group"` alongside its existing `aria-label`
+- [x] Generator time inputs have `inputmode="numeric"` in 24-hour locales and no `inputmode` in en-US, decided by a typed property on the locale config (no inline locale comparison in the view)
+- [x] Generator From/To date inputs have `inputmode="numeric"` in all locales
+- [x] Delete-confirmation dialogs have `overscroll-behavior: contain`
+- [x] All player-name input variants (valid and invalid, home and away) have `autocomplete="off"`
+- [x] Player-name list cells allow wrapping (`min-width: 0`, `overflow-wrap: anywhere`); a 60-character name stays inside the card
+- [x] Component specs assert `role`, `inputmode` per locale, and `autocomplete`; existing e2e locators on cards still resolve

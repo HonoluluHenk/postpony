@@ -55,6 +55,15 @@ describe('TeamSection component', () => {
       .toContain('hx-target="#team-management"');
   });
 
+  it('turns off autofill on the valid home and away name inputs', () => {
+    const html = renderToString(TeamSection(baseProps()));
+
+    expect(html)
+      .toMatch(/id="playerName"[^>]*autocomplete="off"/);
+    expect(html)
+      .toMatch(/id="playerNameAway"[^>]*autocomplete="off"/);
+  });
+
   it('keeps the invalid input and error text on the home field when the home form failed', () => {
     const html = renderToString(TeamSection({
       ...baseProps(),
@@ -78,6 +87,8 @@ describe('TeamSection component', () => {
     expect(html)
       .not
       .toContain('id="playerNameAway-error"');
+    expect(html)
+      .toMatch(/id="playerName"[^>]*autocomplete="off"/);
   });
 
   it('keeps the invalid input on the away field when the away form failed', () => {
@@ -97,6 +108,8 @@ describe('TeamSection component', () => {
     expect(html)
       .not
       .toContain('id="playerName-error"');
+    expect(html)
+      .toMatch(/id="playerNameAway"[^>]*autocomplete="off"/);
   });
 });
 
