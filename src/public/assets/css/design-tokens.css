@@ -3,6 +3,12 @@
     /* Brand */
     --primary: #1a237e;
 
+    /* Warning — amber (MD3 amber-200). Informational "hall busy" signal,
+       deliberately distinct from the pink error/tertiary family; contrast
+       vs --on-warning-container is 10.5:1 (WCAG AA). */
+    --warning-container: #ffe082;
+    --on-warning-container: #3d2b00;
+
     /* Layout */
     --container-max-width: 75rem;
 

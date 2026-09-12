@@ -27,12 +27,11 @@ export function venueTooltip(venueNumber: number | undefined, venues: readonly V
 /**
  * The "(1)" pill shown next to a proposed date; `title` carries the full venue
  * name when known. `label` overrides the visible text (the vote page shows the
- * number, short name, and occupancy count inside the pill). `busy` flags a
- * Venue Occupancy > 0, tinting the pill as an informational warning.
+ * number, short name, and occupancy count inside the pill).
  */
-export function VenueBadge(props: { venueNumber?: number; venues: readonly Venue[]; label?: string; busy?: boolean }): JSX.Element {
+export function VenueBadge(props: { venueNumber?: number; venues: readonly Venue[]; label?: string }): JSX.Element {
   return (
-    <span class={`chip venue-badge${props.busy ? ' busy' : ''}`} title={venueTooltip(props.venueNumber, props.venues)}>
+    <span class="chip venue-badge" title={venueTooltip(props.venueNumber, props.venues)}>
       {props.label ?? venueNumberToken(props.venueNumber)}
     </span>
   );

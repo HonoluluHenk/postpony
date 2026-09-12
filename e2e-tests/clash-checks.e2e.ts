@@ -121,10 +121,12 @@ test.describe('Clash checks', () => {
     // The occupancy count renders per proposed date alongside the clash lines.
     await expect(editPage.proposedDateList.getByText('1 other games at this venue'))
       .toBeVisible();
-    // The venue bubble is painted with the informational warning color: at
-    // least one other match occupies the venue (Venue Occupancy > 0).
-    await expect(editPage.proposedDateList.locator('.venue-badge.busy'))
-      .toHaveCount(1);
+    // The occupancy count chip is painted with the informational warning color
+    // (amber): at least one other match occupies the venue (Venue Occupancy > 0),
+    // deliberately distinct from the error clash tint.
+    const occupancyChip = editPage.proposedDateList.locator('.venue-occupancy__trigger');
+    await expect(occupancyChip).toHaveCount(1);
+    await expect(occupancyChip).toHaveCSS('background-color', 'rgb(255, 224, 130)');
     // Hovering the count reveals the conflicting match (opponent + time) in an
     // accessible tooltip: the club-meetings fixture has Ostermundigen vs Port.
     const occupancyTrigger = editPage.proposedDateList
@@ -148,9 +150,6 @@ test.describe('Clash checks', () => {
       .toBeVisible();
     await expect(joinPage.voteForm.getByRole('button', {name: '1 other games at this venue'}))
       .toHaveCount(0);
-    // The vote pill is painted with the same informational warning.
-    await expect(joinPage.voteForm.locator('.venue-badge.busy'))
-      .toHaveCount(1);
 
     await checkA11y();
   });

@@ -21,15 +21,6 @@ export interface VenueOccupancy {
 
 export type VenueOccupancyByProposedDate = Record<string, VenueOccupancy>;
 
-/**
- * Whether a Proposed Date's venue is occupied: at least one other home Match
- * was counted there on the last check. `undefined` (never checked, failed
- * scrape, or no club identity) is not busy.
- */
-export function isVenueBusy(occupancy: VenueOccupancy | undefined): boolean {
-  return occupancy !== undefined && occupancy.count > 0;
-}
-
 export function computeVenueOccupancy(
   proposedDates: ProposedDate[],
   homeMatches: Match[],

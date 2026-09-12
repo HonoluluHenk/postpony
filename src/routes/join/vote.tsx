@@ -56,57 +56,52 @@ export function VotePage(props: VotePageProps): JSX.Element {
             hx-boost="false"
             aria-label={props.t('vote_title')}
           >
-            {props.proposedDates.map((pd) => {
-              const occupancy = pd.venueOccupancy;
-              const busy = occupancy !== undefined && occupancy.count > 0;
-              return (
-                <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
-                  <legend>
-                    {pd.display}{' '}
-                    <VenueBadge
-                      venueNumber={pd.venueNumber}
-                      venues={props.venues}
-                      busy={busy}
-                      label={venuePillLabel(
-                        pd.venueNumber,
-                        props.venues,
-                        busy
-                          ? props.t('venue_legend_occupancy', {count: String(occupancy.count)})
-                          : undefined,
-                      )}
-                    />
-                  </legend>
+            {props.proposedDates.map((pd) => (
+              <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
+                <legend>
+                  {pd.display}{' '}
+                  <VenueBadge
+                    venueNumber={pd.venueNumber}
+                    venues={props.venues}
+                    label={venuePillLabel(
+                      pd.venueNumber,
+                      props.venues,
+                      pd.venueOccupancy !== undefined && pd.venueOccupancy.count > 0
+                        ? props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})
+                        : undefined,
+                    )}
+                  />
+                </legend>
                 <label class="radio">
-                    <input
-                      type="radio"
-                      name={`vote-${pd.id}`}
-                      value="Yes"
-                      checked={pd.currentVote === 'Yes'}
-                      required
-                    />
-                    <span>{props.t('vote_yes')}</span>
-                  </label>
-                  <label class="radio">
-                    <input
-                      type="radio"
-                      name={`vote-${pd.id}`}
-                      value="Maybe"
-                      checked={pd.currentVote === 'Maybe'}
-                    />
-                    <span>{props.t('vote_maybe')}</span>
-                  </label>
-                  <label class="radio">
-                    <input
-                      type="radio"
-                      name={`vote-${pd.id}`}
-                      value="No"
-                      checked={pd.currentVote === 'No'}
-                    />
-                    <span>{props.t('vote_no')}</span>
-                  </label>
-                </fieldset>
-              );
-            })}
+                  <input
+                    type="radio"
+                    name={`vote-${pd.id}`}
+                    value="Yes"
+                    checked={pd.currentVote === 'Yes'}
+                    required
+                  />
+                  <span>{props.t('vote_yes')}</span>
+                </label>
+                <label class="radio">
+                  <input
+                    type="radio"
+                    name={`vote-${pd.id}`}
+                    value="Maybe"
+                    checked={pd.currentVote === 'Maybe'}
+                  />
+                  <span>{props.t('vote_maybe')}</span>
+                </label>
+                <label class="radio">
+                  <input
+                    type="radio"
+                    name={`vote-${pd.id}`}
+                    value="No"
+                    checked={pd.currentVote === 'No'}
+                  />
+                  <span>{props.t('vote_no')}</span>
+                </label>
+              </fieldset>
+            ))}
 
             <div class="right-align">
               <button type="submit">{props.t('vote_submit')}</button>
