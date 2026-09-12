@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] `npm run verify` (lint, test, build, e2e) passes
-- [ ] Coverage stays at or above 80% for all metrics
-- [ ] Re-run the web-design-guidelines review against the edit page URL; remaining findings are limited to: language select as links, shared single delete dialog, `beforeunload` guard for the generator form
-- [ ] Spec's Out of Scope section still matches the remaining findings; update it if anything else was consciously deferred
+- [x] `npm run verify` (lint, test, build, e2e) passes
+- [x] Coverage stays at or above 80% for all metrics
+- [x] Re-run the web-design-guidelines review against the edit page URL; remaining findings are limited to: language select as links, shared single delete dialog, `beforeunload` guard for the generator form
+- [x] Spec's Out of Scope section still matches the remaining findings; update it if anything else was consciously deferred

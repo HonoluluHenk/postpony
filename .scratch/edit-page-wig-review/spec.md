@@ -87,6 +87,8 @@ Three findings are intentionally deferred (see Out of Scope).
 - Replacing the language `<select>` with per-language links (deep-linkable, middle-clickable). Deferred; current inline navigation stays.
 - Collapsing 26 per-card delete dialogs into one shared dialog.
 - `beforeunload` guard for the unsaved generator form.
+- Success toasts for add-date and the generator staying `role="alert"` (assertive) next to the polite `role="status"` announcement: screen readers hear the same short outcome twice, one assertively. Collapsing them into the status element alone is future work.
+- The edit page `<h1>`'s accessible name (the page title, which embeds the original match datetime in input-token format) diverging from the visible heading's Intl reading format; screen readers announce the typing format in the heading. Harmonising the title with the display formatter is deferred.
 - Virtualization of Proposed Date lists (under the 50-item threshold).
 - Any visual redesign; BeerCSS vendor CSS untouched.
 - Join/vote page (participant side) review; only the organizer edit page was audited.

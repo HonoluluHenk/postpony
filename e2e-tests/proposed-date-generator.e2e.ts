@@ -306,18 +306,21 @@ test.describe('Proposed Date Generator', () => {
 
     const initialCount = await editPage.proposedDateRows.count();
 
-    // today is ~2026-08-29 per env, so from=2026-09-10, to=2026-09-05 (to < from)
-    await editPage.fillFromDate('2026-09-10');
-    await editPage.fillToDate('2026-09-05');
+    // to = today, from = tomorrow: to ≤ from triggers the To error while both
+    // stay ≥ today, so the From "today or later" check cannot preempt it.
+    const from = isoDate(1);
+    const to = isoDate(0);
+    await editPage.fillFromDate(from);
+    await editPage.fillToDate(to);
     await editPage.generateProposedDates([...TUPLES]);
 
     await expect(editPage.toDateError)
       .toBeVisible();
     // Both values stay as the submitted en-US tokens, flagged on To.
     await expect(editPage.fromDateInput)
-      .toHaveValue('09/10/2026');
+      .toHaveValue(isoToLocaleDateTokens('en-US', from));
     await expect(editPage.toDateInput)
-      .toHaveValue('09/05/2026');
+      .toHaveValue(isoToLocaleDateTokens('en-US', to));
 
     const finalCount = await editPage.proposedDateRows.count();
     expect(finalCount)
@@ -351,11 +354,13 @@ test.describe('Proposed Date Generator', () => {
   test('custom from/to with anchor generates within specified range', async ({page}) => {
     const {editPage} = await EditPage.createSession(page);
 
-    // Narrow window: only one week starting 2026-09-07 (Monday)
-    // Anchor is the scraped match (2027-01-14), cap is 2027-02-11
-    // from=2026-09-07, to=2026-09-13 (one week: Mon-Sun)
-    await editPage.fillFromDate('2026-09-07');
-    await editPage.fillToDate('2026-09-13');
+    // Narrow window: any 7 consecutive days starting today (start weekday varies
+    // with the wall clock). Anchor is the scraped match (2027-01-14), cap is
+    // 2027-02-11 (4 weeks after), so [today, today+6] is inside the window.
+    const from = isoDate(0);
+    const to = isoDate(6);
+    await editPage.fillFromDate(from);
+    await editPage.fillToDate(to);
     await editPage.generateProposedDates([...TUPLES]);
 
     const successToast = page.getByRole('alert')
@@ -364,8 +369,8 @@ test.describe('Proposed Date Generator', () => {
       .toBeVisible();
 
     const dateTexts = await editPage.proposedDateDisplays();
-    const fromDate = new Date('2026-09-07T00:00');
-    const toDate = new Date('2026-09-13T23:59');
+    const fromDate = new Date(`${from}T00:00`);
+    const toDate = new Date(`${to}T23:59`);
     for (const dateText of dateTexts) {
       const date = new Date(stripWeekdayPrefix(dateText)
         .replace(' at ', ', '));
@@ -375,7 +380,8 @@ test.describe('Proposed Date Generator', () => {
         .toBeLessThanOrEqual(toDate.getTime());
     }
 
-    // Should only contain Wednesday (2026-09-09) and Saturday (2026-09-12)
+    // Every 7-day span holds exactly one of each weekday, so exactly one
+    // Wednesday (3) and one Saturday (6) are generated on any start day.
     const weekdays: number[] = dateTexts.map((dateText: string): number => isoWeekday(new Date(stripWeekdayPrefix(dateText)
       .replace(' at ', ', '))));
     expect([...new Set(weekdays)].sort((a: number, b: number): number => a - b))
