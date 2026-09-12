@@ -146,13 +146,24 @@ export function initOccupancyTooltips() {
 }
 
 /**
- * Handles click-to-copy for [data-copy] buttons.
+ * Handles click-to-copy for [data-copy] buttons: writes the link to the
+ * clipboard, swaps the icon to a check, and announces the localized "copied"
+ * label via the shared visually-hidden `role="status"` element for ~2 s.
  */
 export function initClipboard() {
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-copy]');
     if (!btn) return;
     navigator.clipboard.writeText(btn.dataset.copy);
+
+    const status = document.getElementById('clipboard-status');
+    if (status && btn.dataset.copiedLabel) {
+      status.textContent = btn.dataset.copiedLabel;
+      setTimeout(() => {
+        status.textContent = '';
+      }, 2000);
+    }
+
     const icon = btn.querySelector('i');
     if (icon) {
       const original = icon.textContent;

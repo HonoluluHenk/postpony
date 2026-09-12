@@ -19,6 +19,7 @@
   "confirmed_date_label": "Confirmed date",
   "confirmed_date_title": "Postponement Confirmed",
   "confirmed_view_info": "Voting is closed. This date has been locked in.",
+  "copied_to_clipboard": "Copied to clipboard",
   "copy_to_clipboard": "Copy to clipboard",
   "create_button": "Create Postponement",
   "delete_proposed_date": "Delete",

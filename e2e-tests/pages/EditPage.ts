@@ -255,6 +255,10 @@ export class EditPage {
     return this.page.locator('a[href*="/away?token="]');
   }
 
+  get clipboardStatus(): Locator {
+    return this.page.locator('#clipboard-status');
+  }
+
   homeTallySection(): Locator {
     return this.page.getByRole('region', {name: 'Home Team Votes'});
   }

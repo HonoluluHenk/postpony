@@ -77,3 +77,21 @@ describe('EditPage organizer-password toast', () => {
       .toContain('<span class="password-display" translate="no">pw-123</span>');
   });
 });
+
+describe('EditPage clipboard announcement', () => {
+  it('renders a visually-hidden role="status" element for clipboard feedback in the initial render', () => {
+    const html = renderToString(EditPage(baseProps()));
+
+    expect(html)
+      .toContain('<p id="clipboard-status" class="visually-hidden" role="status"></p>');
+  });
+
+  it('carries the localized copied label as a data attribute on both copy buttons', () => {
+    const html = renderToString(EditPage(baseProps()));
+
+    expect(html)
+      .toContain('data-copied-label="Copied to clipboard"');
+    expect(html.match(/class="clipboard-btn"/g))
+      .toHaveLength(2);
+  });
+});

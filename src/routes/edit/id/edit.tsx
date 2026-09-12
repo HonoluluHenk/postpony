@@ -44,6 +44,7 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
           <button
             class="clipboard-btn"
             data-copy={homeLink}
+            data-copied-label={props.t('copied_to_clipboard')}
             aria-label={props.t('copy_to_clipboard')}
             type="button"
           >
@@ -55,6 +56,7 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
           <button
             class="clipboard-btn"
             data-copy={awayLink}
+            data-copied-label={props.t('copied_to_clipboard')}
             aria-label={props.t('copy_to_clipboard')}
             type="button"
           >
@@ -103,6 +105,8 @@ export function EditPage(props: EditPageProps): JSX.Element {
           })}
         </p>
       </div>
+
+      <p id="clipboard-status" class="visually-hidden" role="status"></p>
 
       <InviteLinks
         baseUrl={props.baseUrl}

@@ -152,6 +152,42 @@ describe('initClipboard', () => {
 
     document.body.removeChild(btn);
   });
+
+  it('announces the copied label in the status element and clears it after 2s', () => {
+    const status = document.createElement('p');
+    status.id = 'clipboard-status';
+    document.body.appendChild(status);
+
+    const btn = document.createElement('button');
+    btn.setAttribute('data-copy', 'test-value');
+    btn.setAttribute('data-copied-label', 'Copied to clipboard');
+    document.body.appendChild(btn);
+
+    btn.click();
+    expect(status.textContent).toBe('Copied to clipboard');
+
+    vi.advanceTimersByTime(2000);
+    expect(status.textContent).toBe('');
+
+    document.body.removeChild(status);
+    document.body.removeChild(btn);
+  });
+
+  it('announces nothing when the button carries no copied label', () => {
+    const status = document.createElement('p');
+    status.id = 'clipboard-status';
+    document.body.appendChild(status);
+
+    const btn = document.createElement('button');
+    btn.setAttribute('data-copy', 'test-value');
+    document.body.appendChild(btn);
+
+    btn.click();
+    expect(status.textContent).toBe('');
+
+    document.body.removeChild(status);
+    document.body.removeChild(btn);
+  });
 });
 
 describe('initOccupancyTooltips', () => {
