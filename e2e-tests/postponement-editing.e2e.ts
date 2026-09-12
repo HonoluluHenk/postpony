@@ -103,6 +103,9 @@ test.describe('Postponement Editing', () => {
     const homeTally = editPage.homeTallySection();
     await expect(homeTally.getByRole('heading', {level: 3}))
       .toContainText('Home Team Votes');
+    // The visually-hidden caption keeps the table's accessible name.
+    await expect(homeTally.getByRole('table', {name: 'Home Team Votes'}))
+      .toBeVisible();
 
     const homeRows = homeTally.getByRole('rowgroup')
       .last()
@@ -262,6 +265,9 @@ test.describe('Postponement Editing', () => {
     const ownTeam = editPage.ownTeamSection();
     await expect(ownTeam.getByRole('heading', {level: 3}))
       .toContainText('Your Team Votes');
+    // The visually-hidden caption keeps the table's accessible name.
+    await expect(ownTeam.getByRole('table', {name: 'Your Team Votes'}))
+      .toBeVisible();
 
     // Roster: 3 scraped players + John Doe + Jane Smith = 5. Only John Doe
     // votes, so every date reports 1 of 5 voted.

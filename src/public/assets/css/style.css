@@ -101,6 +101,15 @@
     border: 0;
   }
 
+  /* Numeric table cells (vote counts, voted column): tabular numerals so
+     columns line up for at-a-glance comparison, right-aligned. In the
+     stacked mobile layout the cell stays display:block, so the label and
+     value both align to the end — still readable as a labelled card. */
+  .num {
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+  }
+
   a:not(.button) {
     text-decoration: underline;
   }

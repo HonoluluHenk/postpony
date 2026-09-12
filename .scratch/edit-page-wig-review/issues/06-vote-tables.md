@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Table `<caption>` is visually hidden in all three tables; the heading remains the visible title and stays the first child of its section
-- [ ] `getByRole('table', { name })` still resolves for each table (accessible name preserved)
-- [ ] Yes/Maybe/No cells and the voted-count cells (header and body) carry a shared numeric class styled with `font-variant-numeric: tabular-nums` and `text-align: end`
-- [ ] Mobile stacked-table styles (data-label cards) still render correctly with the new class
-- [ ] Player header cells in the own-team table have a stable `key`
-- [ ] Component specs assert hidden caption class and numeric class placement; join-voting e2e still passes
+- [x] Table `<caption>` is visually hidden in all three tables; the heading remains the visible title and stays the first child of its section
+- [x] `getByRole('table', { name })` still resolves for each table (accessible name preserved)
+- [x] Yes/Maybe/No cells and the voted-count cells (header and body) carry a shared numeric class styled with `font-variant-numeric: tabular-nums` and `text-align: end`
+- [x] Mobile stacked-table styles (data-label cards) still render correctly with the new class
+- [x] Player header cells in the own-team table have a stable `key`
+- [x] Component specs assert hidden caption class and numeric class placement; join-voting e2e still passes

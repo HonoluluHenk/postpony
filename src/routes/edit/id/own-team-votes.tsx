@@ -37,14 +37,14 @@ export function OwnTeamVotes(props: OwnTeamVotesProps): JSX.Element | null {
         <Heading id="own-team-votes-title">{title}</Heading>
       </header>
       <table>
-        <caption>{title}</caption>
+        <caption class="visually-hidden">{title}</caption>
         <thead>
           <tr>
             <th scope="col">{props.t('proposed_date_time_label')}</th>
             {props.organizerPlayers.map((player) => (
-              <th scope="col">{player.name}</th>
+              <th scope="col" key={player.id}>{player.name}</th>
             ))}
-            <th scope="col">{props.t('voted_column')}</th>
+            <th scope="col" class="num">{props.t('voted_column')}</th>
           </tr>
         </thead>
         <tbody>
@@ -64,7 +64,7 @@ export function OwnTeamVotes(props: OwnTeamVotesProps): JSX.Element | null {
                       )}
                   </td>
                 ))}
-                <td>
+                <td class="num">
                   {props.t('voted_count', {
                     voted: String(dateResult.voted),
                     total: String(dateResult.total),

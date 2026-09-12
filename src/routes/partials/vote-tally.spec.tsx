@@ -28,7 +28,7 @@ describe('VoteTally component', () => {
     const html = renderToString(node);
 
     expect(html).toContain('<h3 id="vote-tally-title">Vote Summary</h3>');
-    expect(html).toContain('<caption>Vote Summary</caption>');
+    expect(html).toContain('<caption class="visually-hidden">Vote Summary</caption>');
   });
 
   it('supports custom heading-level variants and custom titleId/title', () => {
@@ -41,7 +41,7 @@ describe('VoteTally component', () => {
     });
     const htmlH2 = renderToString(nodeH2);
     expect(htmlH2).toContain('<h2 id="custom-h2-title">Custom Summary</h2>');
-    expect(htmlH2).toContain('<caption>Custom Summary</caption>');
+    expect(htmlH2).toContain('<caption class="visually-hidden">Custom Summary</caption>');
 
     const nodeH4 = VoteTally({
       proposedDates: sampleDates,
@@ -57,18 +57,18 @@ describe('VoteTally component', () => {
     const html = renderToString(node);
 
     expect(html).toContain('<th scope="col">Proposed Date &amp; Time</th>');
-    expect(html).toContain('<th scope="col">Yes</th>');
-    expect(html).toContain('<th scope="col">Maybe</th>');
-    expect(html).toContain('<th scope="col">No</th>');
+    expect(html).toContain('<th scope="col" class="num">Yes</th>');
+    expect(html).toContain('<th scope="col" class="num">Maybe</th>');
+    expect(html).toContain('<th scope="col" class="num">No</th>');
 
     expect(html).toContain('<td data-label="Proposed Date &amp; Time">10.10.2026 19:00</td>');
-    expect(html).toContain('<td data-label="Yes">3</td>');
-    expect(html).toContain('<td data-label="Maybe">1</td>');
-    expect(html).toContain('<td data-label="No">0</td>');
+    expect(html).toContain('<td data-label="Yes" class="num">3</td>');
+    expect(html).toContain('<td data-label="Maybe" class="num">1</td>');
+    expect(html).toContain('<td data-label="No" class="num">0</td>');
 
     expect(html).toContain('<td data-label="Proposed Date &amp; Time">12.10.2026 20:00</td>');
-    expect(html).toContain('<td data-label="Yes">1</td>');
-    expect(html).toContain('<td data-label="Maybe">2</td>');
-    expect(html).toContain('<td data-label="No">2</td>');
+    expect(html).toContain('<td data-label="Yes" class="num">1</td>');
+    expect(html).toContain('<td data-label="Maybe" class="num">2</td>');
+    expect(html).toContain('<td data-label="No" class="num">2</td>');
   });
 });

@@ -50,11 +50,11 @@ describe('OwnTeamVotes component', () => {
 
     expect(html).toContain('<section id="own-team-votes" class="padding small-round surface-variant"');
     expect(html).toContain('<h3 id="own-team-votes-title">Your Team Votes</h3>');
-    expect(html).toContain('<caption>Your Team Votes</caption>');
+    expect(html).toContain('<caption class="visually-hidden">Your Team Votes</caption>');
     expect(html).toContain('<th scope="col">Proposed Date &amp; Time</th>');
     expect(html).toContain('<th scope="col">Voter</th>');
     expect(html).toContain('<th scope="col">SitsOut</th>');
-    expect(html).toContain('<th scope="col">Voted</th>');
+    expect(html).toContain('<th scope="col" class="num">Voted</th>');
   });
 
   it('renders the vote cells, the N/M voted count, and the non-voter row', () => {
@@ -64,7 +64,7 @@ describe('OwnTeamVotes component', () => {
     expect(html).toContain('<th scope="row">10.10.2026 19:00</th>');
     expect(html).toContain('<td>Yes</td>');
     expect(html).toContain('<span class="visually-hidden">No vote</span>');
-    expect(html).toContain('1/2 voted');
+    expect(html).toContain('<td class="num">1/2 voted</td>');
     expect(html).toContain('Not voted yet:');
     expect(html).toContain('SitsOut (not joined)');
   });
@@ -88,6 +88,6 @@ describe('OwnTeamVotes component', () => {
     const html = renderToString(node);
 
     expect(html).toContain('<h2 id="own-team-votes-title">Custom Votes</h2>');
-    expect(html).toContain('<caption>Custom Votes</caption>');
+    expect(html).toContain('<caption class="visually-hidden">Custom Votes</caption>');
   });
 });

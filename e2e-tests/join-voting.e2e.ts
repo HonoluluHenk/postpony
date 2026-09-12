@@ -154,6 +154,12 @@ test.describe('Join and Voting', () => {
     await awayJoinPage.join('AwayVoter');
 
     let tallyTable = awayJoinPage.voteSummaryTable();
+    // The visually-hidden caption keeps the table's accessible name.
+    await expect(tallyTable)
+      .toBeVisible();
+    await expect(awayJoinPage.voteSummarySection()
+      .getByRole('table', {name: 'Vote Summary'}))
+      .toBeVisible();
     await expect(tallyTable.getByRole('rowgroup')
       .last()
       .getByRole('row')
