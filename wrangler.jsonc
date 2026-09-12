@@ -1,0 +1,34 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "postpony",
+  "main": "worker.ts",
+  "compatibility_date": "2026-09-11",
+  "workers_dev": true,
+  "send_metrics": false,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "routes": [
+    {
+      "pattern": "spielverlegung.date",
+      "custom_domain": true
+    }
+  ],
+  // Static assets (CSS, vendor) served by Workers Assets instead of the Node
+  // serveStatic middleware (which is kept out of the Worker build).
+  "assets": {
+    "directory": "src/public",
+    "binding": "ASSETS"
+  },
+  // Config values that are safe to commit. Secrets (the Turso auth token) are
+  // provided via `wrangler secret put TURSO_DB_AUTH_TOKEN` and never stored here.
+  // ponytail: the Turso auth token is a SECRET slot — supply it (never commit it)
+  // with `wrangler secret put TURSO_DB_AUTH_TOKEN`. No secrets are published by
+  // this scaffold.
+  "vars": {
+    // Turso DB URL — wired as a text var. Replace with your instance URL, or set it
+    // with `wrangler secret put TURSO_DB_URL` for a non-committed value.
+    "TURSO_DB_URL": "libsql://einsatzplaan-honoluluhenk.aws-eu-west-1.turso.io"
+  }
+}
