@@ -4,7 +4,7 @@ import { aProposedDate } from './__test-utils__/builders';
 import { CLASH_BUFFER_HOURS, type OriginalMatchIdentity } from './clashes';
 import type { Match } from './click-tt-scraper';
 import type { ProposedDate } from './models';
-import { computeVenueOccupancy } from './venue-occupancy';
+import { computeVenueOccupancy, isVenueBusy } from './venue-occupancy';
 
 const HOME = 'Thun';
 const AWAY = 'Ostermundigen';
@@ -199,5 +199,24 @@ describe('computeVenueOccupancy', () => {
         count: 1,
         matches: [{opponent: AWAY, start: '2026-08-29T16:00'}],
       });
+  });
+});
+
+describe('isVenueBusy', () => {
+  test('is false when the check never ran', () => {
+    expect(isVenueBusy(undefined)).toBe(false);
+  });
+
+  test('is false when the hall is free', () => {
+    expect(isVenueBusy({count: 0, matches: []})).toBe(false);
+  });
+
+  test('is true when at least one other match occupies the venue', () => {
+    expect(isVenueBusy({count: 1, matches: [{opponent: AWAY, start: '2026-09-05T17:00'}]})).toBe(true);
+    expect(isVenueBusy({count: 3, matches: [
+      {opponent: 'A', start: '2026-09-05T17:00'},
+      {opponent: 'B', start: '2026-09-05T18:00'},
+      {opponent: 'C', start: '2026-09-05T19:00'},
+    ]})).toBe(true);
   });
 });

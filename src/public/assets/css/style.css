@@ -206,6 +206,14 @@
     padding-inline-start: calc(var(--space-3) - 4px);
   }
 
+  /* Busy venue badge on a proposed date: Venue Occupancy > 0, an informational
+     warning (never blocks a date) — distinct from the --error clash treatment.
+     Tertiary-container tint keeps WCAG contrast via the paired on-token. */
+  .venue-badge.busy {
+    background: var(--tertiary-container);
+    color: var(--on-tertiary-container);
+  }
+
   /* Switch inside proposed-date card header. BeerCSS switch needs a positioned ancestor. */
   .proposed-date-actions .switch {
     position: relative;

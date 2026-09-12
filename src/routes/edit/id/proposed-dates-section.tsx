@@ -2,6 +2,7 @@ import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { DateClashes } from '../../../lib/clashes';
 import type { PostponementStatus, Venue, VoteTallyItem } from '../../../lib/models';
 import type { VenueOccupancy } from '../../../lib/venue-occupancy';
+import { isVenueBusy } from '../../../lib/venue-occupancy';
 import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
 import { ClashInfo } from '../../partials/clash-info';
@@ -289,7 +290,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                          <i aria-hidden="true">event</i>
                          <span class="max" title={proposedDate.display}>{proposedDate.shortDisplay ??
                            proposedDate.display}</span>
-                         <VenueBadge venueNumber={proposedDate.venueNumber} venues={props.venues}/>
+                         <VenueBadge venueNumber={proposedDate.venueNumber} venues={props.venues} busy={isVenueBusy(proposedDate.venueOccupancy)}/>
                        </div>
                        <div class="proposed-date-actions">
                          <label
