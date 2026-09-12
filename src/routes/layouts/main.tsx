@@ -44,7 +44,11 @@ export function Layout(props: LayoutProps): JSX.Element {
             <a href="/" class="shrink" aria-label="PostPony home">
               <img src="/assets/logos/wordmark.svg" alt="PostPony" height="40" width="155"/>
             </a>
-            <h1 class="max center-align" aria-label={props.headingTitle ? props.title : undefined}>
+            {/* ponytail: no aria-label override on the heading: the visible
+                headingTitle now renders Intl reading-format dates, so the
+                accessible name must be the visible text itself, not the title
+                string (which embeds the token-format match datetime). */}
+            <h1 class="max center-align">
               {props.headingTitle ?? props.title}
             </h1>
             <nav class="row no-wrap shrink" aria-label={props.t('language_selection')}>

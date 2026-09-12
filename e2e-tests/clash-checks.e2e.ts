@@ -38,7 +38,7 @@ test.describe('Clash checks', () => {
     // The check scrapes both teams' schedules (team.html / team-thun.html).
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-12-04T18:00');
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
     await expect(editPage.proposedDateList.getByText('Home: 7:30 PM vs Burgdorf'))
@@ -51,7 +51,7 @@ test.describe('Clash checks', () => {
 
     // 3. A second, clean date: no scheduled game within 10.10.2026 18:00 ± 2h.
     await editPage.addProposedDate('2026-10-10T18:00');
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
     await expect(editPage.proposedDateList.getByText('Schedule checked, no clashes'))
@@ -115,7 +115,7 @@ test.describe('Clash checks', () => {
       .selectOption('3');
     await editPage.addProposedDateButton.click();
 
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
     // The occupancy count renders per proposed date alongside the clash lines.

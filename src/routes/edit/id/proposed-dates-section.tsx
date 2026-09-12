@@ -214,7 +214,7 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
         <p class="error mt-2" role="alert">{props.error}</p>
       ) : null}
       {typeof props.successCount === 'number' && props.successCount > 0 ? (
-        <div class="toast success top mt-2" role="alert">
+        <div class="toast success top mt-2">
           <i aria-hidden="true">check_circle</i>
           <div class="max">
             <p>{t('proposed_dates_generate_added', {count: String(props.successCount)})}</p>
@@ -432,14 +432,14 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                <button type="submit">{props.t('add_proposed_date')}</button>
              </div>
            </form>
-           {props.success ? (
-             <div class="toast success top" role="alert">
-               <i aria-hidden="true">check_circle</i>
-               <div class="max">
-                 <p>{props.t('proposed_date_added')}</p>
-               </div>
-             </div>
-           ) : null}
+{props.success ? (
+              <div class="toast success top">
+                <i aria-hidden="true">check_circle</i>
+                <div class="max">
+                  <p>{props.t('proposed_date_added')}</p>
+                </div>
+              </div>
+            ) : null}
          </>
        )}
     </section>

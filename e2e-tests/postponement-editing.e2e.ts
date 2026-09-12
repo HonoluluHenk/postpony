@@ -86,12 +86,12 @@ test.describe('Postponement Editing', () => {
     const editPage = new EditPage(page);
     // Add proposed dates
     await editPage.addProposedDate('2026-06-01T20:00');
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 
     await editPage.addProposedDate('2026-06-15T18:30');
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 
@@ -183,12 +183,12 @@ test.describe('Postponement Editing', () => {
     const editPage = new EditPage(page);
     // Add proposed dates
     await editPage.addProposedDate('2026-06-01T20:00');
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 
     await editPage.addProposedDate('2026-06-15T18:30');
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 
@@ -242,11 +242,11 @@ test.describe('Postponement Editing', () => {
   test('should show own-team per-player votes and the N/M voted count in the edit view', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
     await editPage.addProposedDate('2026-06-15T18:30');
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 
@@ -315,12 +315,12 @@ test.describe('Postponement Editing', () => {
   test('maintains accessibility on the edit page with split tallies visible', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 
     await editPage.addProposedDate('2026-06-15T18:30');
-    await expect(page.getByRole('alert')
+    await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 

@@ -116,7 +116,7 @@ test.describe('Proposed Date Generator', () => {
       // number from the rendered text grounds the subsequent list assertions in
       // the same value the handler actually emitted — "Added by user" rather
       // than "any number > 0".
-      const successToast = page.getByRole('alert')
+      const successToast = page.locator('.toast.success')
         .filter({hasText: /\d+ dates? added/});
       await expect(successToast)
         .toBeVisible();
@@ -247,8 +247,8 @@ test.describe('Proposed Date Generator', () => {
     await editPage.fillToDate(TO);
     await editPage.generateProposedDates([...TUPLES]);
 
-    const successToast = page.getByRole('alert')
-      .filter({hasText: /\d+ dates? added/});
+const successToast = page.locator('.toast.success')
+        .filter({hasText: /\d+ dates? added/});
     await expect(successToast)
       .toBeVisible();
 
@@ -363,8 +363,8 @@ test.describe('Proposed Date Generator', () => {
     await editPage.fillToDate(to);
     await editPage.generateProposedDates([...TUPLES]);
 
-    const successToast = page.getByRole('alert')
-      .filter({hasText: /\d+ dates? added/});
+const successToast = page.locator('.toast.success')
+        .filter({hasText: /\d+ dates? added/});
     await expect(successToast)
       .toBeVisible();
 
@@ -461,8 +461,8 @@ test.describe('Proposed Date Generator', () => {
     await editPage.generateVenueSelect.selectOption('2');
     await editPage.generateProposedDates([...TUPLES]);
 
-    const successToast = page.getByRole('alert')
-      .filter({hasText: /\d+ dates? added/});
+const successToast = page.locator('.toast.success')
+        .filter({hasText: /\d+ dates? added/});
     await expect(successToast)
       .toBeVisible();
 
