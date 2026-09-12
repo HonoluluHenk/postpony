@@ -12,3 +12,7 @@
 - [x] Status chip translates the Postponement status (Draft / Voting / Confirmed) through new keys before interpolating into the status label; German page shows a German status
 - [x] English and German locale files contain every new key; TranslationKeys type compiles
 - [x] Component specs cover singular occupancy line and translated status; e2e suites asserting "Confirm" or "Refresh schedule check" updated
+
+## Comments
+
+- `7d45eea` — ticket done: 07-copy-and-i18n. Singular venue-occupancy line (`venue_occupancy_line_one`), Title-Case refresh label, "Confirm Date" / "Termin bestätigen", status enum translated via `status_draft`/`status_voting`/`status_confirmed`, all en+de keys added; component specs + page-object/e2e locators updated.
