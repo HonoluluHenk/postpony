@@ -83,11 +83,11 @@ export function EditPage(props: EditPageProps): JSX.Element {
   const content = (
     <>
       {props.organizerPassword ? (
-        <div class="toast primary white-text top" role="alert">
+        <div class="toast primary white-text top" role="status">
           <i aria-hidden="true">info</i>
           <div class="max">
             <p><strong>{props.t('postponement_created_success')}</strong></p>
-            <p>{raw(props.t('organizer_password_label'))} <span class="password-display">{props.organizerPassword}</span></p>
+            <p>{raw(props.t('organizer_password_label'))} <span class="password-display" translate="no">{props.organizerPassword}</span></p>
             <p>{props.t('save_password_warning')}</p>
           </div>
         </div>

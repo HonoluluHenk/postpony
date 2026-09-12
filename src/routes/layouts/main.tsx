@@ -19,6 +19,7 @@ export function Layout(props: LayoutProps): JSX.Element {
       <head>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta name="theme-color" content="#fdf8fd"/>
         <title>{props.title}</title>
         <link rel="icon" type="image/svg+xml" href="/assets/logos/favicon.svg"/>
         <script src="/assets/vendor/js/htmx.min.js"></script>
@@ -41,7 +42,7 @@ export function Layout(props: LayoutProps): JSX.Element {
         <header class="padding">
           <div class="row no-wrap">
             <a href="/" class="shrink" aria-label="PostPony home">
-              <img src="/assets/logos/wordmark.svg" alt="PostPony" height="40"/>
+              <img src="/assets/logos/wordmark.svg" alt="PostPony" height="40" width="155"/>
             </a>
             <h1 class="max center-align" aria-label={props.headingTitle ? props.title : undefined}>
               {props.headingTitle ?? props.title}
@@ -68,7 +69,7 @@ export function Layout(props: LayoutProps): JSX.Element {
           </article>
         </main>
         <footer class="padding center-align">
-          <p>&copy; 2024 PostPony</p>
+          <p>&copy; {new Date().getFullYear()} PostPony</p>
         </footer>
       </div>
       <div id="global-spinner" class="global-spinner" role="status" aria-live="polite" aria-hidden="true">

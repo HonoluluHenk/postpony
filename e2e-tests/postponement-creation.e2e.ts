@@ -47,7 +47,7 @@ test.describe('Postponement Creation', () => {
       .toContainText('08/29/2026 04:00 pm');
 
     // 6. Verify the organizer password is displayed.
-    await expect(editPage.organizerPasswordAlert)
+    await expect(editPage.organizerPasswordToast)
       .toBeVisible();
     const password = await editPage.organizerPassword;
     expect(password)

@@ -91,8 +91,8 @@ export class EditPage {
     return this.page.locator('.match-summary');
   }
 
-  get organizerPasswordAlert(): Locator {
-    return this.page.getByRole('alert')
+  get organizerPasswordToast(): Locator {
+    return this.page.getByRole('status')
       .filter({hasText: 'Your Organizer Password is'});
   }
 

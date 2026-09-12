@@ -56,3 +56,24 @@ describe('EditPage match summary', () => {
       .toContain('/create?sessionId=');
   });
 });
+
+describe('EditPage organizer-password toast', () => {
+  it('announces the success notice as a polite status, not an alert', () => {
+    const html = renderToString(EditPage({...baseProps(), organizerPassword: 'pw-123'}));
+
+    expect(html)
+      .toContain('role="status"');
+    expect(html)
+      .toContain('Postponement created successfully!');
+    expect(html)
+      .not
+      .toContain('role="alert"');
+  });
+
+  it('protects the password value from machine translation', () => {
+    const html = renderToString(EditPage({...baseProps(), organizerPassword: 'pw-123'}));
+
+    expect(html)
+      .toContain('<span class="password-display" translate="no">pw-123</span>');
+  });
+});
