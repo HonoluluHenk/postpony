@@ -16,3 +16,7 @@
 - [x] Organizer password value carries `translate="no"`
 - [x] Component spec asserts the toast role and `translate` attribute; e2e a11y check (`checkA11y`) passes on the edit page
 - [x] Screenshot baselines updated if the shell changes shift pixels
+
+## Comments
+
+- `08131eb` — ticket done: 01-page-shell-polish. Shell polish (theme-color, logo dims, language select ≥24px + explicit colors, touch-action, balanced headings, computed footer year) plus organizer-password toast role=status / translate=no, component specs, page-object locator rename, and regenerated screenshot baselines.
