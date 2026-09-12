@@ -12,3 +12,7 @@
 - [x] Add-date input placeholder and prefill are unchanged (token format)
 - [x] Component specs for the edit page and proposed-dates section assert the new display format; temporal-utils spec updated
 - [x] E2E assertions that hard-code the old `07:30 pm` display style are updated; generator e2e still types token format into inputs
+
+## Comments
+
+- `82055c5` ticket done: 03-intl-display-dates — heading/match-summary use `formatProposedDateDisplay` (Intl medium date + short time, 2-letter weekday prefix); new `proposedDateTimeDisplay` prop feeds the heading while `proposedDateTime` keeps the token format for the add-date prefill; `formatProposedDateDisplayShort` redefined to Intl short date + short time; component/e2e/temporal-utils specs updated. E2E note: `proposed-date-generator.e2e.ts` still has 2 pre-existing date-sensitive failures (hard-coded `2026-09-07..13` / `2026-09-10` windows now in the past), unrelated to this ticket; the generator main test (which exercises the new card short format) passes. Screenshot baselines for the edit page were verified unchanged (card-date pixels are format-agnostic; `--update-snapshots` reproduced the committed bytes).
