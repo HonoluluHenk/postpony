@@ -325,7 +325,7 @@ export class EditPage {
   confirmButton(dateIndex: number): Locator {
     return this.proposedDateRows
       .nth(dateIndex)
-      .getByRole('button', {name: 'Confirm'});
+      .getByRole('button', {name: 'Confirm Date', exact: true});
   }
 
   deleteButton(dateIndex: number): Locator {

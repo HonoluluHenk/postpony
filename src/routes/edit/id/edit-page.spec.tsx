@@ -58,6 +58,43 @@ describe('EditPage match summary', () => {
   });
 });
 
+describe('EditPage status chip', () => {
+  it('renders the status label with the translated English status value', () => {
+    const session = aSession({status: 'Voting'});
+    const html = renderToString(EditPage({...baseProps(), session}));
+
+    expect(html)
+      .toContain('<p class="chip outline" id="status-chip">Status: Voting</p>');
+  });
+
+  it('renders a German status value on a de-CH page', () => {
+    const tDe = (key: any, params?: any): string => getTranslation('de-CH', key, params);
+    const session = aSession({status: 'Voting'});
+    const html = renderToString(EditPage({...baseProps(), t: tDe, session}));
+
+    expect(html)
+      .toContain('<p class="chip outline" id="status-chip">Status: Abstimmung</p>');
+    expect(html)
+      .not
+      .toContain('Status: Voting');
+  });
+
+  it('translates Draft and Confirmed through the status keys', () => {
+    const session = aSession({status: 'Confirmed'});
+    const html = renderToString(EditPage({...baseProps(), session}));
+
+    expect(html)
+      .toContain('<p class="chip outline" id="status-chip">Status: Confirmed</p>');
+
+    const tDe = (key: any, params?: any): string => getTranslation('de-CH', key, params);
+    const deSession = aSession({status: 'Draft'});
+    const deHtml = renderToString(EditPage({...baseProps(), t: tDe, session: deSession}));
+
+    expect(deHtml)
+      .toContain('<p class="chip outline" id="status-chip">Status: Entwurf</p>');
+  });
+});
+
 describe('EditPage heading date', () => {
   it('renders the original match datetime in the Intl reading format', () => {
     const html = renderToString(EditPage(baseProps()));

@@ -467,7 +467,7 @@ describe('ProposedDatesSection clash info', () => {
       .toContain('refresh-clashes');
     expect(html)
       .not
-      .toContain('Refresh schedule check');
+      .toContain('Refresh Schedule Check');
   });
 
   it('offers the refresh action for a clash-checkable postponement', () => {
@@ -478,7 +478,7 @@ describe('ProposedDatesSection clash info', () => {
     expect(html)
       .toContain('hx-target="#proposed-dates-management"');
     expect(html)
-      .toContain('>Refresh schedule check</button>');
+      .toContain('>Refresh Schedule Check</button>');
     expect(html)
       .not
       .toContain('showing the previous results');
@@ -492,7 +492,7 @@ describe('ProposedDatesSection clash info', () => {
       .toContain('refresh-clashes');
     expect(html)
       .not
-      .toContain('Refresh schedule check');
+      .toContain('Refresh Schedule Check');
   });
 
   it('renders the refresh failure notice when a refresh failed', () => {
@@ -567,6 +567,51 @@ describe('ProposedDatesSection venue occupancy info', () => {
 
     expect(html)
       .toContain('3 other games at this venue');
+  });
+
+  it('renders the singular line for exactly one other match', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: '10.10.2026 19:00',
+          votable: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          venueOccupancy: {count: 1, matches: [{opponent: 'Port', start: '2026-10-10T20:15'}]},
+        },
+      ],
+    }));
+
+    expect(html)
+      .toContain('1 other game at this venue');
+    expect(html)
+      .not
+      .toContain('other games at this venue');
+  });
+
+  it('renders the singular occupancy line in de-CH', () => {
+    const tDe = (key: any, params?: any): string => getTranslation('de-CH', key, params);
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      t: tDe,
+      proposedDates: [
+        {
+          id: 'pd-1',
+          display: '10.10.2026 19:00',
+          votable: true,
+          yes: 0,
+          maybe: 0,
+          no: 0,
+          venueOccupancy: {count: 1, matches: [{opponent: 'Port', start: '2026-10-10T20:15'}]},
+        },
+      ],
+    }));
+
+    expect(html)
+      .toContain('1 weiteres Spiel an dieser Halle');
   });
 
   it('renders the conflicting matches in an accessible tooltip popup', () => {

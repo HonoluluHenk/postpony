@@ -68,7 +68,7 @@ test.describe('Clash checks', () => {
       .toBeVisible();
 
     // 4. The manual refresh action exists and keeps the same snapshot.
-    await expect(page.getByRole('button', {name: 'Refresh schedule check'}))
+    await expect(page.getByRole('button', {name: 'Refresh Schedule Check'}))
       .toBeVisible();
 
     // 5. Only votable dates reach the polls: the organizer's auto-deselect
@@ -119,7 +119,7 @@ test.describe('Clash checks', () => {
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
     // The occupancy count renders per proposed date alongside the clash lines.
-    await expect(editPage.proposedDateList.getByText('1 other games at this venue'))
+    await expect(editPage.proposedDateList.getByText('1 other game at this venue'))
       .toBeVisible();
     // The occupancy count chip is painted with the informational warning color
     // (amber): at least one other match occupies the venue (Venue Occupancy > 0),
@@ -130,7 +130,7 @@ test.describe('Clash checks', () => {
     // Hovering the count reveals the conflicting match (opponent + time) in an
     // accessible tooltip: the club-meetings fixture has Ostermundigen vs Port.
     const occupancyTrigger = editPage.proposedDateList
-      .getByRole('button', {name: '1 other games at this venue'});
+      .getByRole('button', {name: '1 other game at this venue'});
     await occupancyTrigger.hover();
     await expect(page.getByRole('tooltip'))
       .toContainText('Port');
@@ -148,7 +148,7 @@ test.describe('Clash checks', () => {
       .toBeVisible();
     await expect(joinPage.voteForm.getByText('1 other games'))
       .toBeVisible();
-    await expect(joinPage.voteForm.getByRole('button', {name: '1 other games at this venue'}))
+    await expect(joinPage.voteForm.getByRole('button', {name: '1 other game at this venue'}))
       .toHaveCount(0);
 
     await checkA11y();

@@ -43,7 +43,9 @@ export function VenueOccupancyInfo(props: VenueOccupancyInfoProps): JSX.Element 
         aria-describedby={tooltipId}
         data-occupancy-trigger="true"
       >
-        {t('venue_occupancy_line', {count: String(occupancy.count)})}
+        {occupancy.count === 1
+          ? t('venue_occupancy_line_one')
+          : t('venue_occupancy_line', {count: String(occupancy.count)})}
       </button>
       <div id={tooltipId} role="tooltip" class="occupancy-tooltip">
         <span class="occupancy-tooltip__title">{t('venue_occupancy_conflicts_title')}</span>

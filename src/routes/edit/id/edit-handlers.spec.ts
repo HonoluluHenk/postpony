@@ -1418,7 +1418,7 @@ describe('edit handlers', () => {
           expect(stored?.proposedDates[0]?.clashes)
             .toEqual({home: [], away: []});
           expect(html)
-            .toContain('1 other games at this venue');
+            .toContain('1 other game at this venue');
         });
 
         test('single add: a failed occupancy scrape still saves the date and still attaches the clash snapshot', async () => {
@@ -2210,7 +2210,7 @@ describe('edit handlers', () => {
       expect(stored?.proposedDates[0]?.clashes)
         .toEqual({home: [], away: []});
       expect(html)
-        .toContain('1 other games at this venue');
+        .toContain('1 other game at this venue');
     });
   });
 
