@@ -13,3 +13,7 @@
 - [x] All player-name input variants (valid and invalid, home and away) have `autocomplete="off"`
 - [x] Player-name list cells allow wrapping (`min-width: 0`, `overflow-wrap: anywhere`); a 60-character name stays inside the card
 - [x] Component specs assert `role`, `inputmode` per locale, and `autocomplete`; existing e2e locators on cards still resolve
+
+## Comments
+
+- `fd03eea` ticket done: 05-card-semantics-and-form-hints — added `role="group"` (only on cards that carry an aria-label), `inputmode="numeric"` on generator From/To (all locales) and time inputs (24-hour locales only via `localeConfig().clock24`), `overscroll-behavior: contain` on dialogs, `autocomplete="off"` on all four player-name inputs, `overflow-wrap: anywhere` on `.list .max`; component specs assert role/inputmode/autocomplete.
