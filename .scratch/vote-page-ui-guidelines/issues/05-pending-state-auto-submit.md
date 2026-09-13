@@ -14,6 +14,12 @@
 - [x] The busy state resets on `pageshow`
 - [x] Browser unit tests cover the client wiring
 - [x] Existing vote e2e (cast a vote, set all) stays green
-- [ ] `npm run verify` passes
+- [x] `npm run verify` passes
 
 ## Comments
+
+- `5574307` ticket done: 05-pending-state-auto-submit — `initVoteForm` marks the form busy, shows the shared spinner, disables controls after `form.submit()`, debounces radio changes by 400ms, cancels on set-all, and resets on `pageshow`; browser unit tests added.
+- `89d03c9` review: 05-pending-state-auto-submit — two-axis review, one minor Duplicated Code finding.
+- `b2cc328` review-fixed: 05-pending-state-auto-submit — extracted the shared vote-control selector.
+- `6b1d929` fix: 05-await-debounced-vote-save-in-e2e — `JoinPage` vote helpers now await the save navigation instead of a stale toast, keeping the existing vote e2e green with the debounce.
+- `npm run verify` passes (lint → test → build → 125 e2e).
