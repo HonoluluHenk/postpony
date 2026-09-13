@@ -15,3 +15,7 @@
 - [x] `npm run verify` passes
 
 ## Comments
+
+- Implementation `d8a147b`, review `eae14a8`. The set-all row now uses BeerCSS `.row.wrap`, `.vote-radio-group` gains `flex-wrap: wrap`, and each vote label gets `padding-block: var(--space-3)` (48px touch target); guards added in `viewport-smoke.e2e.ts` at `phoneSmall`/`desktop` (no review findings).
+- `npm run verify` passed (125 e2e). No vote-page screenshot baseline exists and the join/edit baselines were untouched, so none needed updating.
+- Repaired the git-ignored `.env`, which had `npm run e2e` output appended to it and made the Playwright webServer fail to start.
