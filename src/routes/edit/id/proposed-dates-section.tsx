@@ -1,12 +1,17 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { DateClashes } from '../../../lib/clashes';
-import type { PostponementStatus, Venue, VoteTallyItem } from '../../../lib/models';
+import type { PostponementStatus, Team, Venue, VoteTallyItem } from '../../../lib/models';
 import type { VenueOccupancy } from '../../../lib/venue-occupancy';
 import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
+import { VoteTally } from '../../partials/vote-tally';
 import { venueNumberToken, venueShortName } from '../../partials/venue-badge';
 import type { OwnTeamView } from './own-team-view';
+import { OwnTeamVotes } from './own-team-votes';
+
+/** How the rail orders the Proposed Dates. */
+export type DateSort = 'date' | 'availability';
 
 export interface ProposedDateTallyItem extends VoteTallyItem {
   votable: boolean;
@@ -40,6 +45,12 @@ export interface EditGridProps extends EditPartialsData {
   sessionId: string;
   status: PostponementStatus;
   reopenCount: number;
+  /** Which team the organizer belongs to; drives the "Available" sort. */
+  organizerTeam: Team;
+  homeTeam?: string;
+  guestTeam?: string;
+  /** Rail ordering; defaults to `date` (week-grouped). */
+  sort?: DateSort;
   t: TranslateFn;
   locale: AppLocale;
   inputFormat: string;
@@ -82,22 +93,60 @@ function isoWeekRange(isoStart: string, locale: AppLocale): string {
   return `${a} – ${b}`;
 }
 
-interface WeekGroup {
+interface RailGroup {
   key: string;
-  /** ISO week number; `undefined` is a Temporal typing artefact, not a real value. */
-  week: number | undefined;
-  range: string;
+  label: string;
+  range?: string;
   rows: ProposedDateTallyItem[];
 }
 
-function groupByWeek(rows: readonly ProposedDateTallyItem[], locale: AppLocale): WeekGroup[] {
-  const groups: WeekGroup[] = [];
+function groupByWeek(rows: readonly ProposedDateTallyItem[], locale: AppLocale, t: TranslateFn): RailGroup[] {
+  const groups: RailGroup[] = [];
   for (const row of rows) {
     const key = isoWeekKey(row.dateTimeRange.start);
     const last = groups[groups.length - 1];
     if (last?.key !== key) {
       const dt = parseIsoToPlainDateTime(row.dateTimeRange.start);
-      groups.push({key, week: dt.weekOfYear, range: isoWeekRange(row.dateTimeRange.start, locale), rows: [row]});
+      groups.push({
+        key,
+        label: t('week_label', {week: String(dt.weekOfYear)}),
+        range: isoWeekRange(row.dateTimeRange.start, locale),
+        rows: [row],
+      });
+    } else {
+      last.rows.push(row);
+    }
+  }
+  return groups;
+}
+
+/**
+ * Own-team availability per date: the players who can play, i.e. voted Yes or
+ * If necessary. Drives the "Available" sort/grouping.
+ */
+function ownAvailabilityById(props: EditGridProps): Map<string, number> {
+  const own = props.organizerTeam === 'home' ? props.homeProposedDates : props.awayProposedDates;
+  return new Map(own.map((item) => [item.id, item.yes + item.ifNecessary]));
+}
+
+function groupByAvailability(
+  rows: readonly ProposedDateTallyItem[],
+  availability: Map<string, number>,
+  t: TranslateFn,
+): RailGroup[] {
+  const sorted = [...rows].sort((a, b) => {
+    const diff = (availability.get(b.id) ?? 0) - (availability.get(a.id) ?? 0);
+    if (diff !== 0) {
+      return diff;
+    }
+    return a.dateTimeRange.start < b.dateTimeRange.start ? -1 : a.dateTimeRange.start > b.dateTimeRange.start ? 1 : 0;
+  });
+  const groups: RailGroup[] = [];
+  for (const row of sorted) {
+    const key = String(availability.get(row.id) ?? 0);
+    const last = groups[groups.length - 1];
+    if (last?.key !== key) {
+      groups.push({key, label: t('available_group', {count: key}), rows: [row]});
     } else {
       last.rows.push(row);
     }
@@ -425,6 +474,58 @@ function AddDateForm(props: { sessionId: string; t: TranslateFn; locale: AppLoca
   );
 }
 
+function tallyById(items: readonly VoteTallyItem[]): Map<string, VoteTallyItem> {
+  return new Map(items.map((item) => [item.id, item]));
+}
+
+/**
+ * Both teams' tallies for one date, e.g. `Thun: 3 (2/1/0)`:
+ * availability (can play = yes + if-needed), then yes / if-needed / no.
+ */
+function TeamTallies(props: {
+  row: ProposedDateTallyItem;
+  homeTeam: string;
+  guestTeam: string;
+  homeTallies: Map<string, VoteTallyItem>;
+  awayTallies: Map<string, VoteTallyItem>;
+}): JSX.Element {
+  const format = (team: string, item: VoteTallyItem | undefined): string =>
+    item
+      ? `${team}: ${item.yes + item.ifNecessary} (${item.yes}/${item.ifNecessary}/${item.no})`
+      : `${team}: 0 (0/0/0)`;
+  return (
+    <div class="team-tallies">
+      <span class="team-tally">{format(props.homeTeam, props.homeTallies.get(props.row.id))}</span>
+      <span class="team-tally">{format(props.guestTeam, props.awayTallies.get(props.row.id))}</span>
+    </div>
+  );
+}
+
+function SortControl(props: { sessionId: string; sort: DateSort; t: TranslateFn }): JSX.Element {
+  const option = (value: DateSort, label: string): JSX.Element => (
+    <label class="sort-option">
+      <input
+        type="radio"
+        name="sort"
+        value={value}
+        checked={props.sort === value}
+        hx-get={`/edit/${props.sessionId}?sort=${value}`}
+        hx-target="#edit-grid"
+        hx-push-url="true"
+        hx-trigger="change"
+      />
+      <span>{label}</span>
+    </label>
+  );
+  return (
+    <div class="sort-control" role="radiogroup" aria-label={props.t('sort_by')}>
+      <span class="sort-label">{props.t('sort_by')}</span>
+      {option('date', props.t('sort_by_date'))}
+      {option('availability', props.t('sort_by_availability'))}
+    </div>
+  );
+}
+
 export function ProposedDatesRail(props: EditGridProps): JSX.Element {
   const confirmed = props.status === 'Confirmed';
   const roster = props.organizerPlayers.map((p) => ({id: p.id, name: p.name}));
@@ -437,7 +538,15 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
                        : Array.from({length: FALLBACK_VENUE_COUNT}, (_, index) => (
                          <option key={index + 1} value={index + 1}>{index + 1}</option>
                        ));
-  const weeks = groupByWeek(sortedRows(props.proposedDates), props.locale);
+  const sort = props.sort ?? 'date';
+  const rows = sortedRows(props.proposedDates);
+  const homeTallies = tallyById(props.homeProposedDates);
+  const awayTallies = tallyById(props.awayProposedDates);
+  const groups = sort === 'availability'
+    ? groupByAvailability(rows, ownAvailabilityById(props), props.t)
+    : groupByWeek(rows, props.locale, props.t);
+  const homeTeam = props.homeTeam ?? props.t('home_team');
+  const guestTeam = props.guestTeam ?? props.t('away_team');
 
   return (
     <section id="proposed-dates-management" class="edit-rail">
@@ -464,13 +573,15 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
         </p>
       ) : null}
 
-      {weeks.map((week) => (
-        <section key={week.key}>
+      {props.proposedDates.length > 1 ? <SortControl sessionId={props.sessionId} sort={sort} t={props.t}/> : null}
+
+      {groups.map((group) => (
+        <section key={group.key}>
           <h3 class="week-head">
-            <span>{props.t('week_label', {week: String(week.week)})}</span>
-            <span class="week-range">{week.range}</span>
+            <span>{group.label}</span>
+            {group.range ? <span class="week-range">{group.range}</span> : null}
           </h3>
-          {week.rows.map((row) => {
+          {group.rows.map((row) => {
             const dt = parseIsoToPlainDateTime(row.dateTimeRange.start);
             const hasClashes = row.clashes !== undefined && (row.clashes.home.length > 0 || row.clashes.away.length > 0);
             const isClean = row.clashes !== undefined && !hasClashes;
@@ -487,6 +598,7 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
                 </div>
                 <div class="date-main">
                   <DateChips row={row} clashCheckable={props.clashCheckable} venues={props.venues} t={props.t} locale={props.locale}/>
+                  <TeamTallies row={row} homeTeam={homeTeam} guestTeam={guestTeam} homeTallies={homeTallies} awayTallies={awayTallies}/>
                   <VoteDots row={row} roster={roster} ownTeamResults={props.ownTeamResults} t={props.t}/>
                   <DateActions row={row} sessionId={props.sessionId} t={props.t} confirmed={confirmed}/>
                 </div>
@@ -517,6 +629,28 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
           <div class="max">
             <p>{props.t('proposed_date_added')}</p>
           </div>
+        </div>
+      ) : null}
+
+      {props.proposedDates.length > 0 ? (
+        <div class="edit-votes">
+          <OwnTeamVotes organizerPlayers={props.organizerPlayers} ownTeamResults={props.ownTeamResults} t={props.t}/>
+          <VoteTally
+            proposedDates={props.homeProposedDates}
+            t={props.t}
+            headingLevel={3}
+            titleId="vote-summary-home-title"
+            title={props.t('vote_summary_home')}
+            disclosure={true}
+          />
+          <VoteTally
+            proposedDates={props.awayProposedDates}
+            t={props.t}
+            headingLevel={3}
+            titleId="vote-summary-away-title"
+            title={props.t('vote_summary_away')}
+            disclosure={true}
+          />
         </div>
       ) : null}
     </section>

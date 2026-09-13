@@ -85,6 +85,22 @@ export interface EditPartialExtras {
 }
 
 /**
+ * The rail's sort lives in the page URL, so a mutation (which posts to a URL
+ * without it) recovers it from the browser's current URL that HTMX forwards.
+ */
+function currentSort(app: App): 'date' | 'availability' {
+  const currentUrl = app.c.req.header('HX-Current-URL');
+  if (!currentUrl) {
+    return 'date';
+  }
+  try {
+    return new URL(currentUrl).searchParams.get('sort') === 'availability' ? 'availability' : 'date';
+  } catch {
+    return 'date';
+  }
+}
+
+/**
  * Renders the redesigned edit page as an HTMX partial (isPartial → fragment). The page
  * re-renders in full so the sidebar and rail stay in sync after any mutation; the
  * out-of-band error container and status announcement are emitted by the layout.
@@ -103,6 +119,10 @@ export function renderEditPartials(
     sessionId: session.id,
     status: session.status,
     reopenCount: session.reopenCount,
+    organizerTeam: session.organizerTeam,
+    homeTeam: session.homeTeam,
+    guestTeam: session.guestTeam,
+    sort: currentSort(app),
     title: view.t('edit_postponement_title', {name: session.name}),
     proposedDateTime: extra.proposedDateTime,
     fromDate: extra.fromDate,

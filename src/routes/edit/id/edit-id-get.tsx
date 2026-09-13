@@ -22,6 +22,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     : '';
 
   const {fromDate, toDate} = defaultGeneratorDateRange(locale, session.originalMatchDateTime);
+  const sort = app.c.req.query('sort') === 'availability' ? 'availability' : 'date';
 
   const html = app.render(
     <EditPage
@@ -31,6 +32,10 @@ export const handleEditGet = async (app: App): Promise<Response> => {
       sessionId={session.id}
       status={session.status}
       reopenCount={session.reopenCount}
+      organizerTeam={session.organizerTeam}
+      homeTeam={session.homeTeam}
+      guestTeam={session.guestTeam}
+      sort={sort}
       organizerPassword={organizerPassword ?? undefined}
       proposedDateTime={originalMatchDateTime}
       proposedDateTimeDisplay={originalMatchDateTimeDisplay}

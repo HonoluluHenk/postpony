@@ -250,6 +250,67 @@
     color: var(--ink-soft);
   }
 
+  /* ---- Per-date team tallies: `Team: available (yes/if/no)`. ---- */
+  .team-tallies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--ink);
+  }
+  .team-tally {
+    white-space: nowrap;
+  }
+
+  /* ---- Sort control (Date / Availability). ---- */
+  .sort-control {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    border: 0;
+    font-size: 0.85rem;
+  }
+  .sort-control .sort-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+  .sort-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+  }
+
+  /* ---- Vote tables, collapsed into disclosures. ---- */
+  .edit-votes {
+    margin-top: 1.5rem;
+  }
+  .edit-votes details {
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .edit-votes details > summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .edit-votes details > summary h3 {
+    display: inline;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .edit-votes table {
+    width: 100%;
+  }
+
   /* ---- Date actions. ---- */
   .date-actions {
     display: flex;
