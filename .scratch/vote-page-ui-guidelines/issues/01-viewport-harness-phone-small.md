@@ -12,3 +12,6 @@
 - [x] `npm run verify` passes
 
 ## Comments
+
+- Implementation `58f29b9`, review `c67b2c5`. Added `phoneSmall` 360x740 to the shared viewport helper and a vote-page `checkA11y` smoke test at that width; no production code touched, no review findings.
+- `npm run verify` passed (lint, test, build, 121 e2e). Screenshot baselines unchanged.
