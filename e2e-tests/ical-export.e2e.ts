@@ -2,13 +2,22 @@ import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { EditPage, JoinPage } from './pages';
 
-async function assertCalendarExport(
+async function assertCalendarDownload(
   page: Page,
-  link: { getAttribute(name: string): Promise<string | null> },
+  link: { click(): Promise<void>; getAttribute(name: string): Promise<string | null> },
 ): Promise<void> {
   const href = (await link.getAttribute('href')) ?? '';
   expect(href)
     .toMatch(/\/calendar\.ics(\?token=.*)?$/);
+
+  // Clicking must trigger a real browser download, not an HTMX-swapped page
+  // render: the export link opts out of the layout's hx-boost so the browser
+  // honours the Content-Disposition attachment header.
+  const downloadPromise = page.waitForEvent('download');
+  await link.click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename())
+    .toMatch(/\.ics$/);
 
   const response = await page.request.get(href);
   expect(response.status())
@@ -35,7 +44,7 @@ test.describe('Calendar export', () => {
       .toBeVisible();
     await checkA11y();
 
-    await assertCalendarExport(page, editPage.exportCalendarLink);
+    await assertCalendarDownload(page, editPage.exportCalendarLink);
   });
 
   test('edit page hides the export link when no dates are proposed', async ({page, checkA11y}) => {
@@ -61,7 +70,7 @@ test.describe('Calendar export', () => {
       .toBeVisible();
     await checkA11y();
 
-    await assertCalendarExport(page, joinPage.exportCalendarLink);
+    await assertCalendarDownload(page, joinPage.exportCalendarLink);
   });
 
   test('join calendar export rejects a bad invitation token', async ({page, checkA11y}) => {

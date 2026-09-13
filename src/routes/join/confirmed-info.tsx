@@ -37,6 +37,7 @@ export function ConfirmedInfoPage(props: ConfirmedInfoPageProps): JSX.Element {
         <a
           class="button outline"
           href={`${props.baseUrl}/join/${props.sessionId}/${props.team}/calendar.ics?token=${props.token}`}
+          hx-boost="false"
         >
           <i aria-hidden="true">download</i>
           {props.t('export_calendar')}

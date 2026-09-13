@@ -251,6 +251,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
         <a
           class="button outline"
           href={`${props.baseUrl}/edit/${props.sessionId}/calendar.ics`}
+          hx-boost="false"
         >
           <i aria-hidden="true">download</i>
           {props.t('export_calendar')}
