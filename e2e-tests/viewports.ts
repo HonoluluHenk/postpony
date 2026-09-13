@@ -4,6 +4,7 @@ import type { Page } from '@playwright/test';
 // with an assertion at the width where it broke, so one fix covers all
 // breakpoints without duplicating the dimensions in each spec.
 export const viewports = {
+  phoneSmall: {width: 360, height: 740},
   phone: {width: 390, height: 844},
   tablet: {width: 820, height: 1180},
   desktop: {width: 1282, height: 745},

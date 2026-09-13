@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] The helper exposes a `phoneSmall` 360x740 viewport alongside the existing named widths
-- [ ] A smoke test opening the vote page at `phoneSmall` passes `checkA11y`
-- [ ] Existing e2e tests and screenshot baselines are untouched and green
-- [ ] `npm run verify` passes
+- [x] The helper exposes a `phoneSmall` 360x740 viewport alongside the existing named widths
+- [x] A smoke test opening the vote page at `phoneSmall` passes `checkA11y`
+- [x] Existing e2e tests and screenshot baselines are untouched and green
+- [x] `npm run verify` passes
 
 ## Comments
