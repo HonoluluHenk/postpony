@@ -12,3 +12,9 @@
 - [x] Unit render spec: no match summary text; new heading text present
 - [x] e2e and page object updated for the new heading text; baselines regenerated
 - [x] `npm run verify` passes
+
+## Comments
+
+- `0353484` ticket done — unboxed the edit-page section headings (dropped `surface-variant` on the four section components and the BeerCSS `header` bands around the h2/h3), renamed `scheduling_engine_info` → `schedule_heading` ("Schedule"/"Spielplan") in both locales, removed the match-summary paragraph + its key and CSS, and updated the unit/e2e specs, page object, and the four edit-page screenshot baselines.
+- `a258dcf` review — clean two-axis pass; one judgement call (the `<header>` wrapper deletion is the unbox mechanism, not scope creep), no blocking findings.
+
