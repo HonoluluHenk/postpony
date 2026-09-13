@@ -63,4 +63,26 @@ test.describe('Calendar export', () => {
 
     await assertCalendarExport(page, joinPage.exportCalendarLink);
   });
+
+  test('join calendar export rejects a bad invitation token', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    const response = await page.goto(`/join/${session.id}/home/calendar.ics?token=WRONG`);
+    expect(response?.status())
+      .toBe(403);
+    await expect(page.getByRole('alert'))
+      .toContainText('Invalid or missing invitation token');
+
+    await checkA11y();
+  });
+
+  test('join calendar export returns 404 for an unknown session', async ({page, checkA11y}) => {
+    const response = await page.goto('/join/nonexistent/home/calendar.ics?token=whatever');
+    expect(response?.status())
+      .toBe(404);
+    await expect(page.getByRole('heading', {name: 'Error', level: 2}))
+      .toBeVisible();
+
+    await checkA11y();
+  });
 });
