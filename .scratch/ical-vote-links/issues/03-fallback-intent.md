@@ -6,9 +6,13 @@
 
 **Status:** ready-for-agent
 
-- [ ] `GET /vote` with an unknown `playerId` and a pending `vote-<dateId>=<value>` redirects to the register step and preserves that pending choice through the redirect
-- [ ] The register POST's return redirect to the vote page appends the pending choice; since the intended date is votable and the identity is now known, the Vote casts automatically on arrival
-- [ ] A shared or stale file (no identity, or an identity that no longer matches a Participant) continues to produce a usable calendar and degrades to this flow rather than erroring
-- [ ] The landing page after the fallback flow shows the cast Vote on the poll
+- [x] `GET /vote` with an unknown `playerId` and a pending `vote-<dateId>=<value>` redirects to the register step and preserves that pending choice through the redirect
+- [x] The register POST's return redirect to the vote page appends the pending choice; since the intended date is votable and the identity is now known, the Vote casts automatically on arrival
+- [x] A shared or stale file (no identity, or an identity that no longer matches a Participant) continues to produce a usable calendar and degrades to this flow rather than erroring
+- [x] The landing page after the fallback flow shows the cast Vote on the poll
 
 **Tested via:** handler suite (unknown-playerId redirect preserves intent; register-to-vote redirect appends it and the Vote lands) and the e2e error-path in 04.
+
+## Comments
+
+Implemented fallback intent: GET /vote with unknown playerId carries validated `vote-<dateId>=<value>` into the register step (form action + stored-identity bounce), and the register POST re-appends it to its /vote redirect so the Vote casts on arrival. SHAs: 281d565 (implementation), 9b88339 (tamper-surface tests: closed-date/invalid-value not carried), ab20a39 (review — approve, no fixes).

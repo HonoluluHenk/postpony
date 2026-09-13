@@ -49,7 +49,7 @@ export function VotePage(props: VotePageProps): JSX.Element {
       {props.proposedDates.length > 0 ? (
         <a
           class="button outline"
-          href={`${props.baseUrl}/join/${props.sessionId}/${props.team}/calendar.ics?token=${props.token}`}
+          href={`${props.baseUrl}/join/${props.sessionId}/${props.team}/calendar.ics?token=${props.token}&playerId=${props.playerId}`}
           hx-boost="false"
         >
           <i aria-hidden="true">download</i>

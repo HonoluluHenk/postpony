@@ -131,6 +131,7 @@
   "venue_occupancy_match": "<%= it.time %> vs <%= it.opponent %>",
   "votable_short": "Votable",
   "votable_toggle": "Allow voting",
+  "vote_action_label": "Vote",
   "vote_if_necessary": "if necessary",
   "vote_no": "No",
   "vote_no_dates": "No dates have been proposed yet. The organizer is still deciding which dates to propose.",

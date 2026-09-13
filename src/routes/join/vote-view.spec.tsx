@@ -369,7 +369,7 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('href="https://game-scheduler.localhost:3000/join/test-session/home/calendar.ics?token=token"');
+      .toContain('href="https://game-scheduler.localhost:3000/join/test-session/home/calendar.ics?token=token&amp;playerId=player-1"');
     expect(body)
       .toContain('Export as calendar (.ics)');
   });
@@ -752,6 +752,46 @@ describe('renderConfirmedInfo', () => {
       .toContain('href="https://game-scheduler.localhost:3000/join/test-session/home/calendar.ics?token=token"');
     expect(body)
       .toContain('Export as calendar (.ics)');
+  });
+
+  test('appends the identified playerId to the export-calendar link', async () => {
+    const session = aSession({
+      status: 'Confirmed',
+      confirmedProposedDateId: 'proposed-date-1',
+      proposedDates: [aProposedDate()],
+    });
+    const app = createApp();
+
+    const response = renderConfirmedInfo(app, session, {team: 'home', token: 'token', playerId: 'player-1'});
+    const body = await response.text();
+
+    expect(body)
+      .toContain('href="https://game-scheduler.localhost:3000/join/test-session/home/calendar.ics?token=token&amp;playerId=player-1"');
+  });
+
+  test('renderVoteStep echoes the identified playerId on the confirmed-info export link', async () => {
+    const player = aPlayer({id: 'player-1'});
+    const session = aSession({
+      status: 'Confirmed',
+      confirmedProposedDateId: 'proposed-date-1',
+      players: [player],
+      proposedDates: [aProposedDate()],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('Voting is closed');
+    expect(body)
+      .toContain('href="https://game-scheduler.localhost:3000/join/test-session/home/calendar.ics?token=token&amp;playerId=player-1"');
   });
 
   test('hides the export-calendar link when no date is votable', async () => {

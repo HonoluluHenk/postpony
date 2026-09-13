@@ -6,8 +6,12 @@
 
 **Status:** ready-for-agent
 
-- [ ] Happy path: from the voting poll, download the personalized `.ics`, extract a `vote-<dateId>=IfNecessary` link from its `DESCRIPTION`, open it, and assert the poll shows that Participant's Vote on that date
-- [ ] Error path: a `vote-<dateId>=Yes` link with no `playerId` routes through who-are-you and, after registering, lands the Vote without re-selecting the choice
-- [ ] The `.ics` attachment still arrives with `text/calendar` and the existing `Content-Disposition` filename
+- [x] Happy path: from the voting poll, download the personalized `.ics`, extract a `vote-<dateId>=IfNecessary` link from its `DESCRIPTION`, open it, and assert the poll shows that Participant's Vote on that date
+- [x] Error path: a `vote-<dateId>=Yes` link with no `playerId` routes through who-are-you and, after registering, lands the Vote without re-selecting the choice
+- [x] The `.ics` attachment still arrives with `text/calendar` and the existing `Content-Disposition` filename
 
 **Tested via:** the Playwright flow spec extending the existing join e2e.
+
+## Comments
+
+Done 2026-09-13. Commits: bbcc7cd (e2e tests + ticket ticks), 5ecbe13 (review). Extended join-voting.e2e.ts with a new `extractVoteLink` helper and two scenarios covering the external contract: personalized link happy path and unpersonalized who-are-you fallback. Gates: lint green, 713 tests passed, coverage 90.2 / 82.4 / 93.4 / 90.5, e2e 99/99 passed. Review approved, no fixes.

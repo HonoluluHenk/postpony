@@ -39,6 +39,22 @@ function eventBlock(ical: string, uid: string): string {
   return ical.slice(start, end);
 }
 
+/** Unfolds continuation lines and returns the unescaped logical DESCRIPTION of one event. */
+function descriptionOf(ical: string, uid: string): string {
+  const block = eventBlock(ical.replace(/\r\n /g, ''), uid);
+  const line = block.split('\n').find((l) => l.startsWith('DESCRIPTION:'));
+  expect(line).toBeDefined();
+  return (line ?? '').slice('DESCRIPTION:'.length).replace(/\\n/g, '\n');
+}
+
+/** Unfolds continuation lines and returns the raw URL property of one event. */
+function urlOf(ical: string, uid: string): string {
+  const block = eventBlock(ical.replace(/\r\n /g, ''), uid);
+  const line = block.split('\n').find((l) => l.startsWith('URL:'));
+  expect(line).toBeDefined();
+  return (line ?? '').slice('URL:'.length).replace(/\r$/, '');
+}
+
 describe('buildIcal', () => {
   test('emits a VCALENDAR with the standard header fields and the match name as calendar name', () => {
     const session = aSession({
@@ -337,6 +353,160 @@ describe('buildIcal', () => {
 
     expect(eventBlock(ical, 'proposed-date-1'))
       .toContain('DTSTART;TZID=Europe/Zurich:20260905T180000');
+  });
+});
+
+describe('buildIcal vote links (join export)', () => {
+  const NOW = new Date('2026-09-01T10:00:00Z');
+
+  test('emits exactly three choice links per date, each with token and playerId and correct value', () => {
+    const session = aSession({
+      id: 'sess-1',
+      status: 'Voting',
+      proposedDates: [
+        aProposedDate({id: 'date-a'}),
+        aProposedDate({id: 'date-b'}),
+      ],
+    });
+
+    const ical = buildIcal(session, {
+      baseUrl: BASE_URL,
+      locale: 'de-CH',
+      now: NOW,
+      token: 'tok-123',
+      team: 'home',
+      playerId: 'pl-1',
+      labels: {action: 'Abstimmen', yes: 'Ja', no: 'Nein', ifNecessary: 'notfalls'},
+    });
+
+    for (const dateId of ['date-a', 'date-b']) {
+      const desc = descriptionOf(ical, dateId);
+      expect(desc)
+        .toContain(`vote-${dateId}=Yes`);
+      expect(desc)
+        .toContain(`vote-${dateId}=IfNecessary`);
+      expect(desc)
+        .toContain(`vote-${dateId}=No`);
+      expect(desc.match(/token=tok-123/g))
+        .toHaveLength(3);
+      expect(desc.match(/playerId=pl-1/g))
+        .toHaveLength(3);
+    }
+  });
+
+  test('omits playerId from every link when the export is not personalized', () => {
+    const session = aSession({
+      id: 'sess-1',
+      status: 'Voting',
+      proposedDates: [aProposedDate({id: 'date-a'})],
+    });
+
+    const ical = buildIcal(session, {
+      baseUrl: BASE_URL,
+      locale: 'de-CH',
+      now: NOW,
+      token: 'tok-123',
+      team: 'home',
+      labels: {action: 'Vote', yes: 'Yes', no: 'No', ifNecessary: 'if necessary'},
+    });
+
+    const desc = descriptionOf(ical, 'date-a');
+    expect(desc)
+      .toContain('vote-date-a=Yes');
+    expect(desc)
+      .not
+      .toContain('playerId=');
+    expect(urlOf(ical, 'date-a'))
+      .toBe(`${BASE_URL}/join/sess-1/home/vote?token=tok-123`);
+  });
+
+  test('emits a single URL property pointing at the poll, personalized only when playerId is set', () => {
+    const session = aSession({
+      id: 'sess-1',
+      status: 'Voting',
+      proposedDates: [aProposedDate({id: 'date-a'})],
+    });
+
+    const personalized = buildIcal(session, {
+      baseUrl: BASE_URL, locale: 'de-CH', now: NOW,
+      token: 'tok-123', team: 'home', playerId: 'pl-1',
+      labels: {action: 'Vote', yes: 'Yes', no: 'No', ifNecessary: 'if necessary'},
+    });
+    expect(urlOf(personalized, 'date-a'))
+      .toBe(`${BASE_URL}/join/sess-1/home/vote?token=tok-123&playerId=pl-1`);
+    expect(eventBlock(personalized.replace(/\r\n /g, ''), 'date-a')
+      .split('\n')
+      .filter((l) => l.startsWith('URL:')))
+      .toHaveLength(1);
+    expect(urlOf(personalized, 'date-a'))
+      .not
+      .toContain('vote-');
+  });
+
+  test('uses the labels exactly as given, locale-neutral in the builder', () => {
+    const session = aSession({
+      id: 'sess-1',
+      status: 'Voting',
+      originalMatchDateTime: '2026-08-29T16:00',
+      proposedDates: [aProposedDate({id: 'date-a'})],
+    });
+
+    const ical = buildIcal(session, {
+      baseUrl: BASE_URL, locale: 'de-CH', now: NOW,
+      token: 'tok-123', team: 'home',
+      labels: {action: 'Stimm ab', yes: 'Ja bitte', no: 'Nein danke', ifNecessary: 'Notfalls schon'},
+    });
+
+    const desc = descriptionOf(ical, 'date-a');
+    expect(desc)
+      .toContain('Original match: 29.08.2026 16:00');
+    expect(desc)
+      .toContain(`${BASE_URL}/edit/sess-1`);
+    expect(desc)
+      .toContain('Stimm ab: Ja bitte https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=Yes');
+    expect(desc)
+      .toContain(' | Notfalls schon https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=IfNecessary | ');
+    expect(desc)
+      .toContain('Nein danke https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=No');
+  });
+
+  test('URL-escapes token and playerId and keeps all lines within 75 octets', () => {
+    const session = aSession({
+      id: 'sess-1',
+      status: 'Voting',
+      proposedDates: [aProposedDate({id: 'date-a'})],
+    });
+
+    const ical = buildIcal(session, {
+      baseUrl: BASE_URL, locale: 'de-CH', now: NOW,
+      token: 'a&b;c', team: 'home', playerId: 'pl 1',
+      labels: {action: 'Vote', yes: 'Yes', no: 'No', ifNecessary: 'if necessary'},
+    });
+
+    expect(urlOf(ical, 'date-a'))
+      .toBe(`${BASE_URL}/join/sess-1/home/vote?token=a%26b%3Bc&playerId=pl%201`);
+    const encoder = new TextEncoder();
+    for (const line of lines(ical)) {
+      expect(encoder.encode(line).length)
+        .toBeLessThanOrEqual(75);
+    }
+  });
+
+  test('omits URL and vote links entirely when built without a token (edit export stays byte-identical)', () => {
+    const session = aSession({
+      id: 'sess-1',
+      status: 'Voting',
+      proposedDates: [aProposedDate({id: 'date-a'})],
+    });
+
+    const ical = buildIcal(session, {baseUrl: BASE_URL, locale: 'de-CH', now: NOW});
+
+    expect(ical)
+      .not
+      .toContain('URL:');
+    expect(ical)
+      .not
+      .toContain('vote-');
   });
 });
 
