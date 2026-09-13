@@ -80,7 +80,7 @@
     font-family: var(--font-sans);
     color: var(--ink);
   }
-  .edit-redesign a {
+  .edit-redesign a:not(.button) {
     color: var(--primary);
   }
 
