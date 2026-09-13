@@ -1,5 +1,6 @@
 import type { App } from '../../app';
-import { requireSessionAndToken, requireTeam } from './join-utils';
+import { PostponementRules } from '../../lib/postponement';
+import { isVoteType, requireSessionAndToken, requireTeam } from './join-utils';
 import { renderVoteStep } from './vote-view';
 
 export const handleJoinVoteGet = async (app: App): Promise<Response> => {
@@ -12,5 +13,28 @@ export const handleJoinVoteGet = async (app: App): Promise<Response> => {
     return app.c.redirect(`/join/${session.id}/${team}?token=${encodeURIComponent(token)}`);
   }
 
-  return renderVoteStep(app, {session, team, token, player});
+  // ponytail: a GET casts a Vote to make one-click calendar links work. The
+  // trade-off: a state-changing GET. It stays safe because each click casts at
+  // most one idempotent upsert (castVote), the session short-circuits once
+  // Confirmed, and the request is invitation-token-gated. Upgrade path: a
+  // signed one-time link or a POST behind a form if links ever go untokenized.
+  const canVote = session.status !== 'Confirmed';
+  let updated = session;
+  let cast = false;
+  if (canVote) {
+    const rules = new PostponementRules();
+    for (const pd of rules.votableDates(session)) {
+      const value = app.c.req.query(`vote-${pd.id}`);
+      if (!isVoteType(value)) {
+        continue;
+      }
+      updated = rules.castVote(updated, pd.id, player.id, value);
+      cast = true;
+    }
+    if (cast) {
+      await app.store.save(updated);
+    }
+  }
+
+  return renderVoteStep(app, {session: updated, team, token, player, updated: cast});
 };

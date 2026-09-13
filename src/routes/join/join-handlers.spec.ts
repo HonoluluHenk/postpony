@@ -278,6 +278,162 @@ describe('join handlers', () => {
         .toContain(`/join/${session.id}/home`);
     });
 
+    test('casts a vote from a one-click GET link and renders the poll', async () => {
+      const session = await seedSession({
+        players: [aPlayer()],
+        proposedDates: [aProposedDate()],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'player-1', 'vote-proposed-date-1': 'Yes'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+      const body = await response.text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.votes)
+        .toMatchObject([{proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'Yes'}]);
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain('value="Yes" checked');
+    });
+
+    test('a second click with a different choice silently updates the existing vote', async () => {
+      const session = await seedSession({
+        players: [aPlayer()],
+        proposedDates: [aProposedDate()],
+        votes: [aVote({participantId: 'player-1', proposedDateId: 'proposed-date-1', type: 'Yes'})],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'player-1', 'vote-proposed-date-1': 'No'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.votes)
+        .toMatchObject([{proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'No'}]);
+      expect(response.status)
+        .toBe(200);
+    });
+
+    test.each(['home', 'away'] as const)('ignores the Vote in a GET link for a closed date for the %s team', async (team) => {
+      const session = await seedSession({
+        players: [aPlayer({teamId: team})],
+        proposedDates: [
+          aProposedDate({id: 'open', votable: true}),
+          aProposedDate({id: 'closed', votable: false}),
+        ],
+      });
+      const app = createApp({
+        params: {id: session.id, team},
+        queries: {
+          token: TOKEN,
+          playerId: 'player-1',
+          'vote-open': 'Yes',
+          'vote-closed': 'No',
+        },
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.votes)
+        .toMatchObject([{proposedDateId: 'open', participantId: 'player-1', type: 'Yes'}]);
+      expect(response.status)
+        .toBe(200);
+    });
+
+    test('ignores an out-of-domain vote value in a GET link', async () => {
+      const session = await seedSession({
+        players: [aPlayer()],
+        proposedDates: [aProposedDate()],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'player-1', 'vote-proposed-date-1': 'Maybe'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.votes)
+        .toHaveLength(0);
+      expect(response.status)
+        .toBe(200);
+    });
+
+    test('throws when the session does not exist', async () => {
+      const app = createApp({params: {id: 'missing', team: 'home'}, queries: {token: TOKEN}});
+
+      await expect(handleJoinVoteGet(app))
+        .rejects
+        .toThrow('Session not found');
+    });
+
+    test('throws when the token is missing', async () => {
+      const session = await seedSession();
+      const app = createApp({params: {id: session.id, team: 'home'}});
+      await app.store.save(session);
+
+      await expect(handleJoinVoteGet(app))
+        .rejects
+        .toThrow('Invalid or missing invitation token.');
+    });
+
+    test('throws when the token is wrong', async () => {
+      const session = await seedSession();
+      const app = createApp({params: {id: session.id, team: 'home'}, queries: {token: 'nope'}});
+      await app.store.save(session);
+
+      await expect(handleJoinVoteGet(app))
+        .rejects
+        .toThrow('Invalid or missing invitation token.');
+    });
+
+    test('throws when the team parameter is invalid', async () => {
+      const session = await seedSession();
+      const app = createApp({params: {id: session.id, team: 'spectators'}, queries: {token: TOKEN}});
+      await app.store.save(session);
+
+      await expect(handleJoinVoteGet(app))
+        .rejects
+        .toThrow('Invalid team. Expected \'home\' or \'away\'.');
+    });
+
+    test('does not cast on a Confirmed postponement and renders the confirmed-info view', async () => {
+      const session = await seedSession({
+        status: 'Confirmed',
+        confirmedProposedDateId: 'proposed-date-1',
+        players: [aPlayer()],
+        proposedDates: [aProposedDate()],
+        votes: [aVote({participantId: 'player-1', proposedDateId: 'proposed-date-1', type: 'Yes'})],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'player-1', 'vote-proposed-date-1': 'No'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+      const body = await response.text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.votes)
+        .toMatchObject([{proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'Yes'}]);
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain('Voting is closed');
+    });
+
     test.each(['home', 'away'] as const)('renders the pre-proposal empty-state hint for the %s team with no votable dates', async (team) => {
       const session = await seedSession({
         status: 'Draft',

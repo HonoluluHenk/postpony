@@ -1,12 +1,7 @@
 import type { App } from '../../app';
-import type { Vote } from '../../lib/models';
 import { PostponementRules } from '../../lib/postponement';
-import { requireSessionAndToken, requireTeam } from './join-utils';
+import { isVoteType, requireSessionAndToken, requireTeam } from './join-utils';
 import { renderVoteStep } from './vote-view';
-
-function isVoteType(value: unknown): value is Vote['type'] {
-  return value === 'Yes' || value === 'No' || value === 'IfNecessary';
-}
 
 export const handleJoinVotePost = async (app: App): Promise<Response> => {
   const team = requireTeam(app);

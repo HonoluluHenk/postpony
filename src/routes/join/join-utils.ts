@@ -1,8 +1,12 @@
 import type { App } from '../../app';
 import { comparePassword } from '../../lib/crypto-utils';
-import type { Postponement } from '../../lib/models';
+import type { Postponement, Vote } from '../../lib/models';
 
 export type Team = 'home' | 'away';
+
+export function isVoteType(value: unknown): value is Vote['type'] {
+  return value === 'Yes' || value === 'No' || value === 'IfNecessary';
+}
 
 export function requireTeam(app: App): Team {
   const team = app.requireParam('team');
