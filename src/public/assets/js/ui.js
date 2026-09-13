@@ -84,10 +84,6 @@ export function initLanguage() {
   if (redirect) {
     window.location.href = redirect;
   }
-
-  document.getElementById('language-select')?.addEventListener('change', (event) => {
-    localStorage.setItem('lang', event.target.value);
-  });
 }
 
 /**

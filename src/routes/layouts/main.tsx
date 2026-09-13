@@ -55,7 +55,7 @@ export function Layout(props: LayoutProps): JSX.Element {
               <form class="no-margin">
                 <label class="visually-hidden" for="language-select">{props.t('language_selection')}</label>
                 <select id="language-select" aria-label={props.t('language_selection')}
-                        onchange="const p=new URLSearchParams(window.location.search);p.set('lang',this.value);window.location.search=p.toString()">
+                        onchange="localStorage.setItem('lang',this.value);const p=new URLSearchParams(window.location.search);p.set('lang',this.value);window.location.search=p.toString()">
                   {props.languageOptions.map((option) => (
                     <option value={option.code} selected={props.locale === option.code}>
                       {option.flag} {option.label}
