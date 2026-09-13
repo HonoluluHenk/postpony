@@ -59,6 +59,44 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
+  test('restores focus to the changed radio after the save reload without scrolling', async ({
+                                                                                               page,
+                                                                                               checkA11y,
+                                                                                             }) => {
+    // Pin scroll restoration so the reloaded page deterministically starts at
+    // the top; a focus() without preventScroll would then scroll the below-fold
+    // radio into view and fail the scrollY assertion.
+    await page.addInitScript(() => {
+      history.scrollRestoration = 'manual';
+    });
+    await page.setViewportSize({width: 1024, height: 400});
+    const dates = [
+      '2026-03-05T20:00',
+      '2026-03-06T20:00',
+      '2026-03-07T20:00',
+      '2026-03-08T20:00',
+      '2026-03-09T20:00',
+      '2026-03-10T20:00',
+    ];
+    const {session} = await EditPage.createSession(page, dates);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+
+    // The last date sits below the 400px fold, so the browser scrolls to it
+    // before the click; the reload must not keep that scroll once focus lands.
+    await joinPage.castVote(5, 'No');
+
+    await expect(joinPage.voteGroup(5)
+      .getByRole('radio', {name: 'No'}))
+      .toBeFocused();
+    expect(await page.evaluate(() => window.scrollY))
+      .toBe(0);
+
+    await checkA11y();
+  });
+
   test('set-all buttons fill every date, overwrite earlier picks, and submit directly', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-12T18:30']);
 

@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] After casting a radio Vote, focus is on that same radio once the page reloads
-- [ ] After a set-all tap, focus is on that set-all button once the page reloads
-- [ ] The page does not scroll when focus is restored
-- [ ] A missing target leaves focus untouched and does not error
-- [ ] e2e covers the radio case
+- [x] After casting a radio Vote, focus is on that same radio once the page reloads
+- [x] After a set-all tap, focus is on that set-all button once the page reloads
+- [x] The page does not scroll when focus is restored
+- [x] A missing target leaves focus untouched and does not error
+- [x] e2e covers the radio case
 - [ ] `npm run verify` passes
 
 ## Comments

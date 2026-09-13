@@ -464,6 +464,7 @@ describe('initVoteForm', () => {
   beforeEach(() => {
     form = buildVoteForm();
     document.body.appendChild(form);
+    sessionStorage.clear();
     submitSpy = vi.fn();
     disabledAtSubmit = null;
     vi.spyOn(form, 'submit').mockImplementation(() => {
@@ -646,6 +647,72 @@ describe('initVoteForm', () => {
 
     expect(selectedValues()).toEqual(['IfNecessary', 'IfNecessary']);
     expect(submitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('remembers the changed radio (name + value) before submitting', () => {
+    vi.useFakeTimers();
+    changeRadio('date-1', 'No');
+    vi.advanceTimersByTime(400);
+
+    expect(JSON.parse(sessionStorage.getItem('postpony-vote-focus')))
+      .toEqual({name: 'vote-date-1', value: 'No'});
+  });
+
+  it('remembers the set-all button value before submitting', () => {
+    yesButton.click();
+
+    expect(JSON.parse(sessionStorage.getItem('postpony-vote-focus')))
+      .toEqual({value: 'Yes'});
+  });
+
+  it('remembers the last radio when two changes land inside the debounce window', () => {
+    vi.useFakeTimers();
+    changeRadio('date-1', 'Yes');
+    changeRadio('date-2', 'No');
+    vi.advanceTimersByTime(400);
+
+    expect(JSON.parse(sessionStorage.getItem('postpony-vote-focus')))
+      .toEqual({name: 'vote-date-2', value: 'No'});
+  });
+
+  it('restores focus to the changed radio after the reload without scrolling', () => {
+    sessionStorage.setItem('postpony-vote-focus', JSON.stringify({name: 'vote-date-1', value: 'No'}));
+    const radio = valueByName('date-1', 'No');
+    const focusSpy = vi.spyOn(radio, 'focus');
+
+    reload();
+
+    expect(focusSpy).toHaveBeenCalledWith({preventScroll: true});
+    expect(document.activeElement).toBe(radio);
+    expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
+  });
+
+  it('restores focus to the set-all button after the reload', () => {
+    sessionStorage.setItem('postpony-vote-focus', JSON.stringify({value: 'No'}));
+    const focusSpy = vi.spyOn(noButton, 'focus');
+
+    reload();
+
+    expect(focusSpy).toHaveBeenCalledWith({preventScroll: true});
+    expect(document.activeElement).toBe(noButton);
+    expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
+  });
+
+  it('leaves focus untouched and does not throw when the remembered target is gone', () => {
+    sessionStorage.setItem('postpony-vote-focus', JSON.stringify({name: 'vote-deleted', value: 'Yes'}));
+    const before = document.activeElement;
+
+    expect(() => reload()).not.toThrow();
+
+    expect(document.activeElement).toBe(before);
+    expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
+  });
+
+  it('ignores a corrupt focus record without throwing', () => {
+    sessionStorage.setItem('postpony-vote-focus', 'not-json');
+
+    expect(() => reload()).not.toThrow();
+    expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
   });
 });
 

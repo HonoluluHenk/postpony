@@ -395,6 +395,51 @@ export function initDeleteDialogs() {
   });
 }
 
+// Session-scoped record of the vote control to refocus after the full-page
+// save reload; written by initVoteForm just before the POST and cleared by
+// restoreVoteFocus on the reloaded page. JSON `{name?, value}`.
+const VOTE_FOCUS_KEY = 'postpony-vote-focus';
+
+/**
+ * Records the vote control to refocus after the save reload. Storage is
+ * best-effort: a browser with sessionStorage disabled just skips the
+ * enhancement.
+ * @param {{name?: string, value: string}} target
+ */
+function rememberVoteFocus(target) {
+  try {
+    sessionStorage.setItem(VOTE_FOCUS_KEY, JSON.stringify(target));
+  } catch {
+    // ponytail: private mode / storage disabled — no focus restore, no error.
+  }
+}
+
+/**
+ * Moves focus, without scrolling, to the control recorded before the save
+ * reload, then clears the record. Best-effort: a missing key, form, or target
+ * (date deleted, status Confirmed) leaves focus untouched and does not throw.
+ */
+function restoreVoteFocus() {
+  let stored;
+  try {
+    const raw = sessionStorage.getItem(VOTE_FOCUS_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(VOTE_FOCUS_KEY);
+    stored = JSON.parse(raw);
+  } catch {
+    return;
+  }
+  const form = document.querySelector('.vote-radio-group')
+    ?.closest('form');
+  if (!form || !stored) return;
+  const target = stored.name
+    ? [...form.querySelectorAll('.vote-radio-group input[type="radio"]')]
+      .find((radio) => radio.name === stored.name && radio.value === stored.value)
+    : [...form.querySelectorAll('button[data-set-all]')]
+      .find((button) => button.dataset.setAll === stored.value);
+  target?.focus({preventScroll: true});
+}
+
 /**
  * Wires the vote form for direct submission. Each "Set all: Yes / No / if
  * necessary" button checks every `vote-<dateId>` radio of its target value and
@@ -406,8 +451,9 @@ export function initDeleteDialogs() {
  * While a save is in flight the form is `aria-busy`, its controls are disabled
  * and the global spinner shows; further clicks/changes are ignored. The busy
  * state resets on `pageshow` because a bfcache restore brings the frozen DOM
- * back. Delegated on `document`, so a set-all row injected after initialization
- * still works.
+ * back, and `pageshow` also restores focus to the control the Participant just
+ * changed. Delegated on `document`, so a set-all row injected after
+ * initialization still works.
  * @param {import('./spinner-module.js').Spinner} [spinner] global spinner to show while saving
  */
 export function initVoteForm(spinner) {
@@ -430,15 +476,17 @@ export function initVoteForm(spinner) {
             control.disabled = false;
           });
       });
+    restoreVoteFocus();
   });
 
-  // The single submit path both handlers share; the focus-restore work
-  // (issue 06) hooks in here to remember the changed control.
-  const submit = (form) => {
+  // The single submit path both handlers share; it remembers the control the
+  // Participant changed so the reload can put focus back on it.
+  const submit = (form, focusTarget) => {
     if (pendingForms.has(form)) return;
     pendingForms.add(form);
     form.setAttribute('aria-busy', 'true');
     spinner?.show();
+    rememberVoteFocus(focusTarget);
     // ponytail: form.submit() captures the entry list synchronously, so
     // disabling the controls afterwards keeps them out of the *next* submission
     // without dropping any changed vote from this one.
@@ -467,7 +515,7 @@ export function initVoteForm(spinner) {
       .forEach((radio) => {
         if (radio.value === value) radio.checked = true;
       });
-    submit(form);
+    submit(form, {value});
   });
 
   document.addEventListener('change', (event) => {
@@ -478,7 +526,7 @@ export function initVoteForm(spinner) {
     // ponytail: a keyboard user arrowing through the options fires a change per
     // keypress; debounce so they get one save once they settle.
     clearTimeout(timer);
-    timer = setTimeout(() => submit(form), 400);
+    timer = setTimeout(() => submit(form, {name: radio.name, value: radio.value}), 400);
   });
 }
 

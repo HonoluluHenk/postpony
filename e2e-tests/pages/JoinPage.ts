@@ -66,6 +66,11 @@ export class JoinPage {
     return this.page.getByRole('radio', {name: VOTE_LABELS[vote]});
   }
 
+  voteGroup(dateIndex: number): Locator {
+    return this.voteForm.locator('.vote-radio-group')
+      .nth(dateIndex);
+  }
+
   voteSummarySection(): Locator {
     return this.page.getByRole('region', {name: 'Vote Summary'});
   }
