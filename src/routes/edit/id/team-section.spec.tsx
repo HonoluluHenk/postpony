@@ -36,7 +36,7 @@ describe('TeamSection component', () => {
     const html = renderToString(TeamSection(baseProps()));
 
     expect(html)
-      .toContain('<section id="team-management" class="padding small-round surface-variant s12 m4"');
+      .toContain('<section id="team-management" class="padding small-round s12 m4"');
     expect(html)
       .toContain('<h3 tabindex="-1">Players</h3>');
     expect(html)
@@ -139,7 +139,7 @@ describe('TeamSectionPartial', () => {
     expect(html)
       .toContain('id="team-management"');
     expect(html)
-      .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+      .toContain('<section id="own-team-votes" class="padding small-round" hx-swap-oob="true"');
     // The partial's OOB own-team votes is a disclosure closed by default.
     expect(html)
       .toMatch(/<section id="own-team-votes"[^>]*>\s*<details>\s*<summary>\s*<h3 id="own-team-votes-title">Your Team Votes<\/h3>/);

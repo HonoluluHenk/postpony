@@ -28,7 +28,7 @@ export function OwnTeamVotes(props: OwnTeamVotesProps): JSX.Element | null {
   return (
     <section
       id="own-team-votes"
-      class="padding small-round surface-variant"
+      class="padding small-round"
       hx-swap-oob={props.oob ? 'true' : undefined}
       aria-labelledby="own-team-votes-title"
     >

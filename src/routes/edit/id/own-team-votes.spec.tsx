@@ -48,7 +48,7 @@ describe('OwnTeamVotes component', () => {
     const node = OwnTeamVotes({ organizerPlayers, ownTeamResults, t });
     const html = renderToString(node);
 
-    expect(html).toContain('<section id="own-team-votes" class="padding small-round surface-variant"');
+    expect(html).toContain('<section id="own-team-votes" class="padding small-round"');
     expect(html).toContain('<h3 id="own-team-votes-title">Your Team Votes</h3>');
     expect(html).toContain('<caption class="visually-hidden">Your Team Votes</caption>');
     expect(html).toContain('<th scope="col">Proposed Date &amp; Time</th>');

@@ -243,10 +243,8 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                        ));
 
   return (
-    <section id="proposed-dates-management" class="padding small-round surface-variant s12 m8">
-      <header>
-        <h3 tabindex={-1}>{props.t('proposed_dates_management')}</h3>
-      </header>
+    <section id="proposed-dates-management" class="padding small-round s12 m8">
+      <h3 tabindex={-1}>{props.t('proposed_dates_management')}</h3>
       {props.proposedDates.some((pd) => pd.votable) ? (
         <a
           class="button outline"

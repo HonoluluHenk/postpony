@@ -1606,7 +1606,7 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('toast success');
       expect(html)
-        .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+        .toContain('<section id="own-team-votes" class="padding small-round" hx-swap-oob="true"');
       // The success outcome is announced once via the shared OOB status element.
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Proposed date added!</p>');
@@ -1829,7 +1829,7 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('id="status-chip" hx-swap-oob="true"');
       expect(html)
-        .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+        .toContain('<section id="own-team-votes" class="padding small-round" hx-swap-oob="true"');
       // The confirmed outcome is announced via the shared OOB status element.
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Date confirmed</p>');

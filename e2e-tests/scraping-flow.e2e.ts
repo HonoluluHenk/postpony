@@ -214,11 +214,11 @@ test.describe('Scraping Flow', () => {
     await expect(editPage.heading)
       .toBeVisible();
 
-    // The referenced Match (home vs guest, original date/time) is shown
-    // read-only — Thun hosts Ostermundigen on 29.08.2026 16:00.
-    await expect(editPage.matchSummary)
-      .toContainText('Match: Thun vs Ostermundigen');
-    await expect(editPage.matchSummary)
+    // The referenced Match (home vs guest, original date/time) is shown in the
+    // page heading — Thun hosts Ostermundigen on 29.08.2026 16:00.
+    await expect(editPage.heading)
+      .toContainText('Thun vs Ostermundigen');
+    await expect(editPage.heading)
       .toContainText('Sa, Aug 29, 2026, 4:00 PM');
 
     // No change-match affordance remains.
@@ -317,7 +317,7 @@ test.describe('Scraping Flow', () => {
     await editPage.goto(session.editUrl);
     await expect(editPage.heading)
       .toBeVisible();
-    await expect(editPage.matchSummary)
+    await expect(editPage.heading)
       .toContainText('Ostermundigen vs Thun');
     await expect(editPage.status)
       .toContainText('Voting');

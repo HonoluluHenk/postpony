@@ -21,10 +21,8 @@ export function TeamSection(props: TeamSectionProps): JSX.Element {
   const awayInvalid = props.teamId === 'away' && !!props.error;
 
   return (
-    <section id="team-management" class="padding small-round surface-variant s12 m4">
-      <header>
-        <h3 tabindex={-1}>{props.t('players')}</h3>
-      </header>
+    <section id="team-management" class="padding small-round s12 m4">
+      <h3 tabindex={-1}>{props.t('players')}</h3>
 
       <h4>{props.t('home_team')}</h4>
       <ul id="home-player-list" class="list" aria-label={props.t('home_team')}>

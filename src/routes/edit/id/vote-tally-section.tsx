@@ -17,7 +17,7 @@ export function VoteTallySection(props: VoteTallySectionProps): JSX.Element {
   return (
     <div id="vote-tally-section" hx-swap-oob={props.oob ? 'true' : undefined} class="grid">
       {props.homeProposedDates.length > 0 ? (
-        <section class="padding small-round surface-variant s12 m6" aria-labelledby="vote-summary-home-title">
+        <section class="padding small-round s12 m6" aria-labelledby="vote-summary-home-title">
           <VoteTally
             proposedDates={props.homeProposedDates}
             t={props.t}
@@ -29,7 +29,7 @@ export function VoteTallySection(props: VoteTallySectionProps): JSX.Element {
         </section>
       ) : null}
       {props.awayProposedDates.length > 0 ? (
-        <section class="padding small-round surface-variant s12 m6" aria-labelledby="vote-summary-away-title">
+        <section class="padding small-round s12 m6" aria-labelledby="vote-summary-away-title">
           <VoteTally
             proposedDates={props.awayProposedDates}
             t={props.t}

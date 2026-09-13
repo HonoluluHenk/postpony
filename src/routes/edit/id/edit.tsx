@@ -23,9 +23,6 @@ export interface EditPageProps extends ViewContext, EditPartialsData {
   globalError?: string;
   fromDate?: string;
   toDate?: string;
-  homeTeam?: string;
-  guestTeam?: string;
-  matchDateTime?: string;
 }
 
 interface InviteLinksProps {
@@ -101,13 +98,6 @@ export function EditPage(props: EditPageProps): JSX.Element {
 
       <div class="row items-center gap wrap">
         <StatusChip status={props.session.status} t={props.t} />
-        <p class="match-summary">
-          {props.t('match_summary', {
-            home: props.homeTeam ?? '',
-            guest: props.guestTeam ?? '',
-            datetime: props.matchDateTime ?? '',
-          })}
-        </p>
       </div>
 
       <StatusAnnouncement />
@@ -119,9 +109,7 @@ export function EditPage(props: EditPageProps): JSX.Element {
       />
 
       <div>
-        <header>
-          <h2>{props.t('scheduling_engine_info')}</h2>
-        </header>
+        <h2>{props.t('schedule_heading')}</h2>
 
         <div id="scheduling-info" class="grid">
           <TeamSection

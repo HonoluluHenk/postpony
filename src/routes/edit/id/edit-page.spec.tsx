@@ -27,9 +27,6 @@ function baseProps(): EditPageProps {
     organizerPlayers: [],
     ownTeamResults: [],
     proposedDateTimeDisplay: 'Sa, Aug 29, 2026, 4:00 PM',
-    matchDateTime: 'Sa, Aug 29, 2026, 4:00 PM',
-    homeTeam: 'Home Team',
-    guestTeam: 'Guest Team',
   };
 }
 
@@ -40,21 +37,15 @@ function renderToString(node: unknown): string {
   return (node as { toString(): string }).toString();
 }
 
-describe('EditPage match summary', () => {
-  it('renders the referenced Match identity read-only and no change action', () => {
+describe('EditPage schedule heading', () => {
+  it('renders the renamed plain-language section heading and omits the match summary paragraph', () => {
     const html = renderToString(EditPage(baseProps()));
 
     expect(html)
-      .toContain('Match: Home Team vs Guest Team – Sa, Aug 29, 2026, 4:00 PM');
+      .toContain('<h2>Schedule</h2>');
     expect(html)
       .not
-      .toContain('change_match_details');
-    expect(html)
-      .not
-      .toContain('Change match details');
-    expect(html)
-      .not
-      .toContain('/create?sessionId=');
+      .toContain('Match:');
   });
 });
 

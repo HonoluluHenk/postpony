@@ -87,10 +87,6 @@ export class EditPage {
     return this.page.getByRole('link', {name: 'Change match details'});
   }
 
-  get matchSummary(): Locator {
-    return this.page.locator('.match-summary');
-  }
-
   get organizerPasswordToast(): Locator {
     return this.page.getByRole('status')
       .filter({hasText: 'Your Organizer Password is'});

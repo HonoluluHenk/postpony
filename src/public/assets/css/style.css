@@ -172,14 +172,6 @@
     overflow-wrap: anywhere;
   }
 
-  /* Match summary: a long match line wraps inside its flex row instead of
-     pushing past the viewport edge. (Interim; the paragraph is deleted in
-     Phase 2.) */
-  .match-summary {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
   /* Proposed-date card list: each date is a card with a header row (date/venue | actions)
      and a details row (clashes/occupancy). CSS grid replaces the old table layout. */
   .proposed-date-list {

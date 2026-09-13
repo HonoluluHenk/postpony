@@ -1145,7 +1145,7 @@ describe('ProposedDatesSectionPartial', () => {
     expect(html)
       .toContain('id="vote-tally-section" hx-swap-oob="true"');
     expect(html)
-      .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+      .toContain('<section id="own-team-votes" class="padding small-round" hx-swap-oob="true"');
     // The partial's OOB vote sections are disclosures closed by default, so a
     // swap never leaves a stale open tally on screen.
     expect(html)

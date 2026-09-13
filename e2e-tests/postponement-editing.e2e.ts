@@ -573,10 +573,11 @@ test.describe('Postponement Editing', () => {
   test('edit page shows the referenced Match read-only with no change action', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
 
-    // The scraped match (Ostermundigen vs Thun, 14.01.2027) is shown read-only.
-    await expect(editPage.matchSummary)
-      .toContainText('Match: Ostermundigen vs Thun');
-    await expect(editPage.matchSummary)
+    // The scraped match (Ostermundigen vs Thun, 14.01.2027) is shown in the
+    // page heading now that the match-summary paragraph is gone.
+    await expect(editPage.heading)
+      .toContainText('Ostermundigen vs Thun');
+    await expect(editPage.heading)
       .toContainText('Jan 14, 2027');
 
     // No change-match affordance remains: no "change match details" link and

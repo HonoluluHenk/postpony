@@ -9,7 +9,7 @@ test.describe('Postponement Creation', () => {
       .goto();
   });
 
-  test('scrapes a Match, mints a Postponement, and lands on its edit page with a read-only Match summary', async ({page, checkA11y}) => {
+  test('scrapes a Match, mints a Postponement, and lands on its edit page', async ({page, checkA11y}) => {
     // 1. The start page offers the scrape wizard as the single creation path.
     await expect(startPage.scrapeLink)
       .toBeVisible();
@@ -40,11 +40,9 @@ test.describe('Postponement Creation', () => {
     await expect(editPage.heading)
       .toContainText('Sa, Aug 29, 2026, 4:00 PM');
 
-    // 5. The edit page shows the referenced Match read-only.
-    await expect(editPage.matchSummary)
-      .toContainText('Match: Thun vs Ostermundigen');
-    await expect(editPage.matchSummary)
-      .toContainText('Sa, Aug 29, 2026, 4:00 PM');
+    // 5. The schedule section heading is the renamed plain-language label.
+    await expect(page.getByRole('heading', {name: 'Schedule', level: 2}))
+      .toBeVisible();
 
     // 6. Verify the organizer password is displayed.
     await expect(editPage.organizerPasswordToast)
