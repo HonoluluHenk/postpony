@@ -1,22 +1,13 @@
 import type { App } from '../../../app';
-import { PostponementRules } from '../../../lib/postponement';
-import { renderEditPartials } from './render-edit-partials';
+import { runEditCommand } from './run-edit-command';
 
-export const handleProposedDateVisibilityPost = async (app: App): Promise<Response> => {
-  const id = app.requireParam('id');
-  const session = await app.store.get(id);
-  if (!session) {
-    app.notFound(app.t('session_not_found'));
-  }
-
+export const handleProposedDateVisibilityPost = (app: App): Promise<Response> => {
   const proposedDateId = app.c.req.query('proposedDateId') ?? '';
   const votable = app.c.req.query('votable') === 'true';
 
-  const updated = new PostponementRules().setVotable(session, proposedDateId, votable);
-  await app.store.save(updated);
-
-  const html = renderEditPartials(app, updated, {
-    statusMessage: app.t(votable ? 'voting_enabled' : 'voting_disabled'),
+  return runEditCommand(app, {
+    apply: (rules, session) => rules.setVotable(session, proposedDateId, votable),
+    message: app.t(votable ? 'voting_enabled' : 'voting_disabled'),
+    alwaysRender: true,
   });
-  return app.c.html(html);
 };

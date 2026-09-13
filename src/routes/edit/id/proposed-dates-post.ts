@@ -15,7 +15,8 @@ import {
 import { DEFAULT_CLUB_ID, type Postponement, type Venue } from '../../../lib/models';
 import { computeVenueOccupancy, type VenueOccupancyByProposedDate } from '../../../lib/venue-occupancy';
 import { Temporal } from '@js-temporal/polyfill';
-import { renderEditPartials } from './render-edit-partials';
+import { type EditPartialExtras, renderEditPartials } from './render-edit-partials';
+import { runEditCommand } from './run-edit-command';
 import { FALLBACK_VENUE_COUNT } from './proposed-dates-section';
 
 const TUPLE_DISCRIMINATOR = 'tuple';
@@ -166,19 +167,13 @@ function buildSingleDateSchema(app: App, venues: readonly Venue[]): v.BaseSchema
 
 export const handleEditProposedDatesPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
-  const session = await app.store.get(id);
-  if (!session) {
-    app.notFound('Session not found');
-  }
-
-  const locale = app.locale;
   const values = await app.c.req.parseBody({all: true}) as Record<string, unknown>;
 
   if (values['generate'] === TUPLE_DISCRIMINATOR) {
-    return handleTupleSubmit(app, session, locale, values);
+    return handleTupleSubmit(app, id, values);
   }
 
-  return handleSingleSubmit(app, session, id, locale, values);
+  return handleSingleSubmit(app, id, values);
 };
 
 /**
@@ -283,216 +278,227 @@ function deselectClashingAddedDates(
   return updated;
 }
 
-async function saveWithClashCheck(
-  app: App,
+async function withClashCheck(
   session: Postponement,
   addedIds: readonly string[],
 ): Promise<Postponement> {
   const checkResult = await computeClashesForSession(session);
-  let result = session;
-  if (checkResult !== undefined) {
-    result = deselectClashingAddedDates(
-      attachClashCheckResult(session, checkResult),
-      addedIds,
-      checkResult.clashes,
-    );
+  if (checkResult === undefined) {
+    return session;
   }
-  await app.store.save(result);
-  return result;
+  return deselectClashingAddedDates(
+    attachClashCheckResult(session, checkResult),
+    addedIds,
+    checkResult.clashes,
+  );
 }
 
-async function handleTupleSubmit(
+function handleTupleSubmit(
   app: App,
-  session: Postponement,
-  locale: App['locale'],
-  values: Record<string, unknown>,
-): Promise<Response> {
-  const rawTimes = Array.isArray(values['time[]'])
-    ? values['time[]'].filter((value): value is string => typeof value === 'string')
-    : [];
-  const validation = v.safeParse(buildTupleSchema(app, session.venues), values);
-  if (!validation.success) {
-    const errors = mapValidationToErrors(validation);
-    if (app.isPartial) {
-      return app.c.html(renderEditPartials(app, session, {
-        times: rawTimes,
-        generatorError: errors.fields['venueNumber'] ?? errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
-        generatorFromError: errors.fields['fromDate'],
-        generatorToError: errors.fields['toDate'],
-        fromDate: typeof values['fromDate'] === 'string' ? values['fromDate'] : '',
-        toDate: typeof values['toDate'] === 'string' ? values['toDate'] : '',
-      }), {status: 400});
-    }
-    return redirectAfterEdit(app, session);
-  }
-
-  const times = validation.output['time[]'];
-  const fromDate = validation.output.fromDate;
-  const toDate = validation.output.toDate;
-  const fromDateToken = formatIsoToDateOnlyLocaleTokens(fromDate, locale);
-  const toDateToken = formatIsoToDateOnlyLocaleTokens(toDate, locale);
-  if (times.length > MAX_TUPLES) {
-    // ponytail: the fixed 7-row form can never exceed MAX_TUPLES; this is a
-    // security guard against a hand-crafted oversized time[] array.
-    if (app.isPartial) {
-      return app.c.html(renderEditPartials(app, session, {
-        generatorError: app.t('proposed_date_time_invalid'),
-        fromDate: fromDateToken,
-        toDate: toDateToken,
-      }), {status: 400});
-    }
-    return redirectAfterEdit(app, session);
-  }
-
-  const parsed = parseTupleTimes(times, locale);
-  if (parsed.invalidRowIndex !== undefined) {
-    if (app.isPartial) {
-      return app.c.html(renderEditPartials(app, session, {
-        times,
-        generatorInvalidRow: parsed.invalidRowIndex,
-        fromDate: fromDateToken,
-        toDate: toDateToken,
-      }), {status: 400});
-    }
-    return redirectAfterEdit(app, session);
-  }
-
-  if (parsed.tuples.length === 0) {
-    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate: fromDateToken, toDate: toDateToken});
-  }
-
-  // Validate from/to date constraints
-  const nowIso = nowPlainDateTimeIso();
-  const todayDate = Temporal.PlainDate.from(nowIso);
-
-  const fromDatePlain = Temporal.PlainDate.from(fromDate);
-  const toDatePlain = Temporal.PlainDate.from(toDate);
-
-  // Validate from >= today
-  if (Temporal.PlainDate.compare(fromDatePlain, todayDate) < 0) {
-    return renderPartial(app, session, {
-      times,
-      generatorFromError: app.t('proposed_dates_generate_from_invalid'),
-      fromDate: fromDateToken,
-      toDate: toDateToken,
-    });
-  }
-
-  // Validate to > from
-  if (Temporal.PlainDate.compare(toDatePlain, fromDatePlain) <= 0) {
-    return renderPartial(app, session, {
-      times,
-      generatorToError: app.t('proposed_dates_generate_to_invalid'),
-      fromDate: fromDateToken,
-      toDate: toDateToken,
-    });
-  }
-
-  // Validate to <= cap
-  const capDate = session.originalMatchDateTime !== undefined
-    ? Temporal.PlainDate.from(session.originalMatchDateTime).add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL})
-    : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL});
-
-  if (Temporal.PlainDate.compare(toDatePlain, capDate) > 0) {
-    const toErrorKey = session.originalMatchDateTime !== undefined
-      ? 'proposed_dates_generate_to_invalid'
-      : 'proposed_dates_generate_to_invalid_no_anchor';
-    return renderPartial(app, session, {
-      times,
-      generatorToError: app.t(toErrorKey),
-      fromDate: fromDateToken,
-      toDate: toDateToken,
-    });
-  }
-
-  // Build datetime boundaries for the generator
-  const fromIso = `${fromDate}T00:00`;
-  const toIso = `${toDate}T23:59`;
-
-  const venueNumber = validation.output.venueNumber;
-  // Venue-aware dedup at the handler seam (spec decision): only existing dates
-  // at the form venue can collide with the generated ones, so the composite
-  // "<start>|<venue>" keys are built from those. The generator stays
-  // venue-unaware — it just matches candidates against the given keys.
-  const existingStarts = session.proposedDates
-    .filter((pd) => (pd.venueNumber ?? 1) === (venueNumber ?? 1))
-    .map((pd) => `${pd.dateTimeRange.start}|${pd.venueNumber ?? 1}`);
-  const generated = generateProposedDates({
-    fromIso,
-    toIso,
-    todayIso: nowIso,
-    tuples: parsed.tuples,
-    existingStarts,
-  });
-
-  if (generated.added.length === 0) {
-    return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate: fromDateToken, toDate: toDateToken});
-  }
-
-  const rules = new PostponementRules();
-  let updated = session;
-  const addedIds: string[] = [];
-  for (const startIso of generated.added) {
-    const proposed = rules.proposeDate(updated, startIso, 'organizer', venueNumber);
-    updated = proposed.session;
-    addedIds.push(proposed.proposedDate.id);
-  }
-  updated = await saveWithClashCheck(app, updated, addedIds);
-
-  const extras: {times: string[]; generatorSuccessCount: number; statusMessage?: string; generatorError?: string; generatorFromError?: string; generatorToError?: string; fromDate?: string; toDate?: string} = {
-    times,
-    generatorSuccessCount: generated.added.length,
-    statusMessage: app.t('proposed_dates_generate_added', {count: String(generated.added.length)}),
-    fromDate: fromDateToken,
-    toDate: toDateToken,
-  };
-  return renderPartial(app, session, extras, updated);
-}
-
-async function handleSingleSubmit(
-  app: App,
-  session: Postponement,
   id: string,
-  locale: App['locale'],
   values: Record<string, unknown>,
 ): Promise<Response> {
-  const rawDateTime = typeof values['proposedDateTime'] === 'string' ? values['proposedDateTime'] : '';
-  const rawVenueNumber = typeof values['venueNumber'] === 'string' ? values['venueNumber'] : undefined;
-  const validation = v.safeParse(buildSingleDateSchema(app, session.venues), {
-    proposedDateTime: rawDateTime,
-    venueNumber: rawVenueNumber,
+  const locale = app.locale;
+  let extras: EditPartialExtras = {};
+  let message = app.t('proposed_date_added');
+
+  return runEditCommand(app, {
+    redirectTo: `/edit/${id}`,
+    apply: async (rules, session) => {
+      const rawTimes = Array.isArray(values['time[]'])
+        ? values['time[]'].filter((value): value is string => typeof value === 'string')
+        : [];
+      const validation = v.safeParse(buildTupleSchema(app, session.venues), values);
+      if (!validation.success) {
+        const errors = mapValidationToErrors(validation);
+        if (app.isPartial) {
+          return app.c.html(renderEditPartials(app, session, {
+            times: rawTimes,
+            generatorError: errors.fields['venueNumber'] ?? errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
+            generatorFromError: errors.fields['fromDate'],
+            generatorToError: errors.fields['toDate'],
+            fromDate: typeof values['fromDate'] === 'string' ? values['fromDate'] : '',
+            toDate: typeof values['toDate'] === 'string' ? values['toDate'] : '',
+          }), {status: 400});
+        }
+        return redirectAfterEdit(app, session);
+      }
+
+      const times = validation.output['time[]'];
+      const fromDate = validation.output.fromDate;
+      const toDate = validation.output.toDate;
+      const fromDateToken = formatIsoToDateOnlyLocaleTokens(fromDate, locale);
+      const toDateToken = formatIsoToDateOnlyLocaleTokens(toDate, locale);
+      if (times.length > MAX_TUPLES) {
+        // ponytail: the fixed 7-row form can never exceed MAX_TUPLES; this is a
+        // security guard against a hand-crafted oversized time[] array.
+        if (app.isPartial) {
+          return app.c.html(renderEditPartials(app, session, {
+            generatorError: app.t('proposed_date_time_invalid'),
+            fromDate: fromDateToken,
+            toDate: toDateToken,
+          }), {status: 400});
+        }
+        return redirectAfterEdit(app, session);
+      }
+
+      const parsed = parseTupleTimes(times, locale);
+      if (parsed.invalidRowIndex !== undefined) {
+        if (app.isPartial) {
+          return app.c.html(renderEditPartials(app, session, {
+            times,
+            generatorInvalidRow: parsed.invalidRowIndex,
+            fromDate: fromDateToken,
+            toDate: toDateToken,
+          }), {status: 400});
+        }
+        return redirectAfterEdit(app, session);
+      }
+
+      if (parsed.tuples.length === 0) {
+        return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate: fromDateToken, toDate: toDateToken});
+      }
+
+      // Validate from/to date constraints
+      const nowIso = nowPlainDateTimeIso();
+      const todayDate = Temporal.PlainDate.from(nowIso);
+
+      const fromDatePlain = Temporal.PlainDate.from(fromDate);
+      const toDatePlain = Temporal.PlainDate.from(toDate);
+
+      // Validate from >= today
+      if (Temporal.PlainDate.compare(fromDatePlain, todayDate) < 0) {
+        return renderPartial(app, session, {
+          times,
+          generatorFromError: app.t('proposed_dates_generate_from_invalid'),
+          fromDate: fromDateToken,
+          toDate: toDateToken,
+        });
+      }
+
+      // Validate to > from
+      if (Temporal.PlainDate.compare(toDatePlain, fromDatePlain) <= 0) {
+        return renderPartial(app, session, {
+          times,
+          generatorToError: app.t('proposed_dates_generate_to_invalid'),
+          fromDate: fromDateToken,
+          toDate: toDateToken,
+        });
+      }
+
+      // Validate to <= cap
+      const capDate = session.originalMatchDateTime !== undefined
+        ? Temporal.PlainDate.from(session.originalMatchDateTime).add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL})
+        : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL});
+
+      if (Temporal.PlainDate.compare(toDatePlain, capDate) > 0) {
+        const toErrorKey = session.originalMatchDateTime !== undefined
+          ? 'proposed_dates_generate_to_invalid'
+          : 'proposed_dates_generate_to_invalid_no_anchor';
+        return renderPartial(app, session, {
+          times,
+          generatorToError: app.t(toErrorKey),
+          fromDate: fromDateToken,
+          toDate: toDateToken,
+        });
+      }
+
+      // Build datetime boundaries for the generator
+      const fromIso = `${fromDate}T00:00`;
+      const toIso = `${toDate}T23:59`;
+
+      const venueNumber = validation.output.venueNumber;
+      // Venue-aware dedup at the handler seam (spec decision): only existing dates
+      // at the form venue can collide with the generated ones, so the composite
+      // "<start>|<venue>" keys are built from those. The generator stays
+      // venue-unaware — it just matches candidates against the given keys.
+      const existingStarts = session.proposedDates
+        .filter((pd) => (pd.venueNumber ?? 1) === (venueNumber ?? 1))
+        .map((pd) => `${pd.dateTimeRange.start}|${pd.venueNumber ?? 1}`);
+      const generated = generateProposedDates({
+        fromIso,
+        toIso,
+        todayIso: nowIso,
+        tuples: parsed.tuples,
+        existingStarts,
+      });
+
+      if (generated.added.length === 0) {
+        return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate: fromDateToken, toDate: toDateToken});
+      }
+
+      let updated = session;
+      const addedIds: string[] = [];
+      for (const startIso of generated.added) {
+        const proposed = rules.proposeDate(updated, startIso, 'organizer', venueNumber);
+        updated = proposed.session;
+        addedIds.push(proposed.proposedDate.id);
+      }
+      updated = await withClashCheck(updated, addedIds);
+
+      extras = {
+        times,
+        generatorSuccessCount: generated.added.length,
+        fromDate: fromDateToken,
+        toDate: toDateToken,
+      };
+      message = app.t('proposed_dates_generate_added', {count: String(generated.added.length)});
+      return updated;
+    },
+    message: () => message,
+    extras: () => extras,
   });
+}
 
-  if (!validation.success) {
-    const errors = mapValidationToErrors(validation);
-    if (app.isPartial) {
-      return app.c.html(renderEditPartials(app, session, {
+function handleSingleSubmit(
+  app: App,
+  id: string,
+  values: Record<string, unknown>,
+): Promise<Response> {
+  const locale = app.locale;
+  let extras: EditPartialExtras = {};
+
+  return runEditCommand(app, {
+    redirectTo: `/edit/${id}`,
+    apply: async (rules, session) => {
+      const rawDateTime = typeof values['proposedDateTime'] === 'string' ? values['proposedDateTime'] : '';
+      const rawVenueNumber = typeof values['venueNumber'] === 'string' ? values['venueNumber'] : undefined;
+      const validation = v.safeParse(buildSingleDateSchema(app, session.venues), {
         proposedDateTime: rawDateTime,
-        error: errors.fields['proposedDateTime'],
-        globalError: errors.fields['venueNumber'] ?? errors.global,
+        venueNumber: rawVenueNumber,
+      });
+
+      if (!validation.success) {
+        const errors = mapValidationToErrors(validation);
+        if (app.isPartial) {
+          return app.c.html(renderEditPartials(app, session, {
+            proposedDateTime: rawDateTime,
+            error: errors.fields['proposedDateTime'],
+            globalError: errors.fields['venueNumber'] ?? errors.global,
+            ...defaultGeneratorDateRange(locale, session.originalMatchDateTime),
+          }), {status: 400});
+        }
+        return app.c.redirect(`/edit/${id}?organizerPassword=${organizerQuery(app)}`);
+      }
+
+      const proposedDateTime = validation.output.proposedDateTime;
+      const venueNumber = validation.output.venueNumber;
+      const parsed = parseLocaleDateTime(proposedDateTime, locale);
+      // ponytail: the schema's `check` predicate already guarantees `parsed` is defined.
+      // Use ?-chained parse so the lint ban on non-null assertions stays clean.
+      const parsedOrFail = parsed ?? app.failure(app.t('proposed_date_time_invalid'));
+      const proposed = rules.proposeDate(session, parsedOrFail.toString(), 'organizer', venueNumber);
+      const updated = await withClashCheck(proposed.session, [proposed.proposedDate.id]);
+
+      extras = {
+        success: true,
         ...defaultGeneratorDateRange(locale, session.originalMatchDateTime),
-      }), {status: 400});
-    }
-    return app.c.redirect(`/edit/${id}?organizerPassword=${organizerQuery(app)}`);
-  }
-
-  const proposedDateTime = validation.output.proposedDateTime;
-  const venueNumber = validation.output.venueNumber;
-  const parsed = parseLocaleDateTime(proposedDateTime, locale);
-  // ponytail: the schema's `check` predicate already guarantees `parsed` is defined.
-  // Use ?-chained parse so the lint ban on non-null assertions stays clean.
-  const parsedOrFail = parsed ?? app.failure(app.t('proposed_date_time_invalid'));
-  const proposed = new PostponementRules().proposeDate(session, parsedOrFail.toString(), 'organizer', venueNumber);
-  const updated = await saveWithClashCheck(app, proposed.session, [proposed.proposedDate.id]);
-
-  if (app.isPartial) {
-    return app.c.html(renderEditPartials(app, updated, {
-      success: true,
-      statusMessage: app.t('proposed_date_added'),
-      ...defaultGeneratorDateRange(locale, session.originalMatchDateTime),
-    }));
-  }
-  return app.c.redirect(`/edit/${id}`);
+      };
+      return updated;
+    },
+    message: app.t('proposed_date_added'),
+    extras: () => extras,
+  });
 }
 
 interface GeneratorRenderExtras {

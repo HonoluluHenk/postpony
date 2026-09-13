@@ -1,20 +1,8 @@
 import type { App } from '../../../app';
-import { PostponementRules } from '../../../lib/postponement';
-import { renderEditPartials } from './render-edit-partials';
+import { runEditCommand } from './run-edit-command';
 
-export const handleReopenPost = async (app: App): Promise<Response> => {
-  const id = app.requireParam('id');
-  const session = await app.store.get(id);
-  if (!session) {
-    app.notFound(app.t('session_not_found'));
-  }
-
-  const updated = new PostponementRules().reopen(session);
-  await app.store.save(updated);
-
-  if (app.isPartial) {
-    const html = renderEditPartials(app, updated, {statusMessage: app.t('postponement_reopened')});
-    return app.c.html(html);
-  }
-  return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);
-};
+export const handleReopenPost = (app: App): Promise<Response> =>
+  runEditCommand(app, {
+    apply: (rules, session) => rules.reopen(session),
+    message: app.t('postponement_reopened'),
+  });

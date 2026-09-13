@@ -1,26 +1,20 @@
 import type { App } from '../../../app';
-import { attachClashCheckResult, computeClashesForSession } from './proposed-dates-post';
-import { renderEditPartials } from './render-edit-partials';
+import { attachClashCheckResult, computeClashesForSession, type ClashCheckResult } from './proposed-dates-post';
+import { runEditCommand } from './run-edit-command';
 
-export const handleRefreshClashesPost = async (app: App): Promise<Response> => {
-  const id = app.requireParam('id');
-  const session = await app.store.get(id);
-  if (!session) {
-    app.notFound(app.t('session_not_found'));
-  }
+export const handleRefreshClashesPost = (app: App): Promise<Response> => {
+  let checkResult: ClashCheckResult | undefined;
+  let hadSnapshot = false;
 
-  const checkResult = await computeClashesForSession(session);
-  const refreshed = checkResult === undefined ? session : attachClashCheckResult(session, checkResult);
-  await app.store.save(refreshed);
-
-  if (app.isPartial) {
-    // Only claim "showing the previous results" when a previous snapshot
-    // actually exists; a first check that fails renders the plain nothing state.
-    const hadSnapshot = session.proposedDates.some((pd) => pd.clashes !== undefined);
-    const html = renderEditPartials(app, refreshed, checkResult === undefined && hadSnapshot
-      ? {refreshError: true}
-      : {statusMessage: app.t('clash_check_refreshed')});
-    return app.c.html(html);
-  }
-  return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);
+  return runEditCommand(app, {
+    apply: async (rules, session) => {
+      checkResult = await computeClashesForSession(session);
+      // Only claim "showing the previous results" when a previous snapshot
+      // actually exists; a first check that fails renders the plain nothing state.
+      hadSnapshot = session.proposedDates.some((pd) => pd.clashes !== undefined);
+      return checkResult === undefined ? session : attachClashCheckResult(session, checkResult);
+    },
+    message: () => (checkResult === undefined && hadSnapshot ? undefined : app.t('clash_check_refreshed')),
+    extras: () => (checkResult === undefined && hadSnapshot ? {refreshError: true} : {}),
+  });
 };

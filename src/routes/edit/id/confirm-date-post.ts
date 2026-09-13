@@ -1,32 +1,28 @@
 import type { App } from '../../../app';
-import { PostponementRules } from '../../../lib/postponement';
-import { renderEditPartials } from './render-edit-partials';
+import type { Postponement } from '../../../lib/models';
+import { runEditCommand } from './run-edit-command';
 
-export const handleConfirmDatePost = async (app: App): Promise<Response> => {
-  const id = app.requireParam('id');
-  const session = await app.store.get(id);
-  if (!session) {
-    app.notFound(app.t('session_not_found'));
-  }
-
-  const proposedDateId = app.c.req.query('proposedDateId') ?? '';
-  const updated = new PostponementRules().confirmDate(session, proposedDateId);
-  if (updated !== session) {
-    await app.store.save(updated);
-  }
-
-  const confirmedDate = updated.proposedDates.find((pd) => pd.id === updated.confirmedProposedDateId);
+/**
+ * Whether the date the session is confirmed on carries a Clash. Judged from
+ * `confirmedProposedDateId` (the locked history), not the submitted query, so a
+ * stale parameter never changes the announcement.
+ */
+function confirmedDateHasClashes(session: Postponement): boolean {
+  const confirmedDate = session.proposedDates.find((pd) => pd.id === session.confirmedProposedDateId);
   const clashes = confirmedDate?.clashes;
-  const hasClashes = clashes !== undefined && (clashes.home.length > 0 || clashes.away.length > 0);
+  return clashes !== undefined && (clashes.home.length > 0 || clashes.away.length > 0);
+}
 
-  if (app.isPartial) {
-    const html = renderEditPartials(app, updated, {
-      // One polite announcement per action: a clash on the confirmed date is
-      // the outcome worth announcing, so it replaces the plain confirmation.
-      statusMessage: hasClashes ? app.t('clash_check_confirm_warning') : app.t('date_confirmed'),
-      ...(hasClashes ? {confirmClashWarning: true} : {}),
-    });
-    return app.c.html(html);
-  }
-  return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);
+export const handleConfirmDatePost = (app: App): Promise<Response> => {
+  const proposedDateId = app.c.req.query('proposedDateId') ?? '';
+
+  return runEditCommand(app, {
+    apply: (rules, session) => rules.confirmDate(session, proposedDateId),
+    // One polite announcement per action: a clash on the confirmed date is the
+    // outcome worth announcing, so it replaces the plain confirmation.
+    message: (updated) => (confirmedDateHasClashes(updated)
+      ? app.t('clash_check_confirm_warning')
+      : app.t('date_confirmed')),
+    extras: (updated) => (confirmedDateHasClashes(updated) ? {confirmClashWarning: true} : {}),
+  });
 };

@@ -1,13 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../../lib/__test-utils__/builders';
 import { fetchClubMeetings, fetchMatches } from '../../../lib/click-tt-scraper';
 import { ClickTTError } from '../../../lib/errors';
 import type { Postponement } from '../../../lib/models';
 import { generateProposedDates } from '../../../lib/proposed-dates-generator';
-import { MemorySessionStore } from '../../../lib/session-store';
 import * as temporalUtils from '../../../lib/temporal-utils';
-import { LOCALE_KEY } from '../../../locales';
+import { createApp } from './__test-utils__/create-app';
 import { handleConfirmDatePost } from './confirm-date-post';
 import { handleEditGet } from './edit-id-get';
 import { buildOwnTeamView } from './own-team-view';
@@ -31,32 +29,6 @@ vi.mock('../../../lib/click-tt-scraper', async (importOriginal) => {
 const mockFetchMatches = vi.mocked(fetchMatches);
 const mockFetchClubMeetings = vi.mocked(fetchClubMeetings);
 
-interface MockOptions {
-  params?: Record<string, string>;
-  queries?: Record<string, string>;
-  headers?: Record<string, string>;
-  body?: Record<string, unknown>;
-}
-
-function createApp(options: MockOptions = {}): App {
-  const {params = {}, queries = {}, headers = {}, body = {}} = options;
-  const store = new MemorySessionStore();
-  const context = {
-    get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en-US' : undefined),
-    req: {
-      param: (name: string): string | undefined => params[name],
-      query: (name: string): string | undefined => queries[name],
-      header: (name: string): string | undefined => headers[name],
-      parseBody: (): Promise<Record<string, unknown>> => Promise.resolve(body),
-      url: 'https://game-scheduler.localhost:3000/',
-    },
-    html: vi.fn((content: string, init?: ResponseInit) => new Response(content, init)),
-    redirect: vi.fn((url: string) => new Response(null, {status: 302, headers: {Location: url}})),
-  } as any;
-
-  return App.create(context, store);
-}
-
 const FIXED_TODAY_ISO = '2026-08-25T08:00';
 // en-US date tokens the generator's From/To fields submit for the fixed "today"
 // (2026-08-25) and the default windows: anchor+4w and today+4w respectively.
@@ -78,14 +50,6 @@ describe('edit handlers', () => {
   });
 
   describe('handleEditPlayersPost', () => {
-    test('throws when the session does not exist', async () => {
-      const app = createApp({params: {id: 'missing'}});
-
-      await expect(handleEditPlayersPost(app))
-        .rejects
-        .toThrow('Session not found');
-    });
-
     test('adds a player to a session that has none', async () => {
       const session = aSession();
       const app = createApp({params: {id: session.id}, body: {playerName: 'Alice'}});
@@ -132,14 +96,6 @@ describe('edit handlers', () => {
   });
 
   describe('handleEditProposedDatesPost', () => {
-    test('throws when the session does not exist', async () => {
-      const app = createApp({params: {id: 'missing'}});
-
-      await expect(handleEditProposedDatesPost(app))
-        .rejects
-        .toThrow('Session not found');
-    });
-
     test('adds a proposed date to the session', async () => {
       const session = aSession();
       const app = createApp({params: {id: session.id}, body: {proposedDateTime: '09/01/2025 08:00 pm'}});
@@ -1653,14 +1609,6 @@ describe('edit handlers', () => {
   });
 
   describe('handleConfirmDatePost', () => {
-    test('throws when the session does not exist', async () => {
-      const app = createApp({params: {id: 'missing'}});
-
-      await expect(handleConfirmDatePost(app))
-        .rejects
-        .toThrow('Session not found');
-    });
-
     test('confirms a votable date and locks the session', async () => {
       const session = aSession({
         status: 'Voting',
@@ -1838,33 +1786,9 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Date confirmed</p>');
     });
-
-    test('redirects to the edit page when not partial', async () => {
-      const session = aSession({
-        status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
-      });
-      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
-      await app.store.save(session);
-
-      const response = await handleConfirmDatePost(app);
-
-      expect(response.status)
-        .toBe(302);
-      expect(response.headers.get('location'))
-        .toBe(`/edit/${session.id}?organizerPassword=`);
-    });
   });
 
   describe('handleProposedDateDeletePost', () => {
-    test('throws when the session does not exist', async () => {
-      const app = createApp({params: {id: 'missing'}});
-
-      await expect(handleProposedDateDeletePost(app))
-        .rejects
-        .toThrow('Session not found');
-    });
-
     test('removes the date and its votes', async () => {
       const session = aSession({
         status: 'Voting',
@@ -1916,33 +1840,9 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Proposed date deleted</p>');
     });
-
-    test('redirects to the edit page when not partial', async () => {
-      const session = aSession({
-        status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1'})],
-      });
-      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
-      await app.store.save(session);
-
-      const response = await handleProposedDateDeletePost(app);
-
-      expect(response.status)
-        .toBe(302);
-      expect(response.headers.get('location'))
-        .toBe(`/edit/${session.id}?organizerPassword=`);
-    });
   });
 
   describe('handleProposedDateVisibilityPost', () => {
-    test('throws when the session does not exist', async () => {
-      const app = createApp({params: {id: 'missing'}});
-
-      await expect(handleProposedDateVisibilityPost(app))
-        .rejects
-        .toThrow('Session not found');
-    });
-
     test('flips the votable flag on for a closed date', async () => {
       const session = aSession({
         status: 'Voting',
@@ -2005,14 +1905,6 @@ describe('edit handlers', () => {
   });
 
   describe('handleReopenPost', () => {
-    test('throws when the session does not exist', async () => {
-      const app = createApp({params: {id: 'missing'}});
-
-      await expect(handleReopenPost(app))
-        .rejects
-        .toThrow('Session not found');
-    });
-
     test('reopens a confirmed session: Voting, count + 1, history, votes, and flags kept', async () => {
       const session = aSession({
         status: 'Confirmed',
@@ -2066,24 +1958,6 @@ describe('edit handlers', () => {
         .not
         .toContain(`hx-post="/edit/${session.id}/reopen"`);
     });
-
-    test('redirects to the edit page when not partial', async () => {
-      const session = aSession({
-        status: 'Confirmed',
-        reopenCount: 0,
-        confirmedProposedDateId: 'pd-1',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
-      });
-      const app = createApp({params: {id: session.id}});
-      await app.store.save(session);
-
-      const response = await handleReopenPost(app);
-
-      expect(response.status)
-        .toBe(302);
-      expect(response.headers.get('location'))
-        .toBe(`/edit/${session.id}?organizerPassword=`);
-    });
   });
 
   describe('handleRefreshClashesPost', () => {
@@ -2106,14 +1980,6 @@ describe('edit handlers', () => {
         ],
       });
     }
-
-    test('throws when the session does not exist', async () => {
-      const app = createApp({params: {id: 'missing'}});
-
-      await expect(handleRefreshClashesPost(app))
-        .rejects
-        .toThrow('Session not found');
-    });
 
     test('re-fetches both schedules, recomputes all clashes, replaces the stored snapshot, and saves once', async () => {
       const session = checkedSession();
@@ -2154,7 +2020,7 @@ describe('edit handlers', () => {
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Schedule check refreshed</p>');
     });
 
-    test('a failed refresh keeps the previous snapshot, saves once, and renders the failure notice', async () => {
+    test('a failed refresh keeps the previous snapshot and renders the failure notice without a write', async () => {
       const session = checkedSession();
       mockFetchMatches.mockRejectedValue(new ClickTTError('click-tt is down'));
       const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
@@ -2166,8 +2032,11 @@ describe('edit handlers', () => {
       const stored = await app.store.get(session.id);
       expect(stored?.proposedDates[0]?.clashes)
         .toEqual({home: [{opponent: 'Old Opp', start: '2025-09-01T08:00'}], away: []});
+      // The command seam only writes a changed session; keeping the stale
+      // snapshot is a no-op.
       expect(saveSpy)
-        .toHaveBeenCalledTimes(1);
+        .not
+        .toHaveBeenCalled();
       // The stale snapshot still renders, and the organizer sees the failure notice.
       expect(html)
         .toContain('Home: 8:00 AM vs Old Opp');
