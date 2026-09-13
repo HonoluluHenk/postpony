@@ -418,11 +418,15 @@ test.describe('Proposed Date Generator', () => {
   test('custom from/to with anchor generates within specified range', async ({page}) => {
     const {editPage} = await EditPage.createSession(page);
 
-    // Narrow window: any 7 consecutive days starting today (start weekday varies
-    // with the wall clock). Anchor is the scraped match (2027-01-14), cap is
-    // 2027-02-11 (4 weeks after), so [today, today+6] is inside the window.
-    const from = isoDate(0);
-    const to = isoDate(6);
+    // Narrow window: any 7 consecutive days starting tomorrow (start weekday
+    // varies with the wall clock). Anchor is the scraped match (2027-01-14),
+    // cap is 2027-02-11 (4 weeks after), so [tomorrow, tomorrow+6] is inside
+    // the window. Starting tomorrow (not today) keeps every candidate strictly
+    // after "now": the generator drops candidates at or before the current
+    // wall-clock time, so a today-anchored window would lose today's own
+    // Wed/Sat candidate whenever the test runs after 19:30/20:00.
+    const from = isoDate(1);
+    const to = isoDate(7);
     await editPage.fillFromDate(from);
     await editPage.fillToDate(to);
     await editPage.generateProposedDates([...TUPLES]);

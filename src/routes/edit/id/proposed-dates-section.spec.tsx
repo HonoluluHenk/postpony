@@ -140,7 +140,7 @@ describe('ProposedDatesRail date chips', () => {
     const html = renderToString(ProposedDatesRail(railProps(session)));
 
     expect(html)
-      .toContain('<span class="chip chip--clean">Schedule checked, no clashes</span>');
+      .toContain('<span class="chip chip--clean">No other games</span>');
   });
 
   it('renders the not-checked chip when the schedule check cannot run', () => {
@@ -170,7 +170,7 @@ describe('ProposedDatesRail date chips', () => {
     const html = renderToString(ProposedDatesRail(railProps(session)));
 
     expect(html)
-      .toContain('<span class="chip chip--clean">Venue checked, no other games</span>');
+      .toContain('<span class="chip chip--clean">Venue empty</span>');
   });
 
   it('renders the venue-occupancy warn chip with the count when the venue is busy', () => {

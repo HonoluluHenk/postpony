@@ -521,7 +521,7 @@ describe('renderVoteStep hides clash info', () => {
 
     expect(body)
       .not
-      .toContain('Schedule checked, no clashes');
+      .toContain('No other games');
   });
 
   test('renders no "not checked" chip for a hand-entered match without team identities', async () => {
@@ -704,7 +704,7 @@ describe('renderVoteStep venue occupancy info', () => {
       .toContain('other games');
     expect(body)
       .not
-      .toContain('Venue checked');
+      .toContain('Venue empty');
   });
 
   test('omits the count clause when occupancy data is absent (hand-entered match or failed scrape)', async () => {
@@ -730,7 +730,7 @@ describe('renderVoteStep venue occupancy info', () => {
       .toContain('other games');
     expect(body)
       .not
-      .toContain('Venue checked');
+      .toContain('Venue empty');
   });
 
   test('renders the localized de-CH occupancy count in the legend', async () => {
@@ -768,7 +768,7 @@ describe('renderVoteStep venue occupancy info', () => {
       .toContain('2 weitere Spiele');
     expect(body)
       .not
-      .toContain('Halle geprüft, keine weiteren Spiele');
+      .toContain('Halle leer');
   });
 });
 

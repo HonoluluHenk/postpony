@@ -184,8 +184,8 @@ test.describe('Proposed date row full visibility', () => {
       await expectFullyWithin(firstRow, dateCell);
 
       // Both check chips stay on the clean row.
-      const cleanChip = firstRow.locator('.chip--clean', {hasText: 'Schedule checked, no clashes'});
-      const venueChip = firstRow.locator('.chip--clean', {hasText: 'Venue checked, no other games'});
+      const cleanChip = firstRow.locator('.chip--clean', {hasText: 'No other games'});
+      const venueChip = firstRow.locator('.chip--clean', {hasText: 'Venue empty'});
       await expect(cleanChip)
         .toBeVisible();
       await expect(venueChip)
