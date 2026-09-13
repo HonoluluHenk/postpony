@@ -25,7 +25,7 @@ export function confirmedDateDisplay(session: Postponement, locale: AppLocale): 
 export function renderConfirmedInfo(
   app: App,
   session: Postponement,
-  context: {team: Team; token: string},
+  context: {team: Team; token: string; playerId?: string},
 ): Response {
   const {team, token} = context;
   const hasVotableDates = new PostponementRules().votableDates(session).length > 0;
@@ -38,6 +38,7 @@ export function renderConfirmedInfo(
       sessionId={session.id}
       team={team}
       token={token}
+      playerId={context.playerId}
       hasVotableDates={hasVotableDates}
     />,
   );
@@ -50,7 +51,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const locale = app.locale;
 
   if (session.status === 'Confirmed') {
-    return renderConfirmedInfo(app, session, {team, token});
+    return renderConfirmedInfo(app, session, {team, token, playerId: player.id});
   }
 
   const rules = new PostponementRules();

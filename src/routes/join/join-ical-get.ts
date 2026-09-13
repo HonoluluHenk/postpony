@@ -7,11 +7,30 @@ import { requireSessionAndToken, requireTeam } from './join-utils';
  * invitation token only — no `playerId` is required, because a calendar file is
  * not sensitive and invite links are already shared widely. A bad token is a
  * 403, an unknown session id a 404, and an invalid team a 400.
+ *
+ * An optional `playerId` that identifies a Participant on this team personalizes
+ * every embedded link; a missing or stale id degrades silently to an
+ * unpersonalized file so an old subscription keeps producing a usable calendar.
  */
 export const handleJoinIcalGet = async (app: App): Promise<Response> => {
-  requireTeam(app);
-  const {session} = await requireSessionAndToken(app);
+  const team = requireTeam(app);
+  const {session, token} = await requireSessionAndToken(app);
 
-  const body = buildIcal(session, {baseUrl: app.view.baseUrl, locale: app.locale});
+  const playerId = app.c.req.query('playerId') ?? '';
+  const knownPlayer = session.players.some((p) => p.id === playerId && p.teamId === team);
+
+  const body = buildIcal(session, {
+    baseUrl: app.view.baseUrl,
+    locale: app.locale,
+    token,
+    team,
+    playerId: knownPlayer ? playerId : undefined,
+    labels: {
+      action: app.t('vote_action_label'),
+      yes: app.t('vote_yes'),
+      no: app.t('vote_no'),
+      ifNecessary: app.t('vote_if_necessary'),
+    },
+  });
   return new Response(body, {status: 200, headers: icalResponseHeaders(icalFilename(session.name))});
 };

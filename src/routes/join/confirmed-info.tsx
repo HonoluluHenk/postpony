@@ -10,6 +10,8 @@ export interface ConfirmedInfoPageProps extends ViewContext {
   sessionId: string;
   team: Team;
   token: string;
+  /** Current Participant id when the visitor is identified; personalizes the export link. */
+  playerId?: string;
   /** Whether the Postponement still has dates open for export (hidden otherwise). */
   hasVotableDates: boolean;
   globalError?: string;
@@ -36,7 +38,7 @@ export function ConfirmedInfoPage(props: ConfirmedInfoPageProps): JSX.Element {
       {props.hasVotableDates ? (
         <a
           class="button outline"
-          href={`${props.baseUrl}/join/${props.sessionId}/${props.team}/calendar.ics?token=${props.token}`}
+          href={`${props.baseUrl}/join/${props.sessionId}/${props.team}/calendar.ics?token=${props.token}${props.playerId ? `&playerId=${props.playerId}` : ''}`}
           hx-boost="false"
         >
           <i aria-hidden="true">download</i>
