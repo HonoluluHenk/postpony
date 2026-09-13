@@ -51,6 +51,7 @@ export function VotePage(props: VotePageProps): JSX.Element {
           class="button outline"
           href={`${props.baseUrl}/join/${props.sessionId}/${props.team}/calendar.ics?token=${props.token}&playerId=${props.playerId}`}
           hx-boost="false"
+          data-no-spinner
         >
           <i aria-hidden="true">download</i>
           {props.t('export_calendar')}
