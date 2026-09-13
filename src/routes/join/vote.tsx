@@ -105,7 +105,6 @@ export function VotePage(props: VotePageProps): JSX.Element {
                     name={`vote-${pd.id}`}
                     value="Yes"
                     checked={pd.currentVote === 'Yes'}
-                    required
                   />
                   <span>{props.t('vote_yes')}</span>
                 </label>
@@ -129,10 +128,6 @@ export function VotePage(props: VotePageProps): JSX.Element {
                 </label>
               </fieldset>
             ))}
-
-            <div class="right-align">
-              <button type="submit">{props.t('vote_submit')}</button>
-            </div>
           </form>
 
           <section aria-labelledby="vote-summary-title">

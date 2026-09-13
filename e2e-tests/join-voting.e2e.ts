@@ -39,19 +39,16 @@ test.describe('Join and Voting', () => {
       .goto(session.homeHref);
     await joinPage.join('Alice');
 
-    // Step 2: cast a vote. beer.css visually hides the radio input, so we toggle
-    // it via its label text (scoped to the form to avoid the summary table headers).
+    // Step 2: cast a vote — a radio change posts the form directly. beer.css
+    // visually hides the radio input, so we toggle it via its label text
+    // (scoped to the form to avoid the summary table headers).
     await joinPage.castVote(0, 'Yes');
-    await joinPage.submitVotes();
 
-    await expect(page.getByText('Your votes have been saved!'))
-      .toBeVisible();
     await expect(joinPage.voteRadio('Yes'))
       .toBeChecked();
 
-    // Change the vote and resubmit.
+    // Change the vote; the new radio click submits again.
     await joinPage.castVote(0, 'No');
-    await joinPage.submitVotes();
 
     await expect(joinPage.voteRadio('No'))
       .toBeChecked();
@@ -62,38 +59,40 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
-  test('set-all buttons fill every date, overwrite earlier picks, and save on Submit Votes', async ({page, checkA11y}) => {
+  test('set-all buttons fill every date, overwrite earlier picks, and submit directly', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-12T18:30']);
 
     const joinPage = await new JoinPage(page)
       .goto(session.homeHref);
     await joinPage.join('Alice');
 
-    // Fill-only: a hand-picked vote is overwritten in the DOM but nothing is sent.
+    // A hand-picked vote is overwritten by set-all in the same click that submits.
     await joinPage.castVote(0, 'Yes');
     await joinPage.setAllVotes('IfNecessary');
-    for (const radio of await joinPage.voteRadio('IfNecessary').all()) {
+    for (const radio of await joinPage.voteRadio('IfNecessary')
+      .all())
+    {
       await expect(radio)
         .toBeChecked();
     }
-    await expect(page.getByText('Your votes have been saved!'))
-      .toHaveCount(0);
 
-    // Re-run with No — overwrites the previous fill in the DOM, still no submit.
+    // The reload echoes both saved votes — one per date.
+    for (const row of await joinPage.voteSummaryTable()
+      .getByRole('rowgroup')
+      .last()
+      .getByRole('row')
+      .all())
+    {
+      await expect(row.getByRole('cell')
+        .nth(2))
+        .toHaveText('1'); // if necessary
+    }
+
+    // Re-run with No — overwrites the previous vote and submits again.
     await joinPage.setAllVotes('No');
-    for (const radio of await joinPage.voteRadio('No').all()) {
-      await expect(radio)
-        .toBeChecked();
-    }
-    await expect(page.getByText('Your votes have been saved!'))
-      .toHaveCount(0);
-
-    await joinPage.submitVotes();
-
-    await expect(page.getByText('Your votes have been saved!'))
-      .toBeVisible();
-    // The reload echoes both saved No votes — one per date.
-    for (const radio of await joinPage.voteRadio('No').all()) {
+    for (const radio of await joinPage.voteRadio('No')
+      .all())
+    {
       await expect(radio)
         .toBeChecked();
     }
@@ -101,7 +100,8 @@ test.describe('Join and Voting', () => {
       .getByRole('rowgroup')
       .last()
       .getByRole('row')
-      .all()) {
+      .all())
+    {
       await expect(row.getByRole('cell')
         .nth(3))
         .toHaveText('1'); // no
@@ -135,8 +135,6 @@ test.describe('Join and Voting', () => {
 
     await expect(joinPage.noDatesMessage)
       .toBeVisible();
-    await expect(joinPage.submitVotesButton)
-      .toHaveCount(0);
     await expect(joinPage.setAllControls)
       .toHaveCount(0);
 
@@ -209,7 +207,6 @@ test.describe('Join and Voting', () => {
     await homeJoinPage.goto(session.homeHref);
     await homeJoinPage.join('HomeVoter');
     await homeJoinPage.castVote(0, 'Yes');
-    await homeJoinPage.submitVotes();
 
     // Join as away player — tally should show 0 away votes
     const awayJoinPage = new JoinPage(page);
@@ -233,7 +230,6 @@ test.describe('Join and Voting', () => {
 
     // Cast away team vote
     await awayJoinPage.castVote(0, 'No');
-    await awayJoinPage.submitVotes();
 
     // Now away team tally should show 1 No (0 Yes, 0 if necessary)
     tallyTable = awayJoinPage.voteSummaryTable();
@@ -270,7 +266,8 @@ test.describe('Join and Voting', () => {
     await expect(joinPage.heading)
       .toBeVisible();
     await checkA11y();
-    await expect(page).toHaveScreenshot('join.png', {fullPage: true});
+    await expect(page)
+      .toHaveScreenshot('join.png', {fullPage: true});
 
     await joinPage.join('Dora');
     await checkA11y();
@@ -290,8 +287,6 @@ test.describe('Join and Voting', () => {
 
     await expect(awayJoinPage.noDatesMessage)
       .toBeVisible();
-    await expect(awayJoinPage.submitVotesButton)
-      .toHaveCount(0);
     await expect(awayJoinPage.voteSummarySection())
       .toHaveCount(0);
 
@@ -301,8 +296,6 @@ test.describe('Join and Voting', () => {
 
     await expect(homeJoinPage.noDatesMessage)
       .toBeVisible();
-    await expect(homeJoinPage.submitVotesButton)
-      .toHaveCount(0);
     await expect(homeJoinPage.voteSummarySection())
       .toHaveCount(0);
 
@@ -317,7 +310,6 @@ test.describe('Join and Voting', () => {
     await homeJoinPage.goto(session.homeHref);
     await homeJoinPage.join('Alice');
     await homeJoinPage.castVote(0, 'Yes');
-    await homeJoinPage.submitVotes();
 
     // Second same-team voter: the first join set localStorage, which auto-redirects
     // the join page; clear the stored identity so Bob reaches the register form.
@@ -330,7 +322,6 @@ test.describe('Join and Voting', () => {
     await homeJoinPage.goto(session.homeHref);
     await homeJoinPage.join('Bob');
     await homeJoinPage.castVote(0, 'Yes');
-    await homeJoinPage.submitVotes();
 
     // Edit view: per-player votes by name + "N/M voted" count. Two of the
     // five home-team players (3 scraped + Alice + Bob) vote, so the single
@@ -342,7 +333,8 @@ test.describe('Join and Voting', () => {
       .toContainText('Alice');
     await expect(editPage.ownTeamTable())
       .toContainText('Bob');
-    await expect(editPage.ownTeamTable().getByText('2/5 voted'))
+    await expect(editPage.ownTeamTable()
+      .getByText('2/5 voted'))
       .toBeVisible();
 
     // The proposed date is votable by both teams out of the box; have the
@@ -351,7 +343,6 @@ test.describe('Join and Voting', () => {
     await awayJoinPage.goto(session.awayHref);
     await awayJoinPage.join('Charlie');
     await awayJoinPage.castVote(0, 'No');
-    await awayJoinPage.submitVotes();
 
     await editPage.goto(session.editUrl);
     await editPage.openAwayTally();
@@ -391,7 +382,10 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
-  test('blocks registration after confirm: join link renders the confirmed view, no register form', async ({page, checkA11y}) => {
+  test('blocks registration after confirm: join link renders the confirmed view, no register form', async ({
+                                                                                                             page,
+                                                                                                             checkA11y,
+                                                                                                           }) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const editPage = new EditPage(page);
@@ -475,7 +469,10 @@ test.describe('Click-to-vote from the calendar export', () => {
     await checkA11y();
   });
 
-  test('error path: a link without playerId routes through who-are-you and still lands the vote', async ({page, checkA11y}) => {
+  test('error path: a link without playerId routes through who-are-you and still lands the vote', async ({
+                                                                                                           page,
+                                                                                                           checkA11y,
+                                                                                                         }) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const joinPage = await new JoinPage(page)

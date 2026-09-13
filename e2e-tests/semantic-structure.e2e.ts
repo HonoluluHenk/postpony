@@ -50,13 +50,11 @@ test.describe('Semantic structure', () => {
     await joinPage.join('HomeVoter');
     await joinPage.castVote(0, 'Yes');
     await joinPage.castVote(1, 'No');
-    await joinPage.submitVotes();
 
     await joinPage.goto(session.awayHref);
     await joinPage.join('AwayVoter');
     await joinPage.castVote(0, 'No');
     await joinPage.castVote(1, 'Yes');
-    await joinPage.submitVotes();
 
     await editPage.goto(session.editUrl);
 

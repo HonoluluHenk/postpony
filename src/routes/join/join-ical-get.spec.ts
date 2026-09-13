@@ -87,6 +87,10 @@ describe('handleJoinIcalGet', () => {
       .toContain('BEGIN:VCALENDAR');
     expect(body)
       .toContain('BEGIN:VEVENT');
+    expect(body)
+      .toContain('X-ALT-DESC;FMTTYPE=text/html:');
+    expect(body)
+      .toContain('>Open the poll</a>');
   });
 
   test('embeds playerId in the URL property and every vote link when it matches a participant on the team', async () => {

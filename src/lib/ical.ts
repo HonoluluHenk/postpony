@@ -21,6 +21,20 @@ export interface IcalVoteLabels {
   no: string;
 }
 
+/**
+ * Pretty anchor texts for the HTML links in the `X-ALT-DESC` rendition.
+ * Resolved by the caller so the builder stays locale-neutral. The vote anchors
+ * are join-export only and fall back to the short vote label / raw value when
+ * absent.
+ */
+export interface IcalLinkLabels {
+  /** Anchor text for the poll/edit page link. */
+  open: string;
+  yes?: string;
+  ifNecessary?: string;
+  no?: string;
+}
+
 export interface IcalBuildOptions {
   baseUrl: string;
   locale: AppLocale;
@@ -34,6 +48,8 @@ export interface IcalBuildOptions {
   playerId?: string;
   /** Localized choice labels; required with `token`. */
   labels?: IcalVoteLabels;
+  /** Pretty anchor texts for the `X-ALT-DESC` HTML links; absent → raw URLs as anchors. */
+  linkLabels?: IcalLinkLabels;
 }
 
 interface VoteContext {
@@ -99,6 +115,7 @@ function eventLines(
   }
   lines.push(
     `DESCRIPTION:${escapeText(description(session, options, vote, date))}`,
+    `X-ALT-DESC;FMTTYPE=text/html:${htmlDescription(session, options, vote, date, options.linkLabels)}`,
     `STATUS:${confirmed ? 'CONFIRMED' : 'TENTATIVE'}`,
     'END:VEVENT',
   );
@@ -136,6 +153,51 @@ function description(
     }
   }
   return lines.join('\n');
+}
+
+/**
+ * The `X-ALT-DESC` value: the DESCRIPTION as rich HTML (RFC 7986) with
+ * clickable links, so calendar apps render it readably. Mirrors the plain text
+ * line-for-line; `&` in hrefs is entity-escaped.
+ */
+function htmlDescription(
+  session: Postponement,
+  options: IcalBuildOptions,
+  vote: VoteContext | undefined,
+  date: ProposedDate,
+  linkLabels: IcalLinkLabels | undefined,
+): string {
+  const parts: string[] = [];
+  if (session.originalMatchDateTime) {
+    const original = formatIsoToLocaleTokens(session.originalMatchDateTime, options.locale);
+    parts.push(`<b>Original match: ${escapeHtml(original)}</b>`);
+  }
+  const pollHref = vote ? pollUrl(session, options.baseUrl, vote) : `${options.baseUrl}/edit/${session.id}`;
+  parts.push(`<a href="${escapeHtml(pollHref)}">${escapeHtml(linkLabels?.open ?? pollHref)}</a>`);
+  if (vote) {
+    parts.push(`<b>${escapeHtml(vote.labels.action)}:</b>`);
+    const items: string[] = [];
+    for (const [value, key] of [
+      ['Yes', 'yes'],
+      ['IfNecessary', 'ifNecessary'],
+      ['No', 'no'],
+    ] as const)
+    {
+      const anchor = linkLabels?.[key] ?? value;
+      items.push(`<li><a href="${escapeHtml(voteUrl(session, options.baseUrl, vote, date, value))}">${escapeHtml(anchor)}</a></li>`);
+    }
+    parts.push(`<ul>${items.join('')}</ul>`);
+  }
+  return parts.join('<br>');
+}
+
+/** HTML-escapes a string destined for an attribute or text node. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 /** The choice-less poll URL behind the calendar app's "Open URL" button. */

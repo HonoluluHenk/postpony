@@ -33,6 +33,10 @@ async function assertCalendarDownload(
     .toContain('BEGIN:VCALENDAR');
   expect(body)
     .toContain('BEGIN:VEVENT');
+  expect(body)
+    .toContain('X-ALT-DESC;FMTTYPE=text/html:');
+  expect(body.replace(/\r\n /g, ''))
+    .toContain('<a href=');
 }
 
 test.describe('Calendar export', () => {

@@ -65,6 +65,17 @@ function urlOf(ical: string, uid: string): string {
     .replace(/\r$/, '');
 }
 
+/** Unfolds continuation lines and returns the raw X-ALT-DESC value of one event. */
+function altDescOf(ical: string, uid: string): string {
+  const block = eventBlock(ical.replace(/\r\n /g, ''), uid);
+  const line = block.split('\n')
+    .find((l) => l.startsWith('X-ALT-DESC;FMTTYPE=text/html:'));
+  expect(line)
+    .toBeDefined();
+  return (line ?? '').slice('X-ALT-DESC;FMTTYPE=text/html:'.length)
+    .replace(/\r$/, '');
+}
+
 describe('buildIcal', () => {
   test('emits a VCALENDAR with the standard header fields and the match name as calendar name', () => {
     const session = aSession({
@@ -282,6 +293,38 @@ describe('buildIcal', () => {
     const blockEn = eventBlock(icalEn.replace(/\r\n /g, ''), 'proposed-date-1');
     expect(blockEn)
       .toContain('08/29/2026 04:00 pm');
+  });
+
+  test('emits an X-ALT-DESC HTML rendition of the description with a pretty edit link', () => {
+    const session = aSession({
+      id: 'sess-edit',
+      originalMatchDateTime: '2026-08-29T16:00',
+      proposedDates: [aProposedDate({id: 'proposed-date-1'})],
+    });
+
+    const ical = buildIcal(session, {
+      baseUrl: BASE_URL,
+      locale: 'de-CH',
+      now: new Date('2026-09-01T10:00:00Z'),
+      linkLabels: {open: 'Open the postponement'},
+    });
+
+    expect(altDescOf(ical, 'proposed-date-1'))
+      .toBe(`<b>Original match: 29.08.2026 16:00</b><br><a href="${BASE_URL}/edit/sess-edit">Open the postponement</a>`);
+    expect(ical)
+      .toContain('X-ALT-DESC;FMTTYPE=text/html:');
+  });
+
+  test('falls back to the raw URL as anchor when no link labels are supplied', () => {
+    const session = aSession({
+      id: 'sess-edit',
+      proposedDates: [aProposedDate({id: 'proposed-date-1'})],
+    });
+
+    const ical = buildIcal(session, {baseUrl: BASE_URL, locale: 'de-CH', now: new Date('2026-09-01T10:00:00Z')});
+
+    expect(altDescOf(ical, 'proposed-date-1'))
+      .toBe(`<a href="${BASE_URL}/edit/sess-edit">${BASE_URL}/edit/sess-edit</a>`);
   });
 
   test('keeps UID identical across two builds of the same session regardless of DTSTAMP', () => {
@@ -515,6 +558,32 @@ describe('buildIcal vote links (join export)', () => {
         'Notfalls schon https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=IfNecessary',
         'Nein danke https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=No',
       ]);
+  });
+
+  test('renders the X-ALT-DESC with pretty poll and vote anchors and HTML-escaped hrefs', () => {
+    const session = aSession({
+      id: 'sess-1',
+      status: 'Voting',
+      proposedDates: [aProposedDate({id: 'date-a'})],
+    });
+
+    const ical = buildIcal(session, {
+      baseUrl: BASE_URL, locale: 'de-CH', now: NOW,
+      token: 'tok-123', team: 'home',
+      labels: {action: 'Vote', yes: 'Yes', no: 'No', ifNecessary: 'if necessary'},
+      linkLabels: {open: 'Open the poll', yes: 'Vote yes', ifNecessary: 'Vote if necessary', no: 'Vote no'},
+    });
+
+    const voteHref = (value: string): string => `${BASE_URL}/join/sess-1/home/vote?token=tok-123&amp;vote-date-a=${value}`;
+    expect(altDescOf(ical, 'date-a'))
+      .toBe(
+        `<a href="${BASE_URL}/join/sess-1/home/vote?token=tok-123">Open the poll</a>`
+        + '<br><b>Vote:</b><br><ul>'
+        + `<li><a href="${voteHref('Yes')}">Vote yes</a></li>`
+        + `<li><a href="${voteHref('IfNecessary')}">Vote if necessary</a></li>`
+        + `<li><a href="${voteHref('No')}">Vote no</a></li>`
+        + '</ul>',
+      );
   });
 
   test('URL-escapes token and playerId and keeps all lines within 75 octets', () => {

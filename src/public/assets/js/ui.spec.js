@@ -1,18 +1,18 @@
-import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
+import {afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 import {
-  shouldSwapErrorBody,
   decideLanguageRedirect,
-  initHtmx,
-  initTheme,
-  initProposedDateTimePicker,
-  initDatePicker,
   initClipboard,
+  initDatePicker,
   initDeleteDialogs,
   initFocusManagement,
-  initGeneratorTimePickers,
   initGeneratorDatePickers,
+  initGeneratorTimePickers,
+  initHtmx,
   initOccupancyTooltips,
-  initSetAllVotes,
+  initProposedDateTimePicker,
+  initTheme,
+  initVoteForm,
+  shouldSwapErrorBody,
 } from './ui.js';
 
 describe('shouldSwapErrorBody', () => {
@@ -392,7 +392,7 @@ describe('initFocusManagement', () => {
   });
 });
 
-describe('initSetAllVotes', () => {
+describe('initVoteForm', () => {
   let form;
   let submitSpy;
   let yesButton;
@@ -440,30 +440,35 @@ describe('initSetAllVotes', () => {
       .sort();
   }
 
+  // Delegated on `document`, so wire it once; wiring per test would stack
+  // listeners and multiply the submit spy.
+  beforeAll(() => initVoteForm());
+
   beforeEach(() => {
     form = buildVoteForm();
     document.body.appendChild(form);
     submitSpy = vi.fn();
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
+    vi.spyOn(form, 'submit').mockImplementation(() => {
       submitSpy();
     });
-    initSetAllVotes();
     cleanup = () => form.remove();
   });
 
   afterEach(() => cleanup());
 
-  it('checks the matching radio in every date group', () => {
+  it('checks the matching radio in every date group and submits the form', () => {
     yesButton.click();
     expect(selectedValues()).toEqual(['Yes', 'Yes']);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
     noButton.click();
     expect(selectedValues()).toEqual(['No', 'No']);
+    expect(submitSpy).toHaveBeenCalledTimes(2);
     ifNecessaryButton.click();
     expect(selectedValues()).toEqual(['IfNecessary', 'IfNecessary']);
+    expect(submitSpy).toHaveBeenCalledTimes(3);
   });
 
-  it('overwrites previously selected votes', () => {
+  it('overwrites previously selected votes before submitting', () => {
     valueByName('date-1', 'Yes').checked = true;
     valueByName('date-2', 'IfNecessary').checked = true;
 
@@ -472,12 +477,28 @@ describe('initSetAllVotes', () => {
     expect(selectedValues()).toEqual(['No', 'No']);
     expect(valueByName('date-1', 'Yes').checked).toBe(false);
     expect(valueByName('date-2', 'IfNecessary').checked).toBe(false);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('never submits the form (fill-only)', () => {
-    yesButton.click();
-    expect(submitSpy).not.toHaveBeenCalled();
+  it('submits the form when a vote radio changes', () => {
+    valueByName('date-1', 'No').checked = true;
+    valueByName('date-1', 'No').dispatchEvent(new Event('change', {bubbles: true}));
+
+    expect(submitSpy).toHaveBeenCalledTimes(1);
     expect(form.isConnected).toBe(true);
+  });
+
+  it('ignores changes to radios outside the vote rows', () => {
+    const stray = document.createElement('input');
+    stray.type = 'radio';
+    stray.name = 'vote-stray';
+    stray.value = 'Yes';
+    form.appendChild(stray);
+
+    stray.checked = true;
+    stray.dispatchEvent(new Event('change', {bubbles: true}));
+
+    expect(submitSpy).not.toHaveBeenCalled();
   });
 
   it('works for a set-all button injected after initialization', () => {
@@ -489,6 +510,7 @@ describe('initSetAllVotes', () => {
     late.click();
 
     expect(selectedValues()).toEqual(['IfNecessary', 'IfNecessary']);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -930,7 +952,9 @@ describe('initGeneratorDatePickers with a recording AirDatepicker fake', () => {
     expect(fakeInstances).toHaveLength(4);
     expect(fakeInstances.slice(0, 2).every((instance) => instance.destroyed)).toBe(true);
     expect(fakeInstances.slice(2).every((instance) => !instance.destroyed)).toBe(true);
-    fakeInstances[0].show = () => { fakeInstances[0].shows += 1; };
+    fakeInstances[0].show = () => {
+      fakeInstances[0].shows += 1;
+    };
     document.getElementById('fromDate-picker').click();
     expect(fakeInstances[2].shows).toBe(1);
     expect(fakeInstances[0].shows).toBe(0);

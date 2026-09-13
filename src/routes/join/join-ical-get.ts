@@ -31,6 +31,12 @@ export const handleJoinIcalGet = async (app: App): Promise<Response> => {
       no: app.t('vote_no'),
       ifNecessary: app.t('vote_if_necessary'),
     },
+    linkLabels: {
+      open: app.t('ical_open_poll'),
+      yes: app.t('ical_vote_yes'),
+      ifNecessary: app.t('ical_vote_if_necessary'),
+      no: app.t('ical_vote_no'),
+    },
   });
   return new Response(body, {status: 200, headers: icalResponseHeaders(icalFilename(session.name))});
 };

@@ -13,6 +13,10 @@ export const handleEditIcalGet = async (app: App): Promise<Response> => {
     app.notFound(app.t('session_not_found'));
   }
 
-  const body = buildIcal(session, {baseUrl: app.view.baseUrl, locale: app.locale});
+  const body = buildIcal(session, {
+    baseUrl: app.view.baseUrl,
+    locale: app.locale,
+    linkLabels: {open: app.t('ical_open_edit')},
+  });
   return new Response(body, {status: 200, headers: icalResponseHeaders(icalFilename(session.name))});
 };

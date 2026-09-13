@@ -396,27 +396,38 @@ export function initDeleteDialogs() {
 }
 
 /**
- * Wires the vote form's "Set all: Yes / No / if necessary" buttons. Each
- * button checks every `vote-<dateId>` radio of its target value, overwriting
- * whatever the participant had picked, and never submits — the regular
- * "Submit Votes" POST uploads the filled form. Delegated on `document`, so a
- * set-all row injected after initialization still works.
+ * Wires the vote form for direct submission. Each "Set all: Yes / No / if
+ * necessary" button checks every `vote-<dateId>` radio of its target value and
+ * then posts the form; a change to any single vote radio posts the form too.
+ * There is no separate submit button — the server casts only the dates present
+ * in the request, so votes are saved incrementally per change. Delegated on
+ * `document`, so a set-all row injected after initialization still works.
  */
-export function initSetAllVotes() {
+export function initVoteForm() {
   const voteTypes = ['Yes', 'No', 'IfNecessary'];
+  const submit = (form) => {
+    if (form) form.submit();
+  };
   document.addEventListener('click', (event) => {
     const btn = event.target.closest('button[data-set-all]');
     if (!btn) return;
     const value = btn.dataset.setAll;
     if (!voteTypes.includes(value)) return;
+    const form = btn.closest('form');
     // ponytail: checking the target radio unchecks its siblings via native
     // radio semantics; the `.vote-radio-group` class scopes the fill to the
     // date rows the server renders, so a stray radio with a vote-like name
     // elsewhere in the form is never stamped.
-    btn.closest('form')?.querySelectorAll('.vote-radio-group input[type="radio"]')
+    form?.querySelectorAll('.vote-radio-group input[type="radio"]')
       .forEach((radio) => {
         if (radio.value === value) radio.checked = true;
       });
+    submit(form);
+  });
+  document.addEventListener('change', (event) => {
+    const radio = event.target.closest('.vote-radio-group input[type="radio"]');
+    if (!radio) return;
+    submit(radio.closest('form'));
   });
 }
 

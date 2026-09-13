@@ -103,7 +103,6 @@ test.describe('Postponement Editing', () => {
     await joinPage.join('Alice');
     await joinPage.castVote(0, 'Yes');
     await joinPage.castVote(1, 'IfNecessary');
-    await joinPage.submitVotes();
 
     // Return to edit page and check home team tally
     await page.goto(editUrl);
@@ -201,14 +200,12 @@ test.describe('Postponement Editing', () => {
     await joinPage.join('HomePlayer');
     await joinPage.castVote(0, 'Yes');
     await joinPage.castVote(1, 'No');
-    await joinPage.submitVotes();
 
     // Join as away player and vote No on first date
     await joinPage.goto(session.awayHref);
     await joinPage.join('AwayPlayer');
     await joinPage.castVote(0, 'No');
     await joinPage.castVote(1, 'Yes');
-    await joinPage.submitVotes();
 
     // Return to edit page and check split tallies
     await page.goto(editUrl);
@@ -269,7 +266,6 @@ test.describe('Postponement Editing', () => {
     await joinPage.join('John Doe');
     await joinPage.castVote(0, 'Yes');
     await joinPage.castVote(1, 'No');
-    await joinPage.submitVotes();
 
     await page.goto(editUrl);
     await editPage.openOwnTeamVotes();
@@ -323,7 +319,6 @@ test.describe('Postponement Editing', () => {
       .goto(session.homeHref);
     await joinPage.join('Alice');
     await joinPage.castVote(0, 'Yes');
-    await joinPage.submitVotes();
 
     await page.goto(editUrl);
 
@@ -388,7 +383,6 @@ test.describe('Postponement Editing', () => {
     await joinPage.join('Alice');
     await joinPage.castVote(0, 'Yes');
     await joinPage.castVote(1, 'No');
-    await joinPage.submitVotes();
 
     await page.goto(editUrl);
     await editPage.openHomeTally();
@@ -461,14 +455,13 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.proposedDateRows)
       .toHaveCount(2);
 
-    // A home-team voter casts a Yes on the first date and a No on the second
-    // (the vote form requires a vote on every proposed date).
+    // A home-team voter casts a Yes on the first date and a No on the second;
+    // each radio change posts the form (votes save incrementally).
     const joinPage = new JoinPage(page);
     await joinPage.goto(session.homeHref);
     await joinPage.join('Alice');
     await joinPage.castVote(0, 'Yes');
     await joinPage.castVote(1, 'No');
-    await joinPage.submitVotes();
 
     await editPage.goto(session.editUrl);
     await editPage.openHomeTally();
@@ -568,7 +561,6 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.spinner)
       .toBeHidden();
   });
-
 
   test('edit page shows the referenced Match read-only with no change action', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
