@@ -25,14 +25,19 @@ export function venueTooltip(venueNumber: number | undefined, venues: readonly V
 }
 
 /**
- * The "(1)" pill shown next to a proposed date; `title` carries the full venue
- * name when known. `label` overrides the visible text (the vote page shows the
- * number, short name, and occupancy count inside the pill).
+ * The "(1)" pill shown next to a proposed date; the full venue name is exposed
+ * as visually-hidden text when it differs from the visible label. `label`
+ * overrides the visible text (the vote page shows the number, short name, and
+ * occupancy count inside the pill).
  */
 export function VenueBadge(props: { venueNumber?: number; venues: readonly Venue[]; label?: string }): JSX.Element {
+  const visible = props.label ?? venueNumberToken(props.venueNumber);
+  const full = venueTooltip(props.venueNumber, props.venues);
+  const hasName = findVenue(props.venueNumber, props.venues) !== undefined;
   return (
-    <span class="chip venue-badge" title={venueTooltip(props.venueNumber, props.venues)}>
-      {props.label ?? venueNumberToken(props.venueNumber)}
+    <span class="chip venue-badge">
+      {visible}
+      {hasName && full !== visible ? <span class="visually-hidden">{full}</span> : null}
     </span>
   );
 }

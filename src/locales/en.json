@@ -149,6 +149,7 @@
   "vote_no": "No",
   "vote_no_dates": "No dates have been proposed yet. The organizer is still deciding which dates to propose.",
   "vote_set_all": "Set all:",
+  "vote_set_all_aria_label": "Set all: <%= it.vote %>",
   "vote_summary": "Vote Summary",
   "vote_summary_away": "Away Team Votes",
   "vote_summary_home": "Home Team Votes",

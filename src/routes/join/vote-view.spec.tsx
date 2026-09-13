@@ -134,6 +134,8 @@ describe('renderVoteStep', () => {
     expect(body)
       .toContain('Vote on Proposed Dates');
     expect(body)
+      .toContain('class="toast success top" role="status"');
+    expect(body)
       .toContain('Your votes have been saved!');
     expect(body)
       .toContain('name="vote-proposed-date-1"');
@@ -172,6 +174,13 @@ describe('renderVoteStep', () => {
       .toContain('data-set-all="IfNecessary"');
     expect(body)
       .toContain('data-set-all="No"');
+    // The accessible name says what the button does; the visible text stays short.
+    expect(body)
+      .toContain('aria-label="Set all: Yes"');
+    expect(body)
+      .toContain('aria-label="Set all: if necessary"');
+    expect(body)
+      .toContain('aria-label="Set all: No"');
     expect(body.indexOf('data-set-all="Yes"'))
       .toBeLessThan(body.indexOf('name="vote-date-1"'));
   });
@@ -337,9 +346,9 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>(2) – Turnhalle grün</span></legend>');
+      .toContain('>(2) – Turnhalle grün<span class="visually-hidden">2 – Turnhalle grün</span>');
     expect(body)
-      .toContain('>(1) – Turnhalle orange</span></legend>');
+      .toContain('>(1) – Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange</span>');
   });
 
   test('renders just the venue number in the pill when no venue name is known', async () => {
@@ -396,14 +405,13 @@ describe('renderVoteStep', () => {
     });
     const body = await response.text();
 
-    // Visible pill text is the first comma-segment; the pill's tooltip keeps the full name.
+    // Visible pill text is the first comma-segment; the full name is exposed to
+    // assistive tech as visually-hidden text instead of an unreachable title.
     expect(body)
-      .toContain('>(1) – Turnhalle orange</span></legend>');
-    expect(body)
-      .toContain('title="1 – Turnhalle orange, UG, Schule Dennigkofen"');
+      .toContain('>(1) – Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange, UG, Schule Dennigkofen</span>');
     expect(body)
       .not
-      .toContain('Schule Dennigkofen</span>');
+      .toContain('title="1 – Turnhalle orange');
   });
 
   test('renders the export-calendar link when votable dates exist', async () => {
@@ -624,7 +632,7 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>(1) – Turnhalle orange, 2 other games</span></legend>');
+      .toContain('>(1) – Turnhalle orange, 2 other games<span class="visually-hidden">1 – Turnhalle orange</span>');
     expect(body)
       .not
       .toContain('2 other games at this venue');
@@ -698,7 +706,7 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>(1) – Turnhalle orange</span></legend>');
+      .toContain('>(1) – Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange</span>');
     expect(body)
       .not
       .toContain('other games');

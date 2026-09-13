@@ -9,6 +9,14 @@ const VOTE_LABELS: Record<VoteType, string> = {
   IfNecessary: 'if necessary',
 };
 
+// The set-all buttons carry an aria-label that names the action ("Set all: Yes"),
+// while the visible text stays the short vote label.
+const SET_ALL_ARIA_LABELS: Record<VoteType, string> = {
+  Yes: 'Set all: Yes',
+  No: 'Set all: No',
+  IfNecessary: 'Set all: if necessary',
+};
+
 export class JoinPage {
   constructor(private readonly page: Page) {
   }
@@ -103,7 +111,7 @@ export class JoinPage {
   async setAllVotes(vote: VoteType): Promise<void> {
     await this.page.waitForLoadState('load');
     await this.setAllControls
-      .getByRole('button', {name: VOTE_LABELS[vote]})
+      .getByRole('button', {name: SET_ALL_ARIA_LABELS[vote], exact: true})
       .click();
     await expect(this.page.getByText('Your votes have been saved!'))
       .toBeVisible();

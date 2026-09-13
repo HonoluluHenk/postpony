@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] Set-all buttons are found by accessible name "Set all: Yes" / "Set all: if necessary" / "Set all: No"; visible labels are unchanged
-- [ ] The set-all accessible name comes from a new translation key in both locales
-- [ ] The Venue chip has no `title` attribute and carries the full Venue name as visually-hidden text when it differs from the visible label
-- [ ] The saved message has role `status`
-- [ ] Vote label casing is unchanged (still "if necessary")
+- [x] Set-all buttons are found by accessible name "Set all: Yes" / "Set all: if necessary" / "Set all: No"; visible labels are unchanged
+- [x] The set-all accessible name comes from a new translation key in both locales
+- [x] The Venue chip has no `title` attribute and carries the full Venue name as visually-hidden text when it differs from the visible label
+- [x] The saved message has role `status`
+- [x] Vote label casing is unchanged (still "if necessary")
 - [ ] `checkA11y` passes on the vote page; edit-page chip baselines updated if needed
 - [ ] `npm run verify` passes
 

@@ -20,6 +20,7 @@ const NEW_STRING_KEYS = [
   'proposed_dates_generate_none',
   'proposed_dates_generate_no_anchor',
   'proposed_dates_generate_time_label',
+  'vote_set_all_aria_label',
 ] as const satisfies readonly TranslationKeys[];
 
 describe('translations registry', () => {
@@ -38,6 +39,17 @@ describe('translations registry', () => {
         .toBe('Fill in the time you want on each day; days without a time are skipped.');
       expect(translations['de-CH'].proposed_dates_generate_help)
         .toBe('Tragen Sie die gewünschte Uhrzeit pro Tag ein; Tage ohne Uhrzeit werden übersprungen.');
+    });
+  });
+
+  describe('vote_set_all_aria_label', () => {
+    it('interpolates the visible vote label into the set-all accessible name', () => {
+      expect(getTranslation('en-US', 'vote_set_all_aria_label', {vote: 'Yes'}))
+        .toBe('Set all: Yes');
+      expect(getTranslation('en-US', 'vote_set_all_aria_label', {vote: 'if necessary'}))
+        .toBe('Set all: if necessary');
+      expect(getTranslation('de-CH', 'vote_set_all_aria_label', {vote: 'notfalls'}))
+        .toBe('Alle: notfalls');
     });
   });
 
