@@ -31,6 +31,7 @@
   "edit_postponement_heading": "Editing Postponement",
   "edit_postponement_title": "Editing Postponement: <%= it.name %>",
   "error_title": "Error",
+  "export_calendar": "Export as calendar (.ics)",
   "guest_team": "Guest Team",
   "guest_team_required": "Guest team is required",
   "home_team": "Home Team",

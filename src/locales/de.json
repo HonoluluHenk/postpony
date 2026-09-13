@@ -31,6 +31,7 @@
   "edit_postponement_heading": "Bearbeite Verschiebung",
   "edit_postponement_title": "Bearbeite Verschiebung: <%= it.name %>",
   "error_title": "Fehler",
+  "export_calendar": "Als Kalender exportieren (.ics)",
   "guest_team": "Gast",
   "guest_team_required": "Gastmannschaft ist erforderlich",
   "home_team": "Heim",

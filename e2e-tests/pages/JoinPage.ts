@@ -50,6 +50,10 @@ export class JoinPage {
     return this.page.getByText('No dates have been proposed yet');
   }
 
+  get exportCalendarLink(): Locator {
+    return this.page.getByRole('link', {name: 'Export as calendar (.ics)'});
+  }
+
   voteRadio(vote: VoteType): Locator {
     return this.page.getByRole('radio', {name: VOTE_LABELS[vote]});
   }

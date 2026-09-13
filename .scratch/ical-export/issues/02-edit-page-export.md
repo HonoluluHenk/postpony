@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] `GET /edit/:id/calendar.ics` returns `200` with `text/calendar; charset=utf-8` and `Content-Disposition: attachment; filename="<match>.ics"` (filename sanitized)
-- [ ] Response body is the ticket-01 calendar (votable dates only, ascending)
-- [ ] Unknown session id returns `404`
-- [ ] "Export as calendar (.ics)" link renders in the Proposed Dates section on the initial edit-page render and survives HTMX swaps
-- [ ] Link is absent when the Postponement has no votable Proposed Dates
-- [ ] Link label translation key added and kept in sync across en.json/de.json
-- [ ] Handler spec covers headers, 404, and no-password access; e2e happy path downloads the file from the edit page and asserts a VEVENT is present
+- [x] `GET /edit/:id/calendar.ics` returns `200` with `text/calendar; charset=utf-8` and `Content-Disposition: attachment; filename="<match>.ics"` (filename sanitized)
+- [x] Response body is the ticket-01 calendar (votable dates only, ascending)
+- [x] Unknown session id returns `404`
+- [x] "Export as calendar (.ics)" link renders in the Proposed Dates section on the initial edit-page render and survives HTMX swaps
+- [x] Link is absent when the Postponement has no votable Proposed Dates
+- [x] Link label translation key added and kept in sync across en.json/de.json
+- [x] Handler spec covers headers, 404, and no-password access; e2e happy path downloads the file from the edit page and asserts a VEVENT is present

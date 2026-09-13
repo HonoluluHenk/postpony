@@ -1,6 +1,7 @@
 import { factory, handleAppRequest } from '../../lib/hono-factory';
 import { handleConfirmDatePost } from './id/confirm-date-post';
 import { handleEditGet } from './id/edit-id-get';
+import { handleEditIcalGet } from './id/ical-get';
 import { handleEditPlayersPost } from './id/players-post';
 import { handleProposedDateDeletePost } from './id/proposed-date-delete-post';
 import { handleProposedDateVisibilityPost } from './id/proposed-date-visibility-post';
@@ -17,6 +18,7 @@ editRouter.post('/:id/proposed-date-confirm', handleAppRequest(handleConfirmDate
 editRouter.post('/:id/proposed-date-delete', handleAppRequest(handleProposedDateDeletePost));
 editRouter.post('/:id/refresh-clashes', handleAppRequest(handleRefreshClashesPost));
 editRouter.post('/:id/reopen', handleAppRequest(handleReopenPost));
+editRouter.get('/:id/calendar.ics', handleAppRequest(handleEditIcalGet));
 editRouter.get('/:id', handleAppRequest(handleEditGet));
 
 export default editRouter;
