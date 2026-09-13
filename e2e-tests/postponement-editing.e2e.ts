@@ -302,8 +302,8 @@ test.describe('Postponement Editing', () => {
     await editPage.sortBy('Availability');
     await expect(editPage.sortRadio('Availability'))
       .toBeChecked();
-    expect(page.url())
-      .toContain('sort=availability');
+    // htmx pushes the sort into the URL asynchronously after the change.
+    await page.waitForURL(/sort=availability/);
     await expect(editPage.groupHeads)
       .toHaveText(['Available: 1', 'Available: 0']);
     await expect(editPage.proposedDateDisplays())
