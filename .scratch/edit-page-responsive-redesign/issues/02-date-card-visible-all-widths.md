@@ -13,3 +13,8 @@
 - [x] e2e at phone: same assertions
 - [x] Desktop layout unchanged apart from removed truncation; screenshot baselines regenerated where changed
 - [x] `npm run verify` passes
+
+## Comments
+
+- Implemented in `45333cd` (ticket done: 02-date-card-visible-all-widths); reviewed in `b5bfd76` (review: 02-date-card-visible-all-widths) — no issues found, no review-fixed commit.
+- Summary: card uses `min-height: 7rem` (not fixed) and the details row no longer hides overflow; date text wraps naturally (nowrap/ellipsis/`max-width: 12.5rem` removed); card-wrapping media query widened to `@media (max-width: 992px)` while the generator grid stacking stays phone-only; tablet + phone e2e assert the full date text and every clean/clash chip. Desktop unchanged apart from the removed truncation — the venue badge shifts ~71px to the card's right edge (within the 2% screenshot tolerance), so an `--update-snapshots` run left the baselines byte-identical and no regeneration was needed.
