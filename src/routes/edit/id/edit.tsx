@@ -90,7 +90,18 @@ export function EditPage(props: EditPageProps): JSX.Element {
           <i aria-hidden="true">info</i>
           <div class="max">
             <p><strong>{props.t('postponement_created_success')}</strong></p>
-            <p>{raw(props.t('organizer_password_label'))} <span class="password-display" translate="no">{props.organizerPassword}</span></p>
+            <p>
+              {raw(props.t('organizer_password_label'))} <span class="password-display" translate="no">{props.organizerPassword}</span>
+              <button
+                class="clipboard-btn"
+                data-copy={props.organizerPassword}
+                data-copied-label={props.t('copied_to_clipboard')}
+                aria-label={props.t('copy_organizer_password')}
+                type="button"
+              >
+                <i aria-hidden="true">content_copy</i>
+              </button>
+            </p>
             <p>{props.t('save_password_warning')}</p>
           </div>
         </div>

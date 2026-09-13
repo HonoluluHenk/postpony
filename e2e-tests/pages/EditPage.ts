@@ -92,6 +92,10 @@ export class EditPage {
       .filter({hasText: 'Your Organizer Password is'});
   }
 
+  get organizerPasswordCopyButton(): Locator {
+    return this.organizerPasswordToast.locator('button.clipboard-btn');
+  }
+
   get organizerPassword(): Promise<string | null> {
     return this.page.getByText('Your Organizer Password is')
       .locator('span')

@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] Delete Proposed Date button uses the outlined variant with its icon and keeps its aria label
-- [ ] Votable switch and Confirm Date button unchanged
-- [ ] Organizer password in the success message has the existing clipboard button with the password as copy payload and a translated aria label (en + de)
-- [ ] Unit render specs: delete button variant class; password copy button present with correct payload
-- [ ] e2e: clicking the password copy button shows the copied feedback; delete still works
-- [ ] `checkA11y` passes; baselines regenerated
-- [ ] `npm run verify` passes
+- [x] Delete Proposed Date button uses the outlined variant with its icon and keeps its aria label
+- [x] Votable switch and Confirm Date button unchanged
+- [x] Organizer password in the success message has the existing clipboard button with the password as copy payload and a translated aria label (en + de)
+- [x] Unit render specs: delete button variant class; password copy button present with correct payload
+- [x] e2e: clicking the password copy button shows the copied feedback; delete still works
+- [x] `checkA11y` passes; baselines regenerated
+- [x] `npm run verify` passes

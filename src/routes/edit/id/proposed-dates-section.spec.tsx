@@ -182,6 +182,17 @@ describe('ProposedDatesSection component', () => {
       .toContain('proposed-date-confirm?proposedDateId=pd-2');
   });
 
+  it('renders delete as an outlined button and Confirm Date as the only filled action per row', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    // Delete is the outlined icon button, keeping its accessible name.
+    expect(html)
+      .toMatch(/<button type="button" class="button outline" data-open-dialog="delete-proposed-date-pd-1"/);
+    // Confirm Date is the one filled action on the row.
+    expect(html)
+      .toMatch(/<button type="button" class="button" hx-post="\/edit\/session-1\/proposed-date-confirm\?proposedDateId=pd-1"/);
+  });
+
   it('collapses the proposed-date list when there are no dates', () => {
     const html = renderToString(ProposedDatesSection({...baseProps(), proposedDates: []}));
 

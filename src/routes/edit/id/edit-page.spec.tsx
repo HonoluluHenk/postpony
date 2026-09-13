@@ -117,6 +117,19 @@ describe('EditPage organizer-password toast', () => {
     expect(html)
       .toContain('<span class="password-display" translate="no">pw-123</span>');
   });
+
+  it('renders a copy button beside the password with the password as the copy payload', () => {
+    const html = renderToString(EditPage({...baseProps(), organizerPassword: 'pw-123'}));
+
+    expect(html)
+      .toMatch(/<span class="password-display" translate="no">pw-123<\/span>\s*<button/);
+    expect(html)
+      .toContain('data-copy="pw-123"');
+    expect(html)
+      .toContain('aria-label="Copy organizer password"');
+    expect(html)
+      .toContain('data-copied-label="Copied to clipboard"');
+  });
 });
 
 describe('EditPage clipboard announcement', () => {

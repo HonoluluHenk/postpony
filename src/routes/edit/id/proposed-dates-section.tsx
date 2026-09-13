@@ -336,7 +336,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                          {proposedDate.votable ? (
                            <button
                              type="button"
-                             class="button outline"
+                             class="button"
                              hx-post={`/edit/${props.sessionId}/proposed-date-confirm?proposedDateId=${proposedDate.id}`}
                              hx-target="#proposed-dates-management"
                            >

@@ -52,6 +52,20 @@ test.describe('Invitation Link', () => {
     await checkA11y();
   });
 
+  test('should announce "Copied to clipboard" when the organizer password copy button is pressed', async ({page, checkA11y}) => {
+    const {editPage} = await EditPage.createSession(page);
+
+    await expect(editPage.organizerPasswordToast)
+      .toBeVisible();
+
+    await editPage.organizerPasswordCopyButton.click();
+
+    await expect(editPage.clipboardStatus)
+      .toHaveText('Copied to clipboard');
+
+    await checkA11y();
+  });
+
   test('should use APP_BASE_URL environment variable if provided', async () => {
     // This test is a bit tricky to run in the same process if we don't restart the server.
     // But we can at least verify that it works when the server is started with it.
