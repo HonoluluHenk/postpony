@@ -19,7 +19,10 @@ import { isoToLocaleTokens } from './pages/locale-tokens';
  * still saves and renders").
  */
 test.describe('Clash checks', () => {
-  test('scrape-created match shows clash lines and the clean state on the edit page only', async ({page, checkA11y}) => {
+  test('scrape-created match shows clash lines and the clean state on the edit page only', async ({
+                                                                                                    page,
+                                                                                                    checkA11y,
+                                                                                                  }) => {
     // 1. Scrape the Thun vs Ostermundigen match (fixture mode) — organizer
     // claims the guest side (Ostermundigen), Thun keeps the home side.
     const scrapePage = await new ScrapePage(page)
@@ -54,7 +57,7 @@ test.describe('Clash checks', () => {
     await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
-    await expect(editPage.proposedDateList.getByText('Schedule checked, no clashes'))
+    await expect(editPage.proposedDateList.getByText('No other games'))
       .toBeVisible();
     // Rows sort chronologically: the clean date (10 Oct) leads and stays
     // votable, the clashing date (4 Dec) follows and stays deselected.
@@ -83,7 +86,7 @@ test.describe('Clash checks', () => {
     await joinPage.join('Clash Watcher');
     await expect(joinPage.voteForm.getByText('Home: 7:30 PM vs Burgdorf'))
       .toHaveCount(0);
-    await expect(joinPage.voteForm.getByText('Schedule checked, no clashes'))
+    await expect(joinPage.voteForm.getByText('No other games'))
       .toHaveCount(0);
 
     await checkA11y();
@@ -125,8 +128,10 @@ test.describe('Clash checks', () => {
     // (amber): at least one other match occupies the venue (Venue Occupancy > 0),
     // deliberately distinct from the error clash tint.
     const occupancyChip = editPage.proposedDateList.locator('.chip--warn');
-    await expect(occupancyChip).toHaveCount(1);
-    await expect(occupancyChip).toHaveCSS('background-color', 'rgb(255, 246, 230)');
+    await expect(occupancyChip)
+      .toHaveCount(1);
+    await expect(occupancyChip)
+      .toHaveCSS('background-color', 'rgb(255, 246, 230)');
 
     // 3. The participant poll folds the same count into the legend, without a
     // tooltip button.

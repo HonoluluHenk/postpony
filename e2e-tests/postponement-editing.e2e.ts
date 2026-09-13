@@ -326,9 +326,9 @@ test.describe('Postponement Editing', () => {
     const editPage = new EditPage(page);
 
     const cleanRow = editPage.proposedDateRows.nth(0);
-    await expect(cleanRow.locator('.date-chips .chip--clean', {hasText: 'Schedule checked, no clashes'}))
+    await expect(cleanRow.locator('.date-chips .chip--clean', {hasText: 'No other games'}))
       .toBeVisible();
-    await expect(cleanRow.locator('.date-chips .chip--clean', {hasText: 'Venue checked, no other games'}))
+    await expect(cleanRow.locator('.date-chips .chip--clean', {hasText: 'Venue empty'}))
       .toBeVisible();
 
     const clashRow = editPage.proposedDateRows.nth(1);

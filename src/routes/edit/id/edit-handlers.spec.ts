@@ -1506,7 +1506,7 @@ describe('edit handlers', () => {
           expect(stored?.proposedDates[0]?.venueOccupancy)
             .toEqual({count: 0, matches: []});
           expect(html)
-            .toContain('Venue checked, no other games');
+            .toContain('Venue empty');
           expect(html)
             .not
             .toContain('other games at this venue');
