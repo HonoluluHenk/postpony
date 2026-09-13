@@ -398,36 +398,86 @@ export function initDeleteDialogs() {
 /**
  * Wires the vote form for direct submission. Each "Set all: Yes / No / if
  * necessary" button checks every `vote-<dateId>` radio of its target value and
- * then posts the form; a change to any single vote radio posts the form too.
+ * then posts the form immediately; a change to any single vote radio posts the
+ * form too, after a short debounce so arrowing through the options saves once.
  * There is no separate submit button — the server casts only the dates present
- * in the request, so votes are saved incrementally per change. Delegated on
- * `document`, so a set-all row injected after initialization still works.
+ * in the request, so votes are saved incrementally per change.
+ *
+ * While a save is in flight the form is `aria-busy`, its controls are disabled
+ * and the global spinner shows; further clicks/changes are ignored. The busy
+ * state resets on `pageshow` because a bfcache restore brings the frozen DOM
+ * back. Delegated on `document`, so a set-all row injected after initialization
+ * still works.
+ * @param {import('./spinner-module.js').Spinner} [spinner] global spinner to show while saving
  */
-export function initVoteForm() {
+export function initVoteForm(spinner) {
   const voteTypes = ['Yes', 'No', 'IfNecessary'];
+  // ponytail: one in-flight save and one debounce timer for the page's single
+  // vote form; keyed by form so a re-rendered form is never born busy.
+  let pendingForms = new WeakSet();
+  let timer = null;
+
+  window.addEventListener('pageshow', () => {
+    clearTimeout(timer);
+    timer = null;
+    pendingForms = new WeakSet();
+    document.querySelectorAll('form[aria-busy="true"]')
+      .forEach((form) => {
+        form.removeAttribute('aria-busy');
+        form.querySelectorAll('button[data-set-all], .vote-radio-group input[type="radio"]')
+          .forEach((control) => {
+            control.disabled = false;
+          });
+      });
+  });
+
+  // The single submit path both handlers share; the focus-restore work
+  // (issue 06) hooks in here to remember the changed control.
   const submit = (form) => {
-    if (form) form.submit();
+    if (pendingForms.has(form)) return;
+    pendingForms.add(form);
+    form.setAttribute('aria-busy', 'true');
+    spinner?.show();
+    // ponytail: form.submit() captures the entry list synchronously, so
+    // disabling the controls afterwards keeps them out of the *next* submission
+    // without dropping any changed vote from this one.
+    form.submit();
+    form.querySelectorAll('button[data-set-all], .vote-radio-group input[type="radio"]')
+      .forEach((control) => {
+        control.disabled = true;
+      });
   };
+
   document.addEventListener('click', (event) => {
     const btn = event.target.closest('button[data-set-all]');
     if (!btn) return;
     const value = btn.dataset.setAll;
     if (!voteTypes.includes(value)) return;
     const form = btn.closest('form');
+    if (!form || pendingForms.has(form)) return;
+    // A set-all click wins over a scheduled radio save.
+    clearTimeout(timer);
+    timer = null;
     // ponytail: checking the target radio unchecks its siblings via native
     // radio semantics; the `.vote-radio-group` class scopes the fill to the
     // date rows the server renders, so a stray radio with a vote-like name
     // elsewhere in the form is never stamped.
-    form?.querySelectorAll('.vote-radio-group input[type="radio"]')
+    form.querySelectorAll('.vote-radio-group input[type="radio"]')
       .forEach((radio) => {
         if (radio.value === value) radio.checked = true;
       });
     submit(form);
   });
+
   document.addEventListener('change', (event) => {
     const radio = event.target.closest('.vote-radio-group input[type="radio"]');
     if (!radio) return;
-    submit(radio.closest('form'));
+    const form = radio.closest('form');
+    if (!form || pendingForms.has(form)) return;
+    // ponytail: a keyboard user arrowing through the options fires a change per
+    // keypress; debounce so they get one save once they settle.
+    clearTimeout(timer);
+    timer = setTimeout(() => submit(form), 400);
   });
 }
 

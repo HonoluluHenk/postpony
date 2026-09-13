@@ -14,14 +14,17 @@ import {
   initRedesignDisclosures
 } from './ui.js';
 
+// The Spinner only registers listeners in its constructor and reads
+// #global-spinner lazily, so it is safe to build before the DOM is ready. One
+// instance is shared: initVoteForm shows it for a vote submit, initHtmx for
+// HTMX requests.
+const spinner = new Spinner();
+
 // Delegated on document, so it needs no ready DOM. Wired here rather than in the
 // load callback so a vote click that races the page's load event is never lost.
-initVoteForm();
+initVoteForm(spinner);
 
-// main.js is loaded in <head> without defer, so the DOM (including #global-spinner)
-// is not ready yet; construct the spinner once the page has loaded.
 window.addEventListener('load', () => {
-  const spinner = new Spinner();
   initTheme();
   initLanguage();
   initHtmx(spinner);

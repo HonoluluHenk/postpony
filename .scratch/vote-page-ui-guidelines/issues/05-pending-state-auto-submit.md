@@ -6,14 +6,14 @@
 
 **Status:** ready-for-agent
 
-- [ ] After a set-all tap the form gets `aria-busy="true"` and the global spinner shows
-- [ ] Controls are disabled only after the POST body is complete; all changed votes reach the server
-- [ ] A second set-all tap or radio change during an in-flight save does nothing
-- [ ] Two radio changes within the debounce window submit once; a single change submits after it
-- [ ] A set-all click submits immediately and cancels a pending radio submit
-- [ ] The busy state resets on `pageshow`
-- [ ] Browser unit tests cover the client wiring
-- [ ] Existing vote e2e (cast a vote, set all) stays green
+- [x] After a set-all tap the form gets `aria-busy="true"` and the global spinner shows
+- [x] Controls are disabled only after the POST body is complete; all changed votes reach the server
+- [x] A second set-all tap or radio change during an in-flight save does nothing
+- [x] Two radio changes within the debounce window submit once; a single change submits after it
+- [x] A set-all click submits immediately and cancels a pending radio submit
+- [x] The busy state resets on `pageshow`
+- [x] Browser unit tests cover the client wiring
+- [x] Existing vote e2e (cast a vote, set all) stays green
 - [ ] `npm run verify` passes
 
 ## Comments
