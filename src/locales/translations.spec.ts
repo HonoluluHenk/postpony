@@ -53,6 +53,22 @@ describe('translations registry', () => {
     });
   });
 
+  describe('venue_legend_occupancy pluralisation', () => {
+    it('has a dedicated singular key in both locales', () => {
+      expect(translations['en-US'].venue_legend_occupancy_one)
+        .toBe('1 other game');
+      expect(translations['de-CH'].venue_legend_occupancy_one)
+        .toBe('1 weiteres Spiel');
+    });
+
+    it('interpolates the count into the plural key in both locales', () => {
+      expect(getTranslation('en-US', 'venue_legend_occupancy', {count: '2'}))
+        .toBe('2 other games');
+      expect(getTranslation('de-CH', 'venue_legend_occupancy', {count: '2'}))
+        .toBe('2 weitere Spiele');
+    });
+  });
+
   describe('weekdayLabels', () => {
     it('exposes a 7-entry English array indexed Monday-first', () => {
       expect(weekdayLabels['en-US'])

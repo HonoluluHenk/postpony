@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] The vote page renders the singular text for a Proposed Date with Venue Occupancy 1
-- [ ] Counts >= 2 render the plural text
-- [ ] New key exists in both locale files with matching parameters
-- [ ] `npm run verify` passes
+- [x] The vote page renders the singular text for a Proposed Date with Venue Occupancy 1
+- [x] Counts >= 2 render the plural text
+- [x] New key exists in both locale files with matching parameters
+- [x] `npm run verify` passes
 
 ## Comments

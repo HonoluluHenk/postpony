@@ -109,7 +109,9 @@ export function VotePage(props: VotePageProps): JSX.Element {
                       pd.venueNumber,
                       props.venues,
                       pd.venueOccupancy !== undefined && pd.venueOccupancy.count > 0
-                        ? props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})
+                        ? pd.venueOccupancy.count === 1
+                          ? props.t('venue_legend_occupancy_one')
+                          : props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})
                         : undefined,
                     )}
                   />

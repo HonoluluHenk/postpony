@@ -638,6 +638,49 @@ describe('renderVoteStep venue occupancy info', () => {
       .toContain('2 other games at this venue');
   });
 
+  test('renders the singular occupancy text for a count of one', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      venues: [
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          shortName: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
+      ],
+      players: [player],
+      proposedDates: [
+        aProposedDate({
+          votable: true,
+          venueOccupancy: {
+            count: 1,
+            matches: [{opponent: 'Port', start: '2025-09-01T20:15'}],
+          },
+        }),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('>(1) – Turnhalle orange, 1 other game<span class="visually-hidden">1 – Turnhalle orange</span>');
+    expect(body)
+      .not
+      .toContain('1 other games');
+  });
+
   test('renders no occupancy button or tooltip on the vote page', async () => {
     const player = aPlayer();
     const session = aSession({

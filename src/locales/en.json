@@ -135,6 +135,7 @@
   "status_voting": "Voting",
   "tagline": "Postponing games as quick and easy as the Pony Express.",
   "venue_legend_occupancy": "<%= it.count %> other games",
+  "venue_legend_occupancy_one": "1 other game",
   "venue_occupancy_clean": "Venue empty",
   "venue_occupancy_conflicts_title": "Conflicting games at this venue",
   "venue_occupancy_line": "<%= it.count %> other games at this venue",
