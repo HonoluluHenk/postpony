@@ -208,7 +208,7 @@ function DateChips(props: { row: ProposedDateTallyItem; clashCheckable: boolean;
 /* Date actions (wired: votable, confirm, delete)                      */
 /* ------------------------------------------------------------------ */
 
-function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: TranslateFn }): JSX.Element {
+function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: TranslateFn; confirmed: boolean }): JSX.Element {
   const {row, sessionId, t} = props;
   return (
     <div class="date-actions">
@@ -222,7 +222,7 @@ function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: 
         />
         {t('votable_short')}: {row.votable ? t('votable_on') : t('votable_off')}
       </label>
-      {row.votable ? (
+      {row.votable && !props.confirmed ? (
         <button
           type="button"
           class="action action--primary"
@@ -488,7 +488,7 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
                 <div class="date-main">
                   <DateChips row={row} clashCheckable={props.clashCheckable} venues={props.venues} t={props.t} locale={props.locale}/>
                   <VoteDots row={row} roster={roster} ownTeamResults={props.ownTeamResults} t={props.t}/>
-                  <DateActions row={row} sessionId={props.sessionId} t={props.t}/>
+                  <DateActions row={row} sessionId={props.sessionId} t={props.t} confirmed={confirmed}/>
                 </div>
               </article>
             );

@@ -172,7 +172,7 @@ export function EditPage(props: EditPageProps): JSX.Element {
         </div>
       ) : null}
 
-      <StatusAnnouncement message={props.statusMessage}/>
+      <StatusAnnouncement message={props.statusMessage} isOob={props.isPartial}/>
 
       <EditGrid {...props} />
     </div>

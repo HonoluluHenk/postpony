@@ -343,9 +343,9 @@ describe('edit handlers', () => {
         expect(response.status)
           .toBe(200);
         expect(html)
-          .toContain('>(2)</span>');
+          .toContain('title="(2) Turnhalle grün"');
         expect(html)
-          .toContain('title="2 – Turnhalle grün"');
+          .toContain('(2) Turnhalle grün</span>');
       });
     });
 
@@ -1550,13 +1550,15 @@ describe('edit handlers', () => {
       const html = await (await handleEditPlayersPost(app)).text();
 
       expect(html)
-        .toContain('<section id="team-management"');
+        .toContain('<div id="team-management"');
       expect(html)
         .toContain('Alice');
       expect(html)
         .toContain('id="error-container" hx-swap-oob="true"');
+      // No proposed dates → no vote-dots rail is rendered.
       expect(html)
-        .toContain('<section id="own-team-votes" hx-swap-oob="true" hidden="">');
+        .not
+        .toContain('class="vote-dots"');
       expect(html)
         .not
         .toContain('error padding white-text');
@@ -1606,7 +1608,7 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('toast success');
       expect(html)
-        .toContain('<section id="own-team-votes" class="padding small-round" hx-swap-oob="true"');
+        .toContain('class="vote-dots"');
       // The success outcome is announced once via the shared OOB status element.
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Proposed date added!</p>');
@@ -1827,9 +1829,9 @@ describe('edit handlers', () => {
         .not
         .toContain('proposed-date-confirm');
       expect(html)
-        .toContain('id="status-chip" hx-swap-oob="true"');
+        .toContain('id="status-chip"');
       expect(html)
-        .toContain('<section id="own-team-votes" class="padding small-round" hx-swap-oob="true"');
+        .toContain('class="vote-dots"');
       // The confirmed outcome is announced via the shared OOB status element.
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Date confirmed</p>');
@@ -1907,7 +1909,7 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('proposedDateId=pd-2');
       expect(html)
-        .toContain('id="status-chip" hx-swap-oob="true"');
+        .toContain('id="status-chip"');
       // The deleted outcome is announced via the shared OOB status element.
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Proposed date deleted</p>');
@@ -2055,7 +2057,7 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('Reopened 1 time(s)');
       expect(html)
-        .toContain('id="status-chip" hx-swap-oob="true"');
+        .toContain('id="status-chip"');
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Postponement reopened</p>');
       expect(html)
