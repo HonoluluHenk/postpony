@@ -419,7 +419,7 @@ function AddDateForm(props: { sessionId: string; t: TranslateFn; locale: AppLoca
         </div>
       </div>
       <div class="right-align">
-        <button type="submit">{t('add_proposed_date')}</button>
+        <button type="submit" id="add-proposed-date-submit">{t('add_proposed_date')}</button>
       </div>
     </form>
   );
