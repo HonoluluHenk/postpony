@@ -72,10 +72,10 @@ test.describe('Postponement Editing', () => {
       .goto(session.homeHref);
     await joinPage.join('Alice');
 
-    await expect(joinPage.voteForm.getByRole('group')
+    await expect(joinPage.voteForm.locator('.vote-radio-group')
       .nth(0))
       .toContainText('Mar 5');
-    await expect(joinPage.voteForm.getByRole('group')
+    await expect(joinPage.voteForm.locator('.vote-radio-group')
       .nth(1))
       .toContainText('Mar 12');
 
@@ -121,7 +121,6 @@ test.describe('Postponement Editing', () => {
     await joinPage.join('Alice');
     await joinPage.castVote(0, 'Yes');
     await joinPage.castVote(1, 'IfNecessary');
-    await joinPage.submitVotes();
 
     // Return to edit page; the vote dots are inline (no disclosure to open).
     await page.goto(editUrl);
@@ -220,7 +219,6 @@ test.describe('Postponement Editing', () => {
     await joinPage.join('John Doe');
     await joinPage.castVote(0, 'Yes');
     await joinPage.castVote(1, 'No');
-    await joinPage.submitVotes();
 
     await page.goto(editUrl);
 
@@ -313,7 +311,6 @@ test.describe('Postponement Editing', () => {
     await joinPage.join('Alice');
     await joinPage.castVote(0, 'Yes');
     await joinPage.castVote(1, 'No');
-    await joinPage.submitVotes();
 
     await page.goto(editUrl);
     await checkA11y();
@@ -408,14 +405,13 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.proposedDateRows)
       .toHaveCount(2);
 
-    // A home-team voter casts a Yes on the first date and a No on the second
-    // (the vote form requires a vote on every proposed date).
+    // A home-team voter casts a Yes on the first date and a No on the second;
+    // each radio change posts the form (votes save incrementally).
     const joinPage = new JoinPage(page);
     await joinPage.goto(session.homeHref);
     await joinPage.join('Alice');
     await joinPage.castVote(0, 'Yes');
     await joinPage.castVote(1, 'No');
-    await joinPage.submitVotes();
 
     await editPage.goto(session.editUrl);
     await expect(editPage.proposedDateRows.nth(0)
@@ -512,7 +508,6 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.spinner)
       .toBeHidden();
   });
-
 
   test('edit page shows the referenced Match read-only with no change action', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);

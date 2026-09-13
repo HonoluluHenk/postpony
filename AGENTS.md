@@ -13,8 +13,9 @@ A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framewo
 
 * Keep answers short and concise.
 * Keep everything strongly typed (not "stringly").
-* Keep coverage >= 80% for all metrics
+* Keep coverage >= 90% for all metrics
 * Implement E2E tests for the happy path and some likely error-paths
+* In E2E-Tests: test what the user or screenreader sees. Test behavior. Avoid CSS selectors if alternatives exist.
 * Whe implementing issues: use subagents and commit after each issue
 * Ask questions using the `question` tool.
 

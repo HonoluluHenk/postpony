@@ -143,6 +143,62 @@ describe('renderVoteStep', () => {
       .toContain('<h3 id="vote-summary-title">Vote Summary</h3>');
   });
 
+  test('renders the set-all button group above the date fieldsets', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [
+        aProposedDate({id: 'date-1', votable: true}),
+        aProposedDate({id: 'date-2', votable: true}),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('<legend>Set all:</legend>');
+    expect(body)
+      .toContain('data-set-all="Yes"');
+    expect(body)
+      .toContain('data-set-all="IfNecessary"');
+    expect(body)
+      .toContain('data-set-all="No"');
+    expect(body.indexOf('data-set-all="Yes"'))
+      .toBeLessThan(body.indexOf('name="vote-date-1"'));
+  });
+
+  test('omits the set-all group when no date is votable', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: false})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .not
+      .toContain('data-set-all');
+  });
+
   test('renders the votable dates chronologically and keeps the results table aligned', async () => {
     const player = aPlayer({id: 'player-1', name: 'Alice'});
     const session = aSession({

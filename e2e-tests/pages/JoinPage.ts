@@ -42,8 +42,8 @@ export class JoinPage {
     return this.page.getByRole('form', {name: 'Vote on Proposed Dates'});
   }
 
-  get submitVotesButton(): Locator {
-    return this.page.getByRole('button', {name: 'Submit Votes'});
+  get setAllControls(): Locator {
+    return this.voteForm.getByRole('group', {name: 'Set all:'});
   }
 
   get noDatesMessage(): Locator {
@@ -87,15 +87,25 @@ export class JoinPage {
   }
 
   async castVote(dateIndex: number, vote: VoteType): Promise<void> {
-    // ponytail: beer.css hides native radio inputs; toggle via label text
-    await this.voteForm.getByRole('group')
+    // ponytail: beer.css hides native radio inputs; toggle via label text. The
+    // date groups are class-scoped so the "Set all:" button group is skipped.
+    // A radio change posts the form immediately (no submit button), so wait for
+    // the page's own JS to be wired and block on the confirmation toast.
+    await this.page.waitForLoadState('load');
+    await this.voteForm.locator('.vote-radio-group')
       .nth(dateIndex)
       .getByText(VOTE_LABELS[vote], {exact: true})
       .click();
+    await expect(this.page.getByText('Your votes have been saved!'))
+      .toBeVisible();
   }
 
-  async submitVotes(): Promise<void> {
-    await this.submitVotesButton.click();
+  async setAllVotes(vote: VoteType): Promise<void> {
     await this.page.waitForLoadState('load');
+    await this.setAllControls
+      .getByRole('button', {name: VOTE_LABELS[vote]})
+      .click();
+    await expect(this.page.getByText('Your votes have been saved!'))
+      .toBeVisible();
   }
 }

@@ -444,7 +444,7 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
       <h2>{props.t('proposed_dates_management')}</h2>
       <div class="row items-center gap wrap mt-2">
         {props.proposedDates.some((pd) => pd.votable) ? (
-          <a class="button outline" href={`${props.baseUrl}/edit/${props.sessionId}/calendar.ics`} hx-boost="false">
+          <a class="button outline" href={`${props.baseUrl}/edit/${props.sessionId}/calendar.ics`} hx-boost="false" data-no-spinner>
             <i aria-hidden="true">download</i>
             {props.t('export_calendar')}
           </a>

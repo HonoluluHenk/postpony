@@ -1,17 +1,18 @@
-import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
+import {afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 import {
-  shouldSwapErrorBody,
   decideLanguageRedirect,
-  initHtmx,
-  initTheme,
-  initProposedDateTimePicker,
-  initDatePicker,
   initClipboard,
+  initDatePicker,
   initDeleteDialogs,
   initFocusManagement,
-  initGeneratorTimePickers,
   initGeneratorDatePickers,
+  initGeneratorTimePickers,
+  initHtmx,
   initOccupancyTooltips,
+  initProposedDateTimePicker,
+  initTheme,
+  initVoteForm,
+  shouldSwapErrorBody,
 } from './ui.js';
 
 describe('shouldSwapErrorBody', () => {
@@ -388,6 +389,128 @@ describe('initFocusManagement', () => {
       detail: {target: document.createTextNode('text')},
     });
     expect(() => document.dispatchEvent(event)).not.toThrow();
+  });
+});
+
+describe('initVoteForm', () => {
+  let form;
+  let submitSpy;
+  let yesButton;
+  let noButton;
+  let ifNecessaryButton;
+  let cleanup;
+
+  function buildVoteForm() {
+    const f = document.createElement('form');
+    f.innerHTML = [
+      '<fieldset class="vote-radio-group"><legend>date-1</legend>',
+      '<label><input type="radio" name="vote-date-1" value="Yes"><span>Yes</span></label>',
+      '<label><input type="radio" name="vote-date-1" value="IfNecessary"><span>if necessary</span></label>',
+      '<label><input type="radio" name="vote-date-1" value="No"><span>No</span></label>',
+      '</fieldset>',
+      '<fieldset class="vote-radio-group"><legend>date-2</legend>',
+      '<label><input type="radio" name="vote-date-2" value="Yes"><span>Yes</span></label>',
+      '<label><input type="radio" name="vote-date-2" value="IfNecessary"><span>if necessary</span></label>',
+      '<label><input type="radio" name="vote-date-2" value="No"><span>No</span></label>',
+      '</fieldset>',
+    ].join('');
+    yesButton = document.createElement('button');
+    yesButton.type = 'button';
+    yesButton.setAttribute('data-set-all', 'Yes');
+    noButton = document.createElement('button');
+    noButton.type = 'button';
+    noButton.setAttribute('data-set-all', 'No');
+    ifNecessaryButton = document.createElement('button');
+    ifNecessaryButton.type = 'button';
+    ifNecessaryButton.setAttribute('data-set-all', 'IfNecessary');
+    f.appendChild(yesButton);
+    f.appendChild(noButton);
+    f.appendChild(ifNecessaryButton);
+    return f;
+  }
+
+  function valueByName(dateName, value) {
+    return form.querySelector(`input[name="vote-${dateName}"][value="${value}"]`);
+  }
+
+  function selectedValues() {
+    return Array.from(form.querySelectorAll('input[type="radio"]'))
+      .filter((radio) => radio.checked)
+      .map((radio) => radio.value)
+      .sort();
+  }
+
+  // Delegated on `document`, so wire it once; wiring per test would stack
+  // listeners and multiply the submit spy.
+  beforeAll(() => initVoteForm());
+
+  beforeEach(() => {
+    form = buildVoteForm();
+    document.body.appendChild(form);
+    submitSpy = vi.fn();
+    vi.spyOn(form, 'submit').mockImplementation(() => {
+      submitSpy();
+    });
+    cleanup = () => form.remove();
+  });
+
+  afterEach(() => cleanup());
+
+  it('checks the matching radio in every date group and submits the form', () => {
+    yesButton.click();
+    expect(selectedValues()).toEqual(['Yes', 'Yes']);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+    noButton.click();
+    expect(selectedValues()).toEqual(['No', 'No']);
+    expect(submitSpy).toHaveBeenCalledTimes(2);
+    ifNecessaryButton.click();
+    expect(selectedValues()).toEqual(['IfNecessary', 'IfNecessary']);
+    expect(submitSpy).toHaveBeenCalledTimes(3);
+  });
+
+  it('overwrites previously selected votes before submitting', () => {
+    valueByName('date-1', 'Yes').checked = true;
+    valueByName('date-2', 'IfNecessary').checked = true;
+
+    noButton.click();
+
+    expect(selectedValues()).toEqual(['No', 'No']);
+    expect(valueByName('date-1', 'Yes').checked).toBe(false);
+    expect(valueByName('date-2', 'IfNecessary').checked).toBe(false);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('submits the form when a vote radio changes', () => {
+    valueByName('date-1', 'No').checked = true;
+    valueByName('date-1', 'No').dispatchEvent(new Event('change', {bubbles: true}));
+
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+    expect(form.isConnected).toBe(true);
+  });
+
+  it('ignores changes to radios outside the vote rows', () => {
+    const stray = document.createElement('input');
+    stray.type = 'radio';
+    stray.name = 'vote-stray';
+    stray.value = 'Yes';
+    form.appendChild(stray);
+
+    stray.checked = true;
+    stray.dispatchEvent(new Event('change', {bubbles: true}));
+
+    expect(submitSpy).not.toHaveBeenCalled();
+  });
+
+  it('works for a set-all button injected after initialization', () => {
+    const late = document.createElement('button');
+    late.type = 'button';
+    late.setAttribute('data-set-all', 'IfNecessary');
+    form.appendChild(late);
+
+    late.click();
+
+    expect(selectedValues()).toEqual(['IfNecessary', 'IfNecessary']);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -829,7 +952,9 @@ describe('initGeneratorDatePickers with a recording AirDatepicker fake', () => {
     expect(fakeInstances).toHaveLength(4);
     expect(fakeInstances.slice(0, 2).every((instance) => instance.destroyed)).toBe(true);
     expect(fakeInstances.slice(2).every((instance) => !instance.destroyed)).toBe(true);
-    fakeInstances[0].show = () => { fakeInstances[0].shows += 1; };
+    fakeInstances[0].show = () => {
+      fakeInstances[0].shows += 1;
+    };
     document.getElementById('fromDate-picker').click();
     expect(fakeInstances[2].shows).toBe(1);
     expect(fakeInstances[0].shows).toBe(0);

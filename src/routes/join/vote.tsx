@@ -51,6 +51,7 @@ export function VotePage(props: VotePageProps): JSX.Element {
           class="button outline"
           href={`${props.baseUrl}/join/${props.sessionId}/${props.team}/calendar.ics?token=${props.token}&playerId=${props.playerId}`}
           hx-boost="false"
+          data-no-spinner
         >
           <i aria-hidden="true">download</i>
           {props.t('export_calendar')}
@@ -67,6 +68,21 @@ export function VotePage(props: VotePageProps): JSX.Element {
             hx-boost="false"
             aria-label={props.t('vote_title')}
           >
+            <fieldset class="vote-set-all">
+              <legend>{props.t('vote_set_all')}</legend>
+              <div class="row no-wrap">
+                <button type="button" class="button" data-set-all="Yes">
+                  {props.t('vote_yes')}
+                </button>
+                <button type="button" class="button" data-set-all="IfNecessary">
+                  {props.t('vote_if_necessary')}
+                </button>
+                <button type="button" class="button" data-set-all="No">
+                  {props.t('vote_no')}
+                </button>
+              </div>
+            </fieldset>
+
             {props.proposedDates.map((pd) => (
               <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
                 <legend>
@@ -89,7 +105,6 @@ export function VotePage(props: VotePageProps): JSX.Element {
                     name={`vote-${pd.id}`}
                     value="Yes"
                     checked={pd.currentVote === 'Yes'}
-                    required
                   />
                   <span>{props.t('vote_yes')}</span>
                 </label>
@@ -113,10 +128,6 @@ export function VotePage(props: VotePageProps): JSX.Element {
                 </label>
               </fieldset>
             ))}
-
-            <div class="right-align">
-              <button type="submit">{props.t('vote_submit')}</button>
-            </div>
           </form>
 
           <section aria-labelledby="vote-summary-title">

@@ -67,6 +67,10 @@ describe('handleEditIcalGet', () => {
     expect(body)
       .not
       .toContain('UID:pd-closed@postpony');
+    expect(body)
+      .toContain('X-ALT-DESC;FMTTYPE=text/html:');
+    expect(body)
+      .toContain(`>Open the postponement</a>`);
   });
 
   test('does not require a password and marks the locked date CONFIRMED', async () => {
