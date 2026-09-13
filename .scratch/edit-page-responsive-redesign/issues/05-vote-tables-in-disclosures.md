@@ -13,3 +13,9 @@
 - [x] `checkA11y` passes at all three widths
 - [x] Screenshot baselines regenerated
 - [x] `npm run verify` passes
+
+## Comments
+
+- `5ad1a19` ticket done — wrapped the own-team Votes and home/away tallies in closed native disclosures (heading in summary); updated unit/e2e specs and regenerated the 3 affected baselines.
+- `b5426df` review — two judgement calls (section heading-first-child nuance; duplicated open helpers), no blocking findings.
+
