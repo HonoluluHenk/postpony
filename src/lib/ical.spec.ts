@@ -25,16 +25,19 @@ function lines(ical: string): string[] {
 
 /** Splits into content lines, keeping each physical (folded) line separate. */
 function contentLines(ical: string): string[] {
-  return ical.split('\r\n').filter((line) => line.length > 0);
+  return ical.split('\r\n')
+    .filter((line) => line.length > 0);
 }
 
 function propertyLines(ical: string, name: string): string[] {
-  return contentLines(ical).filter((line) => line.startsWith(name));
+  return contentLines(ical)
+    .filter((line) => line.startsWith(name));
 }
 
 function eventBlock(ical: string, uid: string): string {
   const start = ical.indexOf(`UID:${uid}@postpony`);
-  expect(start).toBeGreaterThan(-1);
+  expect(start)
+    .toBeGreaterThan(-1);
   const end = ical.indexOf('END:VEVENT', start);
   return ical.slice(start, end);
 }
@@ -42,17 +45,24 @@ function eventBlock(ical: string, uid: string): string {
 /** Unfolds continuation lines and returns the unescaped logical DESCRIPTION of one event. */
 function descriptionOf(ical: string, uid: string): string {
   const block = eventBlock(ical.replace(/\r\n /g, ''), uid);
-  const line = block.split('\n').find((l) => l.startsWith('DESCRIPTION:'));
-  expect(line).toBeDefined();
-  return (line ?? '').slice('DESCRIPTION:'.length).replace(/\\n/g, '\n');
+  const line = block.split('\n')
+    .find((l) => l.startsWith('DESCRIPTION:'));
+  expect(line)
+    .toBeDefined();
+  return (line ?? '').slice('DESCRIPTION:'.length)
+    .replace(/\r$/, '')
+    .replace(/\\n/g, '\n');
 }
 
 /** Unfolds continuation lines and returns the raw URL property of one event. */
 function urlOf(ical: string, uid: string): string {
   const block = eventBlock(ical.replace(/\r\n /g, ''), uid);
-  const line = block.split('\n').find((l) => l.startsWith('URL:'));
-  expect(line).toBeDefined();
-  return (line ?? '').slice('URL:'.length).replace(/\r$/, '');
+  const line = block.split('\n')
+    .find((l) => l.startsWith('URL:'));
+  expect(line)
+    .toBeDefined();
+  return (line ?? '').slice('URL:'.length)
+    .replace(/\r$/, '');
 }
 
 describe('buildIcal', () => {
@@ -83,15 +93,28 @@ describe('buildIcal', () => {
     const session = aSession({
       status: 'Voting',
       proposedDates: [
-        aProposedDate({id: 'pd-later', dateTimeRange: {start: '2026-09-12T18:00', end: '2026-09-12T18:00'}, votable: true}),
-        aProposedDate({id: 'pd-closed', dateTimeRange: {start: '2026-09-01T18:00', end: '2026-09-01T18:00'}, votable: false}),
-        aProposedDate({id: 'pd-earlier', dateTimeRange: {start: '2026-09-05T18:00', end: '2026-09-05T18:00'}, votable: true}),
+        aProposedDate({
+          id: 'pd-later',
+          dateTimeRange: {start: '2026-09-12T18:00', end: '2026-09-12T18:00'},
+          votable: true,
+        }),
+        aProposedDate({
+          id: 'pd-closed',
+          dateTimeRange: {start: '2026-09-01T18:00', end: '2026-09-01T18:00'},
+          votable: false,
+        }),
+        aProposedDate({
+          id: 'pd-earlier',
+          dateTimeRange: {start: '2026-09-05T18:00', end: '2026-09-05T18:00'},
+          votable: true,
+        }),
       ],
     });
 
     const ical = buildIcal(session, {baseUrl: BASE_URL, locale: 'de-CH', now: new Date('2026-09-01T10:00:00Z')});
 
-    const uidLines = propertyLines(ical, 'UID:').map((line) => line.slice('UID:'.length));
+    const uidLines = propertyLines(ical, 'UID:')
+      .map((line) => line.slice('UID:'.length));
     expect(uidLines)
       .toEqual(['pd-earlier@postpony', 'pd-later@postpony']);
     expect(ical)
@@ -110,7 +133,8 @@ describe('buildIcal', () => {
 
     const ical = buildIcal(session, {baseUrl: BASE_URL, locale: 'de-CH', now: new Date('2026-09-01T10:00:00Z')});
 
-    const uidLines = propertyLines(ical, 'UID:').map((line) => line.slice('UID:'.length));
+    const uidLines = propertyLines(ical, 'UID:')
+      .map((line) => line.slice('UID:'.length));
     expect(uidLines)
       .toEqual(['pd-a@postpony', 'pd-b@postpony']);
   });
@@ -165,14 +189,27 @@ describe('buildIcal', () => {
     expect(block)
       .toContain('DTSTART;TZID=Europe/Zurich:20260905T180000');
     expect(block)
-      .toContain(`DTEND;TZID=Europe/Zurich:20260905T${String(18 + CLASH_BUFFER_HOURS).padStart(2, '0')}0000`);
+      .toContain(`DTEND;TZID=Europe/Zurich:20260905T${String(18 + CLASH_BUFFER_HOURS)
+        .padStart(2, '0')}0000`);
   });
 
   test('resolves LOCATION via the stored venueNumber and falls back to venue 1 when absent', () => {
     const session = aSession({
       venues: [
-        venue({venueNumber: 1, name: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'}),
-        venue({venueNumber: 2, name: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'}),
+        venue({
+          venueNumber: 1,
+          name: 'Turnhalle orange',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        }),
+        venue({
+          venueNumber: 2,
+          name: 'Turnhalle grün',
+          address: 'Dennigkofenweg 170',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        }),
       ],
       proposedDates: [
         aProposedDate({id: 'pd-2', venueNumber: 2}),
@@ -346,7 +383,14 @@ describe('buildIcal', () => {
 
   test('accepts Proposed Dates stored with minute precision', () => {
     const session = aSession({
-      proposedDates: [aProposedDate({dateTimeRange: {start: '2026-09-05T18:00', end: '2026-09-05T18:00'}})] as Postponement['proposedDates'],
+      proposedDates: [
+        aProposedDate({
+          dateTimeRange: {
+            start: '2026-09-05T18:00',
+            end: '2026-09-05T18:00',
+          },
+        }),
+      ] as Postponement['proposedDates'],
     });
 
     const ical = buildIcal(session, {baseUrl: BASE_URL, locale: 'de-CH', now: new Date('2026-09-01T10:00:00Z')});
@@ -462,12 +506,15 @@ describe('buildIcal vote links (join export)', () => {
       .toContain('Original match: 29.08.2026 16:00');
     expect(desc)
       .toContain(`${BASE_URL}/edit/sess-1`);
-    expect(desc)
-      .toContain('Stimm ab: Ja bitte https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=Yes');
-    expect(desc)
-      .toContain(' | Notfalls schon https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=IfNecessary | ');
-    expect(desc)
-      .toContain('Nein danke https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=No');
+    expect(desc.split('\n'))
+      .toEqual([
+        'Original match: 29.08.2026 16:00',
+        `${BASE_URL}/edit/sess-1`,
+        'Stimm ab:',
+        'Ja bitte https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=Yes',
+        'Notfalls schon https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=IfNecessary',
+        'Nein danke https://game-scheduler.localhost:3000/join/sess-1/home/vote?token=tok-123&vote-date-a=No',
+      ]);
   });
 
   test('URL-escapes token and playerId and keeps all lines within 75 octets', () => {

@@ -65,7 +65,8 @@ export function buildIcal(session: Postponement, options: IcalBuildOptions): str
     'END:VCALENDAR',
   ];
 
-  return `${lines.map(foldLine).join('\r\n')}\r\n`;
+  return `${lines.map(foldLine)
+    .join('\r\n')}\r\n`;
 }
 
 function eventLines(
@@ -124,12 +125,15 @@ function description(
     `${options.baseUrl}/edit/${session.id}`,
   ];
   if (vote) {
-    const choices = ([
+    lines.push(`${vote.labels.action}:`);
+    for (const [value, label] of [
       ['Yes', vote.labels.yes],
       ['IfNecessary', vote.labels.ifNecessary],
       ['No', vote.labels.no],
-    ] as const).map(([value, label]) => `${label} ${voteUrl(session, options.baseUrl, vote, date, value)}`);
-    lines.push(`${vote.labels.action}: ${choices.join(' | ')}`);
+    ] as const)
+    {
+      lines.push(`${label} ${voteUrl(session, options.baseUrl, vote, date, value)}`);
+    }
   }
   return lines.join('\n');
 }
@@ -173,7 +177,8 @@ function formatUtcStamp(date: Date): string {
     + `T${pad2(date.getUTCHours())}${pad2(date.getUTCMinutes())}${pad2(date.getUTCSeconds())}Z`;
 }
 
-const pad2 = (value: number): string => String(value).padStart(2, '0');
+const pad2 = (value: number): string => String(value)
+  .padStart(2, '0');
 
 /**
  * RFC 5545 text escaping: backslash, semicolon, comma and newlines. Backslash
