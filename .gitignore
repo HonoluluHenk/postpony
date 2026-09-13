@@ -37,6 +37,8 @@ node_modules/
 /coverage/
 # generated on typscript incremental builds
 *.tsbuildinfo
+# Wrangler temp dir
+/.wrangler/
 
 ### Always keep files
 !.gitkeep
