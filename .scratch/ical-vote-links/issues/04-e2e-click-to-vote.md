@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Happy path: from the voting poll, download the personalized `.ics`, extract a `vote-<dateId>=IfNecessary` link from its `DESCRIPTION`, open it, and assert the poll shows that Participant's Vote on that date
-- [ ] Error path: a `vote-<dateId>=Yes` link with no `playerId` routes through who-are-you and, after registering, lands the Vote without re-selecting the choice
-- [ ] The `.ics` attachment still arrives with `text/calendar` and the existing `Content-Disposition` filename
+- [x] Happy path: from the voting poll, download the personalized `.ics`, extract a `vote-<dateId>=IfNecessary` link from its `DESCRIPTION`, open it, and assert the poll shows that Participant's Vote on that date
+- [x] Error path: a `vote-<dateId>=Yes` link with no `playerId` routes through who-are-you and, after registering, lands the Vote without re-selecting the choice
+- [x] The `.ics` attachment still arrives with `text/calendar` and the existing `Content-Disposition` filename
 
 **Tested via:** the Playwright flow spec extending the existing join e2e.

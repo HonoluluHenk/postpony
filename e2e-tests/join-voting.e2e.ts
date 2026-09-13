@@ -1,6 +1,18 @@
 import { expect, test } from './fixtures';
 import { EditPage, JoinPage } from './pages';
 
+// Pulls one `vote-<dateId>=<choice>` link out of an exported .ics, proving the
+// external contract a calendar client consumes. Unfolds RFC 5545 line folding
+// (`\r\n ` continuations) so a link split at a 75-octet boundary still matches.
+function extractVoteLink(body: string, choice: 'Yes' | 'IfNecessary' | 'No'): string {
+  const unfolded = body.replace(/\r\n /g, '');
+  const match = new RegExp(`https:\\/\\/\\S+?vote-[^&=]+=${choice}`).exec(unfolded);
+  if (!match) {
+    throw new Error(`no ${choice} vote link found in calendar export`);
+  }
+  return match[0];
+}
+
 test.describe('Join and Voting', () => {
   test('shows inline validation error when submitting empty join form', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page);
@@ -344,6 +356,118 @@ test.describe('Join and Voting', () => {
       .toHaveCount(0);
     await expect(page.getByLabel('Or enter your name'))
       .toHaveCount(0);
+
+    await checkA11y();
+  });
+});
+
+test.describe('Click-to-vote from the calendar export', () => {
+  test('happy path: an IfNecessary link in the personalized .ics casts the vote', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+    await expect(joinPage.voteHeading)
+      .toBeVisible();
+
+    const playerId = await page.evaluate(
+      (sid) => localStorage.getItem(`postpony-player-${sid}-home`),
+      session.id,
+    );
+    expect(playerId)
+      .not
+      .toBeNull();
+
+    // The poll's export link is the personalized download.
+    const href = (await joinPage.exportCalendarLink.getAttribute('href')) ?? '';
+    expect(new URL(href).searchParams.get('playerId'))
+      .toBe(playerId);
+
+    // A real browser download so the Content-Disposition filename is exercised.
+    const downloadPromise = page.waitForEvent('download');
+    await joinPage.exportCalendarLink.click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename())
+      .toMatch(/\.ics$/);
+
+    const response = await page.request.get(href);
+    expect(response.status())
+      .toBe(200);
+    expect(response.headers()['content-type'])
+      .toContain('text/calendar');
+    const disposition = response.headers()['content-disposition'] ?? '';
+    expect(disposition)
+      .toMatch(/^attachment; filename=".+\.ics"$/);
+
+    const body = await response.text();
+    const link = extractVoteLink(body, 'IfNecessary');
+    expect(link)
+      .toContain(`token=${session.token}`);
+    expect(link)
+      .toContain(`playerId=${playerId}`);
+
+    // Clicking the embedded link casts that Participant's vote in one step.
+    await page.goto(link);
+    await expect(joinPage.voteHeading)
+      .toBeVisible();
+    await expect(page.getByText('Your votes have been saved!'))
+      .toBeVisible();
+    await expect(joinPage.voteRadio('IfNecessary'))
+      .toBeChecked();
+    await expect(joinPage.voteRadio('Yes'))
+      .not
+      .toBeChecked();
+
+    await checkA11y();
+  });
+
+  test('error path: a link without playerId routes through who-are-you and still lands the vote', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+
+    // Fetching the export without a Player identity yields an unpersonalized file.
+    const personalizedHref = (await joinPage.exportCalendarLink.getAttribute('href')) ?? '';
+    const unpersonalizedUrl = new URL(personalizedHref);
+    unpersonalizedUrl.searchParams.delete('playerId');
+
+    const response = await page.request.get(unpersonalizedUrl.toString());
+    expect(response.status())
+      .toBe(200);
+    const yesLink = extractVoteLink(await response.text(), 'Yes');
+    expect(yesLink)
+      .not
+      .toContain('playerId=');
+
+    // A browser without a stored identity on this team has to identify first.
+    await page.evaluate(
+      (sid) => {
+        localStorage.removeItem(`postpony-player-${sid}-home`);
+      },
+      session.id,
+    );
+    await page.goto(yesLink);
+
+    // The pending choice survives: the register step renders, not the poll.
+    await expect(joinPage.heading)
+      .toBeVisible();
+    await expect(joinPage.voteHeading)
+      .toHaveCount(0);
+
+    // After registering, the vote lands without re-selecting the choice.
+    await joinPage.join('Bob');
+    await expect(joinPage.voteHeading)
+      .toBeVisible();
+    await expect(page.getByText('Your votes have been saved!'))
+      .toBeVisible();
+    await expect(joinPage.voteRadio('Yes'))
+      .toBeChecked();
+    await expect(joinPage.voteRadio('No'))
+      .not
+      .toBeChecked();
 
     await checkA11y();
   });
