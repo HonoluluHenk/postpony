@@ -1,0 +1,11 @@
+# 05: Update the CSS architecture docs
+
+**What to build:** Bring the CSS documentation in line with the consolidated reality. The `css-styling` skill should describe the actual file set (two stylesheets plus the token layer; the prototype stylesheet gone), list the new token catalog entries, and drop stale references — including the template-engine file that no longer exists. Update `CONTEXT.md` if it names the CSS files. The docs must match the implementation rather than describe an aspiration.
+
+**Blocked by:** 04
+
+**Status:** ready-for-agent
+
+- [ ] The skill documents the real file set and the new token catalog.
+- [ ] No stale file or template-engine references remain in the skill or `CONTEXT.md`.
+- [ ] `npm run lint` passes (docs changes do not affect the app build).

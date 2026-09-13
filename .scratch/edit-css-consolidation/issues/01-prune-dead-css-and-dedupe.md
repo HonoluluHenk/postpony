@@ -1,0 +1,12 @@
+# 01: Prune dead CSS, merge duplicate media queries, drop redundant `!important`
+
+**What to build:** Remove stylesheet rules that no template can reach, and stop defeating the cascade. Dead selectors to remove: from the shared app stylesheet, the clipboard button, multi-row heading, invite-link row, and the proposed-date card/list family; from the edit-page prototype stylesheet, the generator-grid/day/time, not-joined, and roster families. Merge the duplicated medium-breakpoint media blocks and the duplicated small-breakpoint blocks in the shared stylesheet into one each. Remove the three `!important` declarations on the picker button — the app's `design` cascade layer already outranks the framework's `vendor` layer, so they are unnecessary. Appearance and behaviour are unchanged.
+
+**Blocked by:** None (can start immediately)
+
+**Status:** ready-for-agent
+
+- [ ] The dead selectors listed above are gone from all stylesheets.
+- [ ] The shared stylesheet has exactly one media block per affected breakpoint instead of two.
+- [ ] The picker button no longer uses `!important`, and still sits over the right edge of its field on the edit page.
+- [ ] `npm run lint`, `npm run test` and `npm run e2e` pass with no screenshot-baseline changes.
