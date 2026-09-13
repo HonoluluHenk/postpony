@@ -412,6 +412,7 @@ export function initDeleteDialogs() {
  */
 export function initVoteForm(spinner) {
   const voteTypes = ['Yes', 'No', 'IfNecessary'];
+  const voteControls = 'button[data-set-all], .vote-radio-group input[type="radio"]';
   // ponytail: one in-flight save and one debounce timer for the page's single
   // vote form; keyed by form so a re-rendered form is never born busy.
   let pendingForms = new WeakSet();
@@ -424,7 +425,7 @@ export function initVoteForm(spinner) {
     document.querySelectorAll('form[aria-busy="true"]')
       .forEach((form) => {
         form.removeAttribute('aria-busy');
-        form.querySelectorAll('button[data-set-all], .vote-radio-group input[type="radio"]')
+        form.querySelectorAll(voteControls)
           .forEach((control) => {
             control.disabled = false;
           });
@@ -442,7 +443,7 @@ export function initVoteForm(spinner) {
     // disabling the controls afterwards keeps them out of the *next* submission
     // without dropping any changed vote from this one.
     form.submit();
-    form.querySelectorAll('button[data-set-all], .vote-radio-group input[type="radio"]')
+    form.querySelectorAll(voteControls)
       .forEach((control) => {
         control.disabled = true;
       });
