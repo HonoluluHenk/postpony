@@ -14,7 +14,7 @@ Existing tokens (`--space-1..6`, the brand colour, border radius, fonts, palette
 
 **Status:** ready-for-agent
 
-- [ ] All tokens above are defined in the design token layer with the stated values.
-- [ ] No existing token value changed.
-- [ ] No selector references a new token yet.
-- [ ] `npm run lint`, `npm run test` and `npm run e2e` pass with no screenshot-baseline changes.
+- [x] All tokens above are defined in the design token layer with the stated values.
+- [x] No existing token value changed.
+- [x] No selector references a new token yet.
+- [x] `npm run lint`, `npm run test` and `npm run e2e` pass with no screenshot-baseline changes.
