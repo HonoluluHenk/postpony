@@ -144,3 +144,29 @@ function foldLine(line: string): string {
   }
   return segments.join('\r\n');
 }
+
+/**
+ * Derives a safe `.ics` download filename from a match name: keeps only a
+ * conservative ASCII set (letters, digits, space, `.`, `_`, `-`) so the value is
+ * always a valid Content-Disposition filename — a non-ASCII char such as the
+ * en-dash a derived match name carries would otherwise trip Node's header
+ * validation. CR/LF collapse to a space and a blank/unsafe-only name falls back
+ * to a placeholder. `session.name` is the caller's input.
+ */
+export function icalFilename(matchName: string): string {
+  const stem = matchName
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/[^A-Za-z0-9 ._-]/g, '_')
+    .replace(/ +/g, ' ')
+    .trim();
+  const hasContent = stem.replace(/[ _]/g, '').length > 0;
+  return `${hasContent ? stem : 'postponement'}.ics`;
+}
+
+/** The response headers a calendar download endpoint returns. */
+export function icalResponseHeaders(filename: string): Record<string, string> {
+  return {
+    'Content-Type': 'text/calendar; charset=utf-8',
+    'Content-Disposition': `attachment; filename="${filename}"`,
+  };
+}

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { aProposedDate, aSession } from './__test-utils__/builders';
 import { CLASH_BUFFER_HOURS } from './clashes';
-import { buildIcal } from './ical';
+import { buildIcal, icalFilename, icalResponseHeaders } from './ical';
 import type { Postponement, Venue } from './models';
 
 const BASE_URL = 'https://game-scheduler.localhost:3000';
@@ -337,5 +337,41 @@ describe('buildIcal', () => {
 
     expect(eventBlock(ical, 'proposed-date-1'))
       .toContain('DTSTART;TZID=Europe/Zurich:20260905T180000');
+  });
+});
+
+describe('icalFilename', () => {
+  test('keeps a plain match name and appends the .ics extension', () => {
+    expect(icalFilename('Thun vs Ostermundigen'))
+      .toBe('Thun vs Ostermundigen.ics');
+  });
+
+  test('strips unsafe and non-ASCII characters out of the download filename', () => {
+    expect(icalFilename('A/B:C*D?E<F>G|H"I'))
+      .toBe('A_B_C_D_E_F_G_H_I.ics');
+    expect(icalFilename('Ostermundigen vs Thun \u2013 Jan 14, 2027, 12:00 AM'))
+      .toBe('Ostermundigen vs Thun _ Jan 14_ 2027_ 12_00 AM.ics');
+  });
+
+  test('collapses CR/LF to a space so the filename never breaks the header', () => {
+    expect(icalFilename('Line One\r\nLine Two'))
+      .toBe('Line One Line Two.ics');
+  });
+
+  test('falls back to a placeholder stem for a blank or unsafe-only name', () => {
+    expect(icalFilename(''))
+      .toBe('postponement.ics');
+    expect(icalFilename('***'))
+      .toBe('postponement.ics');
+  });
+});
+
+describe('icalResponseHeaders', () => {
+  test('returns text/calendar with an attachment content-disposition', () => {
+    expect(icalResponseHeaders('match.ics'))
+      .toEqual({
+        'Content-Type': 'text/calendar; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="match.ics"',
+      });
   });
 });

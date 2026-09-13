@@ -28,6 +28,7 @@ function baseProps(): ProposedDatesSectionProps {
     t,
     locale: 'en-US',
     inputFormat: 'MM/dd/yyyy hh:mm aa',
+    baseUrl: 'https://game-scheduler.localhost:3000',
   };
 }
 
@@ -338,6 +339,41 @@ describe('ProposedDatesSection component', () => {
       .toContain('title="3"');
     expect(html)
       .toContain('>(3)</span>');
+  });
+
+  it('renders an export-calendar link to the .ics route when a date is votable', () => {
+    const html = renderToString(ProposedDatesSection(baseProps()));
+
+    expect(html)
+      .toContain('href="https://game-scheduler.localhost:3000/edit/session-1/calendar.ics"');
+    expect(html)
+      .toContain('Export as calendar (.ics)');
+  });
+
+  it('hides the export-calendar link when no date is votable', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      proposedDates: [
+        {id: 'pd-1', display: '10.10.2026 19:00', votable: false, yes: 0, ifNecessary: 0, no: 0},
+      ],
+    }));
+
+    expect(html)
+      .not
+      .toContain('/edit/session-1/calendar.ics');
+  });
+
+  it('keeps the export-calendar link on a confirmed session when the locked date is votable', () => {
+    const html = renderToString(ProposedDatesSection({
+      ...baseProps(),
+      status: 'Confirmed',
+      proposedDates: [
+        {id: 'pd-1', display: '10.10.2026 19:00', votable: true, yes: 0, ifNecessary: 0, no: 0},
+      ],
+    }));
+
+    expect(html)
+      .toContain('href="https://game-scheduler.localhost:3000/edit/session-1/calendar.ics"');
   });
 });
 

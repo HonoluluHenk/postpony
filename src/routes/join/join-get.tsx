@@ -8,7 +8,7 @@ export const handleJoinGet = async (app: App): Promise<Response> => {
   const {session, token} = await requireSessionAndToken(app);
 
   if (session.status === 'Confirmed') {
-    return renderConfirmedInfo(app, session);
+    return renderConfirmedInfo(app, session, {team, token});
   }
 
   const players = session.players.filter((p) => p.teamId === team);

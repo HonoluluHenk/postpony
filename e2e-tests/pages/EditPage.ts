@@ -255,6 +255,10 @@ export class EditPage {
     return this.page.locator('a[href*="/away?token="]');
   }
 
+  get exportCalendarLink(): Locator {
+    return this.page.getByRole('link', {name: 'Export as calendar (.ics)'});
+  }
+
   get clipboardStatus(): Locator {
     return this.page.locator('#clipboard-status');
   }

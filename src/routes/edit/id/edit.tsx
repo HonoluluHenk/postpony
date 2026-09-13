@@ -145,6 +145,7 @@ export function EditPage(props: EditPageProps): JSX.Element {
             t={props.t}
             locale={props.locale}
             inputFormat={props.inputFormat}
+            baseUrl={props.baseUrl}
             proposedDateTime={props.proposedDateTime}
             fromDate={props.fromDate}
             toDate={props.toDate}

@@ -46,6 +46,16 @@ export function VotePage(props: VotePageProps): JSX.Element {
         </div>
       ) : null}
 
+      {props.proposedDates.length > 0 ? (
+        <a
+          class="button outline"
+          href={`${props.baseUrl}/join/${props.sessionId}/${props.team}/calendar.ics?token=${props.token}`}
+        >
+          <i aria-hidden="true">download</i>
+          {props.t('export_calendar')}
+        </a>
+      ) : null}
+
       {props.proposedDates.length === 0 ? (
         <p>{props.t('vote_no_dates')}</p>
       ) : (

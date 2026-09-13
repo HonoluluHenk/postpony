@@ -349,6 +349,53 @@ describe('renderVoteStep', () => {
       .not
       .toContain('Schule Dennigkofen</span>');
   });
+
+  test('renders the export-calendar link when votable dates exist', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: true})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('href="https://game-scheduler.localhost:3000/join/test-session/home/calendar.ics?token=token"');
+    expect(body)
+      .toContain('Export as calendar (.ics)');
+  });
+
+  test('hides the export-calendar link when no date is votable', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: false})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .not
+      .toContain('/join/test-session/home/calendar.ics');
+  });
 });
 
 describe('renderVoteStep hides clash info', () => {
@@ -678,7 +725,7 @@ describe('renderConfirmedInfo', () => {
     });
     const app = createApp();
 
-    const response = renderConfirmedInfo(app, session);
+    const response = renderConfirmedInfo(app, session, {team: 'home', token: 'token'});
     const body = await response.text();
 
     expect(body)
@@ -688,5 +735,38 @@ describe('renderConfirmedInfo', () => {
     expect(body)
       .not
       .toContain('Reopened');
+  });
+
+  test('renders the export-calendar link when votable dates remain', async () => {
+    const session = aSession({
+      status: 'Confirmed',
+      confirmedProposedDateId: 'proposed-date-1',
+      proposedDates: [aProposedDate()],
+    });
+    const app = createApp();
+
+    const response = renderConfirmedInfo(app, session, {team: 'home', token: 'token'});
+    const body = await response.text();
+
+    expect(body)
+      .toContain('href="https://game-scheduler.localhost:3000/join/test-session/home/calendar.ics?token=token"');
+    expect(body)
+      .toContain('Export as calendar (.ics)');
+  });
+
+  test('hides the export-calendar link when no date is votable', async () => {
+    const session = aSession({
+      status: 'Confirmed',
+      confirmedProposedDateId: 'proposed-date-1',
+      proposedDates: [aProposedDate({votable: false})],
+    });
+    const app = createApp();
+
+    const response = renderConfirmedInfo(app, session, {team: 'home', token: 'token'});
+    const body = await response.text();
+
+    expect(body)
+      .not
+      .toContain('/join/test-session/home/calendar.ics');
   });
 });

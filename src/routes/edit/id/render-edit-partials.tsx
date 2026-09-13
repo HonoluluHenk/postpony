@@ -104,6 +104,7 @@ export function renderEditPartials(
     t: view.t,
     locale: view.locale,
     inputFormat: view.inputFormat,
+    baseUrl: view.baseUrl,
     venues: data.venues,
     proposedDateTime: extra.proposedDateTime,
     error: extra.error,

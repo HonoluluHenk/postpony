@@ -22,13 +22,23 @@ export function confirmedDateDisplay(session: Postponement, locale: AppLocale): 
          : undefined;
 }
 
-export function renderConfirmedInfo(app: App, session: Postponement): Response {
+export function renderConfirmedInfo(
+  app: App,
+  session: Postponement,
+  context: {team: Team; token: string},
+): Response {
+  const {team, token} = context;
+  const hasVotableDates = new PostponementRules().votableDates(session).length > 0;
   const html = app.render(
     <ConfirmedInfoPage
       {...app.view}
       title={app.t('confirmed_date_title')}
       confirmedDateDisplay={confirmedDateDisplay(session, app.locale)}
       reopenCount={session.reopenCount}
+      sessionId={session.id}
+      team={team}
+      token={token}
+      hasVotableDates={hasVotableDates}
     />,
   );
 
@@ -40,7 +50,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const locale = app.locale;
 
   if (session.status === 'Confirmed') {
-    return renderConfirmedInfo(app, session);
+    return renderConfirmedInfo(app, session, {team, token});
   }
 
   const rules = new PostponementRules();

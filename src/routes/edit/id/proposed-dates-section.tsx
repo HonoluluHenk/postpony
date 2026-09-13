@@ -47,6 +47,8 @@ export interface ProposedDatesSectionProps extends EditPartialsData {
   t: TranslateFn;
   locale: AppLocale;
   inputFormat: string;
+  /** Origin used to build the absolute calendar-export link. */
+  baseUrl: string;
   proposedDateTime?: string;
   error?: string;
   success?: boolean;
@@ -245,6 +247,15 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
       <header>
         <h3 tabindex={-1}>{props.t('proposed_dates_management')}</h3>
       </header>
+      {props.proposedDates.some((pd) => pd.votable) ? (
+        <a
+          class="button outline"
+          href={`${props.baseUrl}/edit/${props.sessionId}/calendar.ics`}
+        >
+          <i aria-hidden="true">download</i>
+          {props.t('export_calendar')}
+        </a>
+      ) : null}
       {props.reopenCount > 0 ? (
         <p class="chip outline">{props.t('reopened_count', {count: String(props.reopenCount)})}</p>
       ) : null}
