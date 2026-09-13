@@ -374,6 +374,31 @@ describe('join handlers', () => {
         .toContain('vote-proposed-date-1');
     });
 
+    test('does not carry votes for closed dates through the fallback redirect', async () => {
+      const session = await seedSession({
+        proposedDates: [
+          aProposedDate({id: 'open', votable: true}),
+          aProposedDate({id: 'closed', votable: false}),
+        ],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'ghost', 'vote-open': 'Yes', 'vote-closed': 'No'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+
+      expect(response.status)
+        .toBe(302);
+      const location = response.headers.get('Location') ?? '';
+      expect(location)
+        .toContain('vote-open=Yes');
+      expect(location)
+        .not
+        .toContain('vote-closed');
+    });
+
     test('casts a vote from a one-click GET link and renders the poll', async () => {
       const session = await seedSession({
         players: [aPlayer()],
