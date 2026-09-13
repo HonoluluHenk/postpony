@@ -97,3 +97,11 @@ Every Proposed Date shows its full date, all of its Clash and Venue Occupancy ch
 
 - The prototype verdict may spawn a follow-up spec for the actual redesign; this spec ends with the verdict recorded, not with the redesign shipped.
 - Bug root causes observed: fixed card height plus hidden overflow on the details row; nowrap/ellipsis with a 12.5rem cap on the date text; missing data labels on the own-team Votes table so the narrow-screen stacking pattern did not apply; wrapping allowed on the invitation link row.
+
+## Comments
+
+### Prototype verdict (ticket 09)
+
+**Question settled:** Does a week-grouped date rail with inline per-player vote dots, a single Plex type family and a sticky desktop sidebar beat the current layout?
+
+**Answer: Yes.** Variant A (week-grouped rail + sticky sidebar + inline vote dots + single Plex family) is the stronger direction and should be the basis of a real redesign. It removes the ~28,000px page (every date listed four times) entirely. **Steal from B:** the dense one-line row (A's date cell wraps awkwardly on phone — `2026` drops to its own line) and meta-on-top for narrow screens. **Before shipping:** phone roster/generator should be collapsed `<details>`; confirm the chip set on a row with real clashes (prototype data had clean rows); keep the icon-only copy button (B's full-text label is verbose). Screenshots: `prototype-screenshots/a-{390,820,1282}.png`, `b-{390,820,1282}.png`; full write-up in `VERDICT.md`. Prototype lives on throwaway branch `proto/edit-redesign` (never merged).

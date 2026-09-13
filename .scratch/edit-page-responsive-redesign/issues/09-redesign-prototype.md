@@ -6,12 +6,16 @@
 
 **Status:** ready-for-agent
 
-- [ ] Branch `proto/edit-redesign` created from main; all prototype code lives there only
-- [ ] `?proto=a|b` on the edit route switches variants; a floating bottom bar switches too
-- [ ] IBM Plex Sans + Plex Sans Condensed self-hosted in the vendor fonts directory (OFL licence file included)
-- [ ] Palette: cool paper background, light line colour, near-black ink, existing indigo/error/warning tokens; no new accent
-- [ ] Proposed Dates grouped by ISO week with dividers; left-aligned; single-line header
-- [ ] Desktop: sticky sidebar with status, invitation links, roster, generator; phone: stacked with votes and roster in disclosures
-- [ ] Votes shown inline per Proposed Date as per-player dots
-- [ ] Screenshots at 390/820/1282 for both variants attached to the spec Comments with the verdict and the question settled
-- [ ] No tests, no persistence changes; main untouched
+- [x] Branch `proto/edit-redesign` created from main; all prototype code lives there only
+- [x] `?proto=a|b` on the edit route switches variants; a floating bottom bar switches too
+- [x] IBM Plex Sans + Plex Sans Condensed self-hosted in the vendor fonts directory (OFL licence file included)
+- [x] Palette: cool paper background, light line colour, near-black ink, existing indigo/error/warning tokens; no new accent
+- [x] Proposed Dates grouped by ISO week with dividers; left-aligned; single-line header
+- [x] Desktop: sticky sidebar with status, invitation links, roster, generator; phone: stacked with votes and roster in disclosures
+- [x] Votes shown inline per Proposed Date as per-player dots
+- [x] Screenshots at 390/820/1282 for both variants attached to the spec Comments with the verdict and the question settled
+- [x] No tests, no persistence changes; main untouched
+
+## Comments
+
+Verdict: variant A (week-grouped rail + sticky sidebar + inline vote dots + single Plex family) beats the current layout; B's dense one-line row and meta-on-top for narrow screens are worth stealing. Full verdict + 6 screenshots recorded in `spec.md` Comments and `VERDICT.md` (feature worktree). Prototype lives on throwaway branch `proto/edit-redesign` (never merged): `89eef2d` fonts · `76b8f1d` palette/layout CSS · `511704c` switcher JS · `3b60137` variants · `b297a17` route wiring + assets.
