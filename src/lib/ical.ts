@@ -1,6 +1,6 @@
 import type { AppLocale } from '../locales';
 import { CLASH_BUFFER_HOURS } from './clashes';
-import type { Postponement, ProposedDate, Venue } from './models';
+import type { Postponement, ProposedDate, Team, Venue, Vote } from './models';
 import { PostponementRules } from './postponement';
 import { formatIsoToLocaleTokens, parseIsoToPlainDateTime } from './temporal-utils';
 
@@ -12,17 +12,47 @@ import { formatIsoToLocaleTokens, parseIsoToPlainDateTime } from './temporal-uti
  */
 export const ICAL_PRODUCT_ID = '-//PostPony//PostPony//EN';
 
+/** Localized labels for the per-date Vote links, resolved by the caller so the builder stays pure and I/O-free. */
+export interface IcalVoteLabels {
+  /** Line label before the choice links, e.g. "Vote". */
+  action: string;
+  yes: string;
+  ifNecessary: string;
+  no: string;
+}
+
 export interface IcalBuildOptions {
   baseUrl: string;
   locale: AppLocale;
   /** Clock seam for DTSTAMP; defaults to the current time. */
   now?: Date;
+  /** Invitation password. When present together with `team` and `labels` the export is a token-gated join export and gains `URL:` plus per-date Vote links; the public edit export omits them and stays byte-identical. */
+  token?: string;
+  /** Team whose poll the embedded links target; required with `token`. */
+  team?: Team;
+  /** Participant id embedded in every link; absent → unpersonalized links. */
+  playerId?: string;
+  /** Localized choice labels; required with `token`. */
+  labels?: IcalVoteLabels;
+}
+
+interface VoteContext {
+  token: string;
+  team: Team;
+  /** '' when unpersonalized. */
+  playerId: string;
+  labels: IcalVoteLabels;
 }
 
 export function buildIcal(session: Postponement, options: IcalBuildOptions): string {
   const rules = new PostponementRules();
   const dates = rules.votableDates(session);
   const now = options.now ?? new Date();
+  // Join mode needs token + team + labels together; a partial state (e.g. a
+  // handler forgetting labels) drops Vote emission rather than half-emitting.
+  const vote = options.token && options.team && options.labels
+               ? {token: options.token, team: options.team, playerId: options.playerId ?? '', labels: options.labels}
+               : undefined;
 
   const lines = [
     'BEGIN:VCALENDAR',
@@ -31,7 +61,7 @@ export function buildIcal(session: Postponement, options: IcalBuildOptions): str
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${escapeText(session.name)}`,
-    ...dates.flatMap((date) => eventLines(session, date, now, options)),
+    ...dates.flatMap((date) => eventLines(session, date, now, options, vote)),
     'END:VCALENDAR',
   ];
 
@@ -43,6 +73,7 @@ function eventLines(
   date: ProposedDate,
   now: Date,
   options: IcalBuildOptions,
+  vote: VoteContext | undefined,
 ): string[] {
   const start = parseIsoToPlainDateTime(date.dateTimeRange.start);
   const end = start.add({hours: CLASH_BUFFER_HOURS});
@@ -62,8 +93,11 @@ function eventLines(
   if (venue) {
     lines.push(`LOCATION:${escapeText(venueLine(venue))}`);
   }
+  if (vote) {
+    lines.push(`URL:${pollUrl(session, options.baseUrl, vote)}`);
+  }
   lines.push(
-    `DESCRIPTION:${escapeText(description(session, options))}`,
+    `DESCRIPTION:${escapeText(description(session, options, vote, date))}`,
     `STATUS:${confirmed ? 'CONFIRMED' : 'TENTATIVE'}`,
     'END:VEVENT',
   );
@@ -76,11 +110,49 @@ function summary(session: Postponement): string {
   return `Verschiebung: ${session.name} (${home} vs ${guest})`;
 }
 
-function description(session: Postponement, options: IcalBuildOptions): string {
+function description(
+  session: Postponement,
+  options: IcalBuildOptions,
+  vote: VoteContext | undefined,
+  date: ProposedDate,
+): string {
   const originalMatch = session.originalMatchDateTime
                         ? formatIsoToLocaleTokens(session.originalMatchDateTime, options.locale)
                         : '';
-  return `Original match: ${originalMatch}\n${options.baseUrl}/edit/${session.id}`;
+  const lines = [
+    `Original match: ${originalMatch}`,
+    `${options.baseUrl}/edit/${session.id}`,
+  ];
+  if (vote) {
+    const choices = ([
+      ['Yes', vote.labels.yes],
+      ['IfNecessary', vote.labels.ifNecessary],
+      ['No', vote.labels.no],
+    ] as const).map(([value, label]) => `${label} ${voteUrl(session, options.baseUrl, vote, date, value)}`);
+    lines.push(`${vote.labels.action}: ${choices.join(' | ')}`);
+  }
+  return lines.join('\n');
+}
+
+/** The choice-less poll URL behind the calendar app's "Open URL" button. */
+function pollUrl(session: Postponement, baseUrl: string, vote: VoteContext): string {
+  return `${baseUrl}/join/${session.id}/${vote.team}/vote?token=${encodeURIComponent(vote.token)}${playerParam(vote)}`;
+}
+
+/** One Date's one-click Vote link for a given choice value. */
+function voteUrl(
+  session: Postponement,
+  baseUrl: string,
+  vote: VoteContext,
+  date: ProposedDate,
+  value: Vote['type'],
+): string {
+  return `${baseUrl}/join/${session.id}/${vote.team}/vote?token=${encodeURIComponent(vote.token)}`
+    + `${playerParam(vote)}&vote-${encodeURIComponent(date.id)}=${value}`;
+}
+
+function playerParam(vote: VoteContext): string {
+  return vote.playerId ? `&playerId=${encodeURIComponent(vote.playerId)}` : '';
 }
 
 function resolveVenue(session: Postponement, venueNumber: number | undefined): Venue | undefined {
