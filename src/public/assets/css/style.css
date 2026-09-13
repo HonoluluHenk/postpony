@@ -175,7 +175,7 @@
     border-radius: var(--border-radius);
     background: var(--surface-container-lowest);
     border: 1px solid var(--outline-variant);
-    height: 7rem;
+    min-height: 7rem;
   }
 
   .proposed-date-header {
@@ -193,7 +193,6 @@
     flex-wrap: wrap;
     gap: var(--space-2);
     align-content: flex-end;
-    overflow: hidden;
   }
 
   .proposed-date-info {
@@ -208,13 +207,9 @@
   }
 
   .proposed-date-info > .max {
-    max-width: 12.5rem;
     min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    /* Grow (bounded by max-width) so the badge sits at a constant x in every
-       row; the cap keeps long dates truncating instead of stretching. */
+    /* Grow so the badge sits at a constant x in every row; the date text wraps
+       naturally instead of truncating with an ellipsis. */
     flex: 1 1 auto;
   }
 
@@ -570,17 +565,13 @@
     flex: 0 0 2.5rem;
   }
 
-  /* Below 600px the proposed-date card's single header row cannot hold the
-     date info (icon + date + venue badge) and the action buttons side by side;
-     the info gets crushed to zero and the toggle covers it. Stack instead: the
-     date info takes the first line, the actions wrap below it (right-aligned)
-     and the fixed 7rem card height becomes auto so nothing clips. The actions
-     row itself wraps so the Confirm button never overflows the card edge. */
-  @media (max-width: 599px) {
-    .proposed-date-card {
-      height: auto;
-    }
-
+  /* Below 993px (BeerCSS medium breakpoint) the proposed-date card's single
+     header row cannot hold the date info (icon + date + venue badge) and the
+     action buttons side by side; the info gets crushed to zero and the toggle
+     covers it. Stack instead: the date info takes the first line, the actions
+     wrap below it (right-aligned). The actions row itself wraps so the Confirm
+     button never overflows the card edge. */
+  @media (max-width: 992px) {
     .proposed-date-header {
       flex-wrap: wrap;
     }
@@ -595,9 +586,11 @@
       flex-wrap: wrap;
       justify-content: flex-end;
     }
+  }
 
-    /* The From/To/Venue generator grid is three columns wide (~500px) and
-       overflows a phone viewport. Stack the fields full-width. */
+  /* The From/To/Venue generator grid is three columns wide (~500px) and
+     overflows a phone viewport. Stack the fields full-width (phone only). */
+  @media (max-width: 599px) {
     .generate-controls {
       grid-template-columns: 1fr;
     }

@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] Card uses a minimum height, not a fixed height; details row does not hide overflow
-- [ ] Date text has no nowrap/ellipsis truncation and no hard max width
-- [ ] The card-wrapping media query applies below 993px (BeerCSS medium breakpoint), not only below 600px
-- [ ] e2e at tablet: full date text of the first Proposed Date visible; both check chips visible on a clean row; clash chip visible on a clash row
-- [ ] e2e at phone: same assertions
-- [ ] Desktop layout unchanged apart from removed truncation; screenshot baselines regenerated where changed
-- [ ] `npm run verify` passes
+- [x] Card uses a minimum height, not a fixed height; details row does not hide overflow
+- [x] Date text has no nowrap/ellipsis truncation and no hard max width
+- [x] The card-wrapping media query applies below 993px (BeerCSS medium breakpoint), not only below 600px
+- [x] e2e at tablet: full date text of the first Proposed Date visible; both check chips visible on a clean row; clash chip visible on a clash row
+- [x] e2e at phone: same assertions
+- [x] Desktop layout unchanged apart from removed truncation; screenshot baselines regenerated where changed
+- [x] `npm run verify` passes

@@ -1,6 +1,7 @@
 import type { Locator } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { EditPage } from './pages';
+import { setViewport } from './viewports';
 
 const PHONE_VIEWPORT = {width: 375, height: 667};
 
@@ -17,6 +18,36 @@ async function expectFullyInViewport(locator: Locator): Promise<void> {
       && rect.bottom <= window.innerHeight;
   });
   expect(fullyVisible)
+    .toBe(true);
+}
+
+// Asserts the child's bounding box lies entirely within the parent's, i.e. the
+// child is not clipped by an ancestor's overflow. This catches the date-card
+// bug where a fixed height plus overflow:hidden on the details row cut off the
+// chips.
+async function expectFullyWithin(parent: Locator, child: Locator): Promise<void> {
+  const childBox = await child.boundingBox();
+  const parentBox = await parent.boundingBox();
+  if (!childBox || !parentBox) {
+    throw new Error('element has no bounding box');
+  }
+  expect(childBox.x)
+    .toBeGreaterThanOrEqual(parentBox.x);
+  expect(childBox.y)
+    .toBeGreaterThanOrEqual(parentBox.y);
+  expect(childBox.x + childBox.width)
+    .toBeLessThanOrEqual(parentBox.x + parentBox.width);
+  expect(childBox.y + childBox.height)
+    .toBeLessThanOrEqual(parentBox.y + parentBox.height);
+}
+
+// Asserts the element renders its full text without horizontal truncation
+// (scrollWidth <= clientWidth). A nowrap/ellipsis style hides the overflowing
+// text, making scrollWidth exceed clientWidth.
+async function expectNotHorizontallyTruncated(locator: Locator): Promise<void> {
+  await locator.scrollIntoViewIfNeeded();
+  const notTruncated = await locator.evaluate((el) => el.scrollWidth <= el.clientWidth);
+  expect(notTruncated)
     .toBe(true);
 }
 
@@ -87,4 +118,49 @@ test.describe('Responsive Layout', () => {
 
     await checkA11y();
   });
+});
+
+// Ticket 02: the Proposed Date card must show its full date text and every
+// Clash / Venue Occupancy chip on tablet and phone. A clean date sorts first
+// (both check chips) and a clashing date follows (clash chip), so one session
+// covers both states.
+test.describe('Proposed date card full visibility', () => {
+  for (const name of ['tablet', 'phone'] as const) {
+    test(`proposed date card shows the full date and all chips at the ${name} viewport`, async ({page, checkA11y}) => {
+      await setViewport(page, name);
+      const {editPage} = await EditPage.createSession(page, ['2026-10-10T18:00', '2026-12-04T18:00']);
+
+      // Full date text of the first Proposed Date is visible, not truncated to
+      // an ellipsis and not clipped at the card edge.
+      const firstCard = editPage.proposedDateRows.nth(0);
+      const dateText = firstCard.locator('.proposed-date-info > .max');
+      await expect(dateText)
+        .toBeVisible();
+      await expectNotHorizontallyTruncated(dateText);
+      await expectFullyWithin(firstCard, dateText);
+
+      // Both check chips stay on the clean row.
+      const cleanDetails = firstCard.locator('.proposed-date-details');
+      const cleanChip = cleanDetails.getByText('Schedule checked, no clashes');
+      const venueChip = cleanDetails.getByText('Venue checked, no other games');
+      await expect(cleanChip)
+        .toBeVisible();
+      await expect(venueChip)
+        .toBeVisible();
+      await expectFullyWithin(firstCard, cleanChip);
+      await expectFullyWithin(firstCard, venueChip);
+
+      // The clashing date's chip is visible on its row too.
+      const clashCard = editPage.proposedDateRows.nth(1);
+      await expect(clashCard)
+        .toHaveClass(/clash-row/);
+      const clashChip = clashCard.locator('.proposed-date-details')
+        .getByText(/vs Burgdorf/);
+      await expect(clashChip)
+        .toBeVisible();
+      await expectFullyWithin(clashCard, clashChip);
+
+      await checkA11y();
+    });
+  }
 });
