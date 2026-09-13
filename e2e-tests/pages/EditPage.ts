@@ -119,8 +119,10 @@ export class EditPage {
   }
 
   playerItem(name: string): Locator {
-    return this.page.getByText(name)
-      .first();
+    // ponytail: scope to the roster list — the restored own-team vote table also
+    // renders player names (as column headers inside a closed disclosure), so a
+    // bare getByText would match a hidden table header first.
+    return this.playerItems.filter({hasText: name});
   }
 
   async addPlayer(name: string, team: 'home' | 'away' = 'home'): Promise<void> {
@@ -297,6 +299,57 @@ export class EditPage {
     return this.proposedDateRows
       .nth(dateIndex)
       .locator('.vote-dots .vote-dot');
+  }
+
+  // ---- Restored inline tallies, sort control and vote tables. ----
+
+  // The two inline team tallies of a date row, in render order (home, away),
+  // e.g. "Ostermundigen: 1 (1/0/0)".
+  teamTallies(dateIndex: number): Locator {
+    return this.proposedDateRows
+      .nth(dateIndex)
+      .locator('.team-tallies .team-tally');
+  }
+
+  teamTally(dateIndex: number, team: string): Locator {
+    return this.teamTallies(dateIndex)
+      .filter({hasText: `${team}:`});
+  }
+
+  get sortControl(): Locator {
+    return this.page.getByRole('radiogroup', {name: 'Sort by'});
+  }
+
+  sortRadio(name: 'Date' | 'Availability'): Locator {
+    return this.sortControl.getByRole('radio', {name});
+  }
+
+  async sortBy(name: 'Date' | 'Availability'): Promise<void> {
+    // beer.css hides native radios; toggle via the visible label text.
+    await this.sortControl.getByText(name, {exact: true})
+      .click();
+  }
+
+  // Availability groups ("Available: 2") and ISO-week groups share `.week-head`.
+  get groupHeads(): Locator {
+    return this.proposedDateList.locator('.week-head');
+  }
+
+  // A vote table in its disclosure, matched by its summary title
+  // ("Your Team Votes" / "Home Team Votes" / "Away Team Votes").
+  votesDisclosure(title: string): Locator {
+    return this.page.locator('.edit-votes details')
+      .filter({has: this.page.locator('summary', {hasText: title})});
+  }
+
+  get ownTeamVotesDisclosure(): Locator {
+    return this.page.locator('#own-team-votes');
+  }
+
+  async openVotesDisclosure(title: string): Promise<void> {
+    await this.votesDisclosure(title)
+      .locator('summary')
+      .click();
   }
 
   homeCopyButton(): Locator {

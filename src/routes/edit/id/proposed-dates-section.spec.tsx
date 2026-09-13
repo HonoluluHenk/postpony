@@ -55,6 +55,7 @@ function railProps(session: Postponement, overrides: Partial<EditGridProps> = {}
     locale: 'en-US',
     inputFormat: inputFormat('en-US'),
     baseUrl: BASE_URL,
+    organizerTeam: 'home',
     ...buildEditPartialsData(session, 'en-US'),
     ...overrides,
   };
@@ -362,6 +363,180 @@ describe('ProposedDatesRail rail-level controls', () => {
       .toContain('class="toast success top mt-2"');
     expect(html)
       .toContain('Proposed date added!');
+  });
+});
+
+describe('ProposedDatesRail inline team tallies', () => {
+  it('renders both teams inline tallies as available (yes/if/no) per date', () => {
+    const session = buildSession({
+      homeTeam: 'Ostermundigen',
+      guestTeam: 'Thun',
+      players: [
+        aPlayer({id: 'h1', name: 'H One', teamId: 'home'}),
+        aPlayer({id: 'h2', name: 'H Two', teamId: 'home'}),
+        aPlayer({id: 'a1', name: 'A One', teamId: 'away'}),
+      ],
+      proposedDates: [
+        aProposedDate({id: 'pd-t', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+      ],
+      votes: [
+        aVote({id: 'v1', proposedDateId: 'pd-t', participantId: 'h1', type: 'Yes'}),
+        aVote({id: 'v2', proposedDateId: 'pd-t', participantId: 'h2', type: 'IfNecessary'}),
+        aVote({id: 'v3', proposedDateId: 'pd-t', participantId: 'a1', type: 'No'}),
+      ],
+    });
+    const html = renderToString(ProposedDatesRail(railProps(session, {homeTeam: 'Ostermundigen', guestTeam: 'Thun'})));
+
+    expect(html)
+      .toContain('<div class="team-tallies">');
+    // Home: two can play (yes + if-needed), one no. Away: one no.
+    expect(html)
+      .toContain('<span class="team-tally">Ostermundigen: 2 (1/1/0)</span>');
+    expect(html)
+      .toContain('<span class="team-tally">Thun: 0 (0/0/1)</span>');
+  });
+
+  it('falls back to a zero tally for a date neither team has voted on', () => {
+    // pd-new has no matching votes (the fixture's votes reference another date).
+    const session = buildSession({
+      proposedDates: [
+        aProposedDate({id: 'pd-new', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+      ],
+    });
+    const html = renderToString(ProposedDatesRail(railProps(session, {homeTeam: 'Home Team', guestTeam: 'Guest Team'})));
+
+    expect(html)
+      .toContain('<span class="team-tally">Home Team: 0 (0/0/0)</span>');
+    expect(html)
+      .toContain('<span class="team-tally">Guest Team: 0 (0/0/0)</span>');
+  });
+});
+
+describe('ProposedDatesRail restored vote tables', () => {
+  it('renders the own-team, home and away tables in closed disclosures at the rail end', () => {
+    const html = renderToString(ProposedDatesRail(railProps(buildSession())));
+
+    expect(html)
+      .toContain('<div class="edit-votes">');
+    expect(html)
+      .toContain('<details id="own-team-votes" class="votes-details">');
+    expect(html)
+      .toContain('<summary>Your Team Votes</summary>');
+    expect(html)
+      .toMatch(/<details>\s*<summary><h3 id="vote-summary-home-title">Home Team Votes<\/h3><\/summary>/);
+    expect(html)
+      .toMatch(/<details>\s*<summary><h3 id="vote-summary-away-title">Away Team Votes<\/h3><\/summary>/);
+    // All three disclosures are closed by default: no `open` attribute on any.
+    expect(html)
+      .not
+      .toContain('<details open');
+  });
+});
+
+describe('ProposedDatesRail sort control', () => {
+  const sortDates = [
+    aProposedDate({id: 'pd-a', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+    aProposedDate({id: 'pd-b', dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'}, votable: true, venueNumber: 1}),
+    aProposedDate({id: 'pd-c', dateTimeRange: {start: '2026-09-15T20:00', end: '2026-09-15T22:00'}, votable: true, venueNumber: 1}),
+    aProposedDate({id: 'pd-d', dateTimeRange: {start: '2026-09-22T20:00', end: '2026-09-22T22:00'}, votable: true, venueNumber: 1}),
+  ];
+  // Home availability: pd-a=1, pd-b=2, pd-c=2 (yes + if-needed), pd-d=0.
+  const sortVotes = [
+    aVote({id: 'v1', proposedDateId: 'pd-a', participantId: 'p1', type: 'Yes'}),
+    aVote({id: 'v2', proposedDateId: 'pd-b', participantId: 'p1', type: 'Yes'}),
+    aVote({id: 'v3', proposedDateId: 'pd-b', participantId: 'p2', type: 'Yes'}),
+    aVote({id: 'v4', proposedDateId: 'pd-c', participantId: 'p1', type: 'Yes'}),
+    aVote({id: 'v5', proposedDateId: 'pd-c', participantId: 'p2', type: 'IfNecessary'}),
+  ];
+
+  it('renders the radiogroup with Date and Availability options that get the edit grid', () => {
+    const session = buildSession({proposedDates: sortDates, votes: sortVotes});
+    const html = renderToString(ProposedDatesRail(railProps(session)));
+
+    expect(html)
+      .toContain('class="sort-control" role="radiogroup" aria-label="Sort by"');
+    expect(html)
+      .toContain('name="sort" value="date" checked');
+    expect(html)
+      .toContain('hx-get="/edit/test-session?sort=date"');
+    expect(html)
+      .toContain('name="sort" value="availability"');
+    expect(html)
+      .toContain('hx-get="/edit/test-session?sort=availability"');
+    expect(html)
+      .toContain('hx-target="#edit-grid"');
+    expect(html)
+      .toContain('hx-push-url="true"');
+  });
+
+  it('groups by availability and orders by date within a group when sorted by availability', () => {
+    const session = buildSession({proposedDates: sortDates, votes: sortVotes});
+    const html = renderToString(ProposedDatesRail(railProps(session, {sort: 'availability'})));
+
+    expect(html)
+      .toContain('<span>Available: 2</span>');
+    expect(html)
+      .toContain('<span>Available: 1</span>');
+    expect(html)
+      .toContain('<span>Available: 0</span>');
+    // Availability grouping labels the groups by count, not ISO week.
+    expect(html)
+      .not
+      .toContain('>Week ');
+
+    // Within "Available: 2" Sep 8 precedes Sep 15; then the 1s and 0s groups.
+    const sep8 = html.indexOf('>September 8<');
+    const sep15 = html.indexOf('>September 15<');
+    const sep1 = html.indexOf('>September 1<');
+    const sep22 = html.indexOf('>September 22<');
+    expect(sep8)
+      .toBeGreaterThan(-1);
+    expect(sep8)
+      .toBeLessThan(sep15);
+    expect(sep15)
+      .toBeLessThan(sep1);
+    expect(sep1)
+      .toBeLessThan(sep22);
+  });
+
+  it('restores ISO-week grouping when sorted by date', () => {
+    const session = buildSession({proposedDates: sortDates, votes: sortVotes});
+    const html = renderToString(ProposedDatesRail(railProps(session, {sort: 'date'})));
+
+    expect(html)
+      .toContain('Week 36');
+    expect(html)
+      .toContain('Week 37');
+    expect(html)
+      .toContain('Week 38');
+    expect(html)
+      .toContain('Week 39');
+    expect(html)
+      .not
+      .toContain('Available:');
+  });
+
+  it('drives the availability grouping from the away tallies when the organizer is away', () => {
+    const session = buildSession({
+      organizerTeam: 'away',
+      proposedDates: sortDates,
+      players: [
+        aPlayer({id: 'p3', name: 'Carol', teamId: 'away'}),
+        aPlayer({id: 'p4', name: 'Dave', teamId: 'away'}),
+        aPlayer({id: 'p5', name: 'Erin', teamId: 'away'}),
+      ],
+      votes: [
+        aVote({id: 'a1', proposedDateId: 'pd-c', participantId: 'p3', type: 'Yes'}),
+        aVote({id: 'a2', proposedDateId: 'pd-c', participantId: 'p4', type: 'IfNecessary'}),
+      ],
+    });
+    const html = renderToString(ProposedDatesRail(railProps(session, {sort: 'availability', organizerTeam: 'away'})));
+
+    expect(html)
+      .toContain('<span>Available: 2</span>');
+    // Only pd-c has away availability, so it leads the list.
+    expect(html.indexOf('>September 15<'))
+      .toBeLessThan(html.indexOf('>September 1<'));
   });
 });
 

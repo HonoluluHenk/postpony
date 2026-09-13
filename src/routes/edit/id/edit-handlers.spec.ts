@@ -9,6 +9,7 @@ import { MemorySessionStore } from '../../../lib/session-store';
 import * as temporalUtils from '../../../lib/temporal-utils';
 import { LOCALE_KEY } from '../../../locales';
 import { handleConfirmDatePost } from './confirm-date-post';
+import { handleEditGet } from './edit-id-get';
 import { buildOwnTeamView } from './own-team-view';
 import { handleEditPlayersPost } from './players-post';
 import { handleProposedDateDeletePost } from './proposed-date-delete-post';
@@ -16,6 +17,7 @@ import { handleProposedDateVisibilityPost } from './proposed-date-visibility-pos
 import { handleEditProposedDatesPost } from './proposed-dates-post';
 import { handleRefreshClashesPost } from './refresh-clashes-post';
 import { handleReopenPost } from './reopen-post';
+import { renderEditPartials } from './render-edit-partials';
 
 vi.mock('../../../lib/click-tt-scraper', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../lib/click-tt-scraper')>();
@@ -2325,6 +2327,98 @@ describe('edit handlers', () => {
         .toEqual(['Voter']);
       expect(view.ownTeamResults)
         .toEqual([]);
+    });
+  });
+
+  describe('sort persistence', () => {
+    const sortDates = [
+      aProposedDate({id: 'pd-a', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+      aProposedDate({id: 'pd-b', dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'}, votable: true, venueNumber: 1}),
+    ];
+
+    test('handleEditGet defaults to date grouping without a sort query', async () => {
+      const session = aSession({proposedDates: sortDates});
+      const app = createApp({params: {id: session.id}});
+      await app.store.save(session);
+
+      const html = await (await handleEditGet(app)).text();
+
+      expect(html)
+        .toContain('value="date" checked');
+      expect(html)
+        .toContain('Week 36');
+    });
+
+    test('handleEditGet renders availability grouping when ?sort=availability', async () => {
+      const session = aSession({proposedDates: sortDates});
+      const app = createApp({params: {id: session.id}, queries: {sort: 'availability'}});
+      await app.store.save(session);
+
+      const html = await (await handleEditGet(app)).text();
+
+      expect(html)
+        .toContain('value="availability" checked');
+      expect(html)
+        .toContain('<span>Available: 0</span>');
+    });
+
+    test('renderEditPartials keeps the availability sort from the HX-Current-URL header', () => {
+      const session = aSession({proposedDates: sortDates});
+      const app = createApp({
+        headers: {'HX-Current-URL': 'https://game-scheduler.localhost:3000/edit/test-session?sort=availability'},
+      });
+
+      const html = renderEditPartials(app, session);
+
+      expect(html)
+        .toContain('value="availability" checked');
+      expect(html)
+        .toContain('<span>Available: 0</span>');
+    });
+
+    test('renderEditPartials defaults to date grouping without the header', () => {
+      const session = aSession({proposedDates: sortDates});
+      const app = createApp();
+
+      const html = renderEditPartials(app, session);
+
+      expect(html)
+        .toContain('value="date" checked');
+      expect(html)
+        .toContain('Week 36');
+    });
+
+    test('renderEditPartials falls back to date grouping when the header URL is invalid', () => {
+      const session = aSession({proposedDates: sortDates});
+      const app = createApp({headers: {'HX-Current-URL': 'not a url'}});
+
+      const html = renderEditPartials(app, session);
+
+      expect(html)
+        .toContain('value="date" checked');
+    });
+
+    test('renderEditPartials treats an unknown sort value as date', () => {
+      const session = aSession({proposedDates: sortDates});
+      const app = createApp({
+        headers: {'HX-Current-URL': 'https://game-scheduler.localhost:3000/edit/test-session?sort=bogus'},
+      });
+
+      const html = renderEditPartials(app, session);
+
+      expect(html)
+        .toContain('value="date" checked');
+    });
+
+    test('handleEditGet renders the original match datetime when the session has one', async () => {
+      const session = aSession({proposedDates: sortDates, originalMatchDateTime: '2026-09-01T20:00'});
+      const app = createApp({params: {id: session.id}});
+      await app.store.save(session);
+
+      const html = await (await handleEditGet(app)).text();
+
+      expect(html)
+        .toContain('Tu, Sep 1, 2026, 8:00 PM');
     });
   });
 

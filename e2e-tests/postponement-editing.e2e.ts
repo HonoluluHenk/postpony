@@ -244,6 +244,140 @@ test.describe('Postponement Editing', () => {
     await checkA11y();
   });
 
+  test('should show the inline team tallies with the availability count after a vote', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(1);
+
+    const editUrl = page.url();
+
+    // Alice (organizer/home team) can play this date.
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+    await joinPage.castVote(0, 'Yes');
+
+    await page.goto(editUrl);
+
+    // Home availability counts Alice's Yes (available = yes + if-needed); the
+    // away team has not voted, so its tally stays zero.
+    await expect(editPage.teamTallies(0))
+      .toHaveText(['Ostermundigen: 1 (1/0/0)', 'Thun: 0 (0/0/0)']);
+
+    await checkA11y();
+  });
+
+  test('should re-group dates by availability and keep the sort across a mutation', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, [
+      '2026-06-01T20:00',
+      '2026-06-08T20:00',
+      '2026-06-15T20:00',
+    ]);
+    const editPage = new EditPage(page);
+
+    // Alice (home) can play the first two dates but not the third.
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+    await joinPage.castVote(0, 'Yes');
+    await joinPage.castVote(1, 'Yes');
+    await joinPage.castVote(2, 'No');
+
+    await editPage.goto(session.editUrl);
+
+    // Default Date sort: one ISO-week group per date.
+    await expect(editPage.sortRadio('Date'))
+      .toBeChecked();
+    await expect(editPage.groupHeads)
+      .toHaveCount(3);
+    await expect(editPage.groupHeads.nth(0))
+      .toContainText('Week 23');
+    await expect(editPage.groupHeads.nth(1))
+      .toContainText('Week 24');
+    await expect(editPage.groupHeads.nth(2))
+      .toContainText('Week 25');
+
+    // Availability sort: two groups, dates ascending within each group.
+    await editPage.sortBy('Availability');
+    await expect(editPage.sortRadio('Availability'))
+      .toBeChecked();
+    expect(page.url())
+      .toContain('sort=availability');
+    await expect(editPage.groupHeads)
+      .toHaveText(['Available: 1', 'Available: 0']);
+    await expect(editPage.proposedDateDisplays())
+      .resolves
+      .toEqual([
+        expect.stringContaining('June 1 2026'),
+        expect.stringContaining('June 8 2026'),
+        expect.stringContaining('June 15 2026'),
+      ]);
+
+    // A mutation (adding a date) recovers the sort from the current URL.
+    await editPage.addProposedDate('2026-06-22T20:00');
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(4);
+    await expect(editPage.sortRadio('Availability'))
+      .toBeChecked();
+    expect(page.url())
+      .toContain('sort=availability');
+    await expect(editPage.groupHeads)
+      .toHaveText(['Available: 1', 'Available: 0']);
+
+    // Switching back restores the ISO-week grouping.
+    await editPage.sortBy('Date');
+    await expect(editPage.groupHeads)
+      .toHaveCount(4);
+    await expect(editPage.groupHeads.nth(3))
+      .toContainText('Week 26');
+
+    await checkA11y();
+  });
+
+  test('should render the three vote tables collapsed and expand the own-team detail on demand', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(1);
+
+    const editUrl = page.url();
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+    await joinPage.castVote(0, 'Yes');
+
+    await page.goto(editUrl);
+
+    const ownVotes = editPage.ownTeamVotesDisclosure;
+    const homeVotes = editPage.votesDisclosure('Home Team Votes');
+    const awayVotes = editPage.votesDisclosure('Away Team Votes');
+
+    // All three tables are closed by default.
+    await expect(ownVotes)
+      .not
+      .toHaveAttribute('open');
+    await expect(homeVotes)
+      .not
+      .toHaveAttribute('open');
+    await expect(awayVotes)
+      .not
+      .toHaveAttribute('open');
+
+    // Opening the own-team table reveals the per-player vote text.
+    await ownVotes.locator('summary')
+      .click();
+    await expect(ownVotes)
+      .toHaveAttribute('open');
+    await expect(ownVotes.getByRole('columnheader', {name: 'Alice'}))
+      .toBeVisible();
+    await expect(ownVotes.getByRole('cell', {name: 'Yes'}))
+      .toBeVisible();
+
+    await checkA11y();
+  });
+
   test('opens the players disclosure with Enter and Space on its summary', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');

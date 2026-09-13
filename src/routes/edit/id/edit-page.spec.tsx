@@ -65,6 +65,7 @@ function baseProps(options: PageOptions = {}): EditPageProps {
     sessionId: session.id,
     status: session.status,
     reopenCount: session.reopenCount,
+    organizerTeam: session.organizerTeam,
     ...buildEditPartialsData(session, 'en-US'),
     organizerPassword: options.organizerPassword,
     proposedDateTimeDisplay: options.proposedDateTimeDisplay ?? 'Tue, Sep 1, 2026, 8:00 PM',
@@ -206,7 +207,7 @@ describe('EditPage week-grouped date rows', () => {
       .toContain('8:00 PM');
   });
 
-  it('replaces the vote tables with per-player vote dots', () => {
+  it('renders per-player vote dots alongside the restored vote tables', () => {
     const html = renderToString(EditPage(baseProps()));
 
     expect(html)
@@ -215,9 +216,28 @@ describe('EditPage week-grouped date rows', () => {
       .toContain('<span class="vote-dot vote-dot--yes"');
     expect(html)
       .toContain('<span class="vote-dot vote-dot--no"');
+    // The redesign keeps the dots but restores the three vote tables.
     expect(html)
-      .not
-      .toContain('<table');
+      .toContain('<details id="own-team-votes" class="votes-details">');
+    expect(html)
+      .toContain('<h3 id="vote-summary-home-title">Home Team Votes</h3>');
+    expect(html)
+      .toContain('<h3 id="vote-summary-away-title">Away Team Votes</h3>');
+  });
+
+  it('renders inline team tallies and the sort control on the full edit page', () => {
+    const html = renderToString(EditPage(baseProps()));
+
+    expect(html)
+      .toContain('<div class="team-tallies">');
+    expect(html)
+      .toContain('<span class="team-tally">Home Team: 1 (1/0/1)</span>');
+    expect(html)
+      .toContain('<span class="team-tally">Away Team: 0 (0/0/0)</span>');
+    expect(html)
+      .toContain('role="radiogroup" aria-label="Sort by"');
+    expect(html)
+      .toContain('hx-get="/edit/test-session?sort=availability"');
   });
 });
 
