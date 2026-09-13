@@ -6,10 +6,14 @@ import { setViewport } from './viewports';
 const PHONE_VIEWPORT = {width: 375, height: 667};
 
 // Asserts the element's full bounding box lies inside the viewport, i.e. it is
-// not clipped at the page edge. scrollIntoViewIfNeeded handles vertical page
-// scroll (e.g. after an HTMX swap focuses a section further down the page).
+// not clipped at the page edge. scrollIntoView handles vertical page scroll
+// (e.g. after an HTMX swap focuses a section further down the page) and
+// centers the element so a sub-pixel boundary doesn't leave a sliver outside
+// the viewport bottom.
 async function expectFullyInViewport(locator: Locator): Promise<void> {
-  await locator.scrollIntoViewIfNeeded();
+  await locator.evaluate((el) => {
+    el.scrollIntoView({block: 'center', inline: 'nearest'});
+  });
   const fullyVisible = await locator.evaluate((el) => {
     const rect = el.getBoundingClientRect();
     return rect.left >= 0
@@ -78,7 +82,9 @@ test.describe('Responsive Layout', () => {
 
     // Vote-tally table stacks below 993px: cells are block-level and the
     // header row is visually hidden (clip pattern) while keeping real
-    // table semantics for screen readers.
+    // table semantics for screen readers. The tally is a closed disclosure,
+    // so open it before asserting the stacked CSS.
+    await editPage.openHomeTally();
     const table = editPage.homeTallyTable();
     await expect(table.locator('thead'))
       .toHaveCSS('position', 'absolute');
@@ -134,6 +140,8 @@ test.describe('Own-team votes table stacking', () => {
     // partial that adds a date (its out-of-band swap needs an existing
     // `#own-team-votes` node), so reload to read the stacked table.
     await page.goto(session.editUrl);
+    // The own-team Votes table is a closed disclosure; open it to read the stack.
+    await editPage.openOwnTeamVotes();
 
     const ownTeamTable = editPage.ownTeamTable();
     const firstRowVotedCell = ownTeamTable.getByRole('row')

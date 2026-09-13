@@ -1146,6 +1146,15 @@ describe('ProposedDatesSectionPartial', () => {
       .toContain('id="vote-tally-section" hx-swap-oob="true"');
     expect(html)
       .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+    // The partial's OOB vote sections are disclosures closed by default, so a
+    // swap never leaves a stale open tally on screen.
+    expect(html)
+      .toMatch(/<section id="own-team-votes"[^>]*>\s*<details>\s*<summary>\s*<h3 id="own-team-votes-title">Your Team Votes<\/h3>/);
+    expect(html)
+      .toMatch(/<section[^>]*aria-labelledby="vote-summary-home-title"[^>]*>\s*<details>\s*<summary>/);
+    expect(html)
+      .not
+      .toContain('<details open');
     expect(html)
       .not
       .toContain('<!DOCTYPE html>');

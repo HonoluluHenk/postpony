@@ -140,6 +140,12 @@ describe('TeamSectionPartial', () => {
       .toContain('id="team-management"');
     expect(html)
       .toContain('<section id="own-team-votes" class="padding small-round surface-variant" hx-swap-oob="true"');
+    // The partial's OOB own-team votes is a disclosure closed by default.
+    expect(html)
+      .toMatch(/<section id="own-team-votes"[^>]*>\s*<details>\s*<summary>\s*<h3 id="own-team-votes-title">Your Team Votes<\/h3>/);
+    expect(html)
+      .not
+      .toContain('<details open');
   });
 
   it('announces the outcome via the out-of-band status element when the handler supplies a message', () => {

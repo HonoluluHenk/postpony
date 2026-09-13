@@ -24,6 +24,7 @@ export function VoteTallySection(props: VoteTallySectionProps): JSX.Element {
             headingLevel={3}
             titleId="vote-summary-home-title"
             title={props.t('vote_summary_home')}
+            disclosure={true}
           />
         </section>
       ) : null}
@@ -35,6 +36,7 @@ export function VoteTallySection(props: VoteTallySectionProps): JSX.Element {
             headingLevel={3}
             titleId="vote-summary-away-title"
             title={props.t('vote_summary_away')}
+            disclosure={true}
           />
         </section>
       ) : null}

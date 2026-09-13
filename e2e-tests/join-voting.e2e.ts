@@ -286,6 +286,7 @@ test.describe('Join and Voting', () => {
     // proposed date reads 2/5 voted.
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
+    await editPage.openOwnTeamVotes();
     await expect(editPage.ownTeamTable())
       .toContainText('Alice');
     await expect(editPage.ownTeamTable())
@@ -302,6 +303,7 @@ test.describe('Join and Voting', () => {
     await awayJoinPage.submitVotes();
 
     await editPage.goto(session.editUrl);
+    await editPage.openAwayTally();
     await expect(editPage.awayTallySection()
       .getByRole('table')
       .getByRole('row')

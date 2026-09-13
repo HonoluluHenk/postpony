@@ -52,6 +52,27 @@ describe('VoteTally component', () => {
     expect(htmlH4).toContain('<h4 id="vote-tally-title">Vote Summary</h4>');
   });
 
+  it('wraps the tally in a closed details with the heading inside the summary when disclosure is set', () => {
+    const node = VoteTally({ proposedDates: sampleDates, t, disclosure: true });
+    const html = renderToString(node);
+
+    expect(html).toContain('<details>');
+    expect(html).toContain('</details>');
+    expect(html).toMatch(/<summary>\s*<h3 id="vote-tally-title">Vote Summary<\/h3>\s*<\/summary>/);
+    // Closed by default: no `open` attribute on the details.
+    expect(html).not.toContain('<details open');
+    // The table sits inside the details, after the summary.
+    expect(html).toMatch(/<\/summary>\s*<table>/);
+  });
+
+  it('keeps the heading outside any disclosure when disclosure is not set', () => {
+    const html = renderToString(VoteTally({ proposedDates: sampleDates, t }));
+
+    expect(html).not.toContain('<details');
+    expect(html).not.toContain('<summary');
+    expect(html).toContain('<h3 id="vote-tally-title">Vote Summary</h3>');
+  });
+
   it('renders table headers and tally values for each date', () => {
     const node = VoteTally({ proposedDates: sampleDates, t });
     const html = renderToString(node);

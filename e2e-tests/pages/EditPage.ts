@@ -275,6 +275,34 @@ export class EditPage {
     return this.page.getByRole('region', {name: 'Your Team Votes'});
   }
 
+  // The three vote tables render inside closed native disclosures on the edit
+  // page, so a test must open a disclosure before reading its table. The
+  // summary holds the section's heading and is the native disclosure toggle;
+  // Playwright exposes it as a plain `generic` (not a button role) in this
+  // Chromium, so target the `<summary>` element structurally.
+  async openHomeTally(): Promise<void> {
+    await this.homeTallySection()
+      .locator('summary')
+      .click();
+  }
+
+  async openAwayTally(): Promise<void> {
+    await this.awayTallySection()
+      .locator('summary')
+      .click();
+  }
+
+  async openOwnTeamVotes(): Promise<void> {
+    await this.ownTeamSection()
+      .locator('summary')
+      .click();
+  }
+
+  homeTallySummary(): Locator {
+    return this.homeTallySection()
+      .locator('summary');
+  }
+
   ownTeamTable(): Locator {
     return this.ownTeamSection()
       .getByRole('table');

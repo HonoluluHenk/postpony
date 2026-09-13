@@ -145,3 +145,38 @@ describe('EditPage clipboard announcement', () => {
       .toHaveLength(2);
   });
 });
+
+describe('EditPage vote-table disclosures', () => {
+  it('renders the own-team votes and both tallies as closed details in the initial render', () => {
+    const html = renderToString(EditPage({
+      ...baseProps(),
+      organizerPlayers: [{id: 'p1', name: 'Voter', teamId: 'home'}],
+      ownTeamResults: [
+        {
+          dateId: 'pd-1',
+          display: '10.10.2026 19:00',
+          votes: [{playerId: 'p1', playerName: 'Voter', vote: 'Yes'}],
+          voted: 1,
+          total: 1,
+          nonVoters: [],
+        },
+      ],
+      homeProposedDates: [{id: 'pd-1', display: '10.10.2026 19:00', yes: 1, ifNecessary: 0, no: 0}],
+      awayProposedDates: [{id: 'pd-1', display: '10.10.2026 19:00', yes: 0, ifNecessary: 0, no: 1}],
+    }));
+
+    // Own-team votes disclosure.
+    expect(html)
+      .toMatch(/<section id="own-team-votes"[^>]*>\s*<details>\s*<summary>\s*<h3 id="own-team-votes-title">Your Team Votes<\/h3>/);
+    // Home tally disclosure.
+    expect(html)
+      .toMatch(/<section[^>]*aria-labelledby="vote-summary-home-title"[^>]*>\s*<details>\s*<summary>\s*<h3 id="vote-summary-home-title">Home Team Votes<\/h3>/);
+    // Away tally disclosure.
+    expect(html)
+      .toMatch(/<section[^>]*aria-labelledby="vote-summary-away-title"[^>]*>\s*<details>\s*<summary>\s*<h3 id="vote-summary-away-title">Away Team Votes<\/h3>/);
+    // All three disclosures are closed by default on the initial render.
+    expect(html)
+      .not
+      .toContain('<details open');
+  });
+});

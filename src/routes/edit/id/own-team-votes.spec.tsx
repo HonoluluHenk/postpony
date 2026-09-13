@@ -60,6 +60,28 @@ describe('OwnTeamVotes component', () => {
     expect(html).not.toContain('aria-live');
   });
 
+  it('wraps the table in a closed details with the heading inside the summary', () => {
+    const node = OwnTeamVotes({ organizerPlayers, ownTeamResults, t });
+    const html = renderToString(node);
+
+    expect(html).toContain('<details>');
+    expect(html).toContain('</details>');
+    expect(html).toMatch(/<summary>\s*<h3 id="own-team-votes-title">Your Team Votes<\/h3>\s*<\/summary>/);
+    // Closed by default: no `open` attribute on the details.
+    expect(html).not.toContain('<details open');
+    // The table sits inside the details, after the summary.
+    expect(html).toMatch(/<\/summary>\s*<table>/);
+  });
+
+  it('keeps the disclosure closed when rendered as an out-of-band partial swap', () => {
+    const html = renderToString(OwnTeamVotes({ organizerPlayers, ownTeamResults, t, oob: true }));
+
+    expect(html).toContain('<details>');
+    expect(html).toMatch(/<summary>\s*<h3 id="own-team-votes-title">Your Team Votes<\/h3>\s*<\/summary>/);
+    expect(html).not.toContain('<details open');
+    expect(html).toContain('hx-swap-oob="true"');
+  });
+
   it('renders the vote cells, the N/M voted count, and the non-voter row', () => {
     const node = OwnTeamVotes({ organizerPlayers, ownTeamResults, t });
     const html = renderToString(node);

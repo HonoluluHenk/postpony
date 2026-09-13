@@ -107,6 +107,7 @@ test.describe('Postponement Editing', () => {
 
     // Return to edit page and check home team tally
     await page.goto(editUrl);
+    await editPage.openHomeTally();
 
     const homeTally = editPage.homeTallySection();
     await expect(homeTally.getByRole('heading', {level: 3}))
@@ -211,6 +212,8 @@ test.describe('Postponement Editing', () => {
 
     // Return to edit page and check split tallies
     await page.goto(editUrl);
+    await editPage.openHomeTally();
+    await editPage.openAwayTally();
 
     // Home Team Votes tally
     const homeTallySection = editPage.homeTallySection();
@@ -269,6 +272,7 @@ test.describe('Postponement Editing', () => {
     await joinPage.submitVotes();
 
     await page.goto(editUrl);
+    await editPage.openOwnTeamVotes();
 
     const ownTeam = editPage.ownTeamSection();
     await expect(ownTeam.getByRole('heading', {level: 3}))
@@ -306,6 +310,56 @@ test.describe('Postponement Editing', () => {
     await checkA11y();
   });
 
+  test('opens a vote-tally disclosure with Enter and Space on its summary', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(page.locator('.toast.success')
+      .filter({hasText: 'Proposed date added!'}))
+      .toBeVisible();
+
+    const editUrl = page.url();
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+    await joinPage.castVote(0, 'Yes');
+    await joinPage.submitVotes();
+
+    await page.goto(editUrl);
+
+    const homeTallyDetails = editPage.homeTallySection()
+      .locator('details');
+    const homeTallySummary = editPage.homeTallySummary();
+
+    // The disclosure is closed by default; its table is not exposed.
+    await expect(homeTallyDetails)
+      .not
+      .toHaveAttribute('open');
+    await expect(editPage.homeTallyTable())
+      .toHaveCount(0);
+
+    // Enter opens it.
+    await homeTallySummary.focus();
+    await page.keyboard.press('Enter');
+    await expect(homeTallyDetails)
+      .toHaveAttribute('open');
+    await expect(editPage.homeTallyTable())
+      .toBeVisible();
+
+    // Space toggles it closed again.
+    await page.keyboard.press(' ');
+    await expect(homeTallyDetails)
+      .not
+      .toHaveAttribute('open');
+
+    // Space opens it again.
+    await page.keyboard.press(' ');
+    await expect(homeTallyDetails)
+      .toHaveAttribute('open');
+
+    await checkA11y();
+  });
+
   test('should maintain accessibility on the editing interface', async ({page, checkA11y}) => {
     await checkA11y();
     // Language selector is a ≥24px tap target with explicit colors.
@@ -337,6 +391,8 @@ test.describe('Postponement Editing', () => {
     await joinPage.submitVotes();
 
     await page.goto(editUrl);
+    await editPage.openHomeTally();
+    await editPage.openAwayTally();
     await checkA11y();
   });
 
@@ -415,6 +471,7 @@ test.describe('Postponement Editing', () => {
     await joinPage.submitVotes();
 
     await editPage.goto(session.editUrl);
+    await editPage.openHomeTally();
     await expect(editPage.homeTallyTable()
       .getByRole('row')
       .nth(1)
@@ -441,6 +498,8 @@ test.describe('Postponement Editing', () => {
     // One polite status announcement names the deleted date.
     await expect(editPage.clipboardStatus)
       .toContainText('Proposed date deleted');
+    // The swap re-renders the tally disclosure closed, so reopen before reading.
+    await editPage.openHomeTally();
     // The deleted date's tally is gone: only the surviving date remains.
     await expect(editPage.homeTallyTable()
       .getByRole('row'))

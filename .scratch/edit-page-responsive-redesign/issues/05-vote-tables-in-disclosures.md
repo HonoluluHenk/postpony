@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] Each of the three vote tables sits in a `details` element, closed on initial render and on HTMX partial re-render
-- [ ] The `summary` contains the existing heading element (heading hierarchy unchanged)
-- [ ] Unit render spec asserts details/summary wrapping and closed default
-- [ ] e2e tally assertions open the disclosure first, then assert; keyboard (Enter/Space) opens it
-- [ ] `checkA11y` passes at all three widths
-- [ ] Screenshot baselines regenerated
-- [ ] `npm run verify` passes
+- [x] Each of the three vote tables sits in a `details` element, closed on initial render and on HTMX partial re-render
+- [x] The `summary` contains the existing heading element (heading hierarchy unchanged)
+- [x] Unit render spec asserts details/summary wrapping and closed default
+- [x] e2e tally assertions open the disclosure first, then assert; keyboard (Enter/Space) opens it
+- [x] `checkA11y` passes at all three widths
+- [x] Screenshot baselines regenerated
+- [x] `npm run verify` passes
