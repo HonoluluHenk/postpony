@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] The dead selectors listed above are gone from all stylesheets.
-- [ ] The shared stylesheet has exactly one media block per affected breakpoint instead of two.
-- [ ] The picker button no longer uses `!important`, and still sits over the right edge of its field on the edit page.
-- [ ] `npm run lint`, `npm run test` and `npm run e2e` pass with no screenshot-baseline changes.
+- [x] The dead selectors listed above are gone from all stylesheets.
+- [x] The shared stylesheet has exactly one media block per affected breakpoint instead of two.
+- [x] The picker button no longer uses `!important`, and still sits over the right edge of its field on the edit page.
+- [x] `npm run lint`, `npm run test` and `npm run e2e` pass with no screenshot-baseline changes.

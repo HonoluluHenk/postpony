@@ -65,12 +65,6 @@
     font-size: var(--h6-size);
   }
 
-  /* Multi-row headings: each row is its own block so text reflows at zoom
-     instead of being pinned by <br>. */
-  .heading-row {
-    display: block;
-  }
-
   /* Language selector: a comfortable tap target with explicit colors, so the
      native select stays legible on Windows dark-mode browsers. */
   #language-select {
@@ -115,24 +109,6 @@
     text-decoration: underline;
   }
 
-  .clipboard-btn {
-    cursor: pointer;
-    font-size: 1.1em;
-    opacity: 0.75;
-    transition: opacity 0.15s;
-    border: none;
-    background: none;
-    padding: 0;
-    color: inherit;
-    font-family: inherit;
-    display: inline;
-    line-height: inherit;
-  }
-
-  .clipboard-btn:hover {
-    opacity: 1;
-  }
-
   .mt-2 {
     margin-top: var(--space-3);
   }
@@ -157,111 +133,6 @@
      wrap so the switch drops below the date instead of overlapping it. */
   .list li {
     flex-wrap: wrap;
-  }
-
-  /* Invitation-link rows: the link and its copy button share one vertical band.
-     `.list li` lets rows wrap; keep these rows nowrap and let the link shrink
-     so a long team name never pushes the copy button onto a new line. */
-  .list li.invite-link-row {
-    flex-wrap: nowrap;
-  }
-
-  .list li.invite-link-row > a {
-    min-width: 0;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
-  /* Proposed-date card list: each date is a card with a header row (date/venue | actions)
-     and a details row (clashes/occupancy). CSS grid replaces the old table layout. */
-  .proposed-date-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  .proposed-date-card {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto 1fr;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border-radius: var(--border-radius);
-    background: var(--surface-container-lowest);
-    border: 1px solid var(--outline-variant);
-    min-height: 7rem;
-  }
-
-  .proposed-date-header {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-
-  .proposed-date-details {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    align-content: flex-end;
-  }
-
-  .proposed-date-info {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-width: 0;
-    /* Grow to fill the header so the venue badge and the action buttons line
-       up in fixed columns across every row instead of drifting by the date
-       text's natural width. */
-    flex: 1 1 auto;
-  }
-
-  .proposed-date-info > .max {
-    min-width: 0;
-    /* Grow so the badge sits at a constant x in every row; the date text wraps
-       naturally instead of truncating with an ellipsis. */
-    flex: 1 1 auto;
-  }
-
-  .proposed-date-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-shrink: 0;
-  }
-
-  .proposed-date-details > * {
-    margin: 0;
-  }
-
-  /* Proposed-date cards with clashes: left error border + subtle tint.
-     Reduce left padding by the border width so content aligns with clean rows. */
-  .proposed-date-card.clash-row {
-    border-inline-start: 4px solid var(--error);
-    background: var(--error-container);
-    padding-inline-start: calc(var(--space-3) - 4px);
-  }
-
-  /* Switch inside proposed-date card header. BeerCSS switch needs a positioned ancestor. */
-  .proposed-date-actions .switch {
-    position: relative;
-  }
-
-  /* Below 600px the header row may wrap so the page title drops onto its
-     own line instead of being clipped between the logo and the language
-     buttons. At 600px and wider it stays a single row. */
-  @media (max-width: 599px) {
-    header > .row.no-wrap {
-      flex-wrap: wrap;
-    }
-
-    header > .row.no-wrap > h1 {
-      flex-basis: 100%;
-    }
   }
 
   /* Below 993px tables stack into labeled cards instead of overflowing.
@@ -357,10 +228,6 @@
     .skip-link {
       transition: none;
     }
-
-    .clipboard-btn {
-      transition: none;
-    }
   }
 
   /* Delete-confirmation dialogs. BeerCSS's `dialog` runs an entrance
@@ -451,7 +318,7 @@
   }
 
   .picker-btn {
-    position: absolute !important;
+    position: absolute;
     right: 0.25rem;
     top: 50%;
     transform: translateY(-50%);
@@ -460,8 +327,8 @@
     min-width: auto;
     width: 2.5rem;
     height: 2.5rem;
-    background: transparent !important;
-    border: none !important;
+    background: transparent;
+    border: none;
     z-index: 1;
   }
 
@@ -582,32 +449,19 @@
     flex: 0 0 2.5rem;
   }
 
-  /* Below 993px (BeerCSS medium breakpoint) the proposed-date card's single
-     header row cannot hold the date info (icon + date + venue badge) and the
-     action buttons side by side; the info gets crushed to zero and the toggle
-     covers it. Stack instead: the date info takes the first line, the actions
-     wrap below it (right-aligned). The actions row itself wraps so the Confirm
-     button never overflows the card edge. */
-  @media (max-width: 992px) {
-    .proposed-date-header {
+  /* Below 600px: the header row may wrap so the page title drops onto its
+     own line instead of being clipped between the logo and the language
+     buttons; and the From/To/Venue generator grid (three columns wide,
+     ~500px) stacks its fields full-width so it never overflows the viewport. */
+  @media (max-width: 599px) {
+    header > .row.no-wrap {
       flex-wrap: wrap;
     }
 
-    .proposed-date-info {
+    header > .row.no-wrap > h1 {
       flex-basis: 100%;
     }
 
-    .proposed-date-actions {
-      width: 100%;
-      margin-left: auto;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-  }
-
-  /* The From/To/Venue generator grid is three columns wide (~500px) and
-     overflows a phone viewport. Stack the fields full-width (phone only). */
-  @media (max-width: 599px) {
     .generate-controls {
       grid-template-columns: 1fr;
     }

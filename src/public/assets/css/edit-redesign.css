@@ -369,28 +369,6 @@
   .side-block .field label {
     color: var(--ink-soft);
   }
-  .roster {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 0.8rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: 0.9rem;
-  }
-  .roster li {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-  }
-  .roster .vote-dot {
-    width: 0.6rem;
-    height: 0.6rem;
-  }
-  .not-joined {
-    font-size: 0.75rem;
-    color: var(--ink-soft);
-  }
   .invite {
     display: flex;
     flex-wrap: wrap;
@@ -414,33 +392,6 @@
     color: var(--ink-soft);
     cursor: pointer;
   }
-  .generator-grid {
-    list-style: none;
-    margin: 0.6rem 0 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.4rem 0.6rem;
-  }
-  .generator-grid li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 0.3rem 0.6rem;
-    font-size: 0.85rem;
-  }
-  .generator-day {
-    font-weight: 500;
-  }
-  .generator-time {
-    color: var(--ink-soft);
-    font-family: var(--font-condensed);
-    font-feature-settings: 'tnum';
-  }
-
   /* ---- Desktop: two-column, sticky sidebar. ---- */
   @media (min-width: 1024px) {
     .edit-grid {
