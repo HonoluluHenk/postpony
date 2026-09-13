@@ -65,11 +65,23 @@ describe('OwnTeamVotes component', () => {
     const html = renderToString(node);
 
     expect(html).toContain('<th scope="row">10.10.2026 19:00</th>');
-    expect(html).toContain('<td>Yes</td>');
+    expect(html).toContain('<td data-label="Voter">Yes</td>');
     expect(html).toContain('<span class="visually-hidden">No vote</span>');
-    expect(html).toContain('<td class="num">1/2 voted</td>');
+    expect(html).toContain('<td data-label="Voted" class="num">1/2 voted</td>');
     expect(html).toContain('Not voted yet:');
     expect(html).toContain('SitsOut (not joined)');
+  });
+
+  it('puts a data label on every body cell matching its column header, so the stacked-table pattern applies', () => {
+    const node = OwnTeamVotes({ organizerPlayers, ownTeamResults, t });
+    const html = renderToString(node);
+
+    // Player-column vote cells carry the player's name, matching the column header.
+    expect(html).toContain('<td data-label="Voter">Yes</td>');
+    // A no-vote cell keeps its player label so the stacked card still names the voter.
+    expect(html).toContain('<td data-label="SitsOut">');
+    // The voted-count cell carries the "Voted" column label.
+    expect(html).toContain('<td data-label="Voted" class="num">1/2 voted</td>');
   });
 
   it('sets hx-swap-oob only when requested', () => {

@@ -120,6 +120,40 @@ test.describe('Responsive Layout', () => {
   });
 });
 
+// Ticket 03: the own-team Votes table must stack on a phone so the rightmost
+// "Voted" column is not cut off at the viewport edge. The stacked-table pattern
+// keys off `td[data-label]` cells, and the voted cell is the rightmost body cell
+// of the first data row, so its bounding box must lie fully inside the viewport.
+// The no-horizontal-overflow guard prevents `scrollIntoViewIfNeeded` from
+// masking a pre-fix cut-off column by scrolling it into view.
+test.describe('Own-team votes table stacking', () => {
+  test('phone viewport: the voted cell of the first row is fully inside the viewport', async ({page, checkA11y}) => {
+    await setViewport(page, 'phone');
+    const {editPage, session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+    // The own-team Votes section is part of the full-page template, not of the
+    // partial that adds a date (its out-of-band swap needs an existing
+    // `#own-team-votes` node), so reload to read the stacked table.
+    await page.goto(session.editUrl);
+
+    const ownTeamTable = editPage.ownTeamTable();
+    const firstRowVotedCell = ownTeamTable.getByRole('row')
+      .nth(1)
+      .getByRole('cell')
+      .last();
+
+    await expect(firstRowVotedCell)
+      .toBeVisible();
+    await expectFullyInViewport(firstRowVotedCell);
+
+    // The stacked table leaves no horizontal page overflow, so the "Voted"
+    // column stays on-screen without any horizontal scrolling.
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+      .toBe(true);
+
+    await checkA11y();
+  });
+});
+
 // Ticket 02: the Proposed Date card must show its full date text and every
 // Clash / Venue Occupancy chip on tablet and phone. A clean date sorts first
 // (both check chips) and a clashing date follows (clash chip), so one session

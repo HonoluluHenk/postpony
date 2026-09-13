@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Every body cell of the own-team Votes table carries a data label matching its column header, so the existing narrow-screen stacking pattern applies
-- [ ] Unit render spec asserts data labels on the cells
-- [ ] e2e at phone: the "voted" cell of the first row has a bounding box fully inside the viewport
-- [ ] Desktop table rendering unchanged
-- [ ] `npm run verify` passes
+- [x] Every body cell of the own-team Votes table carries a data label matching its column header, so the existing narrow-screen stacking pattern applies
+- [x] Unit render spec asserts data labels on the cells
+- [x] e2e at phone: the "voted" cell of the first row has a bounding box fully inside the viewport
+- [x] Desktop table rendering unchanged
+- [x] `npm run verify` passes

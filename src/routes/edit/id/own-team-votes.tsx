@@ -52,7 +52,7 @@ export function OwnTeamVotes(props: OwnTeamVotesProps): JSX.Element | null {
               <tr>
                 <th scope="row">{dateResult.display}</th>
                 {dateResult.votes.map((cell) => (
-                  <td>
+                  <td data-label={cell.playerName}>
                     {cell.vote
                       ? props.t(`vote_${cell.vote.toLowerCase()}` as TranslationKeys)
                       : (
@@ -63,7 +63,7 @@ export function OwnTeamVotes(props: OwnTeamVotesProps): JSX.Element | null {
                       )}
                   </td>
                 ))}
-                <td class="num">
+                <td data-label={props.t('voted_column')} class="num">
                   {props.t('voted_count', {
                     voted: String(dateResult.voted),
                     total: String(dateResult.total),
