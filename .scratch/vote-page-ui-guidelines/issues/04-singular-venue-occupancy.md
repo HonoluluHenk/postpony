@@ -12,3 +12,7 @@
 - [x] `npm run verify` passes
 
 ## Comments
+
+- `a2045a0` ticket done: 04-singular-venue-occupancy — new `venue_legend_occupancy_one` key (en/de), vote page picks singular at count 1, view + translations specs extended, stale `1 other games` e2e assertion corrected.
+- `7c87ead` review: 04-singular-venue-occupancy — two-axis review, 0 hard violations, 0 spec findings, no fixes required.
+- `npm run verify` passed: 39 test files / 690 tests, build, 122 e2e.
