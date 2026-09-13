@@ -6,12 +6,12 @@
 
 **Status:** ready-for-agent
 
-- [ ] `buildIcal(session, {baseUrl, locale})` returns a complete `VCALENDAR` (VERSION 2.0, PRODID, CALSCALE, METHOD, X-WR-CALNAME)
-- [ ] One VEVENT per votable date, ascending; non-votable dates excluded
-- [ ] Confirmed date `STATUS:CONFIRMED`, others `STATUS:TENTATIVE`; after a reopen the formerly-confirmed date is `TENTATIVE`
-- [ ] `DTSTART;TZID=Europe/Zurich` equals the date's wall-clock start; `DTEND` = start + `CLASH_BUFFER_HOURS`
-- [ ] `LOCATION` resolves the venue via `venueNumber` and falls back to venue 1 when absent
-- [ ] `SUMMARY` reads `Verschiebung: <match> (<home> vs <guest>)`; `DESCRIPTION` contains the original date and the baseUrl link
-- [ ] UID identical across two builds of the same session
-- [ ] CRLF line endings; special characters escaped; lines folded at 75 octets
-- [ ] Unit specs cover every bullet above (node Vitest, fixture builders from `__test-utils__`)
+- [x] `buildIcal(session, {baseUrl, locale})` returns a complete `VCALENDAR` (VERSION 2.0, PRODID, CALSCALE, METHOD, X-WR-CALNAME)
+- [x] One VEVENT per votable date, ascending; non-votable dates excluded
+- [x] Confirmed date `STATUS:CONFIRMED`, others `STATUS:TENTATIVE`; after a reopen the formerly-confirmed date is `TENTATIVE`
+- [x] `DTSTART;TZID=Europe/Zurich` equals the date's wall-clock start; `DTEND` = start + `CLASH_BUFFER_HOURS`
+- [x] `LOCATION` resolves the venue via `venueNumber` and falls back to venue 1 when absent
+- [x] `SUMMARY` reads `Verschiebung: <match> (<home> vs <guest>)`; `DESCRIPTION` contains the original date and the baseUrl link
+- [x] UID identical across two builds of the same session
+- [x] CRLF line endings; special characters escaped; lines folded at 75 octets
+- [x] Unit specs cover every bullet above (node Vitest, fixture builders from `__test-utils__`)
