@@ -8,8 +8,8 @@ The migrated page is the same redesigned edit page, with only the intended snap-
 
 **Status:** ready-for-agent
 
-- [ ] The prototype stylesheet no longer exists and is no longer linked; its live rules and `@font-face` declarations are in the shared stylesheet.
-- [ ] No literal spacing, font-size, radius or colour remains in the migrated rules (1px borders and token values excepted).
-- [ ] The edit page uses `993px`/`992px` breakpoints; the page still switches from stacked to two-column at the medium breakpoint.
-- [ ] Only the edit-page screenshots change; the other committed baselines are untouched. Regenerated edit baselines are reviewed before commit.
-- [ ] `npm run lint`, `npm run test` and `npm run e2e` pass.
+- [x] The prototype stylesheet no longer exists and is no longer linked; its live rules and `@font-face` declarations are in the shared stylesheet.
+- [x] No literal spacing, font-size, radius or colour remains in the migrated rules (1px borders and token values excepted).
+- [x] The edit page uses `993px`/`992px` breakpoints; the page still switches from stacked to two-column at the medium breakpoint.
+- [x] Only the edit-page screenshots change; the other committed baselines are untouched. Regenerated edit baselines are reviewed before commit.
+- [x] `npm run lint`, `npm run test` and `npm run e2e` pass.
