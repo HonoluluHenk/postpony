@@ -1,6 +1,7 @@
 import { expect, test } from './fixtures';
 import { EditPage } from './pages';
 import { isoToLocaleDateTokens } from './pages/locale-tokens';
+import { setViewport, viewports } from './viewports';
 
 // The session's anchor is the scraped fixture match (14.01.2027, the
 // createSession default), so the generator's
@@ -211,6 +212,57 @@ test.describe('Proposed Date Generator', () => {
       await expect(items)
         .toHaveCount(addedCount - 1);
     });
+
+  test('lays the weekday grid two-per-row on phones, fitting the viewport, and one-per-row on desktop', async ({
+                                                                                                                                    page,
+                                                                                                                                    checkA11y,
+                                                                                                                                  }) => {
+    const {editPage} = await EditPage.createSession(page);
+    const timeInputs = editPage.generateForm.locator('input[name="time[]"]');
+    await expect(timeInputs)
+      .toHaveCount(7);
+
+    // Phone (390px): the seven fields fit inside the viewport and sit two per
+    // row, so the grid no longer eats a full screen of scrolling.
+    await setViewport(page, 'phone');
+    const phoneRects = await timeInputs.evaluateAll((els) =>
+      els.map((el) => {
+        const r = el.getBoundingClientRect();
+        return {top: Math.round(r.top), right: Math.round(r.right)};
+      }),
+    );
+    expect(phoneRects)
+      .toHaveLength(7);
+    for (const rect of phoneRects) {
+      expect(rect.right)
+        .toBeLessThanOrEqual(viewports.phone.width);
+    }
+    // Monday & Tuesday share a row; Wednesday starts the next.
+    expect(phoneRects[0]?.top)
+      .toBe(phoneRects[1]?.top);
+    expect(phoneRects[2]?.top)
+      .toBeGreaterThan(phoneRects[0]?.top ?? 0);
+
+    // Generating dates still works end-to-end at phone width: fill two
+    // weekdays, submit, and the generated dates land in the list.
+    await editPage.generateProposedDates([...TUPLES]);
+    const successToast = page.locator('.toast.success')
+      .filter({hasText: /\d+ dates? added/});
+    await expect(successToast)
+      .toBeVisible();
+    await expect(editPage.proposedDateRows)
+      .not
+      .toHaveCount(0);
+    await checkA11y();
+
+    // Desktop: each of the seven fields keeps its own row (seven distinct tops).
+    await setViewport(page, 'desktop');
+    const desktopTops = await timeInputs.evaluateAll((els) =>
+      els.map((el) => Math.round(el.getBoundingClientRect().top)),
+    );
+    expect(new Set(desktopTops).size)
+      .toBe(7);
+  });
 
   test('hides the fill-to-generate grid once a date is confirmed', async ({page, checkA11y}) => {
     const {editPage} = await EditPage.createSession(page, ['2026-09-20T20:00']);

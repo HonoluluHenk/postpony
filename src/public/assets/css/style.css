@@ -548,7 +548,10 @@
     grid-template-columns: auto auto 1fr;
     align-items: center;
     gap: var(--space-2);
-    margin-bottom: 3rem;
+    /* ponytail: --space-5 (the .mt-4 standard), not the smaller --space-4:
+       at 1rem the open row time-picker popup crowds the From picker button
+       and fails the WCAG 2.2 target-offset check. 1.5rem keeps it green. */
+    margin-bottom: var(--space-5);
   }
 
   .generate-controls > .field {
@@ -612,6 +615,28 @@
     .generate-controls .date-field,
     .generate-controls .venue-field {
       width: 100%;
+    }
+
+    /* The weekday time grid goes two fields per row on phones. The list's
+       1rem leading padding is dropped so the two columns use the card width,
+       and the row gap shrinks so label + field fit a half-width cell. At
+       600px and wider the grid stays the default one-per-row list. */
+    .generate-time-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+      padding-inline-start: 0;
+    }
+
+    .generate-time-grid .generate-time-row {
+      margin-top: 0;
+      gap: var(--space-2);
+    }
+
+    .generate-time-grid .generate-time-row .time-field {
+      width: auto;
+      flex: 1 1 auto;
+      min-width: 0;
     }
   }
 }

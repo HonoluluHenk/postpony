@@ -166,7 +166,7 @@ function GenerateForm(props: GenerateFormProps): JSX.Element {
           <label for="generateVenueNumber">{t('proposed_date_venue_label')}</label>
         </div>
       </div>
-      <ol class="list no-margin" aria-label={t('proposed_dates_generate_section')}>
+      <ol class="list no-margin generate-time-grid" aria-label={t('proposed_dates_generate_section')}>
         {weekdayLabels[locale].map((weekday, index) => {
           const invalid = props.invalidRow === index;
           const rawValue = submitted[index];
