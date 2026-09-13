@@ -189,17 +189,17 @@
     color: var(--ink);
     background: #fff;
   }
-  .chip--clean {
+  .date-chips .chip--clean {
     color: var(--primary);
     border-color: var(--primary);
     background: #eef1fb;
   }
-  .chip--warn {
+  .date-chips .chip--warn {
     color: var(--warning);
     border-color: var(--warning);
     background: #fff6e6;
   }
-  .chip--error {
+  .date-chips .chip--error {
     color: var(--error);
     border-color: var(--error);
     background: #fdecec;
@@ -421,6 +421,19 @@
     }
     .date-year {
       display: none;
+    }
+  }
+
+  /* The single-date add form's input + venue select sit side by side in a
+     nowrap BeerCSS row; on a narrow phone the input field collapses and its
+     picker button obscures the input, tripping axe target-size. Stack the two
+     fields so the input keeps a full-width, unobscured touch target. */
+  @media (max-width: 599px) {
+    .edit-rail form > .row {
+      flex-wrap: wrap;
+    }
+    .edit-rail form > .row > .field {
+      flex-basis: 100%;
     }
   }
 }

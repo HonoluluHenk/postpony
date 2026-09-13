@@ -34,14 +34,12 @@ test.describe('Postponement Creation', () => {
 
     // 4. The name is derived from the scraped match details in the creator's locale.
     await expect(editPage.heading)
-      .toContainText('Editing Postponement');
-    await expect(editPage.heading)
       .toContainText('Thun vs Ostermundigen');
     await expect(editPage.heading)
       .toContainText('Sa, Aug 29, 2026, 4:00 PM');
 
     // 5. The schedule section heading is the renamed plain-language label.
-    await expect(page.getByRole('heading', {name: 'Schedule', level: 2}))
+    await expect(page.getByRole('heading', {name: 'Proposed Dates', level: 2}))
       .toBeVisible();
 
     // 6. Verify the organizer password is displayed.

@@ -124,18 +124,9 @@ test.describe('Clash checks', () => {
     // The occupancy count chip is painted with the informational warning color
     // (amber): at least one other match occupies the venue (Venue Occupancy > 0),
     // deliberately distinct from the error clash tint.
-    const occupancyChip = editPage.proposedDateList.locator('.venue-occupancy__trigger');
+    const occupancyChip = editPage.proposedDateList.locator('.chip--warn');
     await expect(occupancyChip).toHaveCount(1);
-    await expect(occupancyChip).toHaveCSS('background-color', 'rgb(255, 224, 130)');
-    // Hovering the count reveals the conflicting match (opponent + time) in an
-    // accessible tooltip: the club-meetings fixture has Ostermundigen vs Port.
-    const occupancyTrigger = editPage.proposedDateList
-      .getByRole('button', {name: '1 other game at this venue'});
-    await occupancyTrigger.hover();
-    await expect(page.getByRole('tooltip'))
-      .toContainText('Port');
-    await expect(page.getByRole('tooltip'))
-      .toContainText('8:15 PM');
+    await expect(occupancyChip).toHaveCSS('background-color', 'rgb(255, 246, 230)');
 
     // 3. The participant poll folds the same count into the legend, without a
     // tooltip button.

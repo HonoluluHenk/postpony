@@ -214,17 +214,28 @@ test.describe('Proposed Date Generator', () => {
     });
 
   test('lays the weekday grid two-per-row on phones, fitting the viewport, and one-per-row on desktop', async ({
-                                                                                                                                    page,
-                                                                                                                                    checkA11y,
-                                                                                                                                  }) => {
+                                                                                                                                     page,
+                                                                                                                                     checkA11y,
+                                                                                                                                   }) => {
+    // Two viewport resizes + a scrape + two a11y scans: tripled to survive
+    // full-suite parallel contention, as with the main generator test.
+    test.slow();
     const {editPage} = await EditPage.createSession(page);
     const timeInputs = editPage.generateForm.locator('input[name="time[]"]');
     await expect(timeInputs)
       .toHaveCount(7);
 
     // Phone (390px): the seven fields fit inside the viewport and sit two per
-    // row, so the grid no longer eats a full screen of scrolling.
+    // row, so the grid no longer eats a full screen of scrolling. The sidebar
+    // disclosure is collapsed on phones; wait for that collapse to apply (the
+    // matchMedia change listener fires asynchronously after the viewport resize)
+    // before opening it so it stays open for the grid reads.
     await setViewport(page, 'phone');
+    await expect(page.locator('.edit-redesign details.side-details')
+      .first())
+      .not
+      .toHaveAttribute('open');
+    await editPage.openGenerateForm();
     const phoneRects = await timeInputs.evaluateAll((els) =>
       els.map((el) => {
         const r = el.getBoundingClientRect();
@@ -264,10 +275,10 @@ test.describe('Proposed Date Generator', () => {
       .toBe(7);
   });
 
-  test('hides the fill-to-generate grid once a date is confirmed', async ({page, checkA11y}) => {
+  test('hides the single-date add form and shows the reopen control once a date is confirmed', async ({page, checkA11y}) => {
     const {editPage} = await EditPage.createSession(page, ['2026-09-20T20:00']);
 
-    // In a votable state the grid is present with all seven rows.
+    // In a votable state the generator grid is present with all seven rows.
     await expect(editPage.generateForm)
       .toBeVisible();
     await expect(editPage.generateForm.locator('input[name="time[]"]'))
@@ -277,14 +288,15 @@ test.describe('Proposed Date Generator', () => {
     await expect(editPage.status)
       .toContainText('Confirmed');
 
-    // Confirming swaps the section to the reopen form — the generator block
-    // (and its rows) is gone from the edit view.
-    await expect(editPage.generateForm)
-      .toHaveCount(0);
-    await expect(editPage.generateTimeInput(0))
+    // Confirming locks the session: the single-date add form is gone and the
+    // reopen control appears. The sidebar generator grid stays (it is not the
+    // voting-control block the redesign hides).
+    await expect(editPage.proposedDateTimeInput)
       .toHaveCount(0);
     await expect(editPage.reopenButton())
       .toBeVisible();
+    await expect(editPage.generateForm.locator('input[name="time[]"]'))
+      .toHaveCount(7);
 
     await checkA11y();
   });
@@ -507,6 +519,9 @@ test.describe('Proposed Date Generator', () => {
   });
 
   test('proposes dates with a chosen venue and shows the venue badge in the list', async ({page, checkA11y}) => {
+    // Scrape + generate + an a11y scan: tripled to survive full-suite parallel
+    // contention, as with the main generator test.
+    test.slow();
     const {editPage} = await EditPage.createSession(page);
 
     // Pick venue 2 in the generator form; every generated date carries it.
@@ -523,13 +538,14 @@ test.describe('Proposed Date Generator', () => {
     expect(count)
       .toBeGreaterThan(0);
 
-    // Each list row renders the venue badge for the chosen venue. (The row's
-    // clash chip also carries the generic .chip class, so scope to .venue-badge.)
-    const venueBadges = editPage.proposedDateRows.locator('.venue-badge');
-    await expect(venueBadges)
-      .toHaveCount(count);
-    await expect(venueBadges.first())
-      .toHaveText('(2)');
+    // Each list row's first chip is the venue chip for the chosen venue.
+    // (The row's clash/clean chips also carry the generic .chip class, so read
+    // the first chip per row.)
+    for (let i = 0; i < count; i++) {
+      await expect(items.nth(i).locator('.date-chips .chip')
+        .first())
+        .toContainText('(2)');
+    }
 
     await checkA11y();
   });

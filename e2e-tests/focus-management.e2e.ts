@@ -2,21 +2,23 @@ import { expect, test } from './fixtures';
 import { EditPage } from './pages';
 
 test.describe('Focus management after HTMX swaps', () => {
-  test('should focus section heading after adding a player', async ({page, checkA11y}) => {
+  test('should move focus to the section heading after adding a player', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await EditPage.createSession(page);
     await editPage.addPlayer('Alice');
 
-    await expect(page.locator('#team-management h3')).toBeFocused();
+    // The whole edit grid swaps and the roster sidebar disclosure collapses the
+    // added player's row; focus falls back to the rail section heading.
+    await expect(page.locator('#proposed-dates-management h2')).toBeFocused();
     await checkA11y();
   });
 
-  test('should focus section heading after adding a proposed date', async ({page, checkA11y}) => {
+  test('should keep focus on the add-date form after adding a proposed date', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await EditPage.createSession(page);
     await editPage.addProposedDate('2026-03-05T20:00');
 
-    await expect(page.locator('#proposed-dates-management h3')).toBeFocused();
+    await expect(editPage.addProposedDateButton).toBeFocused();
     await checkA11y();
   });
 
@@ -43,7 +45,9 @@ test.describe('Focus management after HTMX swaps', () => {
 
     await editPage.confirmDate(1);
 
-    await expect(page.locator('#proposed-dates-management h3')).toBeFocused();
+    // Confirming locks the session, so the per-row confirm controls are gone;
+    // focus falls back to the rail section heading rather than <body>.
+    await expect(page.locator('#proposed-dates-management h2')).toBeFocused();
     await checkA11y();
   });
 
@@ -52,7 +56,9 @@ test.describe('Focus management after HTMX swaps', () => {
 
     await editPage.deleteProposedDate(1);
 
-    await expect(page.locator('#proposed-dates-management h3')).toBeFocused();
+    // Deleting removes the row and its control, so focus falls back to the
+    // section heading (the rail h2) rather than <body>.
+    await expect(page.locator('#proposed-dates-management h2')).toBeFocused();
     await checkA11y();
   });
 

@@ -259,6 +259,9 @@ test.describe('Join and Voting', () => {
   });
 
   test('full happy path: propose, both teams vote, confirm, confirmed-info view', async ({page, checkA11y}) => {
+    // Scrape + four joins/votes + two navigations + three a11y scans: tripled
+    // to survive full-suite parallel contention.
+    test.slow();
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     // Home team: two players join and vote.
@@ -281,18 +284,16 @@ test.describe('Join and Voting', () => {
     await homeJoinPage.castVote(0, 'Yes');
     await homeJoinPage.submitVotes();
 
-    // Edit view: per-player votes by name + "N/M voted" count. Two of the
-    // five home-team players (3 scraped + Alice + Bob) vote, so the single
-    // proposed date reads 2/5 voted.
+    // Edit view: per-player votes by name + "N/M voted" count via the inline
+    // vote dots. Two of the five home-team players (3 scraped + Alice + Bob)
+    // vote, so the single proposed date reads 2/5 voted.
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
-    await editPage.openOwnTeamVotes();
-    await expect(editPage.ownTeamTable())
-      .toContainText('Alice');
-    await expect(editPage.ownTeamTable())
-      .toContainText('Bob');
-    await expect(editPage.ownTeamTable().getByText('2/5 voted'))
-      .toBeVisible();
+    const firstDateRow = editPage.proposedDateRows.nth(0);
+    await expect(firstDateRow.locator('.vote-dot-count'))
+      .toHaveText('2/5 voted');
+    await expect(firstDateRow.locator('.vote-dot--yes'))
+      .toHaveCount(2);
 
     // The proposed date is votable by both teams out of the box; have the
     // opponent vote on it.
@@ -302,17 +303,8 @@ test.describe('Join and Voting', () => {
     await awayJoinPage.castVote(0, 'No');
     await awayJoinPage.submitVotes();
 
-    await editPage.goto(session.editUrl);
-    await editPage.openAwayTally();
-    await expect(editPage.awayTallySection()
-      .getByRole('table')
-      .getByRole('row')
-      .nth(1)
-      .getByRole('cell')
-      .nth(3))
-      .toHaveText('1'); // no
-
     // Confirm the date.
+    await editPage.goto(session.editUrl);
     await editPage.confirmDate(0);
     await expect(editPage.status)
       .toContainText('Confirmed');

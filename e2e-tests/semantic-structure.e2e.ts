@@ -39,7 +39,7 @@ test.describe('Semantic structure', () => {
     await checkA11y();
   });
 
-  test('edit page with split tallies', async ({page, checkA11y}) => {
+  test('edit page with votes', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-06-01T20:00', '2026-06-15T18:30']);
 
     const editPage = new EditPage(page);
@@ -60,11 +60,11 @@ test.describe('Semantic structure', () => {
 
     await editPage.goto(session.editUrl);
 
-    // Tallies render their h3 headings; the outline must not skip a level.
-    await expect(editPage.homeTallySection())
-      .toContainText('Home Team Votes');
-    await expect(editPage.awayTallySection())
-      .toContainText('Away Team Votes');
+    // The redesigned rail renders inline vote dots per date; the outline must
+    // not skip a level and every decorative icon stays hidden.
+    await expect(editPage.proposedDateRows.nth(0)
+      .locator('.vote-dots'))
+      .toBeVisible();
 
     await expectNoSkippedHeadings(page);
     await expectAllIconsHidden(page);

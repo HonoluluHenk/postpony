@@ -401,7 +401,12 @@ export function initDeleteDialogs() {
  */
 export function initFocusManagement() {
   document.addEventListener('htmx:afterSettle', function (evt) {
-    var el = evt.target;
+    // ponytail: htmx reports the swapped element as evt.detail.elt; evt.target
+    // is the dispatched-on node. Prefer detail.elt so the section/heading
+    // branches fire even when the swap target is the whole edit grid (the
+    // redesign replaced per-section targets with #edit-grid).
+    var detail = evt.detail || {};
+    var el = detail.elt || evt.target;
     if (!el || el.nodeType !== 1) return;
 
     initProposedDateTimePicker();

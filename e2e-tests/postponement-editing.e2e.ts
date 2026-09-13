@@ -37,7 +37,7 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.clipboardStatus)
       .toHaveText('Proposed date added!');
 
-    // Verify the proposed date is in the list
+    // Verify the proposed date is in the rail
     await expect(editPage.proposedDateList)
       .toContainText('2026');
 
@@ -64,8 +64,8 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.proposedDateDisplays())
       .resolves
       .toEqual([
-        expect.stringContaining('3/5/26'),
-        expect.stringContaining('3/12/26'),
+        expect.stringContaining('March 5 2026'),
+        expect.stringContaining('March 12 2026'),
       ]);
 
     const joinPage = await new JoinPage(page)
@@ -82,7 +82,25 @@ test.describe('Postponement Editing', () => {
     await checkA11y();
   });
 
-  test('should show vote tallies on the edit page', async ({page, checkA11y}) => {
+  test('should group proposed dates into one week header per ISO week', async ({page, checkA11y}) => {
+    // 2026-03-05 (ISO week 10) and 2026-03-12 (ISO week 11) fall in two weeks.
+    await EditPage.createSession(page, [
+      '2026-03-05T20:00',
+      '2026-03-12T18:30',
+    ]);
+    const editPage = new EditPage(page);
+
+    await expect(editPage.weekHeads)
+      .toHaveCount(2);
+    await expect(editPage.weekHeads.nth(0))
+      .toContainText('Week 10');
+    await expect(editPage.weekHeads.nth(1))
+      .toContainText('Week 11');
+
+    await checkA11y();
+  });
+
+  test('should show vote dots on the edit page', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     // Add proposed dates
     await editPage.addProposedDate('2026-06-01T20:00');
@@ -105,61 +123,54 @@ test.describe('Postponement Editing', () => {
     await joinPage.castVote(1, 'IfNecessary');
     await joinPage.submitVotes();
 
-    // Return to edit page and check home team tally
+    // Return to edit page; the vote dots are inline (no disclosure to open).
     await page.goto(editUrl);
-    await editPage.openHomeTally();
 
-    const homeTally = editPage.homeTallySection();
-    await expect(homeTally.getByRole('heading', {level: 3}))
-      .toContainText('Home Team Votes');
-    // The visually-hidden caption keeps the table's accessible name.
-    await expect(homeTally.getByRole('table', {name: 'Home Team Votes'}))
-      .toBeVisible();
+    // Roster: 3 scraped organizer-team players + Alice = 4. Alice votes on
+    // both dates, so each reads 1 of 4 voted.
+    const firstRow = editPage.proposedDateRows.nth(0);
+    await expect(firstRow.locator('.vote-dot-count'))
+      .toHaveText('1/4 voted');
+    await expect(firstRow.locator('.vote-dot--yes'))
+      .toHaveCount(1);
+    await expect(firstRow.locator('.vote-dot--none'))
+      .toHaveCount(3);
 
-    const homeRows = homeTally.getByRole('rowgroup')
-      .last()
-      .getByRole('row');
-    await expect(homeRows)
-      .toHaveCount(2);
-
-    // First date: Yes=1, IfNecessary=0, No=0
-    await expect(homeRows.first()
-      .getByRole('cell')
-      .nth(1))
-      .toHaveText('1');
-    await expect(homeRows.first()
-      .getByRole('cell')
-      .nth(2))
-      .toHaveText('0');
-    await expect(homeRows.first()
-      .getByRole('cell')
-      .nth(3))
-      .toHaveText('0');
-
-    // Second date: Yes=0, IfNecessary=1, No=0
-    await expect(homeRows.nth(1)
-      .getByRole('cell')
-      .nth(1))
-      .toHaveText('0');
-    await expect(homeRows.nth(1)
-      .getByRole('cell')
-      .nth(2))
-      .toHaveText('1');
-    await expect(homeRows.nth(1)
-      .getByRole('cell')
-      .nth(3))
-      .toHaveText('0');
+    const secondRow = editPage.proposedDateRows.nth(1);
+    await expect(secondRow.locator('.vote-dot-count'))
+      .toHaveText('1/4 voted');
+    await expect(secondRow.locator('.vote-dot--ifnecessary'))
+      .toHaveCount(1);
 
     await checkA11y();
     await expect(page)
       .toHaveScreenshot('edit-with-votes.png', {fullPage: true});
   });
 
+  test('should show an empty vote as unvoted dots and a 0/M count', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(1);
+
+    // No player has voted: all dots are unvoted and the count is 0 of the
+    // 3 scraped organizer-team players.
+    const row = editPage.proposedDateRows.nth(0);
+    await expect(row.locator('.vote-dot-count'))
+      .toHaveText('0/3 voted');
+    await expect(row.locator('.vote-dot--none'))
+      .toHaveCount(3);
+    await expect(row.locator('.vote-dot--yes, .vote-dot--no, .vote-dot--ifnecessary'))
+      .toHaveCount(0);
+
+    await checkA11y();
+  });
+
   test('should toggle voting visibility on proposed dates', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     // Add a proposed date
     await editPage.addProposedDate('2026-03-05T20:00');
-    await expect(page.locator('#proposed-date-list > .proposed-date-card'))
+    await expect(page.locator('#proposed-dates-management .date-row'))
       .toHaveCount(1);
 
     // Dates are votable by both teams out of the box.
@@ -180,84 +191,24 @@ test.describe('Postponement Editing', () => {
     await checkA11y();
   });
 
-  test('should show split team tallies on the edit page', async ({page, checkA11y}) => {
-    const editPage = new EditPage(page);
-    // Add proposed dates
-    await editPage.addProposedDate('2026-06-01T20:00');
-    await expect(page.locator('.toast.success')
-      .filter({hasText: 'Proposed date added!'}))
-      .toBeVisible();
-
-    await editPage.addProposedDate('2026-06-15T18:30');
-    await expect(page.locator('.toast.success')
-      .filter({hasText: 'Proposed date added!'}))
-      .toBeVisible();
-
-    const editUrl = page.url();
-
-    // Join as home player and vote Yes on first date
-    const joinPage = await new JoinPage(page)
-      .goto(session.homeHref);
-    await joinPage.join('HomePlayer');
-    await joinPage.castVote(0, 'Yes');
-    await joinPage.castVote(1, 'No');
-    await joinPage.submitVotes();
-
-    // Join as away player and vote No on first date
-    await joinPage.goto(session.awayHref);
-    await joinPage.join('AwayPlayer');
-    await joinPage.castVote(0, 'No');
-    await joinPage.castVote(1, 'Yes');
-    await joinPage.submitVotes();
-
-    // Return to edit page and check split tallies
-    await page.goto(editUrl);
-    await editPage.openHomeTally();
-    await editPage.openAwayTally();
-
-    // Home Team Votes tally
-    const homeTallySection = editPage.homeTallySection();
-    await expect(homeTallySection.getByRole('heading', {level: 3}))
-      .toContainText('Home Team Votes');
-    const homeTallyRows = homeTallySection.getByRole('rowgroup')
-      .last()
-      .getByRole('row');
-    await expect(homeTallyRows.first()
-      .getByRole('cell')
-      .nth(1))
-      .toHaveText('1'); // Yes = 1
-
-    // Away Team Votes tally
-    const awayTallySection = editPage.awayTallySection();
-    await expect(awayTallySection.getByRole('heading', {level: 3}))
-      .toContainText('Away Team Votes');
-    const awayTallyRows = awayTallySection.getByRole('rowgroup')
-      .last()
-      .getByRole('row');
-    await expect(awayTallyRows.first()
-      .getByRole('cell')
-      .nth(3))
-      .toHaveText('1'); // No = 1
-
-    await checkA11y();
-  });
-
   test('should show own-team per-player votes and the N/M voted count in the edit view', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
-    await expect(page.locator('.toast.success')
-      .filter({hasText: 'Proposed date added!'}))
-      .toBeVisible();
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(1);
     await editPage.addProposedDate('2026-06-15T18:30');
-    await expect(page.locator('.toast.success')
-      .filter({hasText: 'Proposed date added!'}))
-      .toBeVisible();
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(2);
 
     // Roster: two home players; Jane Smith never joins.
     await editPage.addPlayer('John Doe');
+    await expect(editPage.clipboardStatus)
+      .toHaveText('Player added');
     await expect(editPage.playerItem('John Doe'))
       .toBeVisible();
     await editPage.addPlayer('Jane Smith');
+    await expect(editPage.clipboardStatus)
+      .toHaveText('Player added');
     await expect(editPage.playerItem('Jane Smith'))
       .toBeVisible();
 
@@ -272,89 +223,63 @@ test.describe('Postponement Editing', () => {
     await joinPage.submitVotes();
 
     await page.goto(editUrl);
-    await editPage.openOwnTeamVotes();
-
-    const ownTeam = editPage.ownTeamSection();
-    await expect(ownTeam.getByRole('heading', {level: 3}))
-      .toContainText('Your Team Votes');
-    // The visually-hidden caption keeps the table's accessible name.
-    await expect(ownTeam.getByRole('table', {name: 'Your Team Votes'}))
-      .toBeVisible();
 
     // Roster: 3 scraped players + John Doe + Jane Smith = 5. Only John Doe
     // votes, so every date reports 1 of 5 voted.
-    await expect(ownTeam.getByRole('table')
-      .getByText('1/5 voted'))
-      .toHaveCount(2);
-
-    // John Doe's per-player cells: a Yes on date 1 and a No on date 2. The
-    // other four players' cells are all "No vote".
-    await expect(ownTeam.getByRole('cell', {name: 'Yes', exact: true}))
+    const firstRow = editPage.proposedDateRows.nth(0);
+    await expect(firstRow.locator('.vote-dot-count'))
+      .toHaveText('1/5 voted');
+    // John Doe's Yes on date 1; the other four players' dots are unvoted.
+    await expect(firstRow.locator('.vote-dot--yes'))
       .toHaveCount(1);
-    await expect(ownTeam.getByRole('cell', {name: 'No', exact: true}))
-      .toHaveCount(1);
-    await expect(ownTeam.getByRole('cell', {name: 'No vote', exact: true}))
-      .toHaveCount(8);
+    await expect(firstRow.locator('.vote-dot--yes'))
+      .toHaveAttribute('title', 'John Doe: Yes');
+    await expect(firstRow.locator('.vote-dot--none'))
+      .toHaveCount(4);
 
-    // The non-voter rows (one per date) mark the never-joining players (incl.
-    // Jane Smith) as not joined.
-    const nonVotersRows = ownTeam.getByRole('row')
-      .filter({hasText: 'Not voted yet:'});
-    await expect(nonVotersRows)
-      .toHaveCount(2);
-    await expect(nonVotersRows.first())
-      .toContainText('Jane Smith');
-    await expect(nonVotersRows.first())
-      .toContainText('not joined');
+    const secondRow = editPage.proposedDateRows.nth(1);
+    await expect(secondRow.locator('.vote-dot-count'))
+      .toHaveText('1/5 voted');
+    await expect(secondRow.locator('.vote-dot--no'))
+      .toHaveAttribute('title', 'John Doe: No');
 
     await checkA11y();
   });
 
-  test('opens a vote-tally disclosure with Enter and Space on its summary', async ({page, checkA11y}) => {
+  test('opens the players disclosure with Enter and Space on its summary', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
     await expect(page.locator('.toast.success')
       .filter({hasText: 'Proposed date added!'}))
       .toBeVisible();
 
-    const editUrl = page.url();
-
-    const joinPage = await new JoinPage(page)
-      .goto(session.homeHref);
-    await joinPage.join('Alice');
-    await joinPage.castVote(0, 'Yes');
-    await joinPage.submitVotes();
-
-    await page.goto(editUrl);
-
-    const homeTallyDetails = editPage.homeTallySection()
-      .locator('details');
-    const homeTallySummary = editPage.homeTallySummary();
-
-    // The disclosure is closed by default; its table is not exposed.
-    await expect(homeTallyDetails)
+    // The redesigned sidebar keeps roster/generator in native <details>. The
+    // players disclosure is open by default on desktop; close it first, then
+    // toggle it back via keyboard on its summary.
+    const playersDetails = page.locator('details.side-details', {hasText: 'Players'});
+    const playersSummary = playersDetails.locator('summary');
+    await expect(playersDetails)
+      .toHaveAttribute('open', '');
+    await playersSummary.click();
+    await expect(playersDetails)
       .not
       .toHaveAttribute('open');
-    await expect(editPage.homeTallyTable())
-      .toHaveCount(0);
 
     // Enter opens it.
-    await homeTallySummary.focus();
+    await playersSummary.focus();
     await page.keyboard.press('Enter');
-    await expect(homeTallyDetails)
+    await expect(playersDetails)
       .toHaveAttribute('open');
-    await expect(editPage.homeTallyTable())
-      .toBeVisible();
 
     // Space toggles it closed again.
     await page.keyboard.press(' ');
-    await expect(homeTallyDetails)
+    await expect(playersDetails)
       .not
       .toHaveAttribute('open');
 
     // Space opens it again.
     await page.keyboard.press(' ');
-    await expect(homeTallyDetails)
+    await expect(playersDetails)
       .toHaveAttribute('open');
 
     await checkA11y();
@@ -369,7 +294,7 @@ test.describe('Postponement Editing', () => {
       .toHaveScreenshot('edit-empty.png', {fullPage: true});
   });
 
-  test('maintains accessibility on the edit page with split tallies visible', async ({page, checkA11y}) => {
+  test('maintains accessibility on the edit page with votes visible', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
     await expect(page.locator('.toast.success')
@@ -391,8 +316,30 @@ test.describe('Postponement Editing', () => {
     await joinPage.submitVotes();
 
     await page.goto(editUrl);
-    await editPage.openHomeTally();
-    await editPage.openAwayTally();
+    await checkA11y();
+  });
+
+  test('should show clean and clash chips on the right date rows', async ({page, checkA11y}) => {
+    // A clean date sorts first, a clashing date second (clash vs Burgdorf), so
+    // one session covers both chip states.
+    await EditPage.createSession(page, [
+      '2026-10-10T18:00',
+      '2026-12-04T18:00',
+    ]);
+    const editPage = new EditPage(page);
+
+    const cleanRow = editPage.proposedDateRows.nth(0);
+    await expect(cleanRow.locator('.date-chips .chip--clean', {hasText: 'Schedule checked, no clashes'}))
+      .toBeVisible();
+    await expect(cleanRow.locator('.date-chips .chip--clean', {hasText: 'Venue checked, no other games'}))
+      .toBeVisible();
+
+    const clashRow = editPage.proposedDateRows.nth(1);
+    await expect(clashRow)
+      .toHaveClass(/clash-row/);
+    await expect(clashRow.locator('.date-chips .chip--error'))
+      .toBeVisible();
+
     await checkA11y();
   });
 
@@ -413,10 +360,10 @@ test.describe('Postponement Editing', () => {
       .toContainText('Confirmed');
     await expect(editPage.reopenButton())
       .toBeVisible();
-    // Date-management controls are gone once locked.
-    await expect(editPage.proposedDateList)
-      .toHaveCount(0);
+    // The add-date form and per-date confirm controls are gone once locked.
     await expect(editPage.proposedDateTimeInput)
+      .toHaveCount(0);
+    await expect(editPage.confirmButton(0))
       .toHaveCount(0);
 
     await checkA11y();
@@ -471,13 +418,9 @@ test.describe('Postponement Editing', () => {
     await joinPage.submitVotes();
 
     await editPage.goto(session.editUrl);
-    await editPage.openHomeTally();
-    await expect(editPage.homeTallyTable()
-      .getByRole('row')
-      .nth(1)
-      .getByRole('cell')
-      .nth(1))
-      .toHaveText('1'); // yes
+    await expect(editPage.proposedDateRows.nth(0)
+      .locator('.vote-dot-count'))
+      .toHaveText('1/4 voted');
 
     await editPage.deleteButton(0)
       .click();
@@ -498,12 +441,13 @@ test.describe('Postponement Editing', () => {
     // One polite status announcement names the deleted date.
     await expect(editPage.clipboardStatus)
       .toContainText('Proposed date deleted');
-    // The swap re-renders the tally disclosure closed, so reopen before reading.
-    await editPage.openHomeTally();
-    // The deleted date's tally is gone: only the surviving date remains.
-    await expect(editPage.homeTallyTable()
-      .getByRole('row'))
-      .toHaveCount(2);
+    // The surviving date keeps Alice's No vote.
+    await expect(editPage.proposedDateRows.nth(0)
+      .locator('.vote-dot-count'))
+      .toHaveText('1/4 voted');
+    await expect(editPage.proposedDateRows.nth(0)
+      .locator('.vote-dot--no'))
+      .toHaveCount(1);
 
     await checkA11y();
   });

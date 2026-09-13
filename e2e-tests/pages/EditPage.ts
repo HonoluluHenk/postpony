@@ -71,8 +71,12 @@ export class EditPage {
     };
   }
 
+  // The redesign renders the single-line page headline (match + original
+  // datetime) in the Layout h1, so the accessible name is the visible headline
+  // text rather than a fixed "Editing Postponement" string. Tests assert the
+  // match/date via `toContainText`.
   get heading(): Locator {
-    return this.page.getByRole('heading', {name: 'Editing Postponement', level: 1});
+    return this.page.getByRole('heading', {level: 1});
   }
 
   get spinner(): Locator {
@@ -80,7 +84,7 @@ export class EditPage {
   }
 
   get status(): Locator {
-    return this.page.getByText('Status:');
+    return this.page.locator('#status-chip');
   }
 
   get changeMatchDetailsLink(): Locator {
@@ -93,7 +97,7 @@ export class EditPage {
   }
 
   get organizerPasswordCopyButton(): Locator {
-    return this.organizerPasswordToast.locator('button.clipboard-btn');
+    return this.organizerPasswordToast.locator('button.copy-btn');
   }
 
   get organizerPassword(): Promise<string | null> {
@@ -142,34 +146,53 @@ export class EditPage {
     return this.page.getByRole('button', {name: 'Open calendar', exact: true});
   }
 
+  // The redesigned rail carries the week-grouped date list in a single section;
+  // the add-date form and the date rows are all scoped under it.
   get proposedDateList(): Locator {
-    // ponytail: the generator's <ol> also has aria-label "Generate Proposed
-    // Dates" which would collide with the fuzzy "Proposed Dates" substring
-    // match; scope to the card container id so the proposal list stays singular.
-    return this.page.locator('#proposed-date-list');
+    return this.page.locator('#proposed-dates-management');
   }
 
-  // The proposal card list's data cards — the index space every per-date
-  // control (toggle, confirm, delete) uses.
+  // The dense date rows — the index space every per-date control (votable,
+  // confirm, delete) uses.
   get proposedDateRows(): Locator {
-    return this.proposedDateList.locator('.proposed-date-card');
+    return this.proposedDateList.locator('.date-row');
+  }
+
+  // One ISO-week divider per week the proposed dates span.
+  get weekHeads(): Locator {
+    return this.proposedDateList.locator('.week-head');
   }
 
   get generateForm(): Locator {
     // ponytail: filter by the hidden `generate=tuple` discriminator so the
-    // generator form never collides with the single-date form below it.
+    // generator form never collides with the single-date form above it.
     return this.page.locator('form').filter({
       has: this.page.locator('input[name="generate"][value="tuple"]'),
     });
   }
 
-  // ponytail: the row also carries the icon and switch aria-labels inside its
-  // textContent, so the test reads the datetime display from the row's `.max`
-  // div to get a parseable "Mo, Sep 30, 2026, 7:30 PM".
+  // The date-cell is split across `.date-day/.date-num/.date-time/.date-year`
+  // spans, so reconstruct a single parseable datetime string per row
+  // (e.g. "March 5 2026 8:00 PM").
   async proposedDateDisplays(): Promise<string[]> {
-    return this.proposedDateRows
-      .locator('.max')
-      .allTextContents();
+    return this.proposedDateRows.locator('.date-cell')
+      .evaluateAll((els) => els.map((el) => {
+        const num = el.querySelector('.date-num')?.textContent ?? '';
+        const year = el.querySelector('.date-year')?.textContent ?? '';
+        const time = el.querySelector('.date-time')?.textContent ?? '';
+        return `${num} ${year} ${time}`.trim();
+      }));
+  }
+
+  // The generator lives in a collapsible sidebar disclosure that the redesign
+  // closes on phones (so the week rail is the first thing seen). Call this
+  // before reading the time grid at a phone/tablet width.
+  async openGenerateForm(): Promise<void> {
+    const details = this.page.locator('details.side-details', {hasText: 'Generate Proposed Dates'});
+    if ((await details.getAttribute('open')) !== '') {
+      await details.locator('summary')
+        .click();
+    }
   }
 
   generateTimeInput(index: number): Locator {
@@ -263,76 +286,37 @@ export class EditPage {
     return this.page.locator('#clipboard-status');
   }
 
-  homeTallySection(): Locator {
-    return this.page.getByRole('region', {name: 'Home Team Votes'});
+  // ---- Vote dots (replaces the removed home/away/own-team tally tables). ----
+  voteDotCount(dateIndex: number): Locator {
+    return this.proposedDateRows
+      .nth(dateIndex)
+      .locator('.vote-dot-count');
   }
 
-  awayTallySection(): Locator {
-    return this.page.getByRole('region', {name: 'Away Team Votes'});
-  }
-
-  ownTeamSection(): Locator {
-    return this.page.getByRole('region', {name: 'Your Team Votes'});
-  }
-
-  // The three vote tables render inside closed native disclosures on the edit
-  // page, so a test must open a disclosure before reading its table. The
-  // summary holds the section's heading and is the native disclosure toggle;
-  // Playwright exposes it as a plain `generic` (not a button role) in this
-  // Chromium, so target the `<summary>` element structurally.
-  async openHomeTally(): Promise<void> {
-    await this.homeTallySection()
-      .locator('summary')
-      .click();
-  }
-
-  async openAwayTally(): Promise<void> {
-    await this.awayTallySection()
-      .locator('summary')
-      .click();
-  }
-
-  async openOwnTeamVotes(): Promise<void> {
-    await this.ownTeamSection()
-      .locator('summary')
-      .click();
-  }
-
-  homeTallySummary(): Locator {
-    return this.homeTallySection()
-      .locator('summary');
-  }
-
-  ownTeamTable(): Locator {
-    return this.ownTeamSection()
-      .getByRole('table');
-  }
-
-  homeTallyTable(): Locator {
-    return this.homeTallySection()
-      .getByRole('table');
+  voteDots(dateIndex: number): Locator {
+    return this.proposedDateRows
+      .nth(dateIndex)
+      .locator('.vote-dots .vote-dot');
   }
 
   homeCopyButton(): Locator {
-    return this.page.locator('li')
+    return this.page.locator('.invite span')
       .filter({has: this.homeInviteLink})
-      .locator('button.clipboard-btn');
+      .locator('button.copy-btn');
   }
 
   awayCopyButton(): Locator {
-    return this.page.locator('li')
+    return this.page.locator('.invite span')
       .filter({has: this.awayInviteLink})
-      .locator('button.clipboard-btn');
+      .locator('button.copy-btn');
   }
 
   votableToggle(dateIndex: number): Locator {
-    // ponytail: the switch is icon-only inside the "Votable" column (full
-    // label only in aria-label/title), so locate the row's switch structurally
-    // instead of by text. beer.css hides the native checkbox (opacity:0), so
-    // the clickable/visible target is the label.
+    // ponytail: beer.css hides the native checkbox (opacity:0), so the
+    // clickable/visible target is the `.action--votable` label.
     return this.proposedDateRows
       .nth(dateIndex)
-      .locator('label.switch');
+      .locator('label.action--votable');
   }
 
   async addProposedDate(dt: string): Promise<void> {
@@ -343,7 +327,7 @@ export class EditPage {
   }
 
   async toggleVotable(dateIndex: number): Promise<void> {
-    // ponytail: beer.css hides native checkboxes; toggle via the switch label
+    // ponytail: beer.css hides native checkboxes; toggle via the label
     await this.votableToggle(dateIndex)
       .click();
   }
@@ -361,11 +345,12 @@ export class EditPage {
   }
 
   deleteButton(dateIndex: number): Locator {
-    // ponytail: the delete action is icon-only, so its accessible name comes
-    // from aria-label rather than visible text.
+    // ponytail: the delete action is icon-only with an aria-label; the row also
+    // carries a second "Delete" text button inside the confirm dialog, so target
+    // the opener structurally instead of by accessible name.
     return this.proposedDateRows
       .nth(dateIndex)
-      .getByRole('button', {name: 'Delete'});
+      .locator('button[data-open-dialog]');
   }
 
   deleteDialog(dateIndex: number): Locator {

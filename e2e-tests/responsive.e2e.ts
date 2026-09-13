@@ -1,7 +1,7 @@
 import type { Locator } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { EditPage } from './pages';
-import { setViewport } from './viewports';
+import { setViewport, viewportNames } from './viewports';
 
 const PHONE_VIEWPORT = {width: 375, height: 667};
 
@@ -26,9 +26,7 @@ async function expectFullyInViewport(locator: Locator): Promise<void> {
 }
 
 // Asserts the child's bounding box lies entirely within the parent's, i.e. the
-// child is not clipped by an ancestor's overflow. This catches the date-card
-// bug where a fixed height plus overflow:hidden on the details row cut off the
-// chips.
+// child is not clipped by an ancestor's overflow.
 async function expectFullyWithin(parent: Locator, child: Locator): Promise<void> {
   const childBox = await child.boundingBox();
   const parentBox = await parent.boundingBox();
@@ -47,16 +45,16 @@ async function expectFullyWithin(parent: Locator, child: Locator): Promise<void>
 
 // Asserts the element renders its full text without horizontal truncation
 // (scrollWidth <= clientWidth). A nowrap/ellipsis style hides the overflowing
-// text, making scrollWidth exceed clientWidth.
+// text, making scrollWidth exceed clientWidth. Polls so the layout can settle
+// (fonts, HTMX swap) before the check runs.
 async function expectNotHorizontallyTruncated(locator: Locator): Promise<void> {
   await locator.scrollIntoViewIfNeeded();
-  const notTruncated = await locator.evaluate((el) => el.scrollWidth <= el.clientWidth);
-  expect(notTruncated)
+  await expect.poll(async () => locator.evaluate((el) => el.scrollWidth <= el.clientWidth))
     .toBe(true);
 }
 
 test.describe('Responsive Layout', () => {
-  test('phone viewport: no horizontal overflow, wrapped header, stacked tables, reachable invite links', async ({page}) => {
+  test('phone viewport: no horizontal overflow, wrapped header, vote dots, reachable invite links', async ({page}) => {
     await page.setViewportSize(PHONE_VIEWPORT);
     const {editPage} = await EditPage.createSession(page, ['2026-03-05T20:00']);
     await page.evaluate(() => {
@@ -80,17 +78,10 @@ test.describe('Responsive Layout', () => {
     expect(titleBox.y)
       .toBeGreaterThan(logoBox.y);
 
-    // Vote-tally table stacks below 993px: cells are block-level and the
-    // header row is visually hidden (clip pattern) while keeping real
-    // table semantics for screen readers. The tally is a closed disclosure,
-    // so open it before asserting the stacked CSS.
-    await editPage.openHomeTally();
-    const table = editPage.homeTallyTable();
-    await expect(table.locator('thead'))
-      .toHaveCSS('position', 'absolute');
-    await expect(table.locator('tbody tr td')
-      .first())
-      .toHaveCSS('display', 'block');
+    // The vote-dot count renders inline and is not clipped on phones.
+    await expect(editPage.voteDotCount(0))
+      .toBeVisible();
+    await expectFullyInViewport(editPage.voteDotCount(0));
 
     // Invitation links wrap and stay reachable; copy buttons are clickable.
     await expectFullyInViewport(editPage.homeInviteLink);
@@ -102,11 +93,22 @@ test.describe('Responsive Layout', () => {
     await expect(editPage.awayCopyButton())
       .toBeEnabled();
 
-    // The proposed-dates list is a flex column of cards (not a table), so
-    // it wraps naturally on phones. The votable toggle stays reachable.
+    // The week rail sits above the sidebar and the votable toggle stays reachable.
     await expect(editPage.votableToggle(0))
       .toBeVisible();
     await expectFullyInViewport(editPage.votableToggle(0));
+
+    // The roster/generator side-details collapse on phones so the rail is the
+    // first thing the organizer sees.
+    const sideDetails = page.locator('.edit-redesign details.side-details');
+    await expect(sideDetails)
+      .toHaveCount(2);
+    await expect(sideDetails.first())
+      .not
+      .toHaveAttribute('open');
+    await expect(sideDetails.nth(1))
+      .not
+      .toHaveAttribute('open');
   });
 
   test('desktop viewport: container caps at 1200px', async ({page}) => {
@@ -118,7 +120,7 @@ test.describe('Responsive Layout', () => {
       .toHaveCSS('max-width', '1200px');
   });
 
-  test('phone viewport: stacked-table page stays accessible', async ({page, checkA11y}) => {
+  test('phone viewport: vote-dot page stays accessible', async ({page, checkA11y}) => {
     await page.setViewportSize(PHONE_VIEWPORT);
     await EditPage.createSession(page, ['2026-03-05T20:00']);
 
@@ -126,35 +128,37 @@ test.describe('Responsive Layout', () => {
   });
 });
 
-// Ticket 03: the own-team Votes table must stack on a phone so the rightmost
-// "Voted" column is not cut off at the viewport edge. The stacked-table pattern
-// keys off `td[data-label]` cells, and the voted cell is the rightmost body cell
-// of the first data row, so its bounding box must lie fully inside the viewport.
-// The no-horizontal-overflow guard prevents `scrollIntoViewIfNeeded` from
-// masking a pre-fix cut-off column by scrolling it into view.
-test.describe('Own-team votes table stacking', () => {
-  test('phone viewport: the voted cell of the first row is fully inside the viewport', async ({page, checkA11y}) => {
+// The edit page renders the redesigned week rail + sticky sidebar at every
+// breakpoint; nothing may push the page wider than the viewport.
+test.describe('Edit page horizontal overflow', () => {
+  for (const name of viewportNames) {
+    test(`edit page has no horizontal overflow at the ${name} viewport`, async ({page, checkA11y}) => {
+      await setViewport(page, name);
+      await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-12T18:30']);
+
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+        .toBe(true);
+
+      await checkA11y();
+    });
+  }
+});
+
+// The vote-dot count is the inline "N/M voted" indicator in each date row. On a
+// phone it must stay fully inside the viewport — a horizontal cut-off here means
+// the rail overflows the layout.
+test.describe('Vote-dot count on phone', () => {
+  test('phone viewport: the vote-dot count of the first row is fully inside the viewport', async ({page, checkA11y}) => {
     await setViewport(page, 'phone');
-    const {editPage, session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
-    // The own-team Votes section is part of the full-page template, not of the
-    // partial that adds a date (its out-of-band swap needs an existing
-    // `#own-team-votes` node), so reload to read the stacked table.
-    await page.goto(session.editUrl);
-    // The own-team Votes table is a closed disclosure; open it to read the stack.
-    await editPage.openOwnTeamVotes();
+    const {editPage} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
-    const ownTeamTable = editPage.ownTeamTable();
-    const firstRowVotedCell = ownTeamTable.getByRole('row')
-      .nth(1)
-      .getByRole('cell')
-      .last();
-
-    await expect(firstRowVotedCell)
+    const count = editPage.voteDotCount(0);
+    await expect(count)
       .toBeVisible();
-    await expectFullyInViewport(firstRowVotedCell);
+    await expectFullyInViewport(count);
 
-    // The stacked table leaves no horizontal page overflow, so the "Voted"
-    // column stays on-screen without any horizontal scrolling.
+    // No horizontal page overflow, so the count stays on-screen without any
+    // horizontal scrolling.
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
       .toBe(true);
 
@@ -162,56 +166,52 @@ test.describe('Own-team votes table stacking', () => {
   });
 });
 
-// Ticket 02: the Proposed Date card must show its full date text and every
-// Clash / Venue Occupancy chip on tablet and phone. A clean date sorts first
-// (both check chips) and a clashing date follows (clash chip), so one session
-// covers both states.
-test.describe('Proposed date card full visibility', () => {
+// A clean date sorts first (both check chips) and a clashing date follows
+// (clash chip), so one session covers both chip states.
+test.describe('Proposed date row full visibility', () => {
   for (const name of ['tablet', 'phone'] as const) {
-    test(`proposed date card shows the full date and all chips at the ${name} viewport`, async ({page, checkA11y}) => {
+    test(`proposed date row shows the full date and all chips at the ${name} viewport`, async ({page, checkA11y}) => {
       await setViewport(page, name);
       const {editPage} = await EditPage.createSession(page, ['2026-10-10T18:00', '2026-12-04T18:00']);
 
       // Full date text of the first Proposed Date is visible, not truncated to
-      // an ellipsis and not clipped at the card edge.
-      const firstCard = editPage.proposedDateRows.nth(0);
-      const dateText = firstCard.locator('.proposed-date-info > .max');
-      await expect(dateText)
+      // an ellipsis and not clipped at the row edge.
+      const firstRow = editPage.proposedDateRows.nth(0);
+      const dateCell = firstRow.locator('.date-cell');
+      await expect(dateCell)
         .toBeVisible();
-      await expectNotHorizontallyTruncated(dateText);
-      await expectFullyWithin(firstCard, dateText);
+      await expectNotHorizontallyTruncated(dateCell);
+      await expectFullyWithin(firstRow, dateCell);
 
       // Both check chips stay on the clean row.
-      const cleanDetails = firstCard.locator('.proposed-date-details');
-      const cleanChip = cleanDetails.getByText('Schedule checked, no clashes');
-      const venueChip = cleanDetails.getByText('Venue checked, no other games');
+      const cleanChip = firstRow.locator('.chip--clean', {hasText: 'Schedule checked, no clashes'});
+      const venueChip = firstRow.locator('.chip--clean', {hasText: 'Venue checked, no other games'});
       await expect(cleanChip)
         .toBeVisible();
       await expect(venueChip)
         .toBeVisible();
-      await expectFullyWithin(firstCard, cleanChip);
-      await expectFullyWithin(firstCard, venueChip);
+      await expectFullyWithin(firstRow, cleanChip);
+      await expectFullyWithin(firstRow, venueChip);
 
-      // The clashing date's chip is visible on its row too.
-      const clashCard = editPage.proposedDateRows.nth(1);
-      await expect(clashCard)
+      // The clashing date's error chip is visible on its row too.
+      const clashRow = editPage.proposedDateRows.nth(1);
+      await expect(clashRow)
         .toHaveClass(/clash-row/);
-      const clashChip = clashCard.locator('.proposed-date-details')
-        .getByText(/vs Burgdorf/);
-      await expect(clashChip)
+      await expect(clashRow.locator('.chip--error'))
         .toBeVisible();
-      await expectFullyWithin(clashCard, clashChip);
+      await expectFullyWithin(clashRow, clashRow.locator('.chip--error'));
 
       await checkA11y();
     });
   }
 });
 
-// Ticket 04: the invitation link row must not wrap — the copy-to-clipboard
-// button sits in the same vertical band as its link, and nothing overflows the
-// phone viewport. A wrapping row would push the icon onto its own line.
+// The invitation link row must not push the copy-to-clipboard button (or the
+// page) past the phone viewport edge. The redesign lets the link text wrap and
+// the copy icon drop onto its own line, so the invariant is reachability + no
+// horizontal overflow rather than a shared vertical band.
 test.describe('Invitation link row on phone', () => {
-  test('clipboard button shares its link vertical band and nothing overflows the viewport', async ({page, checkA11y}) => {
+  test('copy buttons stay reachable and nothing overflows the viewport', async ({page, checkA11y}) => {
     await setViewport(page, 'phone');
     const {editPage} = await EditPage.createSession(page);
 
@@ -222,18 +222,8 @@ test.describe('Invitation link row on phone', () => {
       // Both controls stay fully inside the phone viewport.
       await expectFullyInViewport(link);
       await expectFullyInViewport(copyBtn);
-
-      // The copy button vertically overlaps its link's band, i.e. they share
-      // one line instead of the button wrapping below the link.
-      const linkBox = await link.boundingBox();
-      const copyBox = await copyBtn.boundingBox();
-      if (!linkBox || !copyBox) {
-        throw new Error('invite link or copy button has no bounding box');
-      }
-      const sameBand = copyBox.y < linkBox.y + linkBox.height
-        && linkBox.y < copyBox.y + copyBox.height;
-      expect(sameBand)
-        .toBe(true);
+      await expect(copyBtn)
+        .toBeEnabled();
     }
 
     // No horizontal page overflow: the nowrap link row must not push the
