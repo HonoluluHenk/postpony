@@ -88,4 +88,25 @@ describe('handleEditIcalGet', () => {
     expect(body)
       .toContain('STATUS:CONFIRMED');
   });
+
+  test('stays tokenless and carries no vote links or URL property (edit export unchanged)', async () => {
+    const session = aSession({
+      status: 'Voting',
+      proposedDates: [aProposedDate({id: 'pd-1'})],
+    });
+    const app = createApp({params: {id: session.id}});
+    await app.store.save(session);
+
+    const response = await handleEditIcalGet(app);
+    const body = await response.text();
+
+    expect(body)
+      .toContain('UID:pd-1@postpony');
+    expect(body)
+      .not
+      .toContain('URL:');
+    expect(body)
+      .not
+      .toContain('vote-');
+  });
 });
