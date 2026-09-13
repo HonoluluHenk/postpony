@@ -34,8 +34,9 @@
   }
 
   /* Headings: Beer.css defaults (h1 = 3.5625rem) are oversized for this app.
-     Pin h1 to a fixed size and derive the rest from a modular scale via calc(),
-     exposing each computed size as its own var for easy per-heading overrides. */
+     Pin h1 to a clamp between a phone size and 2rem (desktop) and derive the
+     rest from a modular scale via calc(), exposing each computed size as its
+     own var for easy per-heading overrides. */
   h1 {
     font-size: var(--h1-size);
     text-wrap: balance;
@@ -117,7 +118,7 @@
   .clipboard-btn {
     cursor: pointer;
     font-size: 1.1em;
-    opacity: 0.5;
+    opacity: 0.75;
     transition: opacity 0.15s;
     border: none;
     background: none;
@@ -156,6 +157,26 @@
      wrap so the switch drops below the date instead of overlapping it. */
   .list li {
     flex-wrap: wrap;
+  }
+
+  /* Invitation-link rows: the link and its copy button share one vertical band.
+     `.list li` lets rows wrap; keep these rows nowrap and let the link shrink
+     so a long team name never pushes the copy button onto a new line. */
+  .list li.invite-link-row {
+    flex-wrap: nowrap;
+  }
+
+  .list li.invite-link-row > a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* Match summary: a long match line wraps inside its flex row instead of
+     pushing past the viewport edge. (Interim; the paragraph is deleted in
+     Phase 2.) */
+  .match-summary {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   /* Proposed-date card list: each date is a card with a header row (date/venue | actions)

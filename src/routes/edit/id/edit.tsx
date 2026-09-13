@@ -43,7 +43,7 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
     <div>
       <p>{props.t('invite_link_label')}</p>
       <ul class="list">
-        <li class="row items-center gap wrap">
+        <li class="row items-center gap invite-link-row">
           <a href={homeLink}>{labels.home}</a>
           <button
             class="clipboard-btn"
@@ -55,7 +55,7 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
             <i aria-hidden="true">content_copy</i>
           </button>
         </li>
-        <li class="row items-center gap wrap">
+        <li class="row items-center gap invite-link-row">
           <a href={awayLink}>{labels.away}</a>
           <button
             class="clipboard-btn"

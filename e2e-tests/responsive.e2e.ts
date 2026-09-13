@@ -198,3 +198,41 @@ test.describe('Proposed date card full visibility', () => {
     });
   }
 });
+
+// Ticket 04: the invitation link row must not wrap — the copy-to-clipboard
+// button sits in the same vertical band as its link, and nothing overflows the
+// phone viewport. A wrapping row would push the icon onto its own line.
+test.describe('Invitation link row on phone', () => {
+  test('clipboard button shares its link vertical band and nothing overflows the viewport', async ({page, checkA11y}) => {
+    await setViewport(page, 'phone');
+    const {editPage} = await EditPage.createSession(page);
+
+    for (const [link, copyBtn] of [
+      [editPage.homeInviteLink, editPage.homeCopyButton()],
+      [editPage.awayInviteLink, editPage.awayCopyButton()],
+    ] as const) {
+      // Both controls stay fully inside the phone viewport.
+      await expectFullyInViewport(link);
+      await expectFullyInViewport(copyBtn);
+
+      // The copy button vertically overlaps its link's band, i.e. they share
+      // one line instead of the button wrapping below the link.
+      const linkBox = await link.boundingBox();
+      const copyBox = await copyBtn.boundingBox();
+      if (!linkBox || !copyBox) {
+        throw new Error('invite link or copy button has no bounding box');
+      }
+      const sameBand = copyBox.y < linkBox.y + linkBox.height
+        && linkBox.y < copyBox.y + copyBox.height;
+      expect(sameBand)
+        .toBe(true);
+    }
+
+    // No horizontal page overflow: the nowrap link row must not push the
+    // copy button (or the page) past the viewport edge.
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+      .toBe(true);
+
+    await checkA11y();
+  });
+});

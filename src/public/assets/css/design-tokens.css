@@ -14,7 +14,7 @@
 
     /* Typography — modular scale */
     --heading-scale: 0.875;
-    --h1-size: 2rem;
+    --h1-size: clamp(1.5rem, 5vw, 2rem);
     --h2-size: calc(var(--h1-size) * var(--heading-scale));
     --h3-size: calc(var(--h2-size) * var(--heading-scale));
     --h4-size: calc(var(--h3-size) * var(--heading-scale));

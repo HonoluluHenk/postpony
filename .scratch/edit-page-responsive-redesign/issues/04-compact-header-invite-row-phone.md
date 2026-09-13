@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] The h1 size token is a clamp between a phone size and the current 2rem desktop size
-- [ ] Language selector remains in the header row on phone (does not drop to its own line)
-- [ ] Invitation link rows do not wrap; the link may shrink; the clipboard button idle opacity is raised so it reads as a control
-- [ ] Match summary paragraph wraps within the viewport (interim; deleted in ticket 06)
-- [ ] e2e at phone: clipboard button and its link share the same vertical band; no element exceeds viewport width
-- [ ] `checkA11y` passes; screenshot baselines regenerated where changed
-- [ ] `npm run verify` passes
+- [x] The h1 size token is a clamp between a phone size and the current 2rem desktop size
+- [x] Language selector remains in the header row on phone (does not drop to its own line)
+- [x] Invitation link rows do not wrap; the link may shrink; the clipboard button idle opacity is raised so it reads as a control
+- [x] Match summary paragraph wraps within the viewport (interim; deleted in ticket 06)
+- [x] e2e at phone: clipboard button and its link share the same vertical band; no element exceeds viewport width
+- [x] `checkA11y` passes; screenshot baselines regenerated where changed
+- [x] `npm run verify` passes
