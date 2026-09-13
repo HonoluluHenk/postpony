@@ -19,7 +19,7 @@ export const handleRefreshClashesPost = async (app: App): Promise<Response> => {
     const hadSnapshot = session.proposedDates.some((pd) => pd.clashes !== undefined);
     const html = renderEditPartials(app, refreshed, checkResult === undefined && hadSnapshot
       ? {refreshError: true}
-      : {});
+      : {statusMessage: app.t('clash_check_refreshed')});
     return app.c.html(html);
   }
   return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);

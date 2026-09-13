@@ -534,7 +534,10 @@ describe('ProposedDatesSection clash info', () => {
       .toContain('A scheduled game clashes with this date.');
     expect(html)
       .toContain('class="confirm-clash-warning mt-2"');
+    // The warning is announced via the polite status element, so the visible
+    // paragraph must not double-announce as an alert.
     expect(html)
+      .not
       .toContain('role="alert"');
   });
 

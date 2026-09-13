@@ -11,6 +11,7 @@
   "clash_check_not_checked": "Not checked",
   "clash_check_refresh": "Refresh Schedule Check",
   "clash_check_refresh_failed": "Couldn't refresh the schedule check — showing the previous results.",
+  "clash_check_refreshed": "Schedule check refreshed",
   "clash_line_away": "Away: <%= it.time %> vs <%= it.opponent %>",
   "clash_line_home": "Home: <%= it.time %> vs <%= it.opponent %>",
   "clash_row_label": "Schedule clash: <%= it.date %>",
@@ -67,6 +68,7 @@
   "player_added": "Player added",
   "players": "Players",
   "postponement_created_success": "Postponement created successfully!",
+  "postponement_reopened": "Postponement reopened",
   "proposed_date_added": "Proposed date added!",
   "proposed_date_deleted": "Proposed date deleted",
   "proposed_date_time_invalid": "Please provide a valid date and time",
@@ -140,5 +142,7 @@
   "vote_yes": "Yes",
   "voted_column": "Voted",
   "voted_count": "<%= it.voted %>/<%= it.total %> voted",
+  "voting_disabled": "Voting disabled",
+  "voting_enabled": "Voting enabled",
   "welcome": "Welcome to PostPony"
 }

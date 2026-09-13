@@ -308,6 +308,9 @@ test.describe('Postponement Editing', () => {
 
   test('should maintain accessibility on the editing interface', async ({page, checkA11y}) => {
     await checkA11y();
+    // Language selector is a ≥24px tap target with explicit colors.
+    await expect(page.locator('#language-select'))
+      .toHaveCSS('min-height', '24px');
     await expect(page)
       .toHaveScreenshot('edit-empty.png', {fullPage: true});
   });
@@ -435,6 +438,9 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(1);
     await expect(editPage.deleteDialog(0))
       .toHaveCount(0);
+    // One polite status announcement names the deleted date.
+    await expect(editPage.clipboardStatus)
+      .toContainText('Proposed date deleted');
     // The deleted date's tally is gone: only the surviving date remains.
     await expect(editPage.homeTallyTable()
       .getByRole('row'))

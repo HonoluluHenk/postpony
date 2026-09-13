@@ -249,7 +249,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
         <p class="chip outline">{props.t('reopened_count', {count: String(props.reopenCount)})}</p>
       ) : null}
       {props.confirmClashWarning ? (
-        <p class="confirm-clash-warning mt-2" role="alert">
+        <p class="confirm-clash-warning mt-2">
           <i aria-hidden="true">warning</i>
           {props.t('clash_check_confirm_warning')}
         </p>
@@ -432,7 +432,7 @@ export function ProposedDatesSection(props: ProposedDatesSectionProps): JSX.Elem
                <button type="submit">{props.t('add_proposed_date')}</button>
              </div>
            </form>
-{props.success ? (
+            {props.success ? (
               <div class="toast success top">
                 <i aria-hidden="true">check_circle</i>
                 <div class="max">

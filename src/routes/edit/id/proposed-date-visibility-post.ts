@@ -15,6 +15,8 @@ export const handleProposedDateVisibilityPost = async (app: App): Promise<Respon
   const updated = new PostponementRules().setVotable(session, proposedDateId, votable);
   await app.store.save(updated);
 
-  const html = renderEditPartials(app, updated);
+  const html = renderEditPartials(app, updated, {
+    statusMessage: app.t(votable ? 'voting_enabled' : 'voting_disabled'),
+  });
   return app.c.html(html);
 };

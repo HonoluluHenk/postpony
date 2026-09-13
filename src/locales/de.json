@@ -11,6 +11,7 @@
   "clash_check_not_checked": "Nicht geprüft",
   "clash_check_refresh": "Spielplanprüfung aktualisieren",
   "clash_check_refresh_failed": "Spielplanprüfung konnte nicht aktualisiert werden — die vorherigen Ergebnisse werden angezeigt.",
+  "clash_check_refreshed": "Spielplanprüfung aktualisiert",
   "clash_line_away": "Gast: <%= it.time %> gegen <%= it.opponent %>",
   "clash_line_home": "Heim: <%= it.time %> gegen <%= it.opponent %>",
   "clash_row_label": "Überschneidung: <%= it.date %>",
@@ -67,6 +68,7 @@
   "player_added": "Spieler hinzugefügt",
   "players": "Spieler",
   "postponement_created_success": "Verschiebung erfolgreich erstellt!",
+  "postponement_reopened": "Verschiebung wieder geöffnet",
   "proposed_date_added": "Vorgeschlagener Termin hinzugefügt!",
   "proposed_date_deleted": "Vorgeschlagener Termin gelöscht",
   "proposed_date_time_invalid": "Bitte geben Sie ein gültiges Datum und eine gültige Uhrzeit an",
@@ -140,5 +142,7 @@
   "vote_yes": "Ja",
   "voted_column": "Abgestimmt",
   "voted_count": "<%= it.voted %>/<%= it.total %> abgestimmt",
+  "voting_disabled": "Abstimmung deaktiviert",
+  "voting_enabled": "Abstimmung aktiviert",
   "welcome": "Willkommen bei PostPony"
 }

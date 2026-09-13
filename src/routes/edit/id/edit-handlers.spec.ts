@@ -1736,6 +1736,13 @@ describe('edit handlers', () => {
         .toBe('pd-1');
       expect(html)
         .toContain('A scheduled game clashes with this date.');
+      // The clash warning is the single polite status announcement; the plain
+      // confirmation is not also announced.
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">A scheduled game clashes with this date.</p>');
+      expect(html)
+        .not
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Date confirmed</p>');
     });
 
     test('confirming a clash-free date renders no warning', async () => {
@@ -1761,6 +1768,8 @@ describe('edit handlers', () => {
       expect(html)
         .not
         .toContain('A scheduled game clashes with this date.');
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Date confirmed</p>');
     });
 
     test('judges the warning from the date found via confirmedProposedDateId, not the query', async () => {
@@ -1986,6 +1995,8 @@ describe('edit handlers', () => {
         .toContain('proposed-date-visibility?proposedDateId=pd-1&amp;votable=false');
       expect(html)
         .toContain('proposed-date-confirm?proposedDateId=pd-1');
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Voting enabled</p>');
     });
   });
 
@@ -2045,6 +2056,8 @@ describe('edit handlers', () => {
         .toContain('Reopened 1 time(s)');
       expect(html)
         .toContain('id="status-chip" hx-swap-oob="true"');
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Postponement reopened</p>');
       expect(html)
         .not
         .toContain(`hx-post="/edit/${session.id}/reopen"`);
@@ -2132,6 +2145,9 @@ describe('edit handlers', () => {
       expect(html)
         .not
         .toContain('showing the previous results');
+      // A successful refresh announces a short polite status.
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Schedule check refreshed</p>');
     });
 
     test('a failed refresh keeps the previous snapshot, saves once, and renders the failure notice', async () => {

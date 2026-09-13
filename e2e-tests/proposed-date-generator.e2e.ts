@@ -247,7 +247,7 @@ test.describe('Proposed Date Generator', () => {
     await editPage.fillToDate(TO);
     await editPage.generateProposedDates([...TUPLES]);
 
-const successToast = page.locator('.toast.success')
+    const successToast = page.locator('.toast.success')
         .filter({hasText: /\d+ dates? added/});
     await expect(successToast)
       .toBeVisible();
@@ -363,7 +363,7 @@ const successToast = page.locator('.toast.success')
     await editPage.fillToDate(to);
     await editPage.generateProposedDates([...TUPLES]);
 
-const successToast = page.locator('.toast.success')
+    const successToast = page.locator('.toast.success')
         .filter({hasText: /\d+ dates? added/});
     await expect(successToast)
       .toBeVisible();
@@ -461,7 +461,7 @@ const successToast = page.locator('.toast.success')
     await editPage.generateVenueSelect.selectOption('2');
     await editPage.generateProposedDates([...TUPLES]);
 
-const successToast = page.locator('.toast.success')
+    const successToast = page.locator('.toast.success')
         .filter({hasText: /\d+ dates? added/});
     await expect(successToast)
       .toBeVisible();

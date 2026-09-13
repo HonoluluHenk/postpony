@@ -21,7 +21,9 @@ export const handleConfirmDatePost = async (app: App): Promise<Response> => {
 
   if (app.isPartial) {
     const html = renderEditPartials(app, updated, {
-      statusMessage: app.t('date_confirmed'),
+      // One polite announcement per action: a clash on the confirmed date is
+      // the outcome worth announcing, so it replaces the plain confirmation.
+      statusMessage: hasClashes ? app.t('clash_check_confirm_warning') : app.t('date_confirmed'),
       ...(hasClashes ? {confirmClashWarning: true} : {}),
     });
     return app.c.html(html);

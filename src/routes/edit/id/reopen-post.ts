@@ -13,7 +13,7 @@ export const handleReopenPost = async (app: App): Promise<Response> => {
   await app.store.save(updated);
 
   if (app.isPartial) {
-    const html = renderEditPartials(app, updated);
+    const html = renderEditPartials(app, updated, {statusMessage: app.t('postponement_reopened')});
     return app.c.html(html);
   }
   return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);
