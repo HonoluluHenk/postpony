@@ -35,6 +35,7 @@ export function Layout(props: LayoutProps): JSX.Element {
         <script type="module" src="/assets/js/main.js"></script>
         <link rel="stylesheet" href="/assets/css/design-tokens.css"/>
         <link rel="stylesheet" href="/assets/css/style.css"/>
+        <link rel="stylesheet" href="/assets/css/edit-redesign.css"/>
       </head>
       <body class="light">
       <a href="#main-content" class="skip-link">{props.t('skip_to_main')}</a>

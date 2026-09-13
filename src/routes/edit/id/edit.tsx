@@ -6,13 +6,11 @@ import { matchUpLine } from '../../../lib/postponement';
 import { pageLayout } from '../../layouts/main';
 import { StatusAnnouncement } from '../../partials/status-announcement';
 import { inviteLinkLabels } from './invite-link-labels';
-import { OwnTeamVotes } from './own-team-votes';
-import { ProposedDatesSection, type EditPartialsData } from './proposed-dates-section';
+import { GenerateForm, ProposedDatesRail, type EditGridProps } from './proposed-dates-section';
 import { StatusChip } from './status-chip';
 import { TeamSection } from './team-section';
-import { VoteTallySection } from './vote-tally-section';
 
-export interface EditPageProps extends ViewContext, EditPartialsData {
+export interface EditPageProps extends ViewContext, EditGridProps {
   title?: string;
   session: Postponement;
   organizerPassword?: string;
@@ -21,8 +19,6 @@ export interface EditPageProps extends ViewContext, EditPartialsData {
   /** Original match datetime in the locale's input token format (add-date prefill). */
   proposedDateTime?: string;
   globalError?: string;
-  fromDate?: string;
-  toDate?: string;
 }
 
 interface InviteLinksProps {
@@ -37,35 +33,102 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
   const labels = inviteLinkLabels(props.session, props.t);
 
   return (
-    <div>
-      <p>{props.t('invite_link_label')}</p>
-      <ul class="list">
-        <li class="row items-center gap invite-link-row">
-          <a href={homeLink}>{labels.home}</a>
-          <button
-            class="clipboard-btn"
-            data-copy={homeLink}
-            data-copied-label={props.t('copied_to_clipboard')}
-            aria-label={props.t('copy_to_clipboard')}
-            type="button"
-          >
-            <i aria-hidden="true">content_copy</i>
-          </button>
-        </li>
-        <li class="row items-center gap invite-link-row">
-          <a href={awayLink}>{labels.away}</a>
-          <button
-            class="clipboard-btn"
-            data-copy={awayLink}
-            data-copied-label={props.t('copied_to_clipboard')}
-            aria-label={props.t('copy_to_clipboard')}
-            type="button"
-          >
-            <i aria-hidden="true">content_copy</i>
-          </button>
-        </li>
-      </ul>
-      <p>{props.t('organizer_join_note')}</p>
+    <div class="invite">
+      <span>
+        <a href={homeLink}>{labels.home}</a>
+        <button
+          class="copy-btn"
+          data-copy={homeLink}
+          data-copied-label={props.t('copied_to_clipboard')}
+          aria-label={props.t('copy_to_clipboard')}
+          type="button"
+        >
+          <i aria-hidden="true">content_copy</i>
+        </button>
+      </span>
+      <span>
+        <a href={awayLink}>{labels.away}</a>
+        <button
+          class="copy-btn"
+          data-copy={awayLink}
+          data-copied-label={props.t('copied_to_clipboard')}
+          aria-label={props.t('copy_to_clipboard')}
+          type="button"
+        >
+          <i aria-hidden="true">content_copy</i>
+        </button>
+      </span>
+    </div>
+  );
+}
+
+function SidebarStatus(props: { status: EditGridProps['status']; reopenCount: number; sessionId: string; t: ViewContext['t'] }): JSX.Element {
+  const confirmed = props.status === 'Confirmed';
+  return (
+    <div class="side-block">
+      <StatusChip status={props.status} t={props.t}/>
+      {props.reopenCount > 0 ? <p class="muted">{props.t('reopened_count', {count: String(props.reopenCount)})}</p> : null}
+      {confirmed ? (
+        <form hx-post={`/edit/${props.sessionId}/reopen`} hx-target="#edit-grid" class="mt-4">
+          <button type="submit" class="button outline">{props.t('reopen')}</button>
+        </form>
+      ) : null}
+    </div>
+  );
+}
+
+function EditGrid(props: EditPageProps): JSX.Element {
+  const venueOptions = props.venues.length > 0
+                       ? props.venues.map((venue) => (
+      <option key={venue.venueNumber} value={venue.venueNumber}>
+        ({venue.venueNumber}) - {venue.shortName}
+      </option>
+    ))
+                       : Array.from({length: props.proposedDates.length === 0 ? 10 : props.venues.length}, (_, index) => (
+                         <option key={index + 1} value={index + 1}>{index + 1}</option>
+                       ));
+
+  return (
+    <div id="edit-grid" class="edit-grid">
+      <ProposedDatesRail {...props} />
+      <div class="edit-sidebar">
+        <SidebarStatus status={props.status} reopenCount={props.reopenCount} sessionId={props.sessionId} t={props.t}/>
+        <div class="side-block">
+          <h3>{props.t('invite_link_label')}</h3>
+          <InviteLinks baseUrl={props.baseUrl} session={props.session} t={props.t}/>
+          <p class="muted">{props.t('organizer_join_note')}</p>
+        </div>
+        <details class="side-block side-details" open>
+          <summary>{props.t('players')}</summary>
+          <TeamSection
+            sessionId={props.sessionId}
+            players={props.session.players}
+            organizerPlayers={props.organizerPlayers}
+            ownTeamResults={props.ownTeamResults}
+            t={props.t}
+            playerName={props.playerName}
+            teamId={props.teamId}
+            error={props.playerError}
+          />
+        </details>
+        <details class="side-block side-details" open>
+          <summary>{props.t('proposed_dates_generate_section')}</summary>
+          <GenerateForm
+            sessionId={props.sessionId}
+            t={props.t}
+            locale={props.locale}
+            venueOptions={venueOptions}
+            times={props.times}
+            invalidRow={props.generatorInvalidRow}
+            error={props.generatorError}
+            successCount={props.generatorSuccessCount}
+            fromError={props.generatorFromError}
+            toError={props.generatorToError}
+            fromDate={props.fromDate}
+            toDate={props.toDate}
+          />
+        </details>
+      </div>
     </div>
   );
 }
@@ -74,17 +137,19 @@ export function EditPage(props: EditPageProps): JSX.Element {
   const title = props.title ?? props.t('app_title');
 
   const headingTitle = (
-    <>
-      <span class="heading-row">{props.t('edit_postponement_heading')}</span>
-      <span class="heading-row">{matchUpLine(props.session.homeTeam ?? '', props.session.guestTeam ?? '')}</span>
+    <span class="redesign-headline">
+      <span>{matchUpLine(props.session.homeTeam ?? '', props.session.guestTeam ?? '')}</span>
       {props.proposedDateTimeDisplay ? (
-        <span class="heading-row">{props.proposedDateTimeDisplay}</span>
+        <>
+          <span class="redesign-headline-sep">·</span>
+          <span>{props.proposedDateTimeDisplay}</span>
+        </>
       ) : null}
-    </>
+    </span>
   );
 
   const content = (
-    <>
+    <div class="edit-redesign">
       {props.organizerPassword ? (
         <div class="toast primary white-text top" role="status">
           <i aria-hidden="true">info</i>
@@ -93,7 +158,7 @@ export function EditPage(props: EditPageProps): JSX.Element {
             <p>
               {raw(props.t('organizer_password_label'))} <span class="password-display" translate="no">{props.organizerPassword}</span>
               <button
-                class="clipboard-btn"
+                class="copy-btn"
                 data-copy={props.organizerPassword}
                 data-copied-label={props.t('copied_to_clipboard')}
                 aria-label={props.t('copy_organizer_password')}
@@ -107,62 +172,10 @@ export function EditPage(props: EditPageProps): JSX.Element {
         </div>
       ) : null}
 
-      <div class="row items-center gap wrap">
-        <StatusChip status={props.session.status} t={props.t} />
-      </div>
+      <StatusAnnouncement message={props.statusMessage}/>
 
-      <StatusAnnouncement />
-
-      <InviteLinks
-        baseUrl={props.baseUrl}
-        session={props.session}
-        t={props.t}
-      />
-
-      <div>
-        <h2>{props.t('schedule_heading')}</h2>
-
-        <div id="scheduling-info" class="grid">
-          <TeamSection
-            sessionId={props.session.id}
-            players={props.session.players}
-            organizerPlayers={props.organizerPlayers}
-            ownTeamResults={props.ownTeamResults}
-            t={props.t}
-          />
-          <ProposedDatesSection
-            sessionId={props.session.id}
-            status={props.session.status}
-            reopenCount={props.session.reopenCount}
-            proposedDates={props.proposedDates}
-            homeProposedDates={props.homeProposedDates}
-            awayProposedDates={props.awayProposedDates}
-            clashCheckable={props.clashCheckable}
-            venues={props.venues}
-            organizerPlayers={props.organizerPlayers}
-            ownTeamResults={props.ownTeamResults}
-            t={props.t}
-            locale={props.locale}
-            inputFormat={props.inputFormat}
-            baseUrl={props.baseUrl}
-            proposedDateTime={props.proposedDateTime}
-            fromDate={props.fromDate}
-            toDate={props.toDate}
-          />
-        </div>
-
-        <OwnTeamVotes
-          organizerPlayers={props.organizerPlayers}
-          ownTeamResults={props.ownTeamResults}
-          t={props.t}
-        />
-        <VoteTallySection
-          homeProposedDates={props.homeProposedDates}
-          awayProposedDates={props.awayProposedDates}
-          t={props.t}
-        />
-      </div>
-    </>
+      <EditGrid {...props} />
+    </div>
   );
 
   return pageLayout(props, content, title, props.globalError, headingTitle);

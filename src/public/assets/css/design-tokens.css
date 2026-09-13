@@ -22,6 +22,18 @@
     --h6-size: calc(var(--h5-size) * var(--heading-scale));
     --monospace-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
+    /* Typography — edit-page redesign (one family, two widths, self-hosted) */
+    --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    --font-condensed: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif;
+
+    /* Palette — cool paper, light line, near-black ink. Reuses --primary,
+       --error and --warning-container from BeerCSS; no new accent. */
+    --paper: #f4f6f9;
+    --line: #d8dee7;
+    --ink: #0f1216;
+    --ink-soft: #55606e;
+    --warning: #b26a00;
+
     /* Spacing scale */
     --space-1: 0.25rem;
     --space-2: 0.5rem;

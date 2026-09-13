@@ -4,11 +4,8 @@ import type { Postponement, ProposedDate, VoteTallyItem } from '../../../lib/mod
 import { PostponementRules, sortedProposedDates, type VoteTally } from '../../../lib/postponement';
 import { formatProposedDateDisplay, formatProposedDateDisplayShort } from '../../../lib/temporal-utils';
 import { buildOwnTeamView } from './own-team-view';
-import {
-  ProposedDatesSectionPartial,
-  type EditPartialsData,
-  type ProposedDatesSectionPartialProps,
-} from './proposed-dates-section';
+import { EditPage, type EditPageProps } from './edit';
+import type { EditPartialsData } from './proposed-dates-section';
 
 function toVoteTallyItems(
   proposedDates: ProposedDate[],
@@ -29,8 +26,8 @@ function toVoteTallyItems(
 
 /**
  * Shared shape for the edit page and the HTMX partials: the proposed-date list items
- * (with the votable flag), the per-team tallies, and the organizer-team completion
- * view. Used by edit-id-get and every post handler that re-renders the partial set.
+ * (with the votable flag and ISO range), the per-team tallies, and the organizer-team
+ * completion view. Used by edit-id-get and every post handler that re-renders the page.
  */
 export function buildEditPartialsData(session: Postponement, locale: AppLocale): EditPartialsData {
   const rules = new PostponementRules();
@@ -43,6 +40,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
     const counts = tallies[pd.id] ?? {yes: 0, no: 0, ifNecessary: 0};
     return {
       id: pd.id,
+      dateTimeRange: pd.dateTimeRange,
       display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
       shortDisplay: formatProposedDateDisplayShort(pd.dateTimeRange.start, locale),
       votable: pd.votable,
@@ -81,13 +79,15 @@ export interface EditPartialExtras {
   statusMessage?: string;
   fromDate?: string;
   toDate?: string;
+  playerName?: string;
+  teamId?: 'home' | 'away';
+  playerError?: string;
 }
 
 /**
- * Renders the proposed-dates section partial plus its OOB companions (status chip, vote
- * tally, own-team votes, error container). The partial set is shared by the proposed-dates,
- * visibility, confirm, and reopen post handlers so the edit view stays in sync after any of
- * those mutations.
+ * Renders the redesigned edit page as an HTMX partial (isPartial → fragment). The page
+ * re-renders in full so the sidebar and rail stay in sync after any mutation; the
+ * out-of-band error container and status announcement are emitted by the layout.
  */
 export function renderEditPartials(
   app: App,
@@ -96,17 +96,17 @@ export function renderEditPartials(
 ): string {
   const view = app.view;
   const data = buildEditPartialsData(session, app.locale);
-  const props: ProposedDatesSectionPartialProps = {
+  const props: EditPageProps = {
+    ...view,
     ...data,
+    session,
     sessionId: session.id,
     status: session.status,
     reopenCount: session.reopenCount,
-    t: view.t,
-    locale: view.locale,
-    inputFormat: view.inputFormat,
-    baseUrl: view.baseUrl,
-    venues: data.venues,
+    title: view.t('edit_postponement_title', {name: session.name}),
     proposedDateTime: extra.proposedDateTime,
+    fromDate: extra.fromDate,
+    toDate: extra.toDate,
     error: extra.error,
     success: extra.success,
     times: extra.times,
@@ -119,8 +119,9 @@ export function renderEditPartials(
     confirmClashWarning: extra.confirmClashWarning,
     statusMessage: extra.statusMessage,
     globalError: extra.globalError,
-    fromDate: extra.fromDate,
-    toDate: extra.toDate,
+    playerName: extra.playerName,
+    teamId: extra.teamId,
+    playerError: extra.playerError,
   };
-  return app.render(<ProposedDatesSectionPartial {...props} />);
+  return app.render(<EditPage {...props} />);
 }

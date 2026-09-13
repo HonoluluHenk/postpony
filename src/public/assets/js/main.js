@@ -9,7 +9,8 @@ import {
   initOccupancyTooltips,
   initGeneratorTimePickers,
   initGeneratorDatePickers,
-  initProposedDateTimePicker
+  initProposedDateTimePicker,
+  initRedesignDisclosures
 } from './ui.js';
 
 // main.js is loaded in <head> without defer, so the DOM (including #global-spinner)
@@ -26,4 +27,5 @@ window.addEventListener('load', () => {
   initProposedDateTimePicker();
   initGeneratorTimePickers();
   initGeneratorDatePickers();
+  initRedesignDisclosures();
 });

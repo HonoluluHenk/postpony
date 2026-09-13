@@ -94,6 +94,7 @@
   "proposed_dates_generate_time_label": "Time",
   "proposed_dates_generate_time_picker_label": "Open time picker",
   "proposed_dates_management": "Proposed Dates",
+  "proposed_dates_none": "No dates have been proposed yet.",
   "reopen": "Reopen",
   "reopened_count": "Reopened <%= it.count %> time(s)",
   "return_home": "Return to Home",
@@ -129,6 +130,8 @@
   "venue_occupancy_line": "<%= it.count %> other games at this venue",
   "venue_occupancy_line_one": "1 other game at this venue",
   "venue_occupancy_match": "<%= it.time %> vs <%= it.opponent %>",
+  "votable_off": "off",
+  "votable_on": "on",
   "votable_short": "Votable",
   "votable_toggle": "Allow voting",
   "vote_action_label": "Vote",
@@ -146,5 +149,6 @@
   "voted_count": "<%= it.voted %>/<%= it.total %> voted",
   "voting_disabled": "Voting disabled",
   "voting_enabled": "Voting enabled",
+  "week_label": "Week <%= it.week %>",
   "welcome": "Welcome to PostPony"
 }

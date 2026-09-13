@@ -407,6 +407,7 @@ export function initFocusManagement() {
     initProposedDateTimePicker();
     initGeneratorTimePickers();
     initGeneratorDatePickers();
+    initRedesignDisclosures();
 
     if (el.matches('#main-content')) {
       var h = el.querySelector('h2, h3, h4');
@@ -417,7 +418,7 @@ export function initFocusManagement() {
       return;
     }
 
-    if (el.matches('#team-management, #venue-management, #proposed-dates-management')) {
+    if (el.matches('#team-management, #venue-management, #proposed-dates-management, #edit-grid')) {
       // ponytail: htmx already refocuses the interacted control (matched by
       // id) after a swap, with preventScroll; only fall back to the heading
       // when there is nothing to restore, and never scroll the page for it.
@@ -429,4 +430,21 @@ export function initFocusManagement() {
       }
     }
   });
+}
+
+export function initRedesignDisclosures() {
+  // ponytail: the redesigned edit sidebar keeps roster/generator in open
+  // disclosures on desktop but collapses them on phones, so the week rail is
+  // the first thing the organizer sees. Re-applied on load, on HTMX swaps and
+  // on the breakpoint crossing; a manual toggle survives until one of those.
+  var mq = window.matchMedia('(max-width: 1023px)');
+  function apply() {
+    document.querySelectorAll('.edit-redesign details.side-details').forEach(function (details) {
+      details.open = !mq.matches;
+    });
+  }
+  apply();
+  if (mq.addEventListener) {
+    mq.addEventListener('change', apply);
+  }
 }
