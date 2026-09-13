@@ -70,7 +70,7 @@ export function VotePage(props: VotePageProps): JSX.Element {
           >
             <fieldset class="vote-set-all">
               <legend>{props.t('vote_set_all')}</legend>
-              <div class="row no-wrap">
+              <div class="row wrap">
                 <button
                   type="button"
                   class="button"

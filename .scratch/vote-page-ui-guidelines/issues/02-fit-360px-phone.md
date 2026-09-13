@@ -6,12 +6,12 @@
 
 **Status:** ready-for-agent
 
-- [ ] At `phoneSmall`, the "Set all" buttons (including "No") are fully inside the viewport
-- [ ] At `phoneSmall` with `?lang=de-CH`, every radio label of a Proposed Date is inside the viewport
-- [ ] A vote radio label's bounding box is at least 44px tall
-- [ ] Desktop layout still shows each date's radios on one row
-- [ ] `checkA11y` passes at `phoneSmall` and `desktop`
-- [ ] Vote-page screenshot baselines updated only where wrap/padding changed
-- [ ] `npm run verify` passes
+- [x] At `phoneSmall`, the "Set all" buttons (including "No") are fully inside the viewport
+- [x] At `phoneSmall` with `?lang=de-CH`, every radio label of a Proposed Date is inside the viewport
+- [x] A vote radio label's bounding box is at least 44px tall
+- [x] Desktop layout still shows each date's radios on one row
+- [x] `checkA11y` passes at `phoneSmall` and `desktop`
+- [x] Vote-page screenshot baselines updated only where wrap/padding changed
+- [x] `npm run verify` passes
 
 ## Comments
