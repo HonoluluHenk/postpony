@@ -12,6 +12,7 @@ import {
   initGeneratorTimePickers,
   initGeneratorDatePickers,
   initOccupancyTooltips,
+  initSetAllVotes,
 } from './ui.js';
 
 describe('shouldSwapErrorBody', () => {
@@ -388,6 +389,106 @@ describe('initFocusManagement', () => {
       detail: {target: document.createTextNode('text')},
     });
     expect(() => document.dispatchEvent(event)).not.toThrow();
+  });
+});
+
+describe('initSetAllVotes', () => {
+  let form;
+  let submitSpy;
+  let yesButton;
+  let noButton;
+  let ifNecessaryButton;
+  let cleanup;
+
+  function buildVoteForm() {
+    const f = document.createElement('form');
+    f.innerHTML = [
+      '<fieldset class="vote-radio-group"><legend>date-1</legend>',
+      '<label><input type="radio" name="vote-date-1" value="Yes"><span>Yes</span></label>',
+      '<label><input type="radio" name="vote-date-1" value="IfNecessary"><span>if necessary</span></label>',
+      '<label><input type="radio" name="vote-date-1" value="No"><span>No</span></label>',
+      '</fieldset>',
+      '<fieldset class="vote-radio-group"><legend>date-2</legend>',
+      '<label><input type="radio" name="vote-date-2" value="Yes"><span>Yes</span></label>',
+      '<label><input type="radio" name="vote-date-2" value="IfNecessary"><span>if necessary</span></label>',
+      '<label><input type="radio" name="vote-date-2" value="No"><span>No</span></label>',
+      '</fieldset>',
+    ].join('');
+    yesButton = document.createElement('button');
+    yesButton.type = 'button';
+    yesButton.setAttribute('data-set-all', 'Yes');
+    noButton = document.createElement('button');
+    noButton.type = 'button';
+    noButton.setAttribute('data-set-all', 'No');
+    ifNecessaryButton = document.createElement('button');
+    ifNecessaryButton.type = 'button';
+    ifNecessaryButton.setAttribute('data-set-all', 'IfNecessary');
+    f.appendChild(yesButton);
+    f.appendChild(noButton);
+    f.appendChild(ifNecessaryButton);
+    return f;
+  }
+
+  function valueByName(dateName, value) {
+    return form.querySelector(`input[name="vote-${dateName}"][value="${value}"]`);
+  }
+
+  function selectedValues() {
+    return Array.from(form.querySelectorAll('input[type="radio"]'))
+      .filter((radio) => radio.checked)
+      .map((radio) => radio.value)
+      .sort();
+  }
+
+  beforeEach(() => {
+    form = buildVoteForm();
+    document.body.appendChild(form);
+    submitSpy = vi.fn();
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitSpy();
+    });
+    initSetAllVotes();
+    cleanup = () => form.remove();
+  });
+
+  afterEach(() => cleanup());
+
+  it('checks the matching radio in every date group', () => {
+    yesButton.click();
+    expect(selectedValues()).toEqual(['Yes', 'Yes']);
+    noButton.click();
+    expect(selectedValues()).toEqual(['No', 'No']);
+    ifNecessaryButton.click();
+    expect(selectedValues()).toEqual(['IfNecessary', 'IfNecessary']);
+  });
+
+  it('overwrites previously selected votes', () => {
+    valueByName('date-1', 'Yes').checked = true;
+    valueByName('date-2', 'IfNecessary').checked = true;
+
+    noButton.click();
+
+    expect(selectedValues()).toEqual(['No', 'No']);
+    expect(valueByName('date-1', 'Yes').checked).toBe(false);
+    expect(valueByName('date-2', 'IfNecessary').checked).toBe(false);
+  });
+
+  it('never submits the form (fill-only)', () => {
+    yesButton.click();
+    expect(submitSpy).not.toHaveBeenCalled();
+    expect(form.isConnected).toBe(true);
+  });
+
+  it('works for a set-all button injected after initialization', () => {
+    const late = document.createElement('button');
+    late.type = 'button';
+    late.setAttribute('data-set-all', 'IfNecessary');
+    form.appendChild(late);
+
+    late.click();
+
+    expect(selectedValues()).toEqual(['IfNecessary', 'IfNecessary']);
   });
 });
 

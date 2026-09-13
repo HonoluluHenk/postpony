@@ -7,6 +7,7 @@ import {
   initDeleteDialogs,
   initFocusManagement,
   initOccupancyTooltips,
+  initSetAllVotes,
   initGeneratorTimePickers,
   initGeneratorDatePickers,
   initProposedDateTimePicker
@@ -23,6 +24,7 @@ window.addEventListener('load', () => {
   initDeleteDialogs();
   initFocusManagement();
   initOccupancyTooltips();
+  initSetAllVotes();
   initProposedDateTimePicker();
   initGeneratorTimePickers();
   initGeneratorDatePickers();

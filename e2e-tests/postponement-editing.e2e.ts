@@ -72,10 +72,10 @@ test.describe('Postponement Editing', () => {
       .goto(session.homeHref);
     await joinPage.join('Alice');
 
-    await expect(joinPage.voteForm.getByRole('group')
+    await expect(joinPage.voteForm.locator('.vote-radio-group')
       .nth(0))
       .toContainText('Mar 5');
-    await expect(joinPage.voteForm.getByRole('group')
+    await expect(joinPage.voteForm.locator('.vote-radio-group')
       .nth(1))
       .toContainText('Mar 12');
 

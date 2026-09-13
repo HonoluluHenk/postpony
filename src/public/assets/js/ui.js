@@ -396,6 +396,31 @@ export function initDeleteDialogs() {
 }
 
 /**
+ * Wires the vote form's "Set all: Yes / No / if necessary" buttons. Each
+ * button checks every `vote-<dateId>` radio of its target value, overwriting
+ * whatever the participant had picked, and never submits — the regular
+ * "Submit Votes" POST uploads the filled form. Delegated on `document`, so a
+ * set-all row injected after initialization still works.
+ */
+export function initSetAllVotes() {
+  const voteTypes = ['Yes', 'No', 'IfNecessary'];
+  document.addEventListener('click', (event) => {
+    const btn = event.target.closest('button[data-set-all]');
+    if (!btn) return;
+    const value = btn.dataset.setAll;
+    if (!voteTypes.includes(value)) return;
+    // ponytail: checking the target radio unchecks its siblings via native
+    // radio semantics; the `.vote-radio-group` class scopes the fill to the
+    // date rows the server renders, so a stray radio with a vote-like name
+    // elsewhere in the form is never stamped.
+    btn.closest('form')?.querySelectorAll('.vote-radio-group input[type="radio"]')
+      .forEach((radio) => {
+        if (radio.value === value) radio.checked = true;
+      });
+  });
+}
+
+/**
  * Focuses a heading inside the swap target, or the error alert when validation fails.
  * Called from hx-on::after-request on forms that trigger partial swaps.
  */

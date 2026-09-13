@@ -68,6 +68,21 @@ export function VotePage(props: VotePageProps): JSX.Element {
             hx-boost="false"
             aria-label={props.t('vote_title')}
           >
+            <fieldset class="vote-set-all">
+              <legend>{props.t('vote_set_all')}</legend>
+              <div class="row no-wrap">
+                <button type="button" class="button" data-set-all="Yes">
+                  {props.t('vote_yes')}
+                </button>
+                <button type="button" class="button" data-set-all="IfNecessary">
+                  {props.t('vote_if_necessary')}
+                </button>
+                <button type="button" class="button" data-set-all="No">
+                  {props.t('vote_no')}
+                </button>
+              </div>
+            </fieldset>
+
             {props.proposedDates.map((pd) => (
               <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
                 <legend>

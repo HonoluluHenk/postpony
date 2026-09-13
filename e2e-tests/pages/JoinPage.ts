@@ -46,6 +46,10 @@ export class JoinPage {
     return this.page.getByRole('button', {name: 'Submit Votes'});
   }
 
+  get setAllControls(): Locator {
+    return this.voteForm.getByRole('group', {name: 'Set all:'});
+  }
+
   get noDatesMessage(): Locator {
     return this.page.getByText('No dates have been proposed yet');
   }
@@ -87,10 +91,17 @@ export class JoinPage {
   }
 
   async castVote(dateIndex: number, vote: VoteType): Promise<void> {
-    // ponytail: beer.css hides native radio inputs; toggle via label text
-    await this.voteForm.getByRole('group')
+    // ponytail: beer.css hides native radio inputs; toggle via label text. The
+    // date groups are class-scoped so the "Set all:" button group is skipped.
+    await this.voteForm.locator('.vote-radio-group')
       .nth(dateIndex)
       .getByText(VOTE_LABELS[vote], {exact: true})
+      .click();
+  }
+
+  async setAllVotes(vote: VoteType): Promise<void> {
+    await this.setAllControls
+      .getByRole('button', {name: VOTE_LABELS[vote]})
       .click();
   }
 

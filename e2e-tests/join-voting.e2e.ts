@@ -62,6 +62,54 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
+  test('set-all buttons fill every date, overwrite earlier picks, and save on Submit Votes', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-12T18:30']);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+
+    // Fill-only: a hand-picked vote is overwritten in the DOM but nothing is sent.
+    await joinPage.castVote(0, 'Yes');
+    await joinPage.setAllVotes('IfNecessary');
+    for (const radio of await joinPage.voteRadio('IfNecessary').all()) {
+      await expect(radio)
+        .toBeChecked();
+    }
+    await expect(page.getByText('Your votes have been saved!'))
+      .toHaveCount(0);
+
+    // Re-run with No — overwrites the previous fill in the DOM, still no submit.
+    await joinPage.setAllVotes('No');
+    for (const radio of await joinPage.voteRadio('No').all()) {
+      await expect(radio)
+        .toBeChecked();
+    }
+    await expect(page.getByText('Your votes have been saved!'))
+      .toHaveCount(0);
+
+    await joinPage.submitVotes();
+
+    await expect(page.getByText('Your votes have been saved!'))
+      .toBeVisible();
+    // The reload echoes both saved No votes — one per date.
+    for (const radio of await joinPage.voteRadio('No').all()) {
+      await expect(radio)
+        .toBeChecked();
+    }
+    for (const row of await joinPage.voteSummaryTable()
+      .getByRole('rowgroup')
+      .last()
+      .getByRole('row')
+      .all()) {
+      await expect(row.getByRole('cell')
+        .nth(3))
+        .toHaveText('1'); // no
+    }
+
+    await checkA11y();
+  });
+
   test('remembers the player on return visits via localStorage', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
@@ -88,6 +136,8 @@ test.describe('Join and Voting', () => {
     await expect(joinPage.noDatesMessage)
       .toBeVisible();
     await expect(joinPage.submitVotesButton)
+      .toHaveCount(0);
+    await expect(joinPage.setAllControls)
       .toHaveCount(0);
 
     await checkA11y();
@@ -131,15 +181,16 @@ test.describe('Join and Voting', () => {
     const awayJoinPage = new JoinPage(page);
     await awayJoinPage.goto(session.awayHref);
     await awayJoinPage.join('AwayPlayer');
-    await expect(awayJoinPage.voteForm.getByRole('group'))
-      .toHaveCount(1);
+    // One votable date = exactly one radio trio (Yes / if necessary / No).
+    await expect(awayJoinPage.voteForm.getByRole('radio'))
+      .toHaveCount(3);
 
     // Join as home team — the closed date is hidden from them too
     const homeJoinPage = new JoinPage(page);
     await homeJoinPage.goto(session.homeHref);
     await homeJoinPage.join('HomePlayer');
-    await expect(homeJoinPage.voteForm.getByRole('group'))
-      .toHaveCount(1);
+    await expect(homeJoinPage.voteForm.getByRole('radio'))
+      .toHaveCount(3);
 
     await checkA11y();
   });
