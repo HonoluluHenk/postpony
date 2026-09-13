@@ -1,6 +1,6 @@
 import type { App } from '../../app';
 import { PostponementRules } from '../../lib/postponement';
-import { isVoteType, requireSessionAndToken, requireTeam } from './join-utils';
+import { isVoteType, pendingVoteQuery, readPendingVotes, requireSessionAndToken, requireTeam } from './join-utils';
 import { renderVoteStep } from './vote-view';
 
 export const handleJoinVoteGet = async (app: App): Promise<Response> => {
@@ -10,7 +10,11 @@ export const handleJoinVoteGet = async (app: App): Promise<Response> => {
   const playerId = app.c.req.query('playerId') ?? '';
   const player = session.players.find((p) => p.id === playerId && p.teamId === team);
   if (!player) {
-    return app.c.redirect(`/join/${session.id}/${team}?token=${encodeURIComponent(token)}`);
+    const pendingQuery = pendingVoteQuery(readPendingVotes(app, session));
+    return app.c.redirect(
+      `/join/${session.id}/${team}?token=${encodeURIComponent(token)}` +
+      (pendingQuery ? `&${pendingQuery}` : ''),
+    );
   }
 
   // ponytail: a GET casts a Vote to make one-click calendar links work. The

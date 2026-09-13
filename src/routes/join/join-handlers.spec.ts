@@ -105,6 +105,25 @@ describe('join handlers', () => {
       expect(body)
         .toContain(`postpony-player-${session.id}-home`);
     });
+
+    test('renders the register form carrying a pending vote in its action', async () => {
+      const session = await seedSession({proposedDates: [aProposedDate()]});
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, 'vote-proposed-date-1': 'Yes'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinGet(app);
+      const body = await response.text();
+
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain(`action="/join/${session.id}/home/register?token=${TOKEN}&amp;vote-proposed-date-1=Yes`);
+      expect(body)
+        .toContain("key.indexOf('vote-') === 0");
+    });
   });
 
   describe('handleJoinRegisterPost', () => {
@@ -211,6 +230,44 @@ describe('join handlers', () => {
         .toContain(`/join/${session.id}/away`);
     });
 
+    test('appends pending votes to the redirect back to the vote page', async () => {
+      const session = await seedSession({proposedDates: [aProposedDate()]});
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, 'vote-proposed-date-1': 'IfNecessary'},
+        body: {newPlayerName: 'Alice'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinRegisterPost(app);
+
+      expect(response.status)
+        .toBe(302);
+      const location = response.headers.get('Location') ?? '';
+      expect(location)
+        .toContain('/vote');
+      expect(location)
+        .toContain('vote-proposed-date-1=IfNecessary');
+    });
+
+    test('keeps pending votes in the register form action on the inline error re-render', async () => {
+      const session = await seedSession({players: [aPlayer()], proposedDates: [aProposedDate()]});
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, 'vote-proposed-date-1': 'No'},
+        body: {},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinRegisterPost(app);
+      const body = await response.text();
+
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain(`action="/join/${session.id}/home/register?token=${TOKEN}&amp;vote-proposed-date-1=No"`);
+    });
+
     test('allows registration when the session is Draft (pre-proposal)', async () => {
       const session = await seedSession({status: 'Draft'});
       const app = createApp({
@@ -276,6 +333,45 @@ describe('join handlers', () => {
         .toBe(302);
       expect(response.headers.get('Location') ?? '')
         .toContain(`/join/${session.id}/home`);
+    });
+
+    test('preserves the pending vote in the redirect when the player is unknown', async () => {
+      const session = await seedSession({proposedDates: [aProposedDate()]});
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'ghost', 'vote-proposed-date-1': 'Yes'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+
+      expect(response.status)
+        .toBe(302);
+      const location = response.headers.get('Location') ?? '';
+      expect(location)
+        .toContain(`/join/${session.id}/home`);
+      expect(location)
+        .toContain('vote-proposed-date-1=Yes');
+    });
+
+    test('does not echo invalid vote values through the fallback redirect', async () => {
+      const session = await seedSession({proposedDates: [aProposedDate()]});
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'ghost', 'vote-proposed-date-1': 'Maybe'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+
+      expect(response.status)
+        .toBe(302);
+      const location = response.headers.get('Location') ?? '';
+      expect(location)
+        .toContain(`/join/${session.id}/home`);
+      expect(location)
+        .not
+        .toContain('vote-proposed-date-1');
     });
 
     test('casts a vote from a one-click GET link and renders the poll', async () => {
@@ -611,6 +707,62 @@ describe('join handlers', () => {
         .toBe(200);
       expect(await response.text())
         .toContain('Voting is closed');
+    });
+  });
+
+  describe('fallback intent through the register step', () => {
+    test('the full chain: unknown player GET -> register POST -> vote GET casts the Vote on arrival', async () => {
+      const session = await seedSession({
+        players: [aPlayer({id: 'alice', name: 'Alice'})],
+        proposedDates: [aProposedDate()],
+      });
+
+      // Step 1: click an unpersonalized vote link — unknown player, pending intent
+      const step1 = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'ghost', 'vote-proposed-date-1': 'Yes'},
+      });
+      await step1.store.save(session);
+
+      const registerRedirect = await handleJoinVoteGet(step1);
+      const registerUrl = registerRedirect.headers.get('Location') ?? '';
+      expect(registerUrl)
+        .toContain(`/join/${session.id}/home`);
+      expect(registerUrl)
+        .toContain('vote-proposed-date-1=Yes');
+
+      // Step 2: register by selecting the existing player, pending vote in the query
+      const step2 = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, 'vote-proposed-date-1': 'Yes'},
+        body: {playerId: 'alice'},
+      });
+      await step2.store.save(session);
+
+      const voteRedirect = await handleJoinRegisterPost(step2);
+      const voteUrl = voteRedirect.headers.get('Location') ?? '';
+      expect(voteUrl)
+        .toContain('/vote');
+      expect(voteUrl)
+        .toContain('vote-proposed-date-1=Yes');
+
+      // Step 3: GET /vote — player now known, vote casts automatically on arrival
+      const step3 = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'alice', 'vote-proposed-date-1': 'Yes'},
+      });
+      await step3.store.save(session);
+
+      const response = await handleJoinVoteGet(step3);
+      const body = await response.text();
+
+      const storedFinal = await step3.store.get(session.id);
+      expect(storedFinal?.votes)
+        .toMatchObject([{proposedDateId: 'proposed-date-1', participantId: 'alice', type: 'Yes'}]);
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain('value="Yes" checked');
     });
   });
 

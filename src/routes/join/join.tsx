@@ -3,7 +3,7 @@ import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../app';
 import type { Player } from '../../lib/models';
 import { pageLayout } from '../layouts/main';
-import type { Team } from './join-utils';
+import { pendingVoteQuery, type PendingVote, type Team } from './join-utils';
 
 export interface JoinPageProps extends ViewContext {
   title?: string;
@@ -13,10 +13,16 @@ export interface JoinPageProps extends ViewContext {
   players: readonly Player[];
   error?: string;
   globalError?: string;
+  /** Pending vote-<dateId>=<value> intent carried through the register step. */
+  pendingVotes?: readonly PendingVote[];
 }
 
 export function JoinPage(props: JoinPageProps): JSX.Element {
   const title = props.title ?? props.t('join_title');
+  const pendingVotes = props.pendingVotes ?? [];
+  const pendingQuery = pendingVoteQuery(pendingVotes);
+  const action = `/join/${props.sessionId}/${props.team}/register?token=${props.token}` +
+    (pendingQuery ? `&${pendingQuery}` : '');
 
   const content = (
     <>
@@ -35,7 +41,7 @@ export function JoinPage(props: JoinPageProps): JSX.Element {
 
       <form
         method="post"
-        action={`/join/${props.sessionId}/${props.team}/register?token=${props.token}`}
+        action={action}
         hx-boost="false"
       >
         {props.players.length > 0 ? (
@@ -77,10 +83,15 @@ export function JoinPage(props: JoinPageProps): JSX.Element {
   (function () {
     var stored = window.localStorage.getItem('postpony-player-${props.sessionId}-${props.team}');
     if (stored) {
-      var token = new URLSearchParams(window.location.search).get('token') || '';
+      var params = new URLSearchParams(window.location.search);
+      var parts = [];
+      params.forEach(function (value, key) {
+        if (key.indexOf('vote-') === 0) parts.push(key + '=' + encodeURIComponent(value));
+      });
+      var pending = parts.length ? '&' + parts.join('&') : '';
       window.location.replace(
         '/join/${props.sessionId}/${props.team}/vote?playerId=' + encodeURIComponent(stored) +
-        '&token=' + encodeURIComponent(token)
+        '&token=' + encodeURIComponent(params.get('token') || '') + pending
       );
     }
   })();

@@ -1,7 +1,7 @@
 import type { App } from '../../app';
 import { PostponementRules } from '../../lib/postponement';
 import { JoinPage } from './join';
-import { requireSessionAndToken, requireTeam } from './join-utils';
+import { pendingVoteQuery, readPendingVotes, requireSessionAndToken, requireTeam } from './join-utils';
 
 export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
@@ -28,6 +28,7 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
         team={team}
         token={token}
         players={players}
+        pendingVotes={readPendingVotes(app, session)}
         error={app.t('join_select_required')}
       />,
     );
@@ -36,7 +37,10 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
 
   await app.store.save(updated);
 
-  const voteUrl = `/join/${id}/${team}/vote?playerId=${encodeURIComponent(player.id)}` +
-    `&token=${encodeURIComponent(token)}`;
-  return app.c.redirect(voteUrl);
+  const pendingQuery = pendingVoteQuery(readPendingVotes(app, session));
+  return app.c.redirect(
+    `/join/${id}/${team}/vote?playerId=${encodeURIComponent(player.id)}` +
+    `&token=${encodeURIComponent(token)}` +
+    (pendingQuery ? `&${pendingQuery}` : ''),
+  );
 };

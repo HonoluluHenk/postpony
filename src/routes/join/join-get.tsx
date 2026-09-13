@@ -1,6 +1,6 @@
 import type { App } from '../../app';
 import { JoinPage } from './join';
-import { requireSessionAndToken, requireTeam } from './join-utils';
+import { readPendingVotes, requireSessionAndToken, requireTeam } from './join-utils';
 import { renderConfirmedInfo } from './vote-view';
 
 export const handleJoinGet = async (app: App): Promise<Response> => {
@@ -12,6 +12,7 @@ export const handleJoinGet = async (app: App): Promise<Response> => {
   }
 
   const players = session.players.filter((p) => p.teamId === team);
+  const pendingVotes = readPendingVotes(app, session);
 
   const html = app.render(
     <JoinPage
@@ -21,6 +22,7 @@ export const handleJoinGet = async (app: App): Promise<Response> => {
       team={team}
       token={token}
       players={players}
+      pendingVotes={pendingVotes}
     />,
   );
 
