@@ -201,6 +201,10 @@
     align-items: center;
     gap: var(--space-2);
     min-width: 0;
+    /* Grow to fill the header so the venue badge and the action buttons line
+       up in fixed columns across every row instead of drifting by the date
+       text's natural width. */
+    flex: 1 1 auto;
   }
 
   .proposed-date-info > .max {
@@ -209,6 +213,9 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    /* Grow (bounded by max-width) so the badge sits at a constant x in every
+       row; the cap keeps long dates truncating instead of stretching. */
+    flex: 1 1 auto;
   }
 
   .proposed-date-actions {
@@ -535,6 +542,14 @@
     margin-bottom: 3rem;
   }
 
+  .generate-controls > .field {
+    /* BeerCSS `.field + .field` adds a block-start margin to the 2nd/3rd grid
+       items; in a grid that margin (with `align-items: center`) shifts the To
+       and Venue fields down relative to From. Zero the block-start margin so
+       the From/To/Venue row is vertically centred as one unit. */
+    margin-block-start: 0;
+  }
+
   .generate-controls .date-field {
     width: 9rem;
   }
@@ -546,5 +561,50 @@
   /* Time inputs in generate form: constrain to ~80px. */
   .generate-time-row .time-field {
     width: 9rem;
+  }
+
+  /* Weekday labels ("Mo", "We", …) have different natural widths, so in the
+     flex row the time inputs start at a different x per row. Give the label a
+     fixed width so every time input lines up in one column. */
+  .generate-time-row > label {
+    flex: 0 0 2.5rem;
+  }
+
+  /* Below 600px the proposed-date card's single header row cannot hold the
+     date info (icon + date + venue badge) and the action buttons side by side;
+     the info gets crushed to zero and the toggle covers it. Stack instead: the
+     date info takes the first line, the actions wrap below it (right-aligned)
+     and the fixed 7rem card height becomes auto so nothing clips. The actions
+     row itself wraps so the Confirm button never overflows the card edge. */
+  @media (max-width: 599px) {
+    .proposed-date-card {
+      height: auto;
+    }
+
+    .proposed-date-header {
+      flex-wrap: wrap;
+    }
+
+    .proposed-date-info {
+      flex-basis: 100%;
+    }
+
+    .proposed-date-actions {
+      width: 100%;
+      margin-left: auto;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    /* The From/To/Venue generator grid is three columns wide (~500px) and
+       overflows a phone viewport. Stack the fields full-width. */
+    .generate-controls {
+      grid-template-columns: 1fr;
+    }
+
+    .generate-controls .date-field,
+    .generate-controls .venue-field {
+      width: 100%;
+    }
   }
 }
