@@ -6,11 +6,13 @@
 
 **Status:** ready-for-agent
 
-- [ ] A JSX-free venue module exposes the default (absent ⇒ 1), `resolveVenue` and `venueShortName`
-- [ ] The `VenueBadge` component and its label/tooltip helpers consolidate into one partials module importing the new helpers
-- [ ] Venue occupancy, iCal, badge, generator dedup and rail fallback all use the one default
-- [ ] The duplicated lookup is deleted
-- [ ] Badge unit tests and the vote-page e2e that renders venue pills are green; rendered output is unchanged
-- [ ] `npm run verify` passes
+- [x] A JSX-free venue module exposes the default (absent ⇒ 1), `resolveVenue` and `venueShortName`
+- [x] The `VenueBadge` component and its label/tooltip helpers consolidate into one partials module importing the new helpers
+- [x] Venue occupancy, iCal, badge, generator dedup and rail fallback all use the one default
+- [x] The duplicated lookup is deleted
+- [x] Badge unit tests and the vote-page e2e that renders venue pills are green; rendered output is unchanged
+- [x] `npm run verify` passes
 
 ## Comments
+
+- `df05c6d` ticket done, `3ceefa2` review: venue-1 default + lookup consolidated into JSX-free `lib/venues.ts`, `VenueBadge` moved to `partials/venues.tsx`; occupancy/iCal/dedup/rail now share it. No behaviour change; `npm run verify` green (126 e2e).
