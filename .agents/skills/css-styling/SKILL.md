@@ -13,7 +13,7 @@ This project uses a layered CSS architecture: **Beer.css** (Material Design 3) f
 beer.min.css        —  vendor: MD3 components, theme, grid, reset
 air-datepicker.css  —  vendor: calendar + time sliders
 design-tokens.css   —  design: custom properties (brand, warning, layout, typography, spacing, radius, spinner)
-style.css           —  design: app selectors + self-hosted @font-face declarations
+style.css           —  app selectors (@layer design) + self-hosted @font-face rules (unlayered)
 ```
 
 ### Cascade order (`@layer`)
@@ -33,8 +33,8 @@ Declared in `src/routes/layouts/main.tsx`:
 ```
 src/public/assets/css/
   design-tokens.css   — all :root custom properties, wrapped in @layer design
-  style.css           — app selectors (incl. the edit-page redesign section) plus the
-                        six @font-face declarations; wrapped in @layer design
+  style.css           — app selectors (incl. the edit-page redesign section), wrapped in
+                        @layer design; six unlayered @font-face declarations above the layer
 src/public/assets/vendor/css/
   beer.min.css        — BeerCSS framework, loaded into @layer vendor
   air-datepicker.css  — air-datepicker v3, loaded into @layer vendor
@@ -42,7 +42,7 @@ src/public/assets/vendor/fonts/
   IBMPlexSans-*.woff2, IBMPlexSansCondensed-*.woff2  — self-hosted IBM Plex faces (OFL)
 ```
 
-Only these two stylesheets and the token file are app-authored. The former `edit-redesign.css` prototype is gone; its live rules now live in the edit-page section of `style.css` (see below).
+Only these two stylesheets and the token file are app-authored. The former prototype stylesheet is gone; its live rules now live in the edit-page section of `style.css` (see below).
 
 ## Design Token Catalog
 
