@@ -274,6 +274,15 @@ function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: 
         />
         {t('votable_short')}: {row.votable ? t('votable_on') : t('votable_off')}
       </label>
+      <button
+        type="button"
+        class="action action--outline"
+        data-open-dialog={`delete-proposed-date-${row.id}`}
+        aria-label={t('delete_proposed_date')}
+        title={t('delete_proposed_date')}
+      >
+        <i aria-hidden="true">delete</i>
+      </button>
       {row.votable && !props.confirmed ? (
         <button
           type="button"
@@ -284,15 +293,6 @@ function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: 
           {t('confirm_date')}
         </button>
       ) : null}
-      <button
-        type="button"
-        class="action action--outline"
-        data-open-dialog={`delete-proposed-date-${row.id}`}
-        aria-label={t('delete_proposed_date')}
-        title={t('delete_proposed_date')}
-      >
-        <i aria-hidden="true">delete</i>
-      </button>
       <dialog id={`delete-proposed-date-${row.id}`} class="padding small-round surface" aria-labelledby={`delete-proposed-date-title-${row.id}`}>
         <h4 id={`delete-proposed-date-title-${row.id}`}>{t('delete_proposed_date_confirm_title')}</h4>
         <p>{t('delete_proposed_date_confirm_message', {date: row.display})}</p>
@@ -512,7 +512,7 @@ function SortControl(props: { sessionId: string; sort: DateSort; t: TranslateFn 
         name="sort"
         value={value}
         checked={props.sort === value}
-        hx-get={`/edit/${props.sessionId}?sort=${value}`}
+        hx-get={`/edit/${props.sessionId}`}
         hx-target="#edit-grid"
         hx-push-url="true"
         hx-trigger="change"

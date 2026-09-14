@@ -233,7 +233,7 @@ describe('EditPage week-grouped date rows', () => {
     expect(html)
       .toContain('role="radiogroup" aria-label="Sort by"');
     expect(html)
-      .toContain('hx-get="/edit/test-session?sort=availability"');
+      .toContain('hx-get="/edit/test-session"');
   });
 });
 

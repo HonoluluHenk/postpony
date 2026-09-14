@@ -289,6 +289,24 @@ describe('ProposedDatesRail date actions', () => {
       .toContain('>Delete</button>');
   });
 
+  it('renders the delete opener before the confirm control on a votable row', () => {
+    const session = buildSession({
+      proposedDates: [
+        aProposedDate({id: 'pd-open', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+      ],
+    });
+    const html = renderToString(ProposedDatesRail(railProps(session)));
+    const deleteIndex = html.indexOf('data-open-dialog="delete-proposed-date-pd-open"');
+    const confirmIndex = html.indexOf('proposed-date-confirm?proposedDateId=pd-open');
+
+    expect(deleteIndex)
+      .toBeGreaterThan(-1);
+    expect(confirmIndex)
+      .toBeGreaterThan(-1);
+    expect(deleteIndex)
+      .toBeLessThan(confirmIndex);
+  });
+
   it('hides the confirm control and the add-date form when the status is Confirmed', () => {
     const session = buildSession({
       status: 'Confirmed',
@@ -454,11 +472,9 @@ describe('ProposedDatesRail sort control', () => {
     expect(html)
       .toContain('name="sort" value="date" checked');
     expect(html)
-      .toContain('hx-get="/edit/test-session?sort=date"');
+      .toContain('hx-get="/edit/test-session"');
     expect(html)
       .toContain('name="sort" value="availability"');
-    expect(html)
-      .toContain('hx-get="/edit/test-session?sort=availability"');
     expect(html)
       .toContain('hx-target="#edit-grid"');
     expect(html)

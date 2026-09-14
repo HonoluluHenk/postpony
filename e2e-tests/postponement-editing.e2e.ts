@@ -332,6 +332,15 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.groupHeads.nth(3))
       .toContainText('Week 26');
 
+    // The URL carries exactly one sort param, so a reload keeps the Date radio checked.
+    await expect(page)
+      .toHaveURL(/\/edit\/[^?]+\?sort=date$/);
+    await page.reload();
+    await expect(editPage.sortRadio('Date'))
+      .toBeChecked();
+    await expect(editPage.groupHeads)
+      .toHaveCount(4);
+
     await checkA11y();
   });
 
