@@ -2,8 +2,8 @@ import type { DateClashes } from './clashes';
 import { DateTimeRange } from './temporal-utils';
 import type { VenueOccupancy } from './venue-occupancy';
 
-// ponytail: placeholder until multi-tenancy (ADR-0001) is implemented;
-// replace with real club resolution (from URL domain, user session, etc.).
+// ponytail: single-club by design (multi-tenancy withdrawn, ADR-0001);
+// club_id is retained as a forward-compatible column only.
 export const DEFAULT_CLUB_ID = 'default-club';
 
 export type Team = 'home' | 'away';
