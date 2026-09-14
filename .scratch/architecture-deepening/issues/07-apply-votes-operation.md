@@ -15,3 +15,5 @@
 - [x] `npm run verify` passes
 
 ## Comments
+
+- `a3bf630` + `bca9232` ticket done, `4ae18a8` review: `PostponementRules.applyVotes(session, participantId, submitted)` owns the votable-date filter, the (`isVoteType`, now domain-owned) value whitelist, one `castVote` per surviving submission and the `changed` flag; both join vote handlers build their submission list from query/body and the duplicated loop is deleted, with behaviour, the Confirmed lock, the GET `updated`/POST `canVote` rendering and the pending-vote fallback redirect all preserved. `readPendingVotes` reshaped to a pure lookup reader. No fixes needed; `npm run verify` green (754 tests, 126 e2e).
