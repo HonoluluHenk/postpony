@@ -48,8 +48,8 @@
     /* Chips — semantic tints (values as rendered by the edit-page redesign) */
     --chip-clean-bg: #eef1fb;
     --chip-clean-fg: var(--primary);
-    --chip-warn-bg: #fff6e6;
-    --chip-warn-fg: var(--warning);
+    --chip-warn-bg: var(--warning-container);
+    --chip-warn-fg: var(--on-warning-container);
     --chip-error-bg: #fdecec;
     --chip-error-fg: var(--error);
 
