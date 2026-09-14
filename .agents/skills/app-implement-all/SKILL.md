@@ -1,5 +1,5 @@
 ---
-name: implement-all
+name: app-implement-all
 description: "Implement every ticket of one feature folder under `.scratch/` (spec + issues). One feature worktree for the whole spec, one subagent per ticket following the `implement` skill; each subagent ticks and commits its own ticket."
 disable-model-invocation: true
 ---
