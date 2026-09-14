@@ -12,6 +12,6 @@
 - [x] Rail grouping, availability sort and chip/action state are untouched
 - [x] Adding a hypothetical new error field requires editing one declaration
 - [x] Edit render specs are unchanged and green
-- [ ] `npm run verify` passes
+- [x] `npm run verify` passes
 
 ## Comments
