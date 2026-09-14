@@ -1,6 +1,6 @@
 import type { App } from '../../app';
 import { PostponementRules } from '../../lib/postponement';
-import { isVoteType, requireSessionAndToken, requireTeam } from './join-utils';
+import { requireSessionAndToken, requireTeam } from './join-utils';
 import { renderVoteStep } from './vote-view';
 
 export const handleJoinVotePost = async (app: App): Promise<Response> => {
@@ -18,15 +18,12 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
   const canVote = session.status !== 'Confirmed';
   let updated = session;
   if (canVote) {
-    const rules = new PostponementRules();
     const body = await app.body();
-    for (const pd of rules.votableDates(session)) {
-      const value = body[`vote-${pd.id}`];
-      if (!isVoteType(value)) {
-        continue;
-      }
-      updated = rules.castVote(updated, pd.id, player.id, value);
-    }
+    const submissions = session.proposedDates.map((pd) => ({
+      dateId: pd.id,
+      value: body[`vote-${pd.id}`],
+    }));
+    updated = new PostponementRules().applyVotes(session, player.id, submissions).session;
     await app.store.save(updated);
   }
 

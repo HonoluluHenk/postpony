@@ -1,6 +1,6 @@
 import type { App } from '../../app';
 import { PostponementRules } from '../../lib/postponement';
-import { isVoteType, pendingVoteQuery, readPendingVotes, requireSessionAndToken, requireTeam } from './join-utils';
+import { pendingVoteQuery, readPendingVotes, requireSessionAndToken, requireTeam } from './join-utils';
 import { renderVoteStep } from './vote-view';
 
 export const handleJoinVoteGet = async (app: App): Promise<Response> => {
@@ -10,7 +10,7 @@ export const handleJoinVoteGet = async (app: App): Promise<Response> => {
   const playerId = app.query('playerId') ?? '';
   const player = session.players.find((p) => p.id === playerId && p.teamId === team);
   if (!player) {
-    const pendingQuery = pendingVoteQuery(readPendingVotes(app, session));
+    const pendingQuery = pendingVoteQuery(readPendingVotes(app.query.bind(app), session));
     return app.redirect(
       `/join/${session.id}/${team}?token=${encodeURIComponent(token)}` +
       (pendingQuery ? `&${pendingQuery}` : ''),
@@ -26,15 +26,13 @@ export const handleJoinVoteGet = async (app: App): Promise<Response> => {
   let updated = session;
   let cast = false;
   if (canVote) {
-    const rules = new PostponementRules();
-    for (const pd of rules.votableDates(session)) {
-      const value = app.query(`vote-${pd.id}`);
-      if (!isVoteType(value)) {
-        continue;
-      }
-      updated = rules.castVote(updated, pd.id, player.id, value);
-      cast = true;
-    }
+    const submissions = session.proposedDates.map((pd) => ({
+      dateId: pd.id,
+      value: app.query(`vote-${pd.id}`),
+    }));
+    const applied = new PostponementRules().applyVotes(updated, player.id, submissions);
+    updated = applied.session;
+    cast = applied.changed;
     if (cast) {
       await app.store.save(updated);
     }

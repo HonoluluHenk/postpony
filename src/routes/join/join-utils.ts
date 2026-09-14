@@ -1,17 +1,13 @@
 import type { App } from '../../app';
 import { comparePassword } from '../../lib/crypto-utils';
 import type { Postponement, Vote } from '../../lib/models';
-import { PostponementRules } from '../../lib/postponement';
+import { isVoteType, PostponementRules } from '../../lib/postponement';
 
 export type Team = 'home' | 'away';
 
 export interface PendingVote {
   dateId: string;
   value: Vote['type'];
-}
-
-export function isVoteType(value: unknown): value is Vote['type'] {
-  return value === 'Yes' || value === 'No' || value === 'IfNecessary';
 }
 
 /**
@@ -23,11 +19,14 @@ export function isVoteType(value: unknown): value is Vote['type'] {
  * Used by both the fallback redirect (unknown playerId) and the register POST
  * redirect so one mechanism covers both personalized and unpersonalized paths.
  */
-export function readPendingVotes(app: App, session: Postponement): PendingVote[] {
+export function readPendingVotes(
+  lookup: (name: string) => string | undefined,
+  session: Postponement,
+): PendingVote[] {
   const rules = new PostponementRules();
   const pending: PendingVote[] = [];
   for (const pd of rules.votableDates(session)) {
-    const value = app.query(`vote-${pd.id}`);
+    const value = lookup(`vote-${pd.id}`);
     if (isVoteType(value)) {
       pending.push({dateId: pd.id, value});
     }

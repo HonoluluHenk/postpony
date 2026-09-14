@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] `applyVotes(session, submitted)` owns the votable-date filter, the value whitelist and the changed flag
-- [ ] Both join vote handlers build the submission list and call it; the duplicated loop is deleted
-- [ ] The confirmed-session lock (a locked session does not cast) is preserved on both paths
-- [ ] The pending-vote fallback redirect still carries pending submissions (or the behaviour is explicitly re-scoped in the ticket)
-- [ ] A unit test covers casting, updating an existing Vote, rejecting a non-votable date and the changed flag
+- [x] `applyVotes(session, submitted)` owns the votable-date filter, the value whitelist and the changed flag
+- [x] Both join vote handlers build the submission list and call it; the duplicated loop is deleted
+- [x] The confirmed-session lock (a locked session does not cast) is preserved on both paths
+- [x] The pending-vote fallback redirect still carries pending submissions (or the behaviour is explicitly re-scoped in the ticket)
+- [x] A unit test covers casting, updating an existing Vote, rejecting a non-votable date and the changed flag
 - [ ] Join-voting e2e is unchanged and green
 - [ ] `npm run verify` passes
 

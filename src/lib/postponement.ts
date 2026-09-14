@@ -26,6 +26,17 @@ export interface VoteTally {
   ifNecessary: number;
 }
 
+/** The accepted Vote values; the single source of truth for the value whitelist. */
+export function isVoteType(value: unknown): value is Vote['type'] {
+  return value === 'Yes' || value === 'No' || value === 'IfNecessary';
+}
+
+/** One submitted Vote intent: a Proposed Date id and its unvalidated value. */
+export interface VoteSubmission {
+  dateId: string;
+  value: unknown;
+}
+
 /**
  * The shared "Home vs Guest" matchup line, used by the derived display name and
  * the edit-page header so the separator never drifts between them.
@@ -247,6 +258,35 @@ export class PostponementRules {
 
     const vote: Vote = {id: this.newId(), proposedDateId, participantId, type};
     return {...session, votes: [...session.votes, vote]};
+  }
+
+  /**
+   * Applies a batch of submitted Votes for one participant: casts only submissions that
+   * target a votable Proposed Date and carry a whitelisted value, one `castVote` per
+   * surviving submission. `changed` reports whether any submission was applied — the
+   * shared "was an update made" signal both join vote handlers render (a re-cast of the
+   * same value still counts, matching the GET path's one-click upsert).
+   */
+  applyVotes(
+    session: Postponement,
+    participantId: string,
+    submitted: readonly VoteSubmission[],
+  ): {
+    session: Postponement;
+    changed: boolean
+  }
+  {
+    const votableIds = new Set(this.votableDates(session).map((pd) => pd.id));
+    let updated = session;
+    let changed = false;
+    for (const {dateId, value} of submitted) {
+      if (!votableIds.has(dateId) || !isVoteType(value)) {
+        continue;
+      }
+      updated = this.castVote(updated, dateId, participantId, value);
+      changed = true;
+    }
+    return {session: updated, changed};
   }
 
   /**

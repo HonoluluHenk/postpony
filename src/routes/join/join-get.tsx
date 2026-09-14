@@ -12,7 +12,7 @@ export const handleJoinGet = async (app: App): Promise<Response> => {
   }
 
   const players = session.players.filter((p) => p.teamId === team);
-  const pendingVotes = readPendingVotes(app, session);
+  const pendingVotes = readPendingVotes(app.query.bind(app), session);
 
   const html = app.render(
     <JoinPage

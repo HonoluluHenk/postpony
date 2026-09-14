@@ -239,6 +239,117 @@ describe('postponement', () => {
     });
   });
 
+  describe('applyVotes', () => {
+    test('casts a new vote for each submitted votable date and reports changed', () => {
+      const before = aSession({
+        proposedDates: [
+          aProposedDate({id: 'pd-1'}),
+          aProposedDate({id: 'pd-2'}),
+        ],
+      });
+
+      const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
+        {dateId: 'pd-1', value: 'Yes'},
+        {dateId: 'pd-2', value: 'No'},
+      ]);
+
+      expect(changed)
+        .toBe(true);
+      expect(session.votes)
+        .toMatchObject([
+          {proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'},
+          {proposedDateId: 'pd-2', participantId: 'player-1', type: 'No'},
+        ]);
+    });
+
+    test('updates an existing vote instead of duplicating it', () => {
+      const before = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+        votes: [aVote({id: 'v1', proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
+      });
+
+      const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
+        {dateId: 'pd-1', value: 'No'},
+      ]);
+
+      expect(changed)
+        .toBe(true);
+      expect(session.votes)
+        .toMatchObject([{id: 'v1', proposedDateId: 'pd-1', participantId: 'player-1', type: 'No'}]);
+    });
+
+    test('rejects a vote for a non-votable date', () => {
+      const before = aSession({proposedDates: [aProposedDate({id: 'closed', votable: false})]});
+
+      const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
+        {dateId: 'closed', value: 'Yes'},
+      ]);
+
+      expect(changed)
+        .toBe(false);
+      expect(session.votes)
+        .toHaveLength(0);
+    });
+
+    test('rejects an out-of-domain value', () => {
+      const before = aSession({proposedDates: [aProposedDate({id: 'pd-1'})]});
+
+      const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
+        {dateId: 'pd-1', value: 'Maybe'},
+      ]);
+
+      expect(changed)
+        .toBe(false);
+      expect(session.votes)
+        .toHaveLength(0);
+    });
+
+    test('reports changed when a valid submission re-casts the same value', () => {
+      const before = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1'})],
+        votes: [aVote({id: 'v1', proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
+      });
+
+      const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
+        {dateId: 'pd-1', value: 'Yes'},
+      ]);
+
+      expect(changed)
+        .toBe(true);
+      expect(session.votes)
+        .toHaveLength(1);
+    });
+
+    test('reports unchanged when no submission survives the filters', () => {
+      const before = aSession({
+        proposedDates: [
+          aProposedDate({id: 'open'}),
+          aProposedDate({id: 'closed', votable: false}),
+        ],
+        votes: [aVote({id: 'v1', proposedDateId: 'open', participantId: 'player-1', type: 'Yes'})],
+      });
+
+      const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
+        {dateId: 'closed', value: 'No'},
+        {dateId: 'open', value: 'Maybe'},
+      ]);
+
+      expect(changed)
+        .toBe(false);
+      expect(session.votes)
+        .toMatchObject([{id: 'v1', type: 'Yes'}]);
+    });
+
+    test('does not mutate the input session', () => {
+      const before = aSession({proposedDates: [aProposedDate({id: 'pd-1'})]});
+
+      new FakePostponementRules().applyVotes(before, 'player-1', [{dateId: 'pd-1', value: 'Yes'}]);
+
+      expect(before.votes)
+        .toHaveLength(0);
+    });
+  });
+
   describe('tally', () => {
     test('aggregates votes per proposed date', () => {
       const session = aSession({
