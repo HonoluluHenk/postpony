@@ -15,14 +15,14 @@ export const handleEditPlayersPost = (app: App): Promise<Response> => {
 
   return runEditCommand(app, {
     apply: async (rules, session) => {
-      const values = await app.c.req.parseBody({all: true});
+      const values = await app.body({all: true});
       const validation = v.safeParse(PlayerSchema, values);
 
       if (!validation.success) {
         const errors = mapValidationToErrors(validation);
 
         if (app.isPartial) {
-          return app.c.html(renderEditPartials(app, session, {
+          return app.html(renderEditPartials(app, session, {
             playerName: (values['playerName'] as string | undefined) ?? '',
             teamId: (values['teamId'] as Team | undefined) ?? 'home',
             playerError: errors.fields['playerName'],
@@ -30,7 +30,7 @@ export const handleEditPlayersPost = (app: App): Promise<Response> => {
           }), {status: 400});
         }
 
-        return app.c.redirect(`/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`);
+        return app.redirect(`/edit/${id}?organizerPassword=${app.query('organizerPassword') ?? ''}`);
       }
 
       const {playerName, teamId} = validation.output;

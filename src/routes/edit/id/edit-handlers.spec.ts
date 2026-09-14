@@ -5,7 +5,7 @@ import { ClickTTError } from '../../../lib/errors';
 import type { Postponement } from '../../../lib/models';
 import { generateProposedDates } from '../../../lib/proposed-dates-generator';
 import * as temporalUtils from '../../../lib/temporal-utils';
-import { createApp } from './__test-utils__/create-app';
+import { createApp } from '../../../lib/__test-utils__/create-app';
 import { handleConfirmDatePost } from './confirm-date-post';
 import { handleEditGet } from './edit-id-get';
 import { buildOwnTeamView } from './own-team-view';

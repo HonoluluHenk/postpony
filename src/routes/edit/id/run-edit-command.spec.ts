@@ -3,7 +3,7 @@ import type { App } from '../../../app';
 import { aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
 import type { Postponement } from '../../../lib/models';
 import * as temporalUtils from '../../../lib/temporal-utils';
-import { createApp } from './__test-utils__/create-app';
+import { createApp } from '../../../lib/__test-utils__/create-app';
 import { handleConfirmDatePost } from './confirm-date-post';
 import { handleEditPlayersPost } from './players-post';
 import { handleProposedDateDeletePost } from './proposed-date-delete-post';

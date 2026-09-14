@@ -3,11 +3,11 @@ import { fetchGroups } from '../../../lib/click-tt-scraper';
 import { ScrapeGroupsPage } from './groups';
 
 export const handleScrapeGroupsGet = async (app: App): Promise<Response> => {
-  const championship = app.c.req.query('championship');
+  const championship = app.query('championship');
   if (!championship) {
     app.failure(app.t('missing_param', {name: 'championship'}));
   }
-  const leagueName = app.c.req.query('leagueName') ?? '';
+  const leagueName = app.query('leagueName') ?? '';
 
   const groups = await fetchGroups(championship);
 
@@ -18,5 +18,5 @@ export const handleScrapeGroupsGet = async (app: App): Promise<Response> => {
       leagueName={leagueName}
     />,
   );
-  return app.c.html(html);
+  return app.html(html);
 };

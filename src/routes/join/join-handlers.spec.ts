@@ -1,41 +1,13 @@
-import { describe, expect, test, vi } from 'vitest';
-import { App } from '../../app';
+import { describe, expect, test } from 'vitest';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../lib/__test-utils__/builders';
+import { createApp } from '../../lib/__test-utils__/create-app';
 import { hashPassword } from '../../lib/crypto-utils';
-import { LOCALE_KEY } from '../../locales';
-import { MemorySessionStore } from '../../lib/session-store';
 import { handleJoinGet } from './join-get';
 import { handleJoinRegisterPost } from './join-register-post';
 import { handleJoinVoteGet } from './join-vote-get';
 import { handleJoinVotePost } from './join-vote-post';
 
 const TOKEN = 'invitation-pw';
-
-interface MockOptions {
-  params?: Record<string, string>;
-  queries?: Record<string, string>;
-  headers?: Record<string, string>;
-  body?: Record<string, unknown>;
-}
-
-function createApp(options: MockOptions = {}): App {
-  const {params = {}, queries = {}, headers = {}, body = {}} = options;
-  const store = new MemorySessionStore();
-  const context = {
-    get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en-US' : undefined),
-    req: {
-      param: (name: string): string | undefined => params[name],
-      query: (name: string): string | undefined => queries[name],
-      header: (name: string): string | undefined => headers[name],
-      parseBody: (): Promise<Record<string, unknown>> => Promise.resolve(body),
-      url: 'https://game-scheduler.localhost:3000/',
-    },
-    html: vi.fn((content: string) => new Response(content)),
-    redirect: vi.fn((url: string) => new Response(null, {status: 302, headers: {Location: url}})),
-  } as any;
-
-  return App.create(context, store);
-}
 
 async function seedSession(overrides: Parameters<typeof aSession>[0] = {}): Promise<ReturnType<typeof aSession>> {
   return aSession({invitationPasswordHash: await hashPassword(TOKEN), ...overrides});

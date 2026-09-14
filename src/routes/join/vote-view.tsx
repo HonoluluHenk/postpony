@@ -43,7 +43,7 @@ export function renderConfirmedInfo(
     />,
   );
 
-  return app.c.html(html);
+  return app.html(html);
 }
 
 export function renderVoteStep(app: App, options: VoteViewOptions): Response {
@@ -88,5 +88,5 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
     />,
   );
 
-  return app.c.html(html);
+  return app.html(html);
 }

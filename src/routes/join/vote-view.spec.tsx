@@ -1,26 +1,8 @@
-import { describe, expect, test, vi } from 'vitest';
-import { App } from '../../app';
+import { describe, expect, test } from 'vitest';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../lib/__test-utils__/builders';
-import { MemorySessionStore } from '../../lib/session-store';
+import { createApp } from '../../lib/__test-utils__/create-app';
 import { formatProposedDateDisplay } from '../../lib/temporal-utils';
-import { LOCALE_KEY } from '../../locales';
 import { renderConfirmedInfo, renderVoteStep } from './vote-view';
-
-function createApp(locale = 'en-US'): App {
-  const store = new MemorySessionStore();
-  const context = {
-    get: (key: string): string | undefined => (key === LOCALE_KEY ? locale : undefined),
-    req: {
-      param: (): string | undefined => undefined,
-      query: (): string | undefined => undefined,
-      header: (): string | undefined => undefined,
-      url: 'https://game-scheduler.localhost:3000/',
-    },
-    html: vi.fn((content: string) => new Response(content)),
-  } as any;
-
-  return App.create(context, store);
-}
 
 describe('renderVoteStep date visibility', () => {
   test.each(['home', 'away'] as const)('%s team sees every date when all are votable', async (team) => {
@@ -276,7 +258,7 @@ describe('renderVoteStep', () => {
       players: [player],
       proposedDates: [aProposedDate()],
     });
-    const app = createApp('de-CH');
+    const app = createApp({locale: 'de-CH'});
     await app.store.save(session);
 
     const response = renderVoteStep(app, {
@@ -753,7 +735,7 @@ describe('renderVoteStep venue occupancy info', () => {
         aProposedDate({id: 'date-2', votable: true, venueOccupancy: {count: 0, matches: []}}),
       ],
     });
-    const app = createApp('de-CH');
+    const app = createApp({locale: 'de-CH'});
     await app.store.save(session);
 
     const response = renderVoteStep(app, {

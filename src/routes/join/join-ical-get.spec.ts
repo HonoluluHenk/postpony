@@ -1,34 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { App } from '../../app';
 import { aPlayer, aProposedDate, aSession } from '../../lib/__test-utils__/builders';
+import { createApp } from '../../lib/__test-utils__/create-app';
 import { hashPassword } from '../../lib/crypto-utils';
-import { MemorySessionStore } from '../../lib/session-store';
-import { LOCALE_KEY } from '../../locales';
 import { handleJoinIcalGet } from './join-ical-get';
 
 const TOKEN = 'invitation-pw';
-
-interface MockOptions {
-  params?: Record<string, string>;
-  queries?: Record<string, string>;
-  headers?: Record<string, string>;
-}
-
-function createApp(options: MockOptions = {}): App {
-  const {params = {}, queries = {}, headers = {}} = options;
-  const store = new MemorySessionStore();
-  const context = {
-    get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en-US' : undefined),
-    req: {
-      param: (name: string): string | undefined => params[name],
-      query: (name: string): string | undefined => queries[name],
-      header: (name: string): string | undefined => headers[name],
-      url: 'https://game-scheduler.localhost:3000/',
-    },
-  } as any;
-
-  return App.create(context, store);
-}
 
 async function seedSession(
   overrides: Parameters<typeof aSession>[0] = {},

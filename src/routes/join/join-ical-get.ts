@@ -16,7 +16,7 @@ export const handleJoinIcalGet = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
   const {session, token} = await requireSessionAndToken(app);
 
-  const playerId = app.c.req.query('playerId') ?? '';
+  const playerId = app.query('playerId') ?? '';
   const knownPlayer = session.players.some((p) => p.id === playerId && p.teamId === team);
 
   const body = buildIcal(session, {

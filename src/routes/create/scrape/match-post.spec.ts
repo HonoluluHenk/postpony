@@ -1,11 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
+import { createApp } from '../../../lib/__test-utils__/create-app';
 import { fetchClubId, fetchVenues } from '../../../lib/click-tt-scraper';
 import { hashPassword } from '../../../lib/crypto-utils';
 import { DEFAULT_CLUB_ID } from '../../../lib/models';
-import { MemorySessionStore } from '../../../lib/session-store';
-import { LOCALE_KEY } from '../../../locales';
 import { handleScrapeMatchPost } from './match-post';
 
 vi.mock('../../../lib/click-tt-scraper', () => ({
@@ -13,26 +12,6 @@ vi.mock('../../../lib/click-tt-scraper', () => ({
   fetchClubId: vi.fn(() => undefined),
   fetchVenues: vi.fn(() => []),
 }));
-
-interface MockOptions {
-  headers?: Record<string, string>;
-  body?: Record<string, unknown>;
-}
-
-function createApp(options: MockOptions = {}): App {
-  const {headers = {}, body = {}} = options;
-  const store = new MemorySessionStore();
-  const context = {
-    get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en-US' : undefined),
-    req: {
-      header: (name: string): string | undefined => headers[name],
-      parseBody: (): Promise<Record<string, unknown>> => Promise.resolve(body),
-    },
-    redirect: vi.fn((url: string) => new Response(null, {status: 302, headers: {Location: url}})),
-  } as any;
-
-  return App.create(context, store);
-}
 
 const MATCH = {
   day: 'Sat.',
@@ -306,5 +285,16 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
       .toBeDefined();
     expect(minted?.homeTeam)
       .toBe('Thun');
+  });
+
+  test('an HTMX partial submission returns 200 with HX-Redirect instead of a 302', async () => {
+    const app = createApp({headers: {'HX-Request': 'true'}, body: {...MATCH, teamName: 'Thun'}});
+
+    const response = await handleScrapeMatchPost(app);
+
+    expect(response.status)
+      .toBe(200);
+    expect(response.headers.get('HX-Redirect'))
+      .toMatch(/^\/edit\/[^?]+\?organizerPassword=/);
   });
 });

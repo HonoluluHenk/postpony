@@ -7,10 +7,10 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
   const {session, token} = await requireSessionAndToken(app);
 
-  const playerId = app.c.req.query('playerId') ?? '';
+  const playerId = app.query('playerId') ?? '';
   const player = session.players.find((p) => p.id === playerId && p.teamId === team);
   if (!player) {
-    return app.c.redirect(`/join/${session.id}/${team}?token=${encodeURIComponent(token)}`);
+    return app.redirect(`/join/${session.id}/${team}?token=${encodeURIComponent(token)}`);
   }
 
   // ponytail: voting is locked once the admin confirms; a locked POST just
@@ -19,7 +19,7 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
   let updated = session;
   if (canVote) {
     const rules = new PostponementRules();
-    const body = await app.c.req.parseBody();
+    const body = await app.body();
     for (const pd of rules.votableDates(session)) {
       const value = body[`vote-${pd.id}`];
       if (!isVoteType(value)) {

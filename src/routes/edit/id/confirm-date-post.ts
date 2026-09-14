@@ -14,7 +14,7 @@ function confirmedDateHasClashes(session: Postponement): boolean {
 }
 
 export const handleConfirmDatePost = (app: App): Promise<Response> => {
-  const proposedDateId = app.c.req.query('proposedDateId') ?? '';
+  const proposedDateId = app.query('proposedDateId') ?? '';
 
   return runEditCommand(app, {
     apply: (rules, session) => rules.confirmDate(session, proposedDateId),

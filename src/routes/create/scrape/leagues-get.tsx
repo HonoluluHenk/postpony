@@ -10,5 +10,5 @@ export const handleScrapeLeaguesGet = async (app: App): Promise<Response> => {
       leagues={leagues}
     />,
   );
-  return app.c.html(html);
+  return app.html(html);
 };

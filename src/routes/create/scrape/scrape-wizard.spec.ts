@@ -1,34 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { App } from '../../../app';
-import { LOCALE_KEY } from '../../../locales';
-import { MemorySessionStore } from '../../../lib/session-store';
+import { createApp } from '../../../lib/__test-utils__/create-app';
 import { handleScrapeGroupsGet } from './groups-get';
 import { handleScrapeLeaguesGet } from './leagues-get';
 import { handleScrapeMatchesGet } from './matches-get';
 import { handleScrapeTeamsGet } from './teams-get';
-
-interface MockOptions {
-  queries?: Record<string, string>;
-}
-
-function createApp(options: MockOptions = {}): App {
-  const {queries = {}} = options;
-  const store = new MemorySessionStore();
-  const context = {
-    get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en-US' : undefined),
-    req: {
-      param: (): string | undefined => undefined,
-      query: (name: string): string | undefined => queries[name],
-      header: (): string | undefined => undefined,
-      url: 'https://game-scheduler.localhost:3000/',
-    },
-    html: vi.fn((content: string, init?: ResponseInit) => new Response(content, init)),
-  } as any;
-
-  return App.create(context, store);
-}
 
 const FIXTURES_DIR = join(__dirname, '../../../lib/__fixtures__');
 

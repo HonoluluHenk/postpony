@@ -8,10 +8,10 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
   const {id, session, token} = await requireSessionAndToken(app);
 
   if (session.status === 'Confirmed') {
-    return app.c.redirect(`/join/${id}/${team}?token=${encodeURIComponent(token)}`);
+    return app.redirect(`/join/${id}/${team}?token=${encodeURIComponent(token)}`);
   }
 
-  const body = await app.c.req.parseBody();
+  const body = await app.body();
 
   const {session: updated, player} = new PostponementRules().registerParticipant(session, team, {
     name: body['newPlayerName'] as string | undefined,
@@ -32,13 +32,13 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
         error={app.t('join_select_required')}
       />,
     );
-    return app.c.html(html);
+    return app.html(html);
   }
 
   await app.store.save(updated);
 
   const pendingQuery = pendingVoteQuery(readPendingVotes(app, session));
-  return app.c.redirect(
+  return app.redirect(
     `/join/${id}/${team}/vote?playerId=${encodeURIComponent(player.id)}` +
     `&token=${encodeURIComponent(token)}` +
     (pendingQuery ? `&${pendingQuery}` : ''),

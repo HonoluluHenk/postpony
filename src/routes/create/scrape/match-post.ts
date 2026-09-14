@@ -36,7 +36,7 @@ function makePlayer(name: string, teamId: 'home' | 'away'): Player {
 }
 
 export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
-  const body = await app.c.req.parseBody({all: true});
+  const body = await app.body({all: true});
   if (typeof body['teamName'] !== 'string' || body['teamName'].length === 0) {
     app.failure(app.t('missing_param', {name: 'teamName'}));
   }
@@ -118,8 +118,8 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
 
   const redirectUrl = `/edit/${id}?organizerPassword=${redirectOrganizerPassword}`;
   if (app.isPartial) {
-    app.c.header('HX-Redirect', redirectUrl);
-    return app.c.text('', 200);
+    app.setHeader('HX-Redirect', redirectUrl);
+    return app.text('', 200);
   }
-  return app.c.redirect(redirectUrl);
+  return app.redirect(redirectUrl);
 };

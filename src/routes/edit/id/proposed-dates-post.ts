@@ -41,11 +41,11 @@ export function defaultGeneratorDateRange(
 }
 
 function organizerQuery(app: App): string {
-  return app.c.req.query('organizerPassword') ?? '';
+  return app.query('organizerPassword') ?? '';
 }
 
 function redirectAfterEdit(app: App, session: Postponement): Response {
-  return app.c.redirect(`/edit/${session.id}?organizerPassword=${organizerQuery(app)}`);
+  return app.redirect(`/edit/${session.id}?organizerPassword=${organizerQuery(app)}`);
 }
 
 interface ParsedTuples {
@@ -167,7 +167,7 @@ function buildSingleDateSchema(app: App, venues: readonly Venue[]): v.BaseSchema
 
 export const handleEditProposedDatesPost = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
-  const values = await app.c.req.parseBody({all: true}) as Record<string, unknown>;
+  const values = await app.body({all: true}) as Record<string, unknown>;
 
   if (values['generate'] === TUPLE_DISCRIMINATOR) {
     return handleTupleSubmit(app, id, values);
@@ -312,7 +312,7 @@ function handleTupleSubmit(
       if (!validation.success) {
         const errors = mapValidationToErrors(validation);
         if (app.isPartial) {
-          return app.c.html(renderEditPartials(app, session, {
+          return app.html(renderEditPartials(app, session, {
             times: rawTimes,
             generatorError: errors.fields['venueNumber'] ?? errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
             generatorFromError: errors.fields['fromDate'],
@@ -333,7 +333,7 @@ function handleTupleSubmit(
         // ponytail: the fixed 7-row form can never exceed MAX_TUPLES; this is a
         // security guard against a hand-crafted oversized time[] array.
         if (app.isPartial) {
-          return app.c.html(renderEditPartials(app, session, {
+          return app.html(renderEditPartials(app, session, {
             generatorError: app.t('proposed_date_time_invalid'),
             fromDate: fromDateToken,
             toDate: toDateToken,
@@ -345,7 +345,7 @@ function handleTupleSubmit(
       const parsed = parseTupleTimes(times, locale);
       if (parsed.invalidRowIndex !== undefined) {
         if (app.isPartial) {
-          return app.c.html(renderEditPartials(app, session, {
+          return app.html(renderEditPartials(app, session, {
             times,
             generatorInvalidRow: parsed.invalidRowIndex,
             fromDate: fromDateToken,
@@ -471,14 +471,14 @@ function handleSingleSubmit(
       if (!validation.success) {
         const errors = mapValidationToErrors(validation);
         if (app.isPartial) {
-          return app.c.html(renderEditPartials(app, session, {
+          return app.html(renderEditPartials(app, session, {
             proposedDateTime: rawDateTime,
             error: errors.fields['proposedDateTime'],
             globalError: errors.fields['venueNumber'] ?? errors.global,
             ...defaultGeneratorDateRange(locale, session.originalMatchDateTime),
           }), {status: 400});
         }
-        return app.c.redirect(`/edit/${id}?organizerPassword=${organizerQuery(app)}`);
+        return app.redirect(`/edit/${id}?organizerPassword=${organizerQuery(app)}`);
       }
 
       const proposedDateTime = validation.output.proposedDateTime;
@@ -518,7 +518,7 @@ function renderPartial(
   updatedSession: Postponement = session,
 ): Response {
   if (app.isPartial) {
-    return app.c.html(renderEditPartials(app, updatedSession, extras));
+    return app.html(renderEditPartials(app, updatedSession, extras));
   }
-  return app.c.redirect(`/edit/${session.id}`);
+  return app.redirect(`/edit/${session.id}`);
 }

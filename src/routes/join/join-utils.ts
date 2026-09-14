@@ -27,7 +27,7 @@ export function readPendingVotes(app: App, session: Postponement): PendingVote[]
   const rules = new PostponementRules();
   const pending: PendingVote[] = [];
   for (const pd of rules.votableDates(session)) {
-    const value = app.c.req.query(`vote-${pd.id}`);
+    const value = app.query(`vote-${pd.id}`);
     if (isVoteType(value)) {
       pending.push({dateId: pd.id, value});
     }
@@ -67,7 +67,7 @@ export async function requireSessionAndToken(app: App): Promise<JoinContext> {
     app.notFound(app.t('session_not_found'));
   }
 
-  const token = app.c.req.query('token') ?? '';
+  const token = app.query('token') ?? '';
   if (!token || !await comparePassword(token, session.invitationPasswordHash)) {
     app.failure(app.t('join_invalid_token'), 403);
   }

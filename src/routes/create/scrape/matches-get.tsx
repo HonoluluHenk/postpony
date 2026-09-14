@@ -3,9 +3,9 @@ import { fetchMatches, fetchPlayers, fetchTeams } from '../../../lib/click-tt-sc
 import { ScrapeMatchesPage } from './matches';
 
 export const handleScrapeMatchesGet = async (app: App): Promise<Response> => {
-  const championship = app.c.req.query('championship');
-  const group = app.c.req.query('group');
-  const teamtable = app.c.req.query('teamtable');
+  const championship = app.query('championship');
+  const group = app.query('group');
+  const teamtable = app.query('teamtable');
   if (!championship) {
     app.failure(app.t('missing_param', {name: 'championship'}));
   }
@@ -15,9 +15,9 @@ export const handleScrapeMatchesGet = async (app: App): Promise<Response> => {
   if (!teamtable) {
     app.failure(app.t('missing_param', {name: 'teamtable'}));
   }
-  const leagueName = app.c.req.query('leagueName') ?? '';
-  const groupName = app.c.req.query('groupName') ?? '';
-  const teamName = app.c.req.query('teamName') ?? '';
+  const leagueName = app.query('leagueName') ?? '';
+  const groupName = app.query('groupName') ?? '';
+  const teamName = app.query('teamName') ?? '';
 
   const [matches, players, teams] = await Promise.all([
     fetchMatches(championship, group, teamtable),
@@ -48,5 +48,5 @@ export const handleScrapeMatchesGet = async (app: App): Promise<Response> => {
       group={group}
     />,
   );
-  return app.c.html(html);
+  return app.html(html);
 };

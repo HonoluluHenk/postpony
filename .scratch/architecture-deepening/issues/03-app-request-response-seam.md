@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] `App` exposes `query`, `body(options)`, `header`, `currentUrl`, `html`, `redirect`, `text` and `setHeader`
-- [ ] `App.c` is private; no handler module references it
-- [ ] The HTMX redirect and the HX-Current-URL sort recovery still work
-- [ ] One shared test context fake replaces the bespoke fakes in the edit, join, create and ical specs
+- [x] `App` exposes `query`, `body(options)`, `header`, `currentUrl`, `html`, `redirect`, `text` and `setHeader`
+- [x] `App.c` is private; no handler module references it
+- [x] The HTMX redirect and the HX-Current-URL sort recovery still work
+- [x] One shared test context fake replaces the bespoke fakes in the edit, join, create and ical specs
 - [ ] All existing unit, browser and e2e tests are green
 - [ ] `npm run verify` passes
 

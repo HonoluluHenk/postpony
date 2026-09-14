@@ -26,5 +26,5 @@ export const handleJoinGet = async (app: App): Promise<Response> => {
     />,
   );
 
-  return app.c.html(html);
+  return app.html(html);
 };

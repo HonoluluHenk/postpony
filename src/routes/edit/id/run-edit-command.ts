@@ -61,13 +61,13 @@ export async function runEditCommand(app: App, command: EditCommand): Promise<Re
   if (app.isPartial || command.alwaysRender === true) {
     const message = resolveDerived(command.message, updated);
     const extras = resolveDerived(command.extras, updated) ?? {};
-    return app.c.html(renderEditPartials(app, updated, {
+    return app.html(renderEditPartials(app, updated, {
       ...extras,
       ...(message === undefined ? {} : {statusMessage: message}),
     }));
   }
 
-  return app.c.redirect(
-    command.redirectTo ?? `/edit/${id}?organizerPassword=${app.c.req.query('organizerPassword') ?? ''}`,
+  return app.redirect(
+    command.redirectTo ?? `/edit/${id}?organizerPassword=${app.query('organizerPassword') ?? ''}`,
   );
 }

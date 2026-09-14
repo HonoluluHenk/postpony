@@ -1,31 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { App } from '../../../app';
 import { aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
-import { MemorySessionStore } from '../../../lib/session-store';
-import { LOCALE_KEY } from '../../../locales';
+import { createApp } from '../../../lib/__test-utils__/create-app';
 import { handleEditIcalGet } from './ical-get';
-
-interface MockOptions {
-  params?: Record<string, string>;
-  queries?: Record<string, string>;
-  headers?: Record<string, string>;
-}
-
-function createApp(options: MockOptions = {}): App {
-  const {params = {}, queries = {}, headers = {}} = options;
-  const store = new MemorySessionStore();
-  const context = {
-    get: (key: string): string | undefined => (key === LOCALE_KEY ? 'en-US' : undefined),
-    req: {
-      param: (name: string): string | undefined => params[name],
-      query: (name: string): string | undefined => queries[name],
-      header: (name: string): string | undefined => headers[name],
-      url: 'https://game-scheduler.localhost:3000/',
-    },
-  } as any;
-
-  return App.create(context, store);
-}
 
 describe('handleEditIcalGet', () => {
   test('throws 404 when the session does not exist', async () => {

@@ -87,12 +87,8 @@ export type EditPartialExtras = Pick<
  * without it) recovers it from the browser's current URL that HTMX forwards.
  */
 function currentSort(app: App): 'date' | 'availability' {
-  const currentUrl = app.c.req.header('HX-Current-URL');
-  if (!currentUrl) {
-    return 'date';
-  }
   try {
-    return new URL(currentUrl).searchParams.get('sort') === 'availability' ? 'availability' : 'date';
+    return new URL(app.currentUrl()).searchParams.get('sort') === 'availability' ? 'availability' : 'date';
   } catch {
     return 'date';
   }

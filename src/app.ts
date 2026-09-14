@@ -35,7 +35,7 @@ export class App {
 
   private constructor(
     readonly isPartial: boolean,
-    readonly c: Context,
+    private readonly c: Context,
     store: SessionStore,
   )
   {
@@ -46,6 +46,45 @@ export class App {
   static create(c: Context, store?: SessionStore): App {
     const partial = !!c.req.header('HX-Request');
     return new App(partial, c, store ?? new MemorySessionStore());
+  }
+
+  query(name: string): string | undefined {
+    return this.c.req.query(name);
+  }
+
+  body(): Promise<Record<string, string | File>>;
+  body(options: {all: true}): Promise<Record<string, string | File | (string | File)[]>>;
+  body(options?: {all?: boolean}): Promise<Record<string, string | File | (string | File)[]>> {
+    return this.c.req.parseBody(options);
+  }
+
+  header(name: string): string | undefined {
+    return this.c.req.header(name);
+  }
+
+  /**
+   * The URL the browser is on: HTMX forwards it as HX-Current-URL on partial
+   * requests, otherwise it is the request URL itself. The edit rail reads its
+   * sort from here so a mutation (posted without the query) keeps the order.
+   */
+  currentUrl(): string {
+    return this.c.req.header('HX-Current-URL') ?? this.c.req.url;
+  }
+
+  html(content: string, init?: {status?: ContentfulStatusCode}): Response {
+    return this.c.html(content, init);
+  }
+
+  redirect(location: string): Response {
+    return this.c.redirect(location);
+  }
+
+  text(content: string, status?: ContentfulStatusCode): Response {
+    return this.c.text(content, status);
+  }
+
+  setHeader(name: string, value: string): void {
+    this.c.header(name, value);
   }
 
   get view(): ViewContext {

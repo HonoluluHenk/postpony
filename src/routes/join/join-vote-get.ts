@@ -7,11 +7,11 @@ export const handleJoinVoteGet = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
   const {session, token} = await requireSessionAndToken(app);
 
-  const playerId = app.c.req.query('playerId') ?? '';
+  const playerId = app.query('playerId') ?? '';
   const player = session.players.find((p) => p.id === playerId && p.teamId === team);
   if (!player) {
     const pendingQuery = pendingVoteQuery(readPendingVotes(app, session));
-    return app.c.redirect(
+    return app.redirect(
       `/join/${session.id}/${team}?token=${encodeURIComponent(token)}` +
       (pendingQuery ? `&${pendingQuery}` : ''),
     );
@@ -28,7 +28,7 @@ export const handleJoinVoteGet = async (app: App): Promise<Response> => {
   if (canVote) {
     const rules = new PostponementRules();
     for (const pd of rules.votableDates(session)) {
-      const value = app.c.req.query(`vote-${pd.id}`);
+      const value = app.query(`vote-${pd.id}`);
       if (!isVoteType(value)) {
         continue;
       }

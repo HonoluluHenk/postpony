@@ -11,7 +11,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     app.notFound(app.t('session_not_found'));
   }
 
-  const organizerPassword = app.c.req.query('organizerPassword') ?? null;
+  const organizerPassword = app.query('organizerPassword') ?? null;
   const locale = app.locale;
 
   const originalMatchDateTime = session.originalMatchDateTime
@@ -22,7 +22,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     : '';
 
   const {fromDate, toDate} = defaultGeneratorDateRange(locale, session.originalMatchDateTime);
-  const sort = app.c.req.query('sort') === 'availability' ? 'availability' : 'date';
+  const sort = app.query('sort') === 'availability' ? 'availability' : 'date';
 
   const html = app.render(
     <EditPage
@@ -38,5 +38,5 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     />,
   );
 
-  return app.c.html(html);
+  return app.html(html);
 };
