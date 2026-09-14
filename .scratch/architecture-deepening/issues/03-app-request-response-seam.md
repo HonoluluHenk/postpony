@@ -10,7 +10,9 @@
 - [x] `App.c` is private; no handler module references it
 - [x] The HTMX redirect and the HX-Current-URL sort recovery still work
 - [x] One shared test context fake replaces the bespoke fakes in the edit, join, create and ical specs
-- [ ] All existing unit, browser and e2e tests are green
-- [ ] `npm run verify` passes
+- [x] All existing unit, browser and e2e tests are green
+- [x] `npm run verify` passes
 
 ## Comments
+
+- `a3076c7` ticket done, `2c0b446` review. Added `App` request reads (`query`, `body({all:true})`, `header`, `currentUrl`) and responses (`html`, `redirect`, `text`, `setHeader`), made `App.c` private and removed every `app.c` handler reference, and collapsed the eight bespoke edit/join/create/ical context fakes into `src/lib/__test-utils__/create-app.ts`. `npm run verify` green (713 unit/browser, 118 e2e). Review: 0 hard violations, 4 judgement calls (worst: `App.html` drops Hono's header-capable `init`).
