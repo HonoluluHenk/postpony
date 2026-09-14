@@ -1,5 +1,5 @@
 ---
-name: update-test-fixtures
+name: app-update-test-fixtures
 description: Refresh the click-tt.ch HTML test fixtures (PostPony) and realign the tests that depend on them. Use when the scraper fixtures in src/lib/__fixtures__ have gone stale (e.g. a new season), when re-anchoring on a different club/league/team, or when click-tt-scraper.spec.ts / scraping-flow.e2e.ts assertions no longer match the live site.
 ---
 
