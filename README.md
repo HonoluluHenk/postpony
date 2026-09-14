@@ -5,7 +5,7 @@ A web-based application for postponing sports matches as quick and easy as the P
 ## Tech Stack
 
 - **Backend**: [Hono](https://hono.dev/) (TypeScript SSR)
-- **Frontend**: [HTMX](https://htmx.org/), [Eta](https://eta.js.org/) (Templating), Beer.css (Material Design 3), design system via CSS custom properties
+- **Frontend**: [HTMX](https://htmx.org/), Hono JSX (server-rendered templates), Beer.css (Material Design 3), design system via CSS custom properties
 - **Data Store**: SQLite via `@libsql/client` (local file in dev, [Turso](https://turso.tech) in production)
 - **Testing**: [Vitest](https://vitest.dev/) (Unit), [Playwright](https://playwright.dev/) (E2E & A11y)
 - **Tooling**: [Vite](https://vitejs.dev/), [mise-en-place](https://mise.jdx.dev/)
@@ -45,10 +45,6 @@ A web-based application for postponing sports matches as quick and easy as the P
 
 3. **Local SSL Certificates**:
    To generate local SSL certificates for `game-scheduler.localhost`, run:
-   ```bash
-   npm run certs
-   ```
-   Or directly:
    ```bash
    ./scripts/create-certs.sh
    ```
@@ -91,7 +87,7 @@ npm run verify
 - `npm run lint`: Run TypeScript type checking on source code.
 - `npm run lint:e2e`: Run TypeScript type checking on E2E tests.
 - `npm test`: Run unit tests using Vitest.
-- `npm run test:e2e`: Run end-to-end tests using Playwright (includes accessibility audits).
+- `npm run e2e`: Run end-to-end tests using Playwright (includes accessibility audits).
 - `npm run clean`: Remove build and test artifacts.
 
 ### Watch Mode
@@ -103,8 +99,8 @@ npm run verify
 ## Guidelines & Standards
 
 - **Accessibility**: All UI changes must adhere to **WCAG 2.2 AA**. Automated checks are integrated into Playwright tests.
-- **Security**: The application uses a **Dual-Password System** (Organizer Password & Invitation Password). No traditional user accounts are required for players.
-- **Multi-Tenancy**: Architecture supports multiple clubs using logical separation (`club_id`).
+- **Security**: Players join via a token-gated invitation link (invitation password). No traditional user accounts are required.
+- **Tenancy**: Single club. `club_id` is retained as a forward-compatible column (multi-tenancy was withdrawn — see ADR-0001).
 - **Code Style**:
     - Use 2-space indentation (4 for Markdown).
     - Entity names are singular (e.g., `Venue`, `Player`).
@@ -112,9 +108,6 @@ npm run verify
 
 ## Documentation
 
-Detailed documentation can be found in the `docs/` folder:
-
-- [Project Specification](docs/specification.md)
-- [Implementation Plan](docs/implementation_plan.md)
+- [Architecture (arc42)](docs/arc42)
 - [Architecture Decision Records (ADRs)](docs/adr)
-- [Use Cases](docs/use_cases.md)
+- [Domain glossary](CONTEXT.md)

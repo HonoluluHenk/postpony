@@ -147,3 +147,7 @@ The five canonical triage roles, each label equal to its name. See `docs/agents/
 ### Domain docs
 
 Single-context: `CONTEXT.md` at the repo root plus ADRs in `docs/adr/`. See `docs/agents/domain.md`.
+
+### Architecture docs
+
+Architecture documentation lives in `docs/arc42/` (12 sections + index). When you change code, update the matching arc42 sections and bump the "last verified against commit" line in `docs/arc42/README.md` — see the `app-arc42-docs` skill for the change→section mapping.
