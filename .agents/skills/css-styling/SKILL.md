@@ -5,36 +5,44 @@ description: How CSS and the design system work in this project (PostPony). Use 
 
 # PostPony CSS & Design System
 
-This project uses a layered CSS architecture: **Beer.css** (Material Design 3) for layout, components, and color system, plus application-level **design tokens** for values Beer.css doesn't cover.
+This project uses a layered CSS architecture: **Beer.css** (Material Design 3) for layout, components, and color system, plus application-level **design tokens** for values Beer.css doesn't cover. **air-datepicker** is vendored and themed through those same tokens.
 
 ## Architecture Overview
 
 ```
-beer.min.css  —  vendor: MD3 components, theme, grid, reset
-design-tokens.css  —  design: custom properties (brand, layout, typography, spacing, borders, spinner)
-style.css  —  design: app-specific selectors using design tokens + BeerCSS vars
+beer.min.css        —  vendor: MD3 components, theme, grid, reset
+air-datepicker.css  —  vendor: calendar + time sliders
+design-tokens.css   —  design: custom properties (brand, warning, layout, typography, spacing, radius, spinner)
+style.css           —  app selectors (@layer design) + self-hosted @font-face rules (unlayered)
 ```
 
 ### Cascade order (`@layer`)
 
-Declared in `src/routes/layouts/main.eta`:
+Declared in `src/routes/layouts/main.tsx`:
 
 ```css
 @import url('/assets/vendor/css/beer.min.css') layer(vendor);
+@import url('/assets/vendor/css/air-datepicker.css') layer(vendor);
 @layer design;
 ```
 
-`vendor` < `design` < unlayered (none currently). The `design` layer overrides `vendor` defaults — this is why `--primary: #1a237e` beats beer.css's default `#6750a4`.
+`vendor` < `design` < unlayered (none currently). The `design` layer overrides `vendor` defaults — this is why `--primary: #1a237e` beats beer.css's default `#6750a4`, and why the air-datepicker theme block in `style.css` wins over the vendored picker CSS.
 
 ### File structure
 
 ```
 src/public/assets/css/
   design-tokens.css   — all :root custom properties, wrapped in @layer design
-  style.css           — app selectors, wrapped in @layer design
+  style.css           — app selectors (incl. the edit-page redesign section), wrapped in
+                        @layer design; six unlayered @font-face declarations above the layer
 src/public/assets/vendor/css/
   beer.min.css        — BeerCSS framework, loaded into @layer vendor
+  air-datepicker.css  — air-datepicker v3, loaded into @layer vendor
+src/public/assets/vendor/fonts/
+  IBMPlexSans-*.woff2, IBMPlexSansCondensed-*.woff2  — self-hosted IBM Plex faces (OFL)
 ```
+
+Only these two stylesheets and the token file are app-authored. The former prototype stylesheet is gone; its live rules now live in the edit-page section of `style.css` (see below).
 
 ## Design Token Catalog
 
@@ -46,39 +54,88 @@ All tokens live in `design-tokens.css` under `@layer design { :root { ... } }`.
 |-------------|-----------|-------------------------------------------|
 | `--primary` | `#1a237e` | Brand primary (overrides BeerCSS default) |
 
+### Warning
+
+| Token                    | Value     | Purpose                                                        |
+|--------------------------|-----------|----------------------------------------------------------------|
+| `--warning-container`    | `#ffe082` | Amber MD3 container behind the "hall busy" Venue-Occupancy chip |
+| `--on-warning-container` | `#3d2b00` | Text on the warning container (10.5:1 contrast)                 |
+
 ### Layout
 
-| Token                   | Value   | Purpose                |
-|-------------------------|---------|------------------------|
-| `--container-max-width` | `800px` | Max page content width |
+| Token                   | Value    | Purpose                          |
+|-------------------------|----------|----------------------------------|
+| `--container-max-width` | `75rem`  | Max page content width           |
+| `--sidebar-width`       | `300px`  | Edit-page sidebar column width   |
+| `--date-cell-width`     | `11rem`  | Edit-page date-row first column  |
+| `--edit-max-width`      | `72rem`  | Edit-page max content width      |
 
 ### Typography
 
 | Token                       | Value / Derivation                              |
 |-----------------------------|-------------------------------------------------|
 | `--heading-scale`           | `0.875` (modular scale factor)                  |
-| `--h1-size`                 | `2rem` (base)                                   |
+| `--h1-size`                 | `clamp(1.5rem, 5vw, 2rem)` (base)               |
 | `--h2-size` ... `--h6-size` | `calc(var(--hN-1-size) * var(--heading-scale))` |
 | `--monospace-font`          | `ui-monospace, SFMono-Regular, …`               |
+| `--font-sans`               | `'IBM Plex Sans', system-ui, …`                 |
+| `--font-condensed`          | `'IBM Plex Sans Condensed', …`                  |
 
-BeerCSS defaults (`h1: 3.5625rem`) are oversized for this app, so the heading scale is pinned explicitly.
+BeerCSS defaults (`h1: 3.5625rem`) are oversized for this app, so the heading scale is pinned explicitly. The six `@font-face` rules for `--font-sans` / `--font-condensed` live at the top of `style.css`, above the `@layer design` block.
+
+### Type scale
+
+| Token              | rem   | px (approx) |
+|--------------------|-------|-------------|
+| `--font-size-xs`   | 0.75  | 12          |
+| `--font-size-sm`   | 0.85  | 13.6        |
+| `--font-size-md`   | 0.9   | 14.4        |
+| `--font-size-base` | 1     | 16          |
+| `--font-size-lg`   | 1.1   | 17.6        |
+| `--font-size-xl`   | 1.3   | 20.8        |
 
 ### Spacing
 
-| Token       | rem  | px (approx) |
-|-------------|------|-------------|
-| `--space-1` | 0.25 | 4           |
-| `--space-2` | 0.5  | 8           |
-| `--space-3` | 0.75 | 12          |
-| `--space-4` | 1    | 16          |
-| `--space-5` | 1.5  | 24          |
-| `--space-6` | 3    | 48          |
+| Token         | rem   | px (approx) |
+|---------------|-------|-------------|
+| `--space-0-5` | 0.125 | 2           |
+| `--space-1`   | 0.25  | 4           |
+| `--space-1-5` | 0.375 | 6           |
+| `--space-2`   | 0.5   | 8           |
+| `--space-2-5` | 0.625 | 10          |
+| `--space-3`   | 0.75  | 12          |
+| `--space-3-5` | 0.875 | 14          |
+| `--space-4`   | 1     | 16          |
+| `--space-4-5` | 1.25  | 20          |
+| `--space-5`   | 1.5   | 24          |
+| `--space-6`   | 3     | 48          |
+| `--space-7`   | 4     | 64          |
 
 ### Borders
 
-| Token             | Value |
-|-------------------|-------|
-| `--border-radius` | `4px` |
+| Token             | Value   |
+|-------------------|---------|
+| `--border-radius` | `4px`   |
+| `--radius-sm`     | `6px`   |
+| `--radius-card`   | `8px`   |
+| `--radius-pill`   | `999px` |
+
+### Chips
+
+Semantic tint pairs for the edit-page chips. The warn pair reuses the MD3 warning container/on-container so it meets WCAG 2.2 AA and survives a theme change.
+
+| Token              | Value                    |
+|--------------------|--------------------------|
+| `--chip-clean-bg`  | `#eef1fb`                |
+| `--chip-clean-fg`  | `var(--primary)`         |
+| `--chip-warn-bg`   | `var(--warning-container)`    |
+| `--chip-warn-fg`   | `var(--on-warning-container)` |
+| `--chip-error-bg`  | `#fdecec`                |
+| `--chip-error-fg`  | `var(--error)`           |
+
+### Palette
+
+Edit-page neutrals: `--paper` (`#f4f6f9`), `--line` (`#d8dee7`), `--ink` (`#0f1216`), `--ink-soft` (`#55606e`), `--warning` (`#b26a00`, the warning dot/border).
 
 ### Spinner
 
@@ -119,6 +176,10 @@ BeerCSS provides MD3-themed classes for nearly everything. Use them first; reach
 
 - `.surface-variant`, `.primary`, `.error`, `.success`, `.transparent`, `.light`, `.dark`
 
+### Edit-page section (`style.css`)
+
+The redesigned edit page's rules are grouped under a commented `Edit-page redesign` section inside `@layer design`. Page-scoped rules stay under the `.edit-redesign` wrapper; the page-headline rules (`.redesign-headline`) are unscoped because the headline renders in the shared layout header. The edit page uses the framework's `993px`/`992px` medium breakpoint, matching the rest of `style.css`.
+
 ## Conventions for Adding Styles
 
 1. **BeerCSS first.** If BeerCSS has a class for it, use it. Don't write custom CSS for what the framework provides.
@@ -136,6 +197,7 @@ All styles must meet **WCAG 2.2 AA** standards. BeerCSS (Material Design 3) prov
 - **Text on surface**: `var(--on-surface)` on `var(--surface)` / `var(--surface-variant)` on `var(--on-surface-variant)`
 - **Text on primary**: `var(--on-primary)` on `var(--primary)` — the `.skip-link` pattern in `style.css`
 - **Error states**: `var(--error)` background with `var(--on-error)` text
+- **Warning states**: `var(--on-warning-container)` on `var(--warning-container)` — the Venue-Occupancy chip
 
 ### Focus indicators
 
@@ -179,8 +241,9 @@ Add to `design-tokens.css` when:
 ## Design Token Gotchas
 
 - BeerCSS declares `--primary` with `#6750a4` (its default). Our `design-tokens.css` overrides it via the `@layer` cascade (`design` > `vendor`), so `var(--primary)` resolves to `#1a237e` everywhere.
-- The heading size chain uses `calc()` — `--h6-size` expands to a nested `calc()` string in DevTools but resolves to `~1.0258rem` at runtime.
+- The heading size chain uses `calc()` on top of a `clamp()` base — `--h6-size` expands to a nested `calc()` string in DevTools but resolves to `~1.0258rem` once `--h1-size` hits its `2rem` ceiling.
 - `--space-5` (`1.5rem`) is aliased as `.mt-4` margin-top utility for backward compatibility with templates.
+- `--chip-warn-bg` / `--chip-warn-fg` point at `--warning-container` / `--on-warning-container`; retheming the warning pair moves the chip with it.
 - `--overlay` from BeerCSS is `rgb(0 0 0 / .5)`; the spinner uses custom `--spinner-overlay` at `0.25` opacity because the default is too heavy for a loading overlay.
 
 ## Relative paths

@@ -1,3 +1,47 @@
+/* Self-hosted IBM Plex (OFL) in vendor/fonts/. */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../vendor/fonts/IBMPlexSans-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../vendor/fonts/IBMPlexSans-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../vendor/fonts/IBMPlexSans-SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Sans Condensed';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../vendor/fonts/IBMPlexSansCondensed-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Sans Condensed';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../vendor/fonts/IBMPlexSansCondensed-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Sans Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../vendor/fonts/IBMPlexSansCondensed-SemiBold.woff2') format('woff2');
+}
+
 @layer design {
   /* Base Styles */
   body {
@@ -65,12 +109,6 @@
     font-size: var(--h6-size);
   }
 
-  /* Multi-row headings: each row is its own block so text reflows at zoom
-     instead of being pinned by <br>. */
-  .heading-row {
-    display: block;
-  }
-
   /* Language selector: a comfortable tap target with explicit colors, so the
      native select stays legible on Windows dark-mode browsers. */
   #language-select {
@@ -115,24 +153,6 @@
     text-decoration: underline;
   }
 
-  .clipboard-btn {
-    cursor: pointer;
-    font-size: 1.1em;
-    opacity: 0.75;
-    transition: opacity 0.15s;
-    border: none;
-    background: none;
-    padding: 0;
-    color: inherit;
-    font-family: inherit;
-    display: inline;
-    line-height: inherit;
-  }
-
-  .clipboard-btn:hover {
-    opacity: 1;
-  }
-
   .mt-2 {
     margin-top: var(--space-3);
   }
@@ -157,111 +177,6 @@
      wrap so the switch drops below the date instead of overlapping it. */
   .list li {
     flex-wrap: wrap;
-  }
-
-  /* Invitation-link rows: the link and its copy button share one vertical band.
-     `.list li` lets rows wrap; keep these rows nowrap and let the link shrink
-     so a long team name never pushes the copy button onto a new line. */
-  .list li.invite-link-row {
-    flex-wrap: nowrap;
-  }
-
-  .list li.invite-link-row > a {
-    min-width: 0;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
-  /* Proposed-date card list: each date is a card with a header row (date/venue | actions)
-     and a details row (clashes/occupancy). CSS grid replaces the old table layout. */
-  .proposed-date-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  .proposed-date-card {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto 1fr;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border-radius: var(--border-radius);
-    background: var(--surface-container-lowest);
-    border: 1px solid var(--outline-variant);
-    min-height: 7rem;
-  }
-
-  .proposed-date-header {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-
-  .proposed-date-details {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    align-content: flex-end;
-  }
-
-  .proposed-date-info {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-width: 0;
-    /* Grow to fill the header so the venue badge and the action buttons line
-       up in fixed columns across every row instead of drifting by the date
-       text's natural width. */
-    flex: 1 1 auto;
-  }
-
-  .proposed-date-info > .max {
-    min-width: 0;
-    /* Grow so the badge sits at a constant x in every row; the date text wraps
-       naturally instead of truncating with an ellipsis. */
-    flex: 1 1 auto;
-  }
-
-  .proposed-date-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-shrink: 0;
-  }
-
-  .proposed-date-details > * {
-    margin: 0;
-  }
-
-  /* Proposed-date cards with clashes: left error border + subtle tint.
-     Reduce left padding by the border width so content aligns with clean rows. */
-  .proposed-date-card.clash-row {
-    border-inline-start: 4px solid var(--error);
-    background: var(--error-container);
-    padding-inline-start: calc(var(--space-3) - 4px);
-  }
-
-  /* Switch inside proposed-date card header. BeerCSS switch needs a positioned ancestor. */
-  .proposed-date-actions .switch {
-    position: relative;
-  }
-
-  /* Below 600px the header row may wrap so the page title drops onto its
-     own line instead of being clipped between the logo and the language
-     buttons. At 600px and wider it stays a single row. */
-  @media (max-width: 599px) {
-    header > .row.no-wrap {
-      flex-wrap: wrap;
-    }
-
-    header > .row.no-wrap > h1 {
-      flex-basis: 100%;
-    }
   }
 
   /* Below 993px tables stack into labeled cards instead of overflowing.
@@ -355,10 +270,6 @@
     }
 
     .skip-link {
-      transition: none;
-    }
-
-    .clipboard-btn {
       transition: none;
     }
   }
@@ -457,7 +368,7 @@
   }
 
   .picker-btn {
-    position: absolute !important;
+    position: absolute;
     right: 0.25rem;
     top: 50%;
     transform: translateY(-50%);
@@ -466,8 +377,8 @@
     min-width: auto;
     width: 2.5rem;
     height: 2.5rem;
-    background: transparent !important;
-    border: none !important;
+    background: transparent;
+    border: none;
     z-index: 1;
   }
 
@@ -588,32 +499,19 @@
     flex: 0 0 2.5rem;
   }
 
-  /* Below 993px (BeerCSS medium breakpoint) the proposed-date card's single
-     header row cannot hold the date info (icon + date + venue badge) and the
-     action buttons side by side; the info gets crushed to zero and the toggle
-     covers it. Stack instead: the date info takes the first line, the actions
-     wrap below it (right-aligned). The actions row itself wraps so the Confirm
-     button never overflows the card edge. */
-  @media (max-width: 992px) {
-    .proposed-date-header {
+  /* Below 600px: the header row may wrap so the page title drops onto its
+     own line instead of being clipped between the logo and the language
+     buttons; and the From/To/Venue generator grid (three columns wide,
+     ~500px) stacks its fields full-width so it never overflows the viewport. */
+  @media (max-width: 599px) {
+    header > .row.no-wrap {
       flex-wrap: wrap;
     }
 
-    .proposed-date-info {
+    header > .row.no-wrap > h1 {
       flex-basis: 100%;
     }
 
-    .proposed-date-actions {
-      width: 100%;
-      margin-left: auto;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-  }
-
-  /* The From/To/Venue generator grid is three columns wide (~500px) and
-     overflows a phone viewport. Stack the fields full-width (phone only). */
-  @media (max-width: 599px) {
     .generate-controls {
       grid-template-columns: 1fr;
     }
@@ -643,6 +541,414 @@
       width: auto;
       flex: 1 1 auto;
       min-width: 0;
+    }
+  }
+
+  /* ===================== Edit-page redesign =====================
+     Absorbed from the former edit-redesign.css prototype. Page-scoped rules
+     stay under `.edit-redesign`; the page-headline rules are unscoped because
+     the headline renders in the shared layout header, outside that wrapper. */
+
+  /* Single-line page header (rendered in the Layout h1). */
+  .redesign-headline {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2-5);
+    flex-wrap: wrap;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .redesign-headline .redesign-headline-sep {
+    color: var(--line);
+  }
+
+  .edit-redesign {
+    font-family: var(--font-sans);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    padding: 0 0 var(--space-7);
+  }
+  .edit-redesign *,
+  .edit-redesign *::before,
+  .edit-redesign *::after {
+    box-sizing: border-box;
+  }
+  .edit-redesign h2,
+  .edit-redesign h3,
+  .edit-redesign h4 {
+    font-family: var(--font-sans);
+    color: var(--ink);
+  }
+  .edit-redesign a:not(.button) {
+    color: var(--primary);
+  }
+
+  .edit-redesign .date-cell,
+  .edit-redesign .date-num {
+    font-family: var(--font-condensed);
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
+  }
+
+  .edit-redesign .muted {
+    color: var(--ink-soft);
+  }
+
+  /* ---- Layout: week rail + sticky sidebar. ---- */
+  .edit-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+    max-width: var(--edit-max-width);
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-4-5) 0;
+  }
+  .edit-rail {
+    min-width: 0;
+  }
+  .edit-rail h2 {
+    font-size: var(--font-size-lg);
+    margin: 0 0 var(--space-1);
+    font-weight: 600;
+  }
+
+  /* ---- Week dividers. ---- */
+  .week-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin: 0;
+    padding: var(--space-3-5) 0 var(--space-1-5);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--ink-soft);
+  }
+  .week-head .week-range {
+    font-weight: 500;
+  }
+
+  /* ---- Dense date row. ---- */
+  .date-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2) var(--space-4-5);
+    align-items: start;
+    padding: var(--space-3-5) 0;
+    border-top: 1px solid var(--line);
+  }
+  .date-row:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+  .date-cell {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-1-5);
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+  .date-num {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+  }
+  .date-day {
+    font-size: var(--font-size-sm);
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .date-time {
+    font-size: var(--font-size-md);
+    color: var(--ink);
+  }
+  .date-year {
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);
+  }
+  .date-main {
+    min-width: 0;
+  }
+
+  /* ---- Chips (clashes / venue occupancy / clean / unchecked). ---- */
+  .date-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1-5);
+    margin-bottom: var(--space-2-5);
+  }
+  .date-chips .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--font-size-xs);
+    padding: var(--space-0-5) var(--space-2);
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    background: var(--surface-container-lowest);
+  }
+  .date-chips .chip--clean {
+    color: var(--chip-clean-fg);
+    border-color: var(--primary);
+    background: var(--chip-clean-bg);
+  }
+  .date-chips .chip--warn {
+    color: var(--chip-warn-fg);
+    border-color: var(--warning);
+    background: var(--chip-warn-bg);
+  }
+  .date-chips .chip--error {
+    color: var(--chip-error-fg);
+    border-color: var(--error);
+    background: var(--chip-error-bg);
+  }
+
+  /* ---- Inline per-player vote dots. ---- */
+  .vote-dots {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+  }
+  .vote-dots-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1-5);
+  }
+  .vote-dots-label {
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .vote-dot {
+    width: 0.85rem;
+    height: 0.85rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--line);
+    background: transparent;
+    flex: 0 0 auto;
+  }
+  .vote-dot--yes {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  .vote-dot--no {
+    background: var(--error);
+    border-color: var(--error);
+  }
+  .vote-dot--ifnecessary {
+    background: var(--warning);
+    border-color: var(--warning);
+  }
+  .vote-dot--none {
+    background: var(--paper);
+  }
+  .vote-dot-count {
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);
+  }
+
+  /* ---- Per-date team tallies: `Team: available (yes/if/no)`. ---- */
+  .team-tallies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin-bottom: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--ink);
+  }
+  .team-tally {
+    white-space: nowrap;
+  }
+
+  /* ---- Sort control (Date / Availability). ---- */
+  .sort-control {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    border: 0;
+    font-size: var(--font-size-sm);
+  }
+  .sort-control .sort-label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+  .sort-option {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    cursor: pointer;
+  }
+
+  /* ---- Vote tables, collapsed into disclosures. ---- */
+  .edit-votes {
+    margin-top: var(--space-5);
+  }
+  .edit-votes details {
+    border: 1px solid var(--line);
+    background: var(--surface-container-lowest);
+    border-radius: var(--radius-card);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+  .edit-votes details > summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: var(--font-size-md);
+  }
+  .edit-votes details > summary h3 {
+    display: inline;
+    margin: 0;
+    font-size: var(--font-size-md);
+  }
+  .edit-votes table {
+    width: 100%;
+  }
+
+  /* ---- Date actions. ---- */
+  .date-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+    margin-top: var(--space-3);
+  }
+  .date-actions .action {
+    font-family: inherit;
+    font-size: var(--font-size-sm);
+    padding: var(--space-1-5) var(--space-3-5);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: var(--surface-container-lowest);
+    color: var(--ink);
+  }
+  .date-actions .action--primary {
+    background: var(--primary);
+    color: var(--on-primary);
+    border-color: var(--primary);
+    font-weight: 600;
+  }
+  .date-actions .action--outline {
+    background: var(--surface-container-lowest);
+  }
+  .date-actions .action--outline:hover {
+    border-color: var(--error);
+    color: var(--error);
+  }
+  .date-actions .action--votable {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1-5);
+  }
+
+  /* ---- Sidebar blocks. ---- */
+  .side-block {
+    border: 1px solid var(--line);
+    background: var(--surface-container-lowest);
+    border-radius: var(--radius-card);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .side-block h3 {
+    margin: 0 0 var(--space-2-5);
+    font-size: var(--font-size-md);
+    font-weight: 600;
+  }
+  .side-block details > summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: var(--font-size-md);
+  }
+  .side-block .field label {
+    color: var(--ink-soft);
+  }
+  .invite {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4-5);
+    font-size: var(--font-size-md);
+  }
+  .invite a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1-5);
+    overflow-wrap: anywhere;
+  }
+  .invite .copy-btn {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--line);
+    background: var(--surface-container-lowest);
+    border-radius: var(--radius-pill);
+    padding: var(--space-0-5) var(--space-2);
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+
+  /* ---- Desktop: two-column, sticky sidebar. ---- */
+  @media (min-width: 993px) {
+    .edit-grid {
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      grid-template-areas: 'sidebar rail';
+    }
+    .edit-sidebar {
+      grid-area: sidebar;
+      position: sticky;
+      top: var(--space-4);
+      align-self: start;
+    }
+    .edit-rail {
+      grid-area: rail;
+    }
+    .date-row {
+      grid-template-columns: var(--date-cell-width) minmax(0, 1fr);
+    }
+    .date-cell {
+      flex-direction: column;
+      gap: var(--space-0-5);
+    }
+  }
+
+  /* ---- Phone: rail first, sidebar below; compact one-line date. ---- */
+  @media (max-width: 992px) {
+    .edit-grid {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'rail' 'sidebar';
+    }
+    .edit-sidebar {
+      grid-area: sidebar;
+    }
+    .edit-rail {
+      grid-area: rail;
+    }
+    .date-cell {
+      flex-wrap: wrap;
+    }
+    .date-year {
+      display: none;
+    }
+  }
+
+  /* The single-date add form's input + venue select sit side by side in a
+     nowrap BeerCSS row; on a narrow phone the input field collapses and its
+     picker button obscures the input, tripping axe target-size. Stack the two
+     fields so the input keeps a full-width, unobscured touch target. */
+  @media (max-width: 599px) {
+    .edit-rail form > .row {
+      flex-wrap: wrap;
+    }
+    .edit-rail form > .row > .field {
+      flex-basis: 100%;
     }
   }
 }

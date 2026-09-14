@@ -1,6 +1,6 @@
 # Consolidate the edit-page redesign stylesheet into the design system
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 

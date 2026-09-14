@@ -12,9 +12,15 @@ Existing tokens (`--space-1..6`, the brand colour, border radius, fonts, palette
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] All tokens above are defined in the design token layer with the stated values.
-- [ ] No existing token value changed.
-- [ ] No selector references a new token yet.
-- [ ] `npm run lint`, `npm run test` and `npm run e2e` pass with no screenshot-baseline changes.
+- [x] All tokens above are defined in the design token layer with the stated values.
+- [x] No existing token value changed.
+- [x] No selector references a new token yet.
+- [x] `npm run lint`, `npm run test` and `npm run e2e` pass with no screenshot-baseline changes.
+
+## Comments
+
+- `e3fb7d4` ticket done: 02-add-design-token-catalog — added spacing/type/radius/layout/chip tokens to `design-tokens.css`, additive only.
+- `e747f51` review: 02-add-design-token-catalog — two-axis review, zero actionable findings (no fix commit).
+- Gate: `npm run lint`, `npm run test` (686 passed), `npm run e2e` (118 passed); no `e2e-tests/**/*.png` baseline changed.

@@ -4,8 +4,12 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The skill documents the real file set and the new token catalog.
-- [ ] No stale file or template-engine references remain in the skill or `CONTEXT.md`.
-- [ ] `npm run lint` passes (docs changes do not affect the app build).
+- [x] The skill documents the real file set and the new token catalog.
+- [x] No stale file or template-engine references remain in the skill or `CONTEXT.md`.
+- [x] `npm run lint` passes (docs changes do not affect the app build).
+
+## Comments
+
+Commits: `9a90733` (ticket done — skill file set + token catalog, `main.eta`→`main.tsx`, ticket ticked), `7828dfa` (review), `eb7dd47` (review-fixed — unlayered `@font-face` attribution, dropped deleted-filename prose). `npm run lint` clean. `CONTEXT.md` needed no change (names no CSS files).
