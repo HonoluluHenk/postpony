@@ -1,5 +1,5 @@
 ---
-name: localization
+name: app-localization
 description: How localization (i18n) works in this project (PostPony). Use whenever you add or change a user-facing string, add a translation key, interpolate a parameter into a message, or need to keep the English and German locale files in sync.
 ---
 
