@@ -1,4 +1,4 @@
-import type { App } from '../../../app';
+import type { App, ViewContext } from '../../../app';
 import type { AppLocale } from '../../../locales';
 import type { Postponement, ProposedDate, VoteTallyItem } from '../../../lib/models';
 import { PostponementRules, sortedProposedDates, type VoteTally } from '../../../lib/postponement';
@@ -71,10 +71,6 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale, 
   };
 }
 
-/** Fields carried by `EditGridProps` (or the page) rather than the data builder. */
-type EditViewField = 't' | 'locale' | 'inputFormat' | 'baseUrl';
-type EditDataField = keyof EditPartialsData;
-
 /**
  * What a mutation may override when re-rendering the edit page: every
  * `EditGridProps` field that is neither view context nor data-builder output,
@@ -83,7 +79,7 @@ type EditDataField = keyof EditPartialsData;
  */
 export type EditPartialExtras = Pick<
   EditGridProps,
-  Exclude<keyof EditGridProps, EditViewField | EditDataField>
+  Exclude<keyof EditGridProps, keyof ViewContext | keyof EditPartialsData>
 > & Pick<EditPageProps, 'globalError'>;
 
 /**
