@@ -239,9 +239,9 @@ export async function fetchTeams(
   const seen = new Set<string>();
   const teams: Team[] = [];
   for (const link of links) {
-    const href = link.getAttribute('href') as string;
+    const href = link.getAttribute('href');
     const name = normalizeWhitespace(link.text);
-    if (!name) {
+    if (!href || !name) {
       continue;
     }
     const teamtable = queryParam(href, 'teamtable');
