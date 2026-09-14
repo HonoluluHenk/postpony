@@ -1,5 +1,5 @@
 ---
-name: testing
+name: app-testing
 description: Use when writing, updating, or debugging any test in this repo — unit, browser, e2e, or visual. Covers the fixture builders, session injection, a11y checks, and the beer.css/heading gotchas that trip up UI tests.
 ---
 
