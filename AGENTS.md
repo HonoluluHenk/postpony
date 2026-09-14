@@ -30,7 +30,7 @@ A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framewo
 | `npm run e2e`      | Playwright (starts its own server on `$E2E_APP_PORT`, default 3001)                |
 | `npm run verify`   | lint → test → build → e2e (full CI gate)                                           |
 
-Full script catalog, watch loops, and gotchas: the `npm-scripts` skill.
+Full script catalog, watch loops, and gotchas: the `app-npm-scripts` skill.
 
 ## Local configuration
 

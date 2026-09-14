@@ -5,7 +5,7 @@ description: Use when writing, updating, or debugging any test in this repo — 
 
 # PostPony Testing
 
-This skill captures the project's testing conventions and the non-obvious gotchas that cost time and are not discoverable from the code alone. For the commands that run the tests, see the `npm-scripts` skill.
+This skill captures the project's testing conventions and the non-obvious gotchas that cost time and are not discoverable from the code alone. For the commands that run the tests, see the `app-npm-scripts` skill.
 
 ## When to Use This Skill
 
@@ -128,7 +128,7 @@ Prefer writing semantic HTML instead of sprinkling `aria-*` attributes everywher
 ### TypeScript validation
 
 e2e files are type-checked separately under `tsconfig.e2e.json`; a full
-`npm run lint` validates them (see the `npm-scripts` skill).
+`npm run lint` validates them (see the `app-npm-scripts` skill).
 
 ### Locale & `Accept-Language` in e2e
 

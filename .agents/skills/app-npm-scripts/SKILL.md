@@ -1,5 +1,5 @@
 ---
-name: npm-scripts
+name: app-npm-scripts
 description: Reference for the npm scripts defined in this project's package.json (PostPony). Use when the user (or you) needs to run the dev server, run tests, lint, build, end-to-end (e2e) test or otherwise drive the project lifecycle via npm.
 ---
 

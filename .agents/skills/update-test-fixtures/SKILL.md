@@ -146,4 +146,4 @@ All three must pass. The e2e server is started by Playwright with
 
 - Confirm `team.html` is English (`lang="en"`, day names `Sat.`/`Mon.`); otherwise the day-name assertions break.
 - The proposed-date default comes only from matches whose `date`/`time` parse (`dd.mm.yyyy` + `HH:mm`); a time of `00:00` becomes `…T00:00`.
-- For running/tests commands see the `npm-scripts` skill; for the beer.css / heading selector traps in the e2e file see the `testing` skill.
+- For running/tests commands see the `app-npm-scripts` skill; for the beer.css / heading selector traps in the e2e file see the `testing` skill.
