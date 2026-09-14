@@ -6,11 +6,13 @@
 
 **Status:** ready-for-agent
 
-- [ ] One `isDateClashing` predicate replaces the four copied expressions (confirm handler, add-dates auto-deselect, rail chips)
-- [ ] Attach and auto-deselect session rules are centralized with the predicate
-- [ ] The async fetch-and-degrade helper moves to a neutral module; refresh no longer imports the add-dates handler
-- [ ] The buffered-window scan is implemented once and shared by clash and venue-occupancy computation
-- [ ] Clash and venue-occupancy behaviour is unchanged; their unit tests and the clash e2e are green
-- [ ] `npm run verify` passes
+- [x] One `isDateClashing` predicate replaces the four copied expressions (confirm handler, add-dates auto-deselect, rail chips)
+- [x] Attach and auto-deselect session rules are centralized with the predicate
+- [x] The async fetch-and-degrade helper moves to a neutral module; refresh no longer imports the add-dates handler
+- [x] The buffered-window scan is implemented once and shared by clash and venue-occupancy computation
+- [x] Clash and venue-occupancy behaviour is unchanged; their unit tests and the clash e2e are green
+- [x] `npm run verify` passes
 
 ## Comments
+
+- `0be8483` ticket done: centralized `isDateClashing` + `applyClashCheckResult` in `clashes.ts`, shared `gamesInBufferedWindow`, moved the fetch helper to `clash-check.ts`; `ffb9d1a` review; `89d32a8` review-fixed (trailing newline, inline type import). `npm run verify` green apart from the known-flaky `focus-management` votable-switch test, which passes 7/7 in isolation.
