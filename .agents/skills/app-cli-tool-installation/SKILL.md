@@ -1,6 +1,6 @@
 ---
-name: tool-installation
-description: Install extra CLI tools for PostPony via mise-en-place so versions stay reproducible across machines and CI.
+name: app-cli-tool-installation
+description: Install extra CLI tools for PostPony via `mise` (mise-en-place too manager) so versions stay reproducible across machines and CI.
 ---
 
 # Tool Installation via mise
