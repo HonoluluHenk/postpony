@@ -12,9 +12,10 @@
 - [x] Refresh-clashes still keeps the previous snapshot and renders the "previous results" message when the check fails and a snapshot exists
 - [x] Add-dates keeps its validation-failure 400 partials and its no-save branches via the escape hatch
 - [x] The characterization matrix from `edit-handlers.spec.ts` is ported to tests targeting the seam, then the legacy file is deleted or shrunk to non-edit coverage
-- [ ] E2E tests and screenshot baselines are unchanged and green
-- [ ] `npm run verify` passes
+- [x] E2E tests and screenshot baselines are unchanged and green
+- [x] `npm run verify` passes
 
 ## Comments
 
-- implementation `149ff33`, review `d9f5bd3`, no review fixes. All seven edit POSTs route through `runEditCommand` (load/guard/save-when-changed/render-or-redirect) with a rule callback, message, extras and the `Response` escape hatch; `npm run test` green (706). `npm run verify` is red only on the pre-existing `should re-group dates by availability and keep the sort across a mutation` e2e, which fails identically at the branch point `86ee2cf` (no e2e/baseline files were changed).
+- implementation `149ff33`, review `d9f5bd3`, no review fixes. All seven edit POSTs route through `runEditCommand` (load/guard/save-when-changed/render-or-redirect) with a rule callback, message, extras and the `Response` escape hatch; `npm run test` green (706). `npm run verify` was red only on the pre-existing `should re-group dates by availability and keep the sort across a mutation` e2e, which failed identically at the branch point `86ee2cf` (no e2e/baseline files were changed).
+- `0460ec5` — reintegrated `main` (edit-css-consolidation); the pre-existing availability-sort e2e now passes. `npm run verify` green: lint · unit 706 · build · e2e 118/118. Both gate boxes ticked.
