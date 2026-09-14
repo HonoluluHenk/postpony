@@ -185,6 +185,14 @@ describe('scrape wizard GET handlers', () => {
         .rejects
         .toThrow('Missing required parameter: group');
     });
+
+    test('throws when the championship query parameter is missing', async () => {
+      const app = createApp({queries: {group: '219397'}});
+
+      await expect(handleScrapeTeamsGet(app))
+        .rejects
+        .toThrow('Missing required parameter: championship');
+    });
   });
 
   describe('handleScrapeMatchesGet', () => {
@@ -275,6 +283,22 @@ describe('scrape wizard GET handlers', () => {
       await expect(handleScrapeMatchesGet(app))
         .rejects
         .toThrow('Missing required parameter: teamtable');
+    });
+
+    test('throws when the championship query parameter is missing', async () => {
+      const app = createApp({queries: {group: '219397', teamtable: '1732193'}});
+
+      await expect(handleScrapeMatchesGet(app))
+        .rejects
+        .toThrow('Missing required parameter: championship');
+    });
+
+    test('throws when the group query parameter is missing', async () => {
+      const app = createApp({queries: {championship: 'MTTV 26/27', teamtable: '1732193'}});
+
+      await expect(handleScrapeMatchesGet(app))
+        .rejects
+        .toThrow('Missing required parameter: group');
     });
   });
 });

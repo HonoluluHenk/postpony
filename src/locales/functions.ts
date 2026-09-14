@@ -1,5 +1,5 @@
 import { AppLocales, type AppLocale } from './config';
-import { defaultLocale, translations, type TranslationKeys } from './constants';
+import { translations, type TranslationKeys } from './constants';
 
 export type TranslateFn = (key: TranslationKeys, params?: Record<string, string>) => string;
 
@@ -9,7 +9,10 @@ export function isLocale(value: unknown): value is AppLocale {
 }
 
 export function getTranslation(locale: AppLocale, key: TranslationKeys, params: Record<string, string> = {}): string {
-  let template = translations[locale][key] || translations[defaultLocale][key] || key;
+  // ponytail: every locale record is kept key-synchronized with en.json (see
+  // translations.spec.ts), so the index always resolves; the dead fallback
+  // chain was removed. If a locale ever lags, that spec fails loudly.
+  let template = translations[locale][key];
   for (const [param, value] of Object.entries(params)) {
     template = template.replace(new RegExp(`<%=\\s*it\\.${param}\\s*%>`, 'g'), value);
   }

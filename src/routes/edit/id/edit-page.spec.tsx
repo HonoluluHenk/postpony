@@ -98,6 +98,17 @@ describe('EditPage single-line header', () => {
       .not
       .toContain('redesign-headline-sep');
   });
+
+  it('renders a bare headline when the session carries no team names', () => {
+    const session: Postponement = {...aSession(), homeTeam: undefined, guestTeam: undefined};
+    const html = renderToString(EditPage(baseProps({session})));
+
+    expect(html)
+      .toContain(' vs ');
+    expect(html)
+      .not
+      .toContain('Home Team vs Guest Team');
+  });
 });
 
 describe('EditPage organizer-password toast', () => {

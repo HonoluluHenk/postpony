@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { createApp } from './lib/__test-utils__/create-app';
+import { InternalError } from './lib/errors';
 
 describe('App request/response seam', () => {
   test('query delegates to the request query; an absent key is undefined', () => {
@@ -63,5 +64,20 @@ describe('App request/response seam', () => {
 
     expect(app.text('', 200).headers.get('HX-Redirect'))
       .toBe('/edit/1');
+  });
+
+  test('body delegates to the request body parser', async () => {
+    const app = createApp({body: {teamName: 'Thun'}});
+
+    await expect(app.body())
+      .resolves
+      .toMatchObject({teamName: 'Thun'});
+  });
+
+  test('internal throws an InternalError with a localized default message', () => {
+    const app = createApp();
+
+    expect(() => app.internal())
+      .toThrow(new InternalError('Internal Server Error'));
   });
 });

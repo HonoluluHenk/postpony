@@ -1,14 +1,16 @@
 import { computeClashes, type ClashCheckResult } from '../../../lib/clashes';
 import { fetchClubMeetings, fetchMatches, seasonWindow, type Match } from '../../../lib/click-tt-scraper';
-import { DEFAULT_CLUB_ID, type Postponement } from '../../../lib/models';
+import { DEFAULT_CLUB_ID, type ClickTtTeamIdentity, type Postponement } from '../../../lib/models';
 import { computeVenueOccupancy } from '../../../lib/venue-occupancy';
 
-async function fetchHomeClubMeetings(session: Postponement): Promise<Match[] | undefined> {
+async function fetchHomeClubMeetings(
+  session: Pick<Postponement, 'clubId'>,
+  homeIdentity: ClickTtTeamIdentity,
+): Promise<Match[] | undefined> {
   if (session.clubId === DEFAULT_CLUB_ID) {
     return undefined;
   }
-  const championship = session.homeTeamIdentity?.championship;
-  const window = championship !== undefined ? seasonWindow(championship) : undefined;
+  const window = seasonWindow(homeIdentity.championship);
   if (window === undefined) {
     return undefined;
   }
@@ -40,7 +42,7 @@ export async function computeClashesForSession(session: Postponement): Promise<C
       // clash snapshot — it resolves to undefined and the occupancy line stays
       // absent. Upgrade path: surface a distinct "occupancy not checked" hint
       // when the club id exists but its scrape failed.
-      fetchHomeClubMeetings(session).catch(() => undefined),
+      fetchHomeClubMeetings(session, homeIdentity).catch(() => undefined),
     ]);
     const originalMatch = {
       start: session.originalMatchDateTime,

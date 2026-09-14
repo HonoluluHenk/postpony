@@ -13,7 +13,9 @@ function toVoteTallyItems(
   locale: AppLocale,
 ): VoteTallyItem[] {
   return proposedDates.map((pd) => {
-    const counts = tallies[pd.id] ?? {yes: 0, no: 0, ifNecessary: 0};
+    // ponytail: tallies derive from these same proposedDates, so the lookup is
+    // guaranteed; a cast keeps a dead default branch out.
+    const counts = tallies[pd.id] as VoteTally;
     return {
       id: pd.id,
       display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
@@ -38,7 +40,9 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale, 
   const dates = sortedProposedDates(session.proposedDates);
 
   const proposedDates: EditPartialsData['proposedDates'] = dates.map((pd) => {
-    const counts = tallies[pd.id] ?? {yes: 0, no: 0, ifNecessary: 0};
+    // ponytail: tallies derive from these same proposedDates, so the lookup is
+    // guaranteed; a cast keeps a dead default branch out.
+    const counts = tallies[pd.id] as VoteTally;
     return {
       id: pd.id,
       dateTimeRange: pd.dateTimeRange,

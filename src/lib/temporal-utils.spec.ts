@@ -11,6 +11,7 @@ import {
   formatProposedDateDisplayShort,
   intersectDateTimeRanges,
   intersectRanges,
+  nowPlainDateTimeIso,
   parseClickTtDateTime,
   parseLocaleDateOnly,
   parseLocaleDateTime,
@@ -84,6 +85,54 @@ describe('Temporal Utils', () => {
       .toBe('2026-05-10T11:00:00');
     expect(intersection?.end.toString())
       .toBe('2026-05-10T12:00:00');
+  });
+
+  test('nowPlainDateTimeIso produces a parseable wall-clock ISO string in Europe/Zurich', () => {
+    const iso = nowPlainDateTimeIso();
+
+    expect(iso)
+      .toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+    expect(Temporal.PlainDateTime.from(iso)
+      .equals(Temporal.PlainDateTime.from(iso)))
+      .toBe(true);
+  });
+
+  test('intersectRanges intersects ZonedDateTime ranges', () => {
+    const zdt = (iso: string): Temporal.ZonedDateTime =>
+      Temporal.ZonedDateTime.from(`${iso}+02:00[Europe/Zurich]`);
+
+    const intersection = intersectRanges(
+      zdt('2026-05-10T10:00:00'),
+      zdt('2026-05-10T12:00:00'),
+      zdt('2026-05-10T11:00:00'),
+      zdt('2026-05-10T13:00:00'),
+    );
+
+    expect(intersection?.start.toString())
+      .toBe('2026-05-10T11:00:00+02:00[Europe/Zurich]');
+    expect(intersection?.end.toString())
+      .toBe('2026-05-10T12:00:00+02:00[Europe/Zurich]');
+  });
+
+  test('intersectRanges returns null when the ranges do not overlap', () => {
+    const start1 = Temporal.PlainDateTime.from('2026-05-10T10:00:00');
+    const end1 = Temporal.PlainDateTime.from('2026-05-10T11:00:00');
+    const start2 = Temporal.PlainDateTime.from('2026-05-10T12:00:00');
+    const end2 = Temporal.PlainDateTime.from('2026-05-10T13:00:00');
+
+    expect(intersectRanges(start1, end1, start2, end2))
+      .toBeNull();
+  });
+
+  test('intersectRanges throws when mixing plain and zoned Temporal types', () => {
+    const start1 = Temporal.PlainDateTime.from('2026-05-10T10:00:00');
+    const end1 = Temporal.PlainDateTime.from('2026-05-10T12:00:00');
+    // Cast through unknown: the point is to feed mismatched runtime types.
+    const start2 = Temporal.ZonedDateTime.from('2026-05-10T11:00:00+02:00[Europe/Zurich]') as unknown as Temporal.PlainDateTime;
+    const end2 = Temporal.ZonedDateTime.from('2026-05-10T13:00:00+02:00[Europe/Zurich]') as unknown as Temporal.PlainDateTime;
+
+    expect(() => intersectRanges(start1, end1, start2, end2))
+      .toThrow('Cannot compare different Temporal types or non-Temporal types');
   });
 
   test('formatLocalizedDateTime should format correctly for German', () => {

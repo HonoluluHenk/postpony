@@ -2,10 +2,12 @@ import { describe, expect, test } from 'vitest';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../lib/__test-utils__/builders';
 import { createApp } from '../../lib/__test-utils__/create-app';
 import { hashPassword } from '../../lib/crypto-utils';
+import { getTranslation, inputFormat, languageOptions } from '../../locales';
 import { handleJoinGet } from './join-get';
 import { handleJoinRegisterPost } from './join-register-post';
 import { handleJoinVoteGet } from './join-vote-get';
 import { handleJoinVotePost } from './join-vote-post';
+import { JoinPage, type JoinPageProps } from './join';
 
 const TOKEN = 'invitation-pw';
 
@@ -704,6 +706,92 @@ describe('join handlers', () => {
         .toBe(200);
       expect(await response.text())
         .toContain('Voting is closed');
+    });
+
+    test('an unknown playerId redirects back to the register step instead of voting', async () => {
+      const session = await seedSession({
+        players: [aPlayer({id: 'player-1', name: 'Alice'})],
+        proposedDates: [aProposedDate()],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'ghost'},
+        body: {'vote-proposed-date-1': 'Yes'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVotePost(app);
+
+      expect(response.status)
+        .toBe(302);
+      expect(response.headers.get('location'))
+        .toBe(`/join/${session.id}/home?token=${TOKEN}`);
+      const stored = await app.store.get(session.id);
+      expect(stored?.votes)
+        .toHaveLength(0);
+    });
+
+    test('redirects when the playerId is missing or belongs to the other team', async () => {
+      const session = await seedSession({
+        players: [aPlayer({id: 'player-1', name: 'Alice', teamId: 'home'})],
+        proposedDates: [aProposedDate()],
+      });
+
+      const missingId = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN},
+        body: {'vote-proposed-date-1': 'Yes'},
+      });
+      await missingId.store.save(session);
+      expect((await handleJoinVotePost(missingId)).headers.get('location'))
+        .toBe(`/join/${session.id}/home?token=${TOKEN}`);
+
+      const otherTeam = createApp({
+        params: {id: session.id, team: 'away'},
+        queries: {token: TOKEN, playerId: 'player-1'},
+        body: {'vote-proposed-date-1': 'Yes'},
+      });
+      await otherTeam.store.save(session);
+      const response = await handleJoinVotePost(otherTeam);
+      expect(response.status)
+        .toBe(302);
+      const stored = await otherTeam.store.get(session.id);
+      expect(stored?.votes)
+        .toHaveLength(0);
+    });
+  });
+
+  describe('JoinPage direct render', () => {
+    function joinPageProps(overrides: Partial<JoinPageProps> = {}): JoinPageProps {
+      return {
+        t: (key, params) => getTranslation('en-US', key, params),
+        locale: 'en-US',
+        isPartial: false,
+        baseUrl: 'https://game-scheduler.localhost:3000',
+        inputFormat: inputFormat('en-US'),
+        languageOptions: languageOptions(),
+        sessionId: 'session-1',
+        team: 'home',
+        token: TOKEN,
+        players: [aPlayer({id: 'player-1', name: 'Alice'})],
+        ...overrides,
+      };
+    }
+
+    test('falls back to the translated title when no title is provided', () => {
+      const html = (JoinPage(joinPageProps()) as { toString(): string })
+        .toString();
+
+      expect(html)
+        .toContain('<h2>Join the Postponement</h2>');
+    });
+
+    test('defaults pending votes to empty, leaving the register action unpolluted', () => {
+      const html = (JoinPage(joinPageProps()) as { toString(): string })
+        .toString();
+
+      expect(html)
+        .toContain(`action="/join/session-1/home/register?token=${TOKEN}"`);
     });
   });
 

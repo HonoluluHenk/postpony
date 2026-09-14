@@ -12,7 +12,7 @@ export interface AppLogger {
   error(obj: unknown, msg?: string): void;
 }
 
-const consoleLogger: AppLogger = {
+export const consoleLogger: AppLogger = {
   info: (obj, msg) => {
     console.log(obj ?? '', msg ?? '');
   },
@@ -24,21 +24,39 @@ const consoleLogger: AppLogger = {
   },
 };
 
+/**
+ * Builds the pino-backed logger for a Node runtime. Exported so the debug/info
+ * and transport selection can be unit-tested without waiting for the dynamic
+ * `pino` import to resolve.
+ */
+export function buildPinoLogger(pinoModule: { default: typeof Pino }): AppLogger {
+  const pino = pinoModule.default;
+  const isDev = config.get('env') === 'development';
+  return pino({
+    level: isDev ? 'debug' : 'info',
+    transport: isDev
+      ? {target: 'pino/file', options: {destination: 1}}
+      : undefined,
+  });
+}
+
 const isNode = typeof process !== 'undefined' && !!process.versions.node;
 
 let current: AppLogger = consoleLogger;
 
+/**
+ * Replaces the active logger backend. Kept as an explicit seam so runtimes can
+ * install their own transport (and tests can verify delegation deterministically
+ * instead of racing the async pino import).
+ */
+export function installLogger(loggerImpl: AppLogger): void {
+  current = loggerImpl;
+}
+
 if (isNode) {
   const pinoModule = 'pino';
   void import(pinoModule).then((m) => {
-    const pino = (m as unknown as { default: typeof Pino }).default;
-    const isDev = config.get('env') === 'development';
-    current = pino({
-      level: isDev ? 'debug' : 'info',
-      transport: isDev
-        ? {target: 'pino/file', options: {destination: 1}}
-        : undefined,
-    });
+    current = buildPinoLogger(m as { default: typeof Pino });
   });
 }
 

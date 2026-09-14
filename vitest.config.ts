@@ -15,7 +15,19 @@ export default defineConfig({
         'src/public/assets/js/*.spec.js',
         'src/public/assets/vendor/**',
         'src/public/assets/js/main.js',
+        // ponytail: the process entry point boots a live HTTP/TLS server on
+        // import, so it is not unit-testable; the e2e suite boots it end-to-end.
+        'src/index.ts',
       ],
+      // Every module must clear 90% in all four metrics; a regression fails
+      // `npm run test` (and therefore `npm run verify`).
+      thresholds: {
+        statements: 90,
+        branches: 90,
+        functions: 90,
+        lines: 90,
+        perFile: true,
+      },
     },
     projects: [
       {

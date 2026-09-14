@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'node-html-parser';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import config from '../config';
 import {
   extractClubId,
   fetchClubId,
@@ -516,6 +517,226 @@ describe('click-tt-scraper', () => {
       await expect(fetchLeagues())
         .rejects
         .toThrow(ClickTTError);
+    });
+  });
+
+  describe('fixture-backed loading', () => {
+    beforeEach(() => {
+      config.set('click-tt-fixtures-dir', FIXTURES_DIR);
+    });
+
+    afterEach(() => {
+      config.set('click-tt-fixtures-dir', '');
+    });
+
+    test('reads every page type from the on-disk fixtures', async () => {
+      expect(await fetchLeagues())
+        .toBeInstanceOf(Array);
+      expect(await fetchGroups('MTTV 26/27'))
+        .toBeInstanceOf(Array);
+      expect(await fetchTeams('MTTV 26/27', '219397'))
+        .toBeInstanceOf(Array);
+      expect(await fetchMatches('MTTV 26/27', '219397', '1732195'))
+        .toBeInstanceOf(Array);
+      expect(await fetchPlayers('MTTV 26/27', '219397', '1732193'))
+        .toBeInstanceOf(Array);
+      expect(await fetchVenues('33282'))
+        .toBeInstanceOf(Array);
+      expect(await fetchClubMeetings('33282', '01.07.2026', '30.06.2027'))
+        .toBeInstanceOf(Array);
+      expect(await fetchClubId('MTTV 26/27', '219397', '1732195', {
+        date: '29.08.2026',
+        time: '16:00',
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+      }))
+        .toBeDefined();
+    });
+  });
+
+  /** Serves one crafted HTML document as the next `fetch` response. */
+  function stubHtml(html: string): void {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      text: () => Promise.resolve(html),
+    } as Response)));
+  }
+
+  describe('parser skip branches', () => {
+    test('fetchLeagues skips blank names, links without a championship, and duplicates', async () => {
+      stubHtml(`
+        <a href="/wa/leaguePage?championship=A">Alpha</a>
+        <a href="/wa/leaguePage?championship=B">   </a>
+        <a href="/wa/leaguePage?other=1">Gamma</a>
+        <a href="/wa/leaguePage?championship=A">Alpha again</a>
+      `);
+
+      expect(await fetchLeagues())
+        .toEqual([{name: 'Alpha', championship: 'A'}]);
+    });
+
+    test('fetchLeagues rejects a link whose href cannot be parsed as a URL', async () => {
+      stubHtml('<a href="http://[invalid/leaguePage?championship=A">Broken</a>');
+
+      expect(await fetchLeagues())
+        .toEqual([]);
+    });
+
+    test('fetchGroups skips blank names, missing groups, sub-view links, and duplicates', async () => {
+      stubHtml(`
+        <a href="/wa/groupPage?championship=A&amp;group=1">G1</a>
+        <a href="/wa/groupPage?championship=A&amp;group=2">   </a>
+        <a href="/wa/groupPage?championship=A&amp;other=4">G</a>
+        <a href="/wa/groupPage?championship=A&amp;group=3&amp;displayTyp=table">G3</a>
+        <a href="/wa/groupPage?championship=A&amp;group=3&amp;displayDetail=x">G3</a>
+        <a href="/wa/groupPage?championship=A&amp;group=3&amp;type=x">G3</a>
+        <a href="/wa/groupPage?championship=A&amp;group=1">G1 dup</a>
+      `);
+
+      expect(await fetchGroups('A'))
+        .toEqual([{name: 'G1', championship: 'A', group: '1'}]);
+    });
+
+    test('fetchTeams skips blank names, missing teamtables, and duplicates', async () => {
+      stubHtml(`
+        <a href="/wa/teamPortrait?teamtable=1">T1</a>
+        <a href="/wa/teamPortrait?teamtable=2">   </a>
+        <a href="/wa/teamPortrait?other=3">T3</a>
+        <a href="/wa/teamPortrait?teamtable=1">T1 dup</a>
+      `);
+
+      expect(await fetchTeams('A', 'g'))
+        .toEqual([{name: 'T1', championship: 'A', group: 'g', teamtable: '1'}]);
+    });
+
+    test('fetchMatches skips short rows, non-date rows, empty teams, and duplicates', async () => {
+      stubHtml(`
+        <table class="result-set">
+          <tr><td>short</td></tr>
+          <tr><td>Sa</td><td>no-date</td><td>16:00</td><td>loc</td><td>r1</td><td>Thun</td><td>x</td><td>Oster</td></tr>
+          <tr><td>Sa</td><td>29.08.2026</td><td>16:00</td><td>loc</td><td>r1</td><td>Thun</td><td>x</td><td>Oster</td></tr>
+          <tr><td>Sa</td><td>29.08.2026</td><td>16:00</td><td>loc</td><td>r1</td><td>Thun</td><td>x</td><td>Oster</td></tr>
+          <tr><td>Sa</td><td>29.08.2026</td><td>16:00</td><td>loc</td><td>r1</td><td></td><td>x</td><td>Oster</td></tr>
+          <tr><td>Sa</td><td>29.08.2026</td><td>16:00</td><td>loc</td><td>r1</td><td>Thun</td><td>x</td><td></td></tr>
+        </table>
+      `);
+
+      expect(await fetchMatches('A', 'g', 't'))
+        .toEqual([{day: 'Sa', date: '29.08.2026', time: '16:00', homeTeam: 'Thun', guestTeam: 'Oster'}]);
+    });
+
+    test('fetchPlayers skips non-roster tables, short rows, summary rows, and blank names', async () => {
+      stubHtml(`
+        <table class="result-set"><tr><th>Other</th></tr><tr><td>1</td><td>x</td></tr></table>
+        <table class="result-set">
+          <tr><th>Rang</th><th>Name</th></tr>
+          <tr><td>1</td><td>Alice</td></tr>
+          <tr><td>2</td><td>   </td></tr>
+          <tr><td>Doppel</td><td>Summary</td></tr>
+          <tr><td>3</td><td>Bob</td></tr>
+        </table>
+      `);
+
+      expect(await fetchPlayers('A', 'g', 't'))
+        .toEqual([{name: 'Alice'}, {name: 'Bob'}]);
+    });
+
+    test('fetchPlayers returns an empty list when no roster table is present', async () => {
+      stubHtml('<table class="result-set"><tr><th>Other</th></tr></table>');
+
+      expect(await fetchPlayers('A', 'g', 't'))
+        .toEqual([]);
+    });
+
+    test('extractClubId returns undefined when the matched row has no club query param', () => {
+      const root = parse(`
+        <table class="result-set">
+          <tr><td>a</td><td>29.08.2026</td><td>16:00</td>
+            <td><a href="/wa/clubInfoDisplay?other=1">(1)</a></td>
+            <td>r</td><td>Thun</td><td>x</td><td>Ostermundigen</td></tr>
+        </table>
+      `);
+
+      expect(extractClubId(root, {
+        date: '29.08.2026', time: '16:00', homeTeam: 'Thun', guestTeam: 'Ostermundigen',
+      }))
+        .toBeUndefined();
+    });
+
+    test('fetchVenues drops venues with malformed addresses and handles last-child headings', async () => {
+      stubHtml(`
+        <h2>Spiellokal 1</h2>
+        <p>Halle Eins
+Dennigkofenweg 169, 3072 Ostermundigen, Schweiz</p>
+        <h2>Spiellokal 2</h2>
+        <p>NoAddress</p>
+        <h2>Spiellokal 3</h2>
+        <p>Halle Drei
+NurOrt, Schweiz</p>
+        <h2>Spiellokal 4</h2>
+        <p>Halle Vier
+NurOrt, Ostermundigen</p>
+        <h2>Spiellokal 5</h2>
+        <p>   </p>
+        <div><h2>Spiellokal 6</h2></div>
+        <p>Halle Sechs
+Dennigkofenweg 1, 3072 Ostermundigen</p>
+      `);
+
+      expect(await fetchVenues('1'))
+        .toEqual([
+          {
+            venueNumber: 1,
+            name: 'Halle Eins',
+            shortName: 'Halle Eins',
+            address: 'Dennigkofenweg 169',
+            postalCode: '3072',
+            city: 'Ostermundigen',
+          },
+          {
+            venueNumber: 6,
+            name: 'Halle Sechs',
+            shortName: 'Halle Sechs',
+            address: 'Dennigkofenweg 1',
+            postalCode: '3072',
+            city: 'Ostermundigen',
+          },
+        ]);
+    });
+
+    test('fetchClubMeetings skips short rows, invalid dates, away meetings, and duplicates', async () => {
+      stubHtml(`
+        <table class="result-set">
+          <tr><td>short</td></tr>
+          <tr><td>Sa</td><td>29.08.2026</td><td>16:00</td>
+            <td><a href="/wa/clubInfoDisplay?club=1">(2)</a></td>
+            <td>r</td><td>x</td><td>Thun</td><td>y</td><td>Oster</td></tr>
+          <tr><td>Sa</td><td>29.08.2026</td><td>16:00</td>
+            <td><a href="/wa/clubInfoDisplay?club=1">(2)</a></td>
+            <td>r</td><td>x</td><td>Thun</td><td>y</td><td>Oster</td></tr>
+          <tr><td>Sa</td><td>29.08.2026</td><td>16:00</td>
+            <td><a href="/wa/clubInfoDisplay?club=99999">(3)</a></td>
+            <td>r</td><td>x</td><td>Away</td><td>y</td><td>X</td></tr>
+          <tr><td>Sa</td><td>29.08.2026</td><td>16:00</td>
+            <td>no link</td>
+            <td>r</td><td>x</td><td>NoVenue</td><td>y</td><td>Y</td></tr>
+          <tr><td>Sa</td><td>not-a-date</td><td>16:00</td>
+            <td>no link</td>
+            <td>r</td><td>x</td><td>Skip</td><td>y</td><td>S</td></tr>
+        </table>
+      `);
+
+      expect(await fetchClubMeetings('1', '01.07.2026', '30.06.2027'))
+        .toEqual([
+          {
+            day: 'Sa', date: '29.08.2026', time: '16:00', homeTeam: 'Thun', guestTeam: 'Oster', venueNumber: 2,
+          },
+          {
+            day: 'Sa', date: '29.08.2026', time: '16:00', homeTeam: 'NoVenue', guestTeam: 'Y', venueNumber: undefined,
+          },
+        ]);
     });
   });
 });

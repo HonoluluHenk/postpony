@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getTranslation, languageOptions } from '../../locales';
-import { Layout, type LayoutProps } from './main';
+import { Layout, pageLayout, type LayoutProps } from './main';
 
 const t = (key: any, params?: any): string => getTranslation('en-US', key, params);
 
@@ -46,5 +46,16 @@ describe('Layout page shell', () => {
     expect(html)
       .not
       .toContain('2024');
+  });
+});
+
+describe('pageLayout', () => {
+  it('falls back to the translated app title when no title is given', () => {
+    const html = renderToString(pageLayout(baseProps(), <p>content</p>));
+
+    expect(html)
+      .toContain('<title>PostPony</title>');
+    expect(html)
+      .toContain('<p>content</p>');
   });
 });

@@ -282,13 +282,6 @@ export function parseClickTtDateTime(date: string, time: string): string | undef
 }
 
 /**
- * Gets the current date and time in a specific time zone.
- */
-export function getCurrentZonedDateTime(timeZone = 'Europe/Zurich'): Temporal.ZonedDateTime {
-  return Temporal.Now.zonedDateTimeISO(timeZone);
-}
-
-/**
  * Calculates the intersection of two time ranges.
  * Returns null if they don't overlap.
  */
