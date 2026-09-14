@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The vote page renders the singular text for a Proposed Date with Venue Occupancy 1
 - [x] Counts >= 2 render the plural text

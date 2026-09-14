@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Set-all buttons are found by accessible name "Set all: Yes" / "Set all: if necessary" / "Set all: No"; visible labels are unchanged
 - [x] The set-all accessible name comes from a new translation key in both locales

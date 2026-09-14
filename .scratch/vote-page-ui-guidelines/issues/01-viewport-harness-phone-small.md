@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The helper exposes a `phoneSmall` 360x740 viewport alongside the existing named widths
 - [x] A smoke test opening the vote page at `phoneSmall` passes `checkA11y`

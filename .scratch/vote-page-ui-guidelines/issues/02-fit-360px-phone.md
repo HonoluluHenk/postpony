@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (Viewport harness gains a 360px phone)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] At `phoneSmall`, the "Set all" buttons (including "No") are fully inside the viewport
 - [x] At `phoneSmall` with `?lang=de-CH`, every radio label of a Proposed Date is inside the viewport

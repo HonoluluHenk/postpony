@@ -4,7 +4,7 @@
 
 **Blocked by:** 05 (Pending state for the auto-submitting vote form)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] After casting a radio Vote, focus is on that same radio once the page reloads
 - [x] After a set-all tap, focus is on that set-all button once the page reloads

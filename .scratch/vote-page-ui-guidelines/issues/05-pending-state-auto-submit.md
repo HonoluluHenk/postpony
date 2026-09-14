@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] After a set-all tap the form gets `aria-busy="true"` and the global spinner shows
 - [x] Controls are disabled only after the POST body is complete; all changed votes reach the server
