@@ -48,14 +48,10 @@ function buildSession(overrides: Parameters<typeof aSession>[0] = {}): Postponem
 
 function railProps(session: Postponement, overrides: Partial<EditGridProps> = {}): EditGridProps {
   return {
-    sessionId: session.id,
-    status: session.status,
-    reopenCount: session.reopenCount,
     t,
     locale: 'en-US',
     inputFormat: inputFormat('en-US'),
     baseUrl: BASE_URL,
-    organizerTeam: 'home',
     ...buildEditPartialsData(session, 'en-US'),
     ...overrides,
   };

@@ -5,7 +5,7 @@ import { PostponementRules, sortedProposedDates, type VoteTally } from '../../..
 import { formatProposedDateDisplay, formatProposedDateDisplayShort } from '../../../lib/temporal-utils';
 import { buildOwnTeamView } from './own-team-view';
 import { EditPage, type EditPageProps } from './edit';
-import type { EditPartialsData } from './proposed-dates-section';
+import type { DateSort, EditGridProps, EditPartialsData } from './proposed-dates-section';
 
 function toVoteTallyItems(
   proposedDates: ProposedDate[],
@@ -25,11 +25,12 @@ function toVoteTallyItems(
 }
 
 /**
- * Shared shape for the edit page and the HTMX partials: the proposed-date list items
- * (with the votable flag and ISO range), the per-team tallies, and the organizer-team
- * completion view. Used by edit-id-get and every post handler that re-renders the page.
+ * Shared shape for the edit page and the HTMX partials: the session-derived display
+ * fields, the proposed-date list items (with the votable flag and ISO range), the
+ * per-team tallies, and the organizer-team completion view. Used by edit-id-get and
+ * every post handler that re-renders the page.
  */
-export function buildEditPartialsData(session: Postponement, locale: AppLocale): EditPartialsData {
+export function buildEditPartialsData(session: Postponement, locale: AppLocale, sort: DateSort = 'date'): EditPartialsData {
   const rules = new PostponementRules();
   const tallies = rules.tally(session);
   const homeTallies = rules.tally(session, 'home');
@@ -54,6 +55,13 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
   });
 
   return {
+    sessionId: session.id,
+    status: session.status,
+    reopenCount: session.reopenCount,
+    organizerTeam: session.organizerTeam,
+    homeTeam: session.homeTeam,
+    guestTeam: session.guestTeam,
+    sort,
     proposedDates,
     homeProposedDates: toVoteTallyItems(dates, homeTallies, locale),
     awayProposedDates: toVoteTallyItems(dates, awayTallies, locale),
@@ -63,26 +71,20 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale):
   };
 }
 
-export interface EditPartialExtras {
-  proposedDateTime?: string;
-  error?: string;
-  globalError?: string;
-  success?: boolean;
-  times?: readonly string[];
-  generatorInvalidRow?: number;
-  generatorError?: string;
-  generatorSuccessCount?: number;
-  generatorFromError?: string;
-  generatorToError?: string;
-  refreshError?: boolean;
-  confirmClashWarning?: boolean;
-  statusMessage?: string;
-  fromDate?: string;
-  toDate?: string;
-  playerName?: string;
-  teamId?: 'home' | 'away';
-  playerError?: string;
-}
+/** Fields carried by `EditGridProps` (or the page) rather than the data builder. */
+type EditViewField = 't' | 'locale' | 'inputFormat' | 'baseUrl';
+type EditDataField = keyof EditPartialsData;
+
+/**
+ * What a mutation may override when re-rendering the edit page: every
+ * `EditGridProps` field that is neither view context nor data-builder output,
+ * plus the page-level `globalError`. Derived by exclusion, so a new form/error
+ * field is declared once on `EditGridProps` and lands here automatically.
+ */
+export type EditPartialExtras = Pick<
+  EditGridProps,
+  Exclude<keyof EditGridProps, EditViewField | EditDataField>
+> & Pick<EditPageProps, 'globalError'>;
 
 /**
  * The rail's sort lives in the page URL, so a mutation (which posts to a URL
@@ -110,38 +112,13 @@ export function renderEditPartials(
   session: Postponement,
   extra: EditPartialExtras = {},
 ): string {
-  const view = app.view;
-  const data = buildEditPartialsData(session, app.locale);
+  const data = buildEditPartialsData(session, app.locale, currentSort(app));
   const props: EditPageProps = {
-    ...view,
+    ...app.view,
     ...data,
+    ...extra,
     session,
-    sessionId: session.id,
-    status: session.status,
-    reopenCount: session.reopenCount,
-    organizerTeam: session.organizerTeam,
-    homeTeam: session.homeTeam,
-    guestTeam: session.guestTeam,
-    sort: currentSort(app),
-    title: view.t('edit_postponement_title', {name: session.name}),
-    proposedDateTime: extra.proposedDateTime,
-    fromDate: extra.fromDate,
-    toDate: extra.toDate,
-    error: extra.error,
-    success: extra.success,
-    times: extra.times,
-    generatorInvalidRow: extra.generatorInvalidRow,
-    generatorError: extra.generatorError,
-    generatorSuccessCount: extra.generatorSuccessCount,
-    generatorFromError: extra.generatorFromError,
-    generatorToError: extra.generatorToError,
-    refreshError: extra.refreshError,
-    confirmClashWarning: extra.confirmClashWarning,
-    statusMessage: extra.statusMessage,
-    globalError: extra.globalError,
-    playerName: extra.playerName,
-    teamId: extra.teamId,
-    playerError: extra.playerError,
+    title: app.t('edit_postponement_title', {name: session.name}),
   };
   return app.render(<EditPage {...props} />);
 }

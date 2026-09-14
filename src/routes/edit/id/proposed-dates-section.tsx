@@ -34,14 +34,6 @@ export interface ProposedDateTallyItem extends VoteTallyItem {
 export const FALLBACK_VENUE_COUNT = 10;
 
 export type EditPartialsData = OwnTeamView & {
-  proposedDates: ProposedDateTallyItem[];
-  homeProposedDates: VoteTallyItem[];
-  awayProposedDates: VoteTallyItem[];
-  clashCheckable: boolean;
-  venues: Venue[];
-};
-
-export interface EditGridProps extends EditPartialsData {
   sessionId: string;
   status: PostponementStatus;
   reopenCount: number;
@@ -49,13 +41,23 @@ export interface EditGridProps extends EditPartialsData {
   organizerTeam: Team;
   homeTeam?: string;
   guestTeam?: string;
-  /** Rail ordering; defaults to `date` (week-grouped). */
-  sort?: DateSort;
+  /** Rail ordering; `date` is week-grouped, `availability` sorts per team. */
+  sort: DateSort;
+  proposedDates: ProposedDateTallyItem[];
+  homeProposedDates: VoteTallyItem[];
+  awayProposedDates: VoteTallyItem[];
+  clashCheckable: boolean;
+  venues: Venue[];
+};
+
+/** The edit view interface: the data builder's output plus the view/extra fields the page and its partials take. */
+export interface EditGridProps extends EditPartialsData {
   t: TranslateFn;
   locale: AppLocale;
   inputFormat: string;
   /** Origin used to build the absolute calendar-export link. */
   baseUrl: string;
+  /** Original match datetime in the locale's input token format (add-date prefill). */
   proposedDateTime?: string;
   error?: string;
   success?: boolean;
@@ -538,7 +540,7 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
                        : Array.from({length: FALLBACK_VENUE_COUNT}, (_, index) => (
                          <option key={index + 1} value={index + 1}>{index + 1}</option>
                        ));
-  const sort = props.sort ?? 'date';
+  const sort = props.sort;
   const rows = sortedRows(props.proposedDates);
   const homeTallies = tallyById(props.homeProposedDates);
   const awayTallies = tallyById(props.awayProposedDates);

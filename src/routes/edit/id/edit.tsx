@@ -16,8 +16,6 @@ export interface EditPageProps extends ViewContext, EditGridProps {
   organizerPassword?: string;
   /** Original match datetime in the locale's Intl reading format (page heading). */
   proposedDateTimeDisplay?: string;
-  /** Original match datetime in the locale's input token format (add-date prefill). */
-  proposedDateTime?: string;
   globalError?: string;
 }
 

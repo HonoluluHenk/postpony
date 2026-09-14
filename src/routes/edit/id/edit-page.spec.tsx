@@ -62,10 +62,6 @@ function baseProps(options: PageOptions = {}): EditPageProps {
     baseUrl: BASE_URL,
     inputFormat: inputFormat('en-US'),
     languageOptions: languageOptions(),
-    sessionId: session.id,
-    status: session.status,
-    reopenCount: session.reopenCount,
-    organizerTeam: session.organizerTeam,
     ...buildEditPartialsData(session, 'en-US'),
     organizerPassword: options.organizerPassword,
     proposedDateTimeDisplay: options.proposedDateTimeDisplay ?? 'Tue, Sep 1, 2026, 8:00 PM',
@@ -233,7 +229,7 @@ describe('EditPage week-grouped date rows', () => {
     expect(html)
       .toContain('<span class="team-tally">Home Team: 1 (1/0/1)</span>');
     expect(html)
-      .toContain('<span class="team-tally">Away Team: 0 (0/0/0)</span>');
+      .toContain('<span class="team-tally">Guest Team: 0 (0/0/0)</span>');
     expect(html)
       .toContain('role="radiogroup" aria-label="Sort by"');
     expect(html)

@@ -29,19 +29,12 @@ export const handleEditGet = async (app: App): Promise<Response> => {
       {...app.view}
       title={app.t('edit_postponement_title', {name: session.name})}
       session={session}
-      sessionId={session.id}
-      status={session.status}
-      reopenCount={session.reopenCount}
-      organizerTeam={session.organizerTeam}
-      homeTeam={session.homeTeam}
-      guestTeam={session.guestTeam}
-      sort={sort}
       organizerPassword={organizerPassword ?? undefined}
       proposedDateTime={originalMatchDateTime}
       proposedDateTimeDisplay={originalMatchDateTimeDisplay}
       fromDate={fromDate}
       toDate={toDate}
-      {...buildEditPartialsData(session, locale)}
+      {...buildEditPartialsData(session, locale, sort)}
     />,
   );
 
