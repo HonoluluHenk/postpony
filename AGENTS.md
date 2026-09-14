@@ -36,7 +36,7 @@ Full script catalog, watch loops, and gotchas: the `app-npm-scripts` skill.
 
 For local development, copy `.env-template` to `.env` (git-ignored) and adjust the values there. `src/config.ts` loads `.env` from the repo root at startup via native `process.loadEnvFile`; already-set env vars (shell/npm scripts) take precedence.
 
-The e2e test server port is `E2E_APP_PORT` (default 3001); `playwright.config.ts` loads `.env` itself, so an exported shell value wins (e.g. `E2E_APP_PORT=3007 npm run e2e`). Parallel worktrees: see the `setup-worktree` skill.
+The e2e test server port is `E2E_APP_PORT` (default 3001); `playwright.config.ts` loads `.env` itself, so an exported shell value wins (e.g. `E2E_APP_PORT=3007 npm run e2e`). Parallel worktrees: see the `app-setup-worktree` skill.
 
 ## HTTPS & certificates
 

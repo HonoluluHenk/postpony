@@ -1,6 +1,6 @@
 ---
-name: setup-worktree
-description: Configure PostPony in a git worktree for parallel development — per-worktree .env (branch-derived ports + SQLite path), certs, deps. Use when setting up a fresh worktree to run dev/tests/e2e concurrently with other worktrees, when the app or e2e won't start in a worktree (missing .env, certs, DB), or when parallel agents need distinct APP_PORT / E2E_APP_PORT.
+name: app-setup-worktree
+description: Configure PostPony in a git worktree for parallel development — per-worktree .env (branch-derived ports + SQLite path), certs, deps. Use when setting up a fresh worktree.
 ---
 
 # Setup Worktree (PostPony)
