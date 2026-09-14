@@ -6,6 +6,6 @@
 
 **Status:** ready-for-agent
 
-- [ ] The skill documents the real file set and the new token catalog.
-- [ ] No stale file or template-engine references remain in the skill or `CONTEXT.md`.
-- [ ] `npm run lint` passes (docs changes do not affect the app build).
+- [x] The skill documents the real file set and the new token catalog.
+- [x] No stale file or template-engine references remain in the skill or `CONTEXT.md`.
+- [x] `npm run lint` passes (docs changes do not affect the app build).
