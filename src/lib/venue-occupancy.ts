@@ -2,6 +2,7 @@ import { gamesInBufferedWindow, isOriginalMatch } from './clashes';
 import type { Clash, OriginalMatchIdentity } from './clashes';
 import type { Match } from './click-tt-scraper';
 import type { ProposedDate } from './models';
+import { defaultVenueNumber } from './venues';
 
 /**
  * The Venue Occupancy domain module: pure counting logic for hall-occupancy
@@ -28,7 +29,7 @@ export function computeVenueOccupancy(
 
   const result: VenueOccupancyByProposedDate = {};
   for (const proposedDate of proposedDates) {
-    const venue = proposedDate.venueNumber ?? 1;
+    const venue = defaultVenueNumber(proposedDate.venueNumber);
 
     const matches: Clash[] = gamesInBufferedWindow(proposedDate.dateTimeRange, games)
       .filter(({match}) => match.venueNumber === venue)

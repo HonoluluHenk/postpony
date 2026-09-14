@@ -3,6 +3,7 @@ import { CLASH_BUFFER_HOURS } from './clashes';
 import type { Postponement, ProposedDate, Team, Venue, Vote } from './models';
 import { PostponementRules } from './postponement';
 import { formatIsoToLocaleTokens, parseIsoToPlainDateTime } from './temporal-utils';
+import { resolveVenue } from './venues';
 
 /**
  * The iCal export module: a pure function turning a Postponement into an RFC
@@ -94,7 +95,7 @@ function eventLines(
 ): string[] {
   const start = parseIsoToPlainDateTime(date.dateTimeRange.start);
   const end = start.add({hours: CLASH_BUFFER_HOURS});
-  const venue = resolveVenue(session, date.venueNumber);
+  const venue = resolveVenue(date.venueNumber, session.venues);
   // CONFIRMED only while the session is actually locked: after a reopen the
   // formerly-confirmed date is votable again and exports as TENTATIVE.
   const confirmed = session.status === 'Confirmed' && session.confirmedProposedDateId === date.id;
@@ -219,10 +220,6 @@ function voteUrl(
 
 function playerParam(vote: VoteContext): string {
   return vote.playerId ? `&playerId=${encodeURIComponent(vote.playerId)}` : '';
-}
-
-function resolveVenue(session: Postponement, venueNumber: number | undefined): Venue | undefined {
-  return session.venues.find((v) => v.venueNumber === (venueNumber ?? 1));
 }
 
 function venueLine(venue: Venue): string {

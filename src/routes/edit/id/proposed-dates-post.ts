@@ -11,6 +11,7 @@ import {
   parseLocaleTimeOnly,
 } from '../../../lib/temporal-utils';
 import type { Postponement, Venue } from '../../../lib/models';
+import { defaultVenueNumber } from '../../../lib/venues';
 import { Temporal } from '@js-temporal/polyfill';
 import { type EditPartialExtras, renderEditPartials } from './render-edit-partials';
 import { runEditCommand } from './run-edit-command';
@@ -310,8 +311,8 @@ function handleTupleSubmit(
       // "<start>|<venue>" keys are built from those. The generator stays
       // venue-unaware — it just matches candidates against the given keys.
       const existingStarts = session.proposedDates
-        .filter((pd) => (pd.venueNumber ?? 1) === (venueNumber ?? 1))
-        .map((pd) => `${pd.dateTimeRange.start}|${pd.venueNumber ?? 1}`);
+        .filter((pd) => defaultVenueNumber(pd.venueNumber) === defaultVenueNumber(venueNumber))
+        .map((pd) => `${pd.dateTimeRange.start}|${defaultVenueNumber(pd.venueNumber)}`);
       const generated = generateProposedDates({
         fromIso,
         toIso,

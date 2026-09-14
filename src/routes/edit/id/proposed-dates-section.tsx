@@ -6,7 +6,8 @@ import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/temporal-utils';
 import { VoteTally } from '../../partials/vote-tally';
-import { venueNumberToken, venueShortName } from '../../partials/venue-badge';
+import { venueShortName } from '../../../lib/venues';
+import { venueNumberToken } from '../../partials/venues';
 import type { OwnTeamView } from './own-team-view';
 import { OwnTeamVotes } from './own-team-votes';
 

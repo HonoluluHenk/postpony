@@ -4,7 +4,7 @@ import type { ViewContext } from '../../app';
 import type { Venue, VoteTallyItem } from '../../lib/models';
 import type { VenueOccupancy } from '../../lib/venue-occupancy';
 import { pageLayout } from '../layouts/main';
-import { VenueBadge, venuePillLabel } from '../partials/venue-badge';
+import { VenueBadge, venuePillLabel } from '../partials/venues';
 import { VoteTally } from '../partials/vote-tally';
 import type { Team } from './join-utils';
 

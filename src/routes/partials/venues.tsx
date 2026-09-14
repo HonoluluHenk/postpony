@@ -1,17 +1,10 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { Venue } from '../../lib/models';
+import { defaultVenueNumber, resolveVenue, venueShortName } from '../../lib/venues';
 
-/**
- * Display token for a proposed date's venue in list/poll views. An absent
- * `venueNumber` means venue 1 — legacy dates predate the venues feature.
- */
+/** Display token for a proposed date's venue in list/poll views, e.g. "(1)". */
 export function venueNumberToken(venueNumber: number | undefined): string {
-  return `(${venueNumber ?? 1})`;
-}
-
-/** Looks up a venue by its number; absent `venueNumber` means venue 1 (legacy dates predate venues). */
-function findVenue(venueNumber: number | undefined, venues: readonly Venue[]): Venue | undefined {
-  return venues.find((v) => v.venueNumber === (venueNumber ?? 1));
+  return `(${defaultVenueNumber(venueNumber)})`;
 }
 
 /**
@@ -19,9 +12,8 @@ function findVenue(venueNumber: number | undefined, venues: readonly Venue[]): V
  * name is known, otherwise just the number.
  */
 export function venueTooltip(venueNumber: number | undefined, venues: readonly Venue[]): string {
-  const number = venueNumber ?? 1;
-  const venue = findVenue(venueNumber, venues);
-  return venue ? `${venue.venueNumber} – ${venue.name}` : String(number);
+  const venue = resolveVenue(venueNumber, venues);
+  return venue ? `${venue.venueNumber} – ${venue.name}` : String(defaultVenueNumber(venueNumber));
 }
 
 /**
@@ -33,22 +25,13 @@ export function venueTooltip(venueNumber: number | undefined, venues: readonly V
 export function VenueBadge(props: { venueNumber?: number; venues: readonly Venue[]; label?: string }): JSX.Element {
   const visible = props.label ?? venueNumberToken(props.venueNumber);
   const full = venueTooltip(props.venueNumber, props.venues);
-  const hasName = findVenue(props.venueNumber, props.venues) !== undefined;
+  const hasName = resolveVenue(props.venueNumber, props.venues) !== undefined;
   return (
     <span class="chip venue-badge">
       {visible}
       {hasName && full !== visible ? <span class="visually-hidden">{full}</span> : null}
     </span>
   );
-}
-
-/**
- * First comma-segment of a venue's name for the vote pill, e.g. "Turnhalle
- * orange" from "Turnhalle orange, UG, Schule Dennigkofen"; undefined when the
- * venue number is unknown.
- */
-export function venueShortName(venueNumber: number | undefined, venues: readonly Venue[]): string | undefined {
-  return findVenue(venueNumber, venues)?.shortName;
 }
 
 /**
