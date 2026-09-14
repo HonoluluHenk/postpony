@@ -15,3 +15,5 @@
 - [x] `npm run verify` passes
 
 ## Comments
+
+- `be9e63d`, `a53e87e`, `09322b9`, `d375dc2` — props-only edit read model: `EditGridProps` the single declaration (`EditPageProps` extends it, duplicate `proposedDateTime` dropped), `EditPartialExtras` derived by `Pick`/`Exclude` over `keyof ViewContext | keyof EditPartialsData` (review fix), session-derived fields moved into `buildEditPartialsData`, `renderEditPartials` reduced to one spread. `npm run verify` green (118 e2e). Notes: spec helpers dropped redundant session literals (TS2783) and one edit-page assertion was corrected (`Away Team` → `Guest Team`) to match the page's actual output; see review.
