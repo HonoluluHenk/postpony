@@ -4,7 +4,7 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The skill documents the real file set and the new token catalog.
 - [x] No stale file or template-engine references remain in the skill or `CONTEXT.md`.

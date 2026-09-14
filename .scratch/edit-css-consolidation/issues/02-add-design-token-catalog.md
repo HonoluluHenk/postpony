@@ -12,7 +12,7 @@ Existing tokens (`--space-1..6`, the brand colour, border radius, fonts, palette
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] All tokens above are defined in the design token layer with the stated values.
 - [x] No existing token value changed.

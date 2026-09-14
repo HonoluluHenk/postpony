@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The dead selectors listed above are gone from all stylesheets.
 - [x] The shared stylesheet has exactly one media block per affected breakpoint instead of two.

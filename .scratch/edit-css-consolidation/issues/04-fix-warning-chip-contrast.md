@@ -4,7 +4,7 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The warning chip's text contrast against its background is at least 4.5:1 (axe on the edit page is green).
 - [x] The chip's class and markup are unchanged; only token values changed.

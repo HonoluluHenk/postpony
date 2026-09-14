@@ -6,7 +6,7 @@ The migrated page is the same redesigned edit page, with only the intended snap-
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The prototype stylesheet no longer exists and is no longer linked; its live rules and `@font-face` declarations are in the shared stylesheet.
 - [x] No literal spacing, font-size, radius or colour remains in the migrated rules (1px borders and token values excepted).
