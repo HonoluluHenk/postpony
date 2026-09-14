@@ -1,4 +1,5 @@
 import type { App } from '../../../app';
+import { isDateClashing } from '../../../lib/clashes';
 import type { Postponement } from '../../../lib/models';
 import { runEditCommand } from './run-edit-command';
 
@@ -9,8 +10,7 @@ import { runEditCommand } from './run-edit-command';
  */
 function confirmedDateHasClashes(session: Postponement): boolean {
   const confirmedDate = session.proposedDates.find((pd) => pd.id === session.confirmedProposedDateId);
-  const clashes = confirmedDate?.clashes;
-  return clashes !== undefined && (clashes.home.length > 0 || clashes.away.length > 0);
+  return isDateClashing(confirmedDate?.clashes);
 }
 
 export const handleConfirmDatePost = (app: App): Promise<Response> => {

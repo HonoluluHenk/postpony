@@ -1,9 +1,7 @@
-import { Temporal } from '@js-temporal/polyfill';
-import { bufferedWindow, isOriginalMatch } from './clashes';
+import { gamesInBufferedWindow, isOriginalMatch } from './clashes';
 import type { Clash, OriginalMatchIdentity } from './clashes';
 import type { Match } from './click-tt-scraper';
 import type { ProposedDate } from './models';
-import { parseClickTtDateTime, parseIsoToPlainDateTime } from './temporal-utils';
 
 /**
  * The Venue Occupancy domain module: pure counting logic for hall-occupancy
@@ -31,24 +29,10 @@ export function computeVenueOccupancy(
   const result: VenueOccupancyByProposedDate = {};
   for (const proposedDate of proposedDates) {
     const venue = proposedDate.venueNumber ?? 1;
-    const {lower, upper} = bufferedWindow(proposedDate.dateTimeRange);
 
-    const matches: Clash[] = [];
-    for (const game of games) {
-      if (game.venueNumber === undefined || game.venueNumber !== venue) {
-        continue;
-      }
-      const start = parseClickTtDateTime(game.date, game.time);
-      if (!start) {
-        continue;
-      }
-      const startTime = parseIsoToPlainDateTime(start);
-      if (Temporal.PlainDateTime.compare(startTime, lower) < 0
-          || Temporal.PlainDateTime.compare(startTime, upper) > 0) {
-        continue;
-      }
-      matches.push({opponent: game.guestTeam, start});
-    }
+    const matches: Clash[] = gamesInBufferedWindow(proposedDate.dateTimeRange, games)
+      .filter(({match}) => match.venueNumber === venue)
+      .map(({match, start}) => ({opponent: match.guestTeam, start}));
     result[proposedDate.id] = {count: matches.length, matches};
   }
   return result;

@@ -1,8 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill';
 import { describe, expect, test } from 'vitest';
-import { aProposedDate } from './__test-utils__/builders';
-import { CLASH_BUFFER_HOURS, computeClashes } from './clashes';
-import type { OriginalMatchIdentity } from './clashes';
+import { aProposedDate, aSession } from './__test-utils__/builders';
+import { CLASH_BUFFER_HOURS, applyClashCheckResult, computeClashes, isDateClashing } from './clashes';
+import type { ClashCheckResult, OriginalMatchIdentity } from './clashes';
 import type { Match } from './click-tt-scraper';
 
 const HOME = 'Thun';
@@ -224,5 +224,80 @@ describe('computeClashes', () => {
         home: [{opponent: AWAY, start: '2026-08-29T16:00'}],
         away: [],
       });
+  });
+});
+
+describe('isDateClashing', () => {
+  test('is true when either side carries a clash', () => {
+    const clash = [{opponent: 'Port', start: '2026-09-05T18:00'}];
+    expect(isDateClashing({home: clash, away: []}))
+      .toBe(true);
+    expect(isDateClashing({home: [], away: clash}))
+      .toBe(true);
+  });
+
+  test('is false for a clean date or missing clash data', () => {
+    expect(isDateClashing({home: [], away: []}))
+      .toBe(false);
+    expect(isDateClashing(undefined))
+      .toBe(false);
+  });
+});
+
+describe('applyClashCheckResult', () => {
+  const clash = [{opponent: 'Port', start: '2026-09-05T18:00'}];
+
+  function result(): ClashCheckResult {
+    return {
+      clashes: {
+        'pd-clash': {home: clash, away: []},
+        'pd-clean': {home: [], away: []},
+      },
+      venueOccupancy: {'pd-clean': {count: 1, matches: clash}},
+    };
+  }
+
+  test('attaches the clash and occupancy snapshot to every proposed date', () => {
+    const session = aSession({
+      proposedDates: [aProposedDate({id: 'pd-clash'}), aProposedDate({id: 'pd-clean'})],
+    });
+
+    const updated = applyClashCheckResult(session, result());
+
+    expect(updated.proposedDates)
+      .toMatchObject([
+        {id: 'pd-clash', clashes: {home: clash, away: []}},
+        {id: 'pd-clean', clashes: {home: [], away: []}, venueOccupancy: {count: 1, matches: clash}},
+      ]);
+  });
+
+  test('auto-deselects only the named newly added clashing dates', () => {
+    const session = aSession({
+      proposedDates: [
+        aProposedDate({id: 'pd-clash'}),
+        aProposedDate({id: 'pd-clean'}),
+        aProposedDate({id: 'pd-existing', votable: false}),
+      ],
+    });
+
+    const updated = applyClashCheckResult(session, result(), ['pd-clash', 'pd-clean']);
+
+    expect(updated.proposedDates)
+      .toMatchObject([
+        {id: 'pd-clash', votable: false},
+        {id: 'pd-clean', votable: true},
+        {id: 'pd-existing', votable: false},
+      ]);
+  });
+
+  test('without auto-deselect ids it only attaches, leaving votable untouched', () => {
+    const session = aSession({proposedDates: [aProposedDate({id: 'pd-clash'})]});
+
+    const updated = applyClashCheckResult(session, result());
+
+    expect(updated.proposedDates[0]?.votable)
+      .toBe(true);
+    expect(updated.proposedDates[0]?.clashes)
+      .toEqual({home: clash, away: []});
   });
 });

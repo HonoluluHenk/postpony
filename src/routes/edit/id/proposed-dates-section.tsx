@@ -1,5 +1,5 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
-import type { DateClashes } from '../../../lib/clashes';
+import { isDateClashing, type DateClashes } from '../../../lib/clashes';
 import type { PostponementStatus, Team, Venue, VoteTallyItem } from '../../../lib/models';
 import type { VenueOccupancy } from '../../../lib/venue-occupancy';
 import type { AppLocale, TranslateFn } from '../../../locales';
@@ -214,7 +214,7 @@ function DateChips(props: { row: ProposedDateTallyItem; clashCheckable: boolean;
   const {row, t, locale} = props;
   const venue = venueShortName(row.venueNumber, props.venues);
   const venueLabel = venue ? `${venueNumberToken(row.venueNumber)} ${venue}` : venueNumberToken(row.venueNumber);
-  const hasClashes = row.clashes !== undefined && (row.clashes.home.length > 0 || row.clashes.away.length > 0);
+  const hasClashes = isDateClashing(row.clashes);
   const clean = row.clashes !== undefined && !hasClashes;
   const chips: JSX.Element[] = [
     <span class="chip" title={venueLabel}>{venueLabel}</span>,
@@ -585,7 +585,7 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
           </h3>
           {group.rows.map((row) => {
             const dt = parseIsoToPlainDateTime(row.dateTimeRange.start);
-            const hasClashes = row.clashes !== undefined && (row.clashes.home.length > 0 || row.clashes.away.length > 0);
+            const hasClashes = isDateClashing(row.clashes);
             const isClean = row.clashes !== undefined && !hasClashes;
             const ariaLabel = hasClashes ? props.t('clash_row_label', {date: row.display}) : isClean
                                                                                              ? props.t('clash_row_clean_label', {date: row.display})

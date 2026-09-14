@@ -1,10 +1,8 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
-import { computeClashes, type ClashesByProposedDate } from '../../../lib/clashes';
-import { fetchClubMeetings, fetchMatches, seasonWindow, type Match } from '../../../lib/click-tt-scraper';
+import { applyClashCheckResult } from '../../../lib/clashes';
 import { MAX_TUPLES, MAX_FORWARD_WEEKS_FROM_ORIGINAL, generateProposedDates, type ProposedDateTuple } from '../../../lib/proposed-dates-generator';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
-import { PostponementRules } from '../../../lib/postponement';
 import {
   formatIsoToDateOnlyLocaleTokens,
   nowPlainDateTimeIso,
@@ -12,11 +10,11 @@ import {
   parseLocaleDateTime,
   parseLocaleTimeOnly,
 } from '../../../lib/temporal-utils';
-import { DEFAULT_CLUB_ID, type Postponement, type Venue } from '../../../lib/models';
-import { computeVenueOccupancy, type VenueOccupancyByProposedDate } from '../../../lib/venue-occupancy';
+import type { Postponement, Venue } from '../../../lib/models';
 import { Temporal } from '@js-temporal/polyfill';
 import { type EditPartialExtras, renderEditPartials } from './render-edit-partials';
 import { runEditCommand } from './run-edit-command';
+import { computeClashesForSession } from './clash-check';
 import { FALLBACK_VENUE_COUNT } from './proposed-dates-section';
 
 const TUPLE_DISCRIMINATOR = 'tuple';
@@ -177,107 +175,10 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
 };
 
 /**
- * Scrapes both teams' click-tt schedules once and computes the Clashes of every
- * Proposed Date in the session, plus the home club's Venue Occupancy in the same
- * parallel pass. Returns undefined when the session has no team identities
- * (hand-entered match) or when either team scrape fails — the caller then saves
- * the dates clash-free and the page renders without clash info. The occupancy
- * scrape degrades on its own: a missing/failed club scrape resolves to undefined
- * and only the occupancy line is absent; clashes and the save are unaffected.
- * Shared by the add paths and the manual refresh handler so one code path drives
- * both.
+ * Fetches a fresh clash check and applies the pure session rule: attach the
+ * snapshot and auto-deselect the newly added clashing dates. A failed check
+ * (undefined) leaves the session unchanged — the dates are saved clash-free.
  */
-export interface ClashCheckResult {
-  clashes: ClashesByProposedDate;
-  venueOccupancy?: VenueOccupancyByProposedDate;
-}
-
-async function fetchHomeClubMeetings(session: Postponement): Promise<Match[] | undefined> {
-  if (session.clubId === DEFAULT_CLUB_ID) {
-    return undefined;
-  }
-  const championship = session.homeTeamIdentity?.championship;
-  const window = championship !== undefined ? seasonWindow(championship) : undefined;
-  if (window === undefined) {
-    return undefined;
-  }
-  return fetchClubMeetings(session.clubId, window.from, window.to);
-}
-
-export async function computeClashesForSession(session: Postponement): Promise<ClashCheckResult | undefined> {
-  const homeIdentity = session.homeTeamIdentity;
-  const guestIdentity = session.guestTeamIdentity;
-  if (!homeIdentity || !guestIdentity) {
-    return undefined;
-  }
-  try {
-    const [homeSchedule, awaySchedule, homeMeetings] = await Promise.all([
-      fetchMatches(homeIdentity.championship, homeIdentity.group, homeIdentity.teamtable),
-      fetchMatches(guestIdentity.championship, guestIdentity.group, guestIdentity.teamtable),
-      // ponytail: a failed or inapplicable occupancy scrape must never block the
-      // clash snapshot — it resolves to undefined and the occupancy line stays
-      // absent. Upgrade path: surface a distinct "occupancy not checked" hint
-      // when the club id exists but its scrape failed.
-      fetchHomeClubMeetings(session).catch(() => undefined),
-    ]);
-    const originalMatch = {
-      start: session.originalMatchDateTime,
-      homeTeam: session.homeTeam,
-      guestTeam: session.guestTeam,
-    };
-    return {
-      clashes: computeClashes(
-        session.proposedDates,
-        homeSchedule,
-        awaySchedule,
-        originalMatch,
-      ),
-      venueOccupancy: homeMeetings === undefined
-        ? undefined
-        : computeVenueOccupancy(session.proposedDates, homeMeetings, originalMatch),
-    };
-  } catch {
-    // ponytail: a failed scrape never blocks adding dates — the dates are saved
-    // without clash data and render without clash lines. On manual refresh the
-    // caller keeps the previous snapshot instead.
-    return undefined;
-  }
-}
-
-export function attachClashCheckResult(session: Postponement, result: ClashCheckResult): Postponement {
-  return {
-    ...session,
-    proposedDates: session.proposedDates.map((pd) => ({
-      ...pd,
-      clashes: result.clashes[pd.id],
-      venueOccupancy: result.venueOccupancy?.[pd.id],
-    })),
-  };
-}
-
-/**
- * Flips the newly added dates with a non-empty Clash set to `votable: false`,
- * so a clashing date never enters either poll without the organizer noticing.
- * Only the ids named by `addedIds` are touched; pre-existing dates keep their
- * current `votable` (respecting any manual override). Dates with an empty clash
- * set (clean) or without clash data stay votable.
- */
-function deselectClashingAddedDates(
-  session: Postponement,
-  addedIds: readonly string[],
-  clashes: ClashesByProposedDate,
-): Postponement {
-  const rules = new PostponementRules();
-  let updated = session;
-  for (const id of addedIds) {
-    const dateClashes = clashes[id];
-    if (dateClashes !== undefined && (dateClashes.home.length > 0 || dateClashes.away.length > 0)) {
-      updated = rules.setVotable(updated, id, false);
-    }
-  }
-  return updated;
-}
-
 async function withClashCheck(
   session: Postponement,
   addedIds: readonly string[],
@@ -286,11 +187,7 @@ async function withClashCheck(
   if (checkResult === undefined) {
     return session;
   }
-  return deselectClashingAddedDates(
-    attachClashCheckResult(session, checkResult),
-    addedIds,
-    checkResult.clashes,
-  );
+  return applyClashCheckResult(session, checkResult, addedIds);
 }
 
 function handleTupleSubmit(

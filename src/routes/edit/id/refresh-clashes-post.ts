@@ -1,5 +1,6 @@
 import type { App } from '../../../app';
-import { attachClashCheckResult, computeClashesForSession, type ClashCheckResult } from './proposed-dates-post';
+import { applyClashCheckResult, type ClashCheckResult } from '../../../lib/clashes';
+import { computeClashesForSession } from './clash-check';
 import { runEditCommand } from './run-edit-command';
 
 export const handleRefreshClashesPost = (app: App): Promise<Response> => {
@@ -12,7 +13,7 @@ export const handleRefreshClashesPost = (app: App): Promise<Response> => {
       // Only claim "showing the previous results" when a previous snapshot
       // actually exists; a first check that fails renders the plain nothing state.
       hadSnapshot = session.proposedDates.some((pd) => pd.clashes !== undefined);
-      return checkResult === undefined ? session : attachClashCheckResult(session, checkResult);
+      return checkResult === undefined ? session : applyClashCheckResult(session, checkResult);
     },
     message: () => (checkResult === undefined && hadSnapshot ? undefined : app.t('clash_check_refreshed')),
     extras: () => (checkResult === undefined && hadSnapshot ? {refreshError: true} : {}),
