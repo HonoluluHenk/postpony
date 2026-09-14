@@ -1,5 +1,5 @@
 ---
-name: route-handlers
+name: app-route-handlers
 description: How route handlers, routers, and the App wrapper work in this project (PostPony). Use when adding or changing a Hono route, a JSX view, or a request handler, or when you need the App API (requireParam, failure/notFound, isPartial, render, t) or the invited-participant guard pattern.
 ---
 

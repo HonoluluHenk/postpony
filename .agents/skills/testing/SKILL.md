@@ -34,7 +34,7 @@ Model test data comes from the deep-merge partial builders in
 
 ## Route-handler unit tests
 
-Handlers take an `App` (see the `route-handlers` skill), so unit tests build a minimal mock `Context`, wrap it with `App.create`, and inject sessions into a `MemorySessionStore`. This is the established pattern in
+Handlers take an `App` (see the `app-route-handlers` skill), so unit tests build a minimal mock `Context`, wrap it with `App.create`, and inject sessions into a `MemorySessionStore`. This is the established pattern in
 `src/routes/edit/id/edit-handlers.spec.ts`:
 
 ```ts
@@ -119,7 +119,7 @@ The layout renders an `<h1>` brand/logo alongside page `<h2>`s, so
 
 ### HTMX partial vs initial render
 
-Any UI element rendered by an HTMX partial must also be rendered in the initial template — tests that load the page fresh hit the initial render, not the partial. Full rule and examples: see the `route-handlers` skill.
+Any UI element rendered by an HTMX partial must also be rendered in the initial template — tests that load the page fresh hit the initial render, not the partial. Full rule and examples: see the `app-route-handlers` skill.
 
 ### Semantic HTML
 

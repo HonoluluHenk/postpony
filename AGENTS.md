@@ -100,7 +100,7 @@ docs/adr/             — 19 ADRs
 
 - **Handlers**: `factory.createApp()` per router; wrap each handler with `handleAppRequest(fn)`.
 - **App class**: all handlers receive `App` (not raw Hono `Context`). Use `app.t()`, `app.render()`, `app.requireParam()`, `app.failure()`, `app.notFound()`, `app.isPartial`.
-- **HTMX**: default swap is `outerHTML`; errors render via `hx-swap-oob="true"` into `#error-container`. **Partial vs initial render**: any UI element an HTMX partial renders must also exist in the initial template (tests hit the initial render, not the partial). See the `route-handlers` skill.
+- **HTMX**: default swap is `outerHTML`; errors render via `hx-swap-oob="true"` into `#error-container`. **Partial vs initial render**: any UI element an HTMX partial renders must also exist in the initial template (tests hit the initial render, not the partial). See the `app-route-handlers` skill.
 - **Rendering**: `app.render(component)` takes a `JSX.Element` (not a template name). Components are `.tsx` functions with typed `interface` props. Use `pageLayout(view, content, title?)` from `src/routes/layouts/main.tsx` to branch on `view.isPartial` for full-page vs fragment rendering. Translation function (`t`) and `locale` are passed as props (see `ViewContext` in `src/app.ts`). See [ADR 0019](docs/adr/0019-jsx-templates.md).
 - **Locale**: `AppLocale = 'de-CH' | 'fr-CH' | 'it-CH' | 'en-US'` (default `de-CH`), resolved by `languageMiddleware` from `?lang=` → `lang` cookie → `Accept-Language` prefix mapping. fr-CH/it-CH reuse the English UI text (ADR-0016). Input formats and resolution order: see the `localization` skill.
 - **Validation**: Valibot schemas → `mapValidationToErrors()` for UI.
