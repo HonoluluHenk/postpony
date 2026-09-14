@@ -1,6 +1,5 @@
 import { computeClashes, type ClashCheckResult } from '../../../lib/clashes';
-import { fetchClubMeetings, fetchMatches, seasonWindow } from '../../../lib/click-tt-scraper';
-import type { Match } from '../../../lib/click-tt-scraper';
+import { fetchClubMeetings, fetchMatches, seasonWindow, type Match } from '../../../lib/click-tt-scraper';
 import { DEFAULT_CLUB_ID, type Postponement } from '../../../lib/models';
 import { computeVenueOccupancy } from '../../../lib/venue-occupancy';
 
