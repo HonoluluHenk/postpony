@@ -2,8 +2,8 @@ import * as v from 'valibot';
 import type { App } from '../../../app';
 import { fetchClubId, fetchPlayers, fetchVenues, type PlayerOnTeam } from '../../../lib/click-tt-scraper';
 import { generateId, generateRandomPassword, hashPassword } from '../../../lib/crypto-utils';
-import { DEFAULT_CLUB_ID, type ClickTtTeamIdentity, type Player, type Postponement, type Venue } from '../../../lib/models';
-import { derivePostponementName } from '../../../lib/postponement';
+import type { ClickTtTeamIdentity, Player, Venue } from '../../../lib/models';
+import { PostponementRules } from '../../../lib/postponement';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
 
 const MatchSchema = v.object({
@@ -47,7 +47,6 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   const m = validation.output;
 
   const originalMatchDateTime = parseClickTtDateTime(m.date, m.time);
-  const name = derivePostponementName(m.homeTeam, m.guestTeam, originalMatchDateTime, app.locale);
 
   const selectedTeamPlayers = parsePlayerNames(body['playerName']);
   const selectedTeamId: 'home' | 'away' = m.teamName === m.homeTeam ? 'home' : 'away';
@@ -89,34 +88,27 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   const guestTeamIdentity =
     selectedTeamId === 'home' ? teamIdentity(m.opponentTeamtable) : teamIdentity(m.teamtable);
 
-  const id = generateId();
   const redirectOrganizerPassword = generateRandomPassword();
   const invitationPassword = generateRandomPassword();
-  const session: Postponement = {
-    id,
-    clubId: clubId ?? DEFAULT_CLUB_ID,
-    name,
+  const session = new PostponementRules().create({
+    clubId,
     homeTeam: m.homeTeam,
     guestTeam: m.guestTeam,
-    organizerPasswordHash: await hashPassword(redirectOrganizerPassword),
-    invitationPasswordHash: await hashPassword(invitationPassword),
-    invitationPassword,
-    status: 'Draft',
+    originalMatchDateTime,
+    locale: app.locale,
     organizerTeam: selectedTeamId,
     homeTeamIdentity,
     guestTeamIdentity,
-    reopenCount: 0,
     players,
     venues,
-    proposedDates: [],
-    votes: [],
-    originalMatchDateTime,
-    createdAt: app.timestamp.now(),
-  };
+    organizerPasswordHash: await hashPassword(redirectOrganizerPassword),
+    invitationPasswordHash: await hashPassword(invitationPassword),
+    invitationPassword,
+  });
 
   await app.store.save(session);
 
-  const redirectUrl = `/edit/${id}?organizerPassword=${redirectOrganizerPassword}`;
+  const redirectUrl = `/edit/${session.id}?organizerPassword=${redirectOrganizerPassword}`;
   if (app.isPartial) {
     app.setHeader('HX-Redirect', redirectUrl);
     return app.text('', 200);

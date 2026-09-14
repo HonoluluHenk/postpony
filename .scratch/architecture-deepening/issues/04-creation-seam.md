@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] `PostponementRules.create(input)` returns a Draft Postponement with name, ids and `createdAt` produced through `newId`/`now`
-- [ ] The create route calls it, passing scraped fields and precomputed hashes, and keeps the scraping and password hashing
-- [ ] The name derivation moves into `create` (route no longer computes it)
-- [ ] `timestamp.ts` and `App.timestamp` are deleted, and no code references them
-- [ ] A unit test constructs a Postponement through `create` with a fake id/clock and asserts the Draft invariants
+- [x] `PostponementRules.create(input)` returns a Draft Postponement with name, ids and `createdAt` produced through `newId`/`now`
+- [x] The create route calls it, passing scraped fields and precomputed hashes, and keeps the scraping and password hashing
+- [x] The name derivation moves into `create` (route no longer computes it)
+- [x] `timestamp.ts` and `App.timestamp` are deleted, and no code references them
+- [x] A unit test constructs a Postponement through `create` with a fake id/clock and asserts the Draft invariants
 - [ ] E2E create/scrape flow and screenshot baselines are unchanged and green
 - [ ] `npm run verify` passes
 

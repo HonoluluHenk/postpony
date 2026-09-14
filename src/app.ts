@@ -4,7 +4,6 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import config from './config';
 import { AppError, InternalError, StateError } from './lib/errors';
 import { MemorySessionStore, type SessionStore } from './lib/session-store';
-import { Timestamp } from './lib/timestamp';
 import {
   type AppLocale,
   defaultLocale,
@@ -27,8 +26,6 @@ export interface ViewContext {
 }
 
 export class App {
-  readonly timestamp = new Timestamp();
-
   readonly locale: AppLocale;
 
   readonly store: SessionStore;

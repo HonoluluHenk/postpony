@@ -1,7 +1,16 @@
 import thenby from 'thenby';
 import type { AppLocale } from '../locales';
 import { generateId } from './crypto-utils';
-import type { Player, Postponement, ProposedDate, Team, Vote } from './models';
+import {
+  DEFAULT_CLUB_ID,
+  type ClickTtTeamIdentity,
+  type Player,
+  type Postponement,
+  type ProposedDate,
+  type Team,
+  type Venue,
+  type Vote,
+} from './models';
 import { formatIsoToLocaleTokens } from './temporal-utils';
 
 // tsx resolves 'thenby' to its CJS build, whose named export (firstBy)
@@ -64,16 +73,68 @@ export function sortedProposedDates(dates: readonly ProposedDate[]): ProposedDat
  * defaults in production; tests subclass and override them for deterministic assertions.
  * The class is the test surface, so tests never construct a Hono context.
  */
+export interface CreatePostponementInput {
+  homeTeam: string;
+  guestTeam: string;
+  originalMatchDateTime?: string;
+  locale: AppLocale;
+  clubId?: string;
+  organizerTeam: Team;
+  homeTeamIdentity?: ClickTtTeamIdentity;
+  guestTeamIdentity?: ClickTtTeamIdentity;
+  players: readonly Player[];
+  venues: readonly Venue[];
+  organizerPasswordHash: string;
+  invitationPasswordHash: string;
+  invitationPassword: string;
+}
+
 export class PostponementRules {
 
   newId(): string {
     return generateId();
   }
 
-  // ponytail: no operation timestamps yet; now() is wired for the first timestamped
-  // operation (status transitions / audit) so the seam is ready when it lands.
+  // The clock seam: creation and any future timestamped operation read the current
+  // time through here so tests can override it.
   now(): string {
     return new Date().toISOString();
+  }
+
+  /**
+   * Creates a new Draft Postponement from scraped match details and already-computed
+   * password hashes (hashing happens in the route, at the trust boundary). Owns the
+   * Draft invariants — status, organizer team, empty Proposed Dates and Votes — derives
+   * the display name, and mints the id and `createdAt` through `newId`/`now` so creation
+   * is deterministic under test.
+   */
+  create(input: CreatePostponementInput): Postponement {
+    return {
+      id: this.newId(),
+      clubId: input.clubId ?? DEFAULT_CLUB_ID,
+      name: derivePostponementName(
+        input.homeTeam,
+        input.guestTeam,
+        input.originalMatchDateTime,
+        input.locale,
+      ),
+      homeTeam: input.homeTeam,
+      guestTeam: input.guestTeam,
+      organizerPasswordHash: input.organizerPasswordHash,
+      invitationPasswordHash: input.invitationPasswordHash,
+      invitationPassword: input.invitationPassword,
+      status: 'Draft',
+      organizerTeam: input.organizerTeam,
+      homeTeamIdentity: input.homeTeamIdentity,
+      guestTeamIdentity: input.guestTeamIdentity,
+      reopenCount: 0,
+      players: [...input.players],
+      venues: [...input.venues],
+      proposedDates: [],
+      votes: [],
+      originalMatchDateTime: input.originalMatchDateTime,
+      createdAt: this.now(),
+    };
   }
 
   /**

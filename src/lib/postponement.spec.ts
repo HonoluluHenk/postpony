@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { aPlayer, aProposedDate, aSession, aVote } from './__test-utils__/builders';
+import { DEFAULT_CLUB_ID } from './models';
 import { derivePostponementName, PostponementRules, sortedProposedDates } from './postponement';
 
 /**
@@ -721,6 +722,68 @@ describe('postponement', () => {
 
       expect(new FakePostponementRules().ownTeamResults(session, 'home'))
         .toEqual([]);
+    });
+  });
+
+  describe('create', () => {
+    test('builds a Draft Postponement with the draft invariants and the id/clock from the seam', () => {
+      const session = new FakePostponementRules().create({
+        homeTeam: 'Thun',
+        guestTeam: 'Ostermundigen',
+        originalMatchDateTime: '2026-08-29T16:00',
+        locale: 'de-CH',
+        organizerTeam: 'home',
+        players: [aPlayer()],
+        venues: [],
+        organizerPasswordHash: 'organizer-hash',
+        invitationPasswordHash: 'invitation-hash',
+        invitationPassword: 'invitation-pw',
+      });
+
+      expect(session)
+        .toEqual({
+          id: 'id-1',
+          clubId: DEFAULT_CLUB_ID,
+          name: 'Thun vs Ostermundigen – 29.08.2026 16:00',
+          homeTeam: 'Thun',
+          guestTeam: 'Ostermundigen',
+          organizerPasswordHash: 'organizer-hash',
+          invitationPasswordHash: 'invitation-hash',
+          invitationPassword: 'invitation-pw',
+          status: 'Draft',
+          organizerTeam: 'home',
+          reopenCount: 0,
+          players: [aPlayer()],
+          venues: [],
+          proposedDates: [],
+          votes: [],
+          originalMatchDateTime: '2026-08-29T16:00',
+          createdAt: '2025-01-01T00:00:00.000Z',
+        });
+    });
+
+    test('takes the club id when given and leaves hashing to the caller', () => {
+      const session = new FakePostponementRules().create({
+        homeTeam: 'Home',
+        guestTeam: 'Guest',
+        locale: 'en-US',
+        clubId: 'club-42',
+        organizerTeam: 'away',
+        players: [],
+        venues: [],
+        organizerPasswordHash: 'organizer-hash',
+        invitationPasswordHash: 'invitation-hash',
+        invitationPassword: 'invitation-pw',
+      });
+
+      expect(session.clubId)
+        .toBe('club-42');
+      expect(session.name)
+        .toBe('Home vs Guest');
+      expect(session.organizerPasswordHash)
+        .toBe('organizer-hash');
+      expect(session.invitationPasswordHash)
+        .toBe('invitation-hash');
     });
   });
 
