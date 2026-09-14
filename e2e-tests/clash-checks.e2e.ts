@@ -124,14 +124,17 @@ test.describe('Clash checks', () => {
     // The occupancy count renders per proposed date alongside the clash lines.
     await expect(editPage.proposedDateList.getByText('1 other game at this venue'))
       .toBeVisible();
-    // The occupancy count chip is painted with the informational warning color
-    // (amber): at least one other match occupies the venue (Venue Occupancy > 0),
-    // deliberately distinct from the error clash tint.
+    // The occupancy count chip is painted with the informational warning
+    // container/on-container pair: at least one other match occupies the venue
+    // (Venue Occupancy > 0), deliberately distinct from the error clash tint,
+    // and meeting WCAG 2.2 AA text contrast (10.5:1).
     const occupancyChip = editPage.proposedDateList.locator('.chip--warn');
     await expect(occupancyChip)
       .toHaveCount(1);
     await expect(occupancyChip)
-      .toHaveCSS('background-color', 'rgb(255, 246, 230)');
+      .toHaveCSS('background-color', 'rgb(255, 224, 130)');
+    await expect(occupancyChip)
+      .toHaveCSS('color', 'rgb(61, 43, 0)');
 
     // 3. The participant poll folds the same count into the legend, without a
     // tooltip button.

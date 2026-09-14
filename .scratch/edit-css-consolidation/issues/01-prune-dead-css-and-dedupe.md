@@ -6,7 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] The dead selectors listed above are gone from all stylesheets.
-- [ ] The shared stylesheet has exactly one media block per affected breakpoint instead of two.
-- [ ] The picker button no longer uses `!important`, and still sits over the right edge of its field on the edit page.
-- [ ] `npm run lint`, `npm run test` and `npm run e2e` pass with no screenshot-baseline changes.
+- [x] The dead selectors listed above are gone from all stylesheets.
+- [x] The shared stylesheet has exactly one media block per affected breakpoint instead of two.
+- [x] The picker button no longer uses `!important`, and still sits over the right edge of its field on the edit page.
+- [x] `npm run lint`, `npm run test` and `npm run e2e` pass with no screenshot-baseline changes.
+
+## Comments
+Implementation `123433f`, review `f70a20a`. Pruned verified-dead selectors from both stylesheets, merged the duplicate 992px/599px blocks, dropped the picker `!important`s; lint/test/e2e green, no baseline PNG changed. Review found no fixable issues.
