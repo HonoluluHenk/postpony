@@ -3,6 +3,8 @@
 ## Status
 Accepted
 
+> Note (2026): items 2 (Club Management) and 3 (Onboarding) below were never built and are withdrawn; the system is single-club. The organizer password (item 4) is generated and hashed but not currently verified on edit routes (see arc42 §11, risk R1). The invitation password is enforced.
+
 ## Context
 The system needs to allow quick, easy access for participants without requiring traditional account creation for
 every player. At the same time, the initiator (organizer) of a rescheduling event needs administrative control over

@@ -1,7 +1,9 @@
 # ADR 0010: CI/CD Pipeline Selection
 
 ## Status
-Proposed
+Superseded by ADR-0018
+
+> Superseded (2026): this ADR's premise was Dockerized delivery via Coolify, which ADR-0018 replaced with Cloudflare Workers + Turso. No CI/CD pipeline is currently implemented (see arc42 §11).
 
 ## Context
 The application is designed as a Dockerized TypeScript SSR application to be deployed via Coolify. To ensure reliable and automated deployments, a CI/CD pipeline is required to build the Docker images and trigger deployments.

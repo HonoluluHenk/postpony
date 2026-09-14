@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed
+Accepted
+
+> Note (2026): later decisions changed parts of this stack — Firestore → SQLite/Turso (ADR-0014), Docker/Coolify hosting → Cloudflare Workers (ADR-0018), Eta templating → Hono JSX (ADR-0019). HTMX, Hono, Valibot, Playwright, and plain CSS remain as stated.
 
 ## Context
 

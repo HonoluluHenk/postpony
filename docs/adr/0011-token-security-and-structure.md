@@ -1,7 +1,9 @@
 # ADR 0011: Token Security and Structure
 
 ## Status
-Proposed
+Accepted
+
+> Note (2026): onboarding tokens (§1) were never built and are withdrawn (single-club). Storage is SQLite (`sessions` table), not Firestore. The invitation-password-as-token mechanism (§2) is implemented.
 
 ## Context
 The application uses tokenized links for two primary purposes:

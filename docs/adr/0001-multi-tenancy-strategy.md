@@ -1,7 +1,9 @@
 # ADR 0001: Multi-Tenancy Strategy
 
 ## Status
-Accepted
+Withdrawn
+
+> Withdrawn (2026): the system is single-club by design. `club_id` was retained as a forward-compatible column but multi-tenancy is no longer a goal. See ADR-0018 and the arc42 docs (§1.1.1, §11).
 
 ## Context
 The application must support multiple independent clubs (multi-tenancy) from the start. Each club will have its

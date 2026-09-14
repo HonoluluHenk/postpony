@@ -1,7 +1,7 @@
 # ADR 0009: Backend Framework Selection
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 The project requires a TypeScript-based backend framework to provide Server-Side Rendering (SSR) for HTMX and JSX templates. The framework needs to be lightweight, easy to use, and have excellent TypeScript support. Candidates include Express, Fastify, and Hono.
