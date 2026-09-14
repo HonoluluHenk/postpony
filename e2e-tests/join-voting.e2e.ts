@@ -59,6 +59,44 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
+  test('restores focus to the changed radio after the save reload without scrolling', async ({
+                                                                                               page,
+                                                                                               checkA11y,
+                                                                                             }) => {
+    // Pin scroll restoration so the reloaded page deterministically starts at
+    // the top; a focus() without preventScroll would then scroll the below-fold
+    // radio into view and fail the scrollY assertion.
+    await page.addInitScript(() => {
+      history.scrollRestoration = 'manual';
+    });
+    await page.setViewportSize({width: 1024, height: 400});
+    const dates = [
+      '2026-03-05T20:00',
+      '2026-03-06T20:00',
+      '2026-03-07T20:00',
+      '2026-03-08T20:00',
+      '2026-03-09T20:00',
+      '2026-03-10T20:00',
+    ];
+    const {session} = await EditPage.createSession(page, dates);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+
+    // The last date sits below the 400px fold, so the browser scrolls to it
+    // before the click; the reload must not keep that scroll once focus lands.
+    await joinPage.castVote(5, 'No');
+
+    await expect(joinPage.voteGroup(5)
+      .getByRole('radio', {name: 'No'}))
+      .toBeFocused();
+    expect(await page.evaluate(() => window.scrollY))
+      .toBe(0);
+
+    await checkA11y();
+  });
+
   test('set-all buttons fill every date, overwrite earlier picks, and submit directly', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-12T18:30']);
 
@@ -106,6 +144,39 @@ test.describe('Join and Voting', () => {
         .nth(3))
         .toHaveText('1'); // no
     }
+
+    await checkA11y();
+  });
+
+  test('announces the set-all buttons by their full accessible name and the save as a status', async ({
+                                                                                                      page,
+                                                                                                      checkA11y,
+                                                                                                    }) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-12T18:30']);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+
+    // Screen readers hear what each set-all button does, not just "Yes".
+    for (const name of ['Set all: Yes', 'Set all: if necessary', 'Set all: No']) {
+      await expect(joinPage.setAllControls.getByRole('button', {name, exact: true}))
+        .toBeVisible();
+    }
+    // The visible text stays the short vote label.
+    await expect(joinPage.setAllControls.getByRole('button', {name: 'Set all: Yes', exact: true}))
+      .toHaveText('Yes');
+
+    // The full venue name reaches assistive tech through the legend, not a title.
+    await expect(joinPage.voteForm.getByRole('group', {name: /Turnhalle orange, UG, Schule Dennigkofen/})
+      .first())
+      .toBeVisible();
+
+    // A routine save is announced politely as a status, not as an alert.
+    await joinPage.setAllVotes('Yes');
+    await expect(page.getByRole('status')
+      .filter({hasText: 'Your votes have been saved!'}))
+      .toBeVisible();
 
     await checkA11y();
   });

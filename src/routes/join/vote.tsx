@@ -38,7 +38,7 @@ export function VotePage(props: VotePageProps): JSX.Element {
       </header>
 
       {props.updated ? (
-        <div class="toast success top" role="alert">
+        <div class="toast success top" role="status">
           <i aria-hidden="true">check_circle</i>
           <div class="max">
             <p>{props.t('vote_updated')}</p>
@@ -70,14 +70,29 @@ export function VotePage(props: VotePageProps): JSX.Element {
           >
             <fieldset class="vote-set-all">
               <legend>{props.t('vote_set_all')}</legend>
-              <div class="row no-wrap">
-                <button type="button" class="button" data-set-all="Yes">
+              <div class="row wrap">
+                <button
+                  type="button"
+                  class="button"
+                  data-set-all="Yes"
+                  aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_yes')})}
+                >
                   {props.t('vote_yes')}
                 </button>
-                <button type="button" class="button" data-set-all="IfNecessary">
+                <button
+                  type="button"
+                  class="button"
+                  data-set-all="IfNecessary"
+                  aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_if_necessary')})}
+                >
                   {props.t('vote_if_necessary')}
                 </button>
-                <button type="button" class="button" data-set-all="No">
+                <button
+                  type="button"
+                  class="button"
+                  data-set-all="No"
+                  aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_no')})}
+                >
                   {props.t('vote_no')}
                 </button>
               </div>
@@ -94,7 +109,9 @@ export function VotePage(props: VotePageProps): JSX.Element {
                       pd.venueNumber,
                       props.venues,
                       pd.venueOccupancy !== undefined && pd.venueOccupancy.count > 0
-                        ? props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})
+                        ? pd.venueOccupancy.count === 1
+                          ? props.t('venue_legend_occupancy_one')
+                          : props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})
                         : undefined,
                     )}
                   />

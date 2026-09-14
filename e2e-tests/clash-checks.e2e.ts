@@ -145,7 +145,7 @@ test.describe('Clash checks', () => {
     // The legend carries the venue number and the count as static text.
     await expect(joinPage.voteForm.getByText('(3)'))
       .toBeVisible();
-    await expect(joinPage.voteForm.getByText('1 other games'))
+    await expect(joinPage.voteForm.getByText('1 other game'))
       .toBeVisible();
     await expect(joinPage.voteForm.getByRole('button', {name: '1 other game at this venue'}))
       .toHaveCount(0);

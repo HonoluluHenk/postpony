@@ -395,6 +395,8 @@ describe('initFocusManagement', () => {
 describe('initVoteForm', () => {
   let form;
   let submitSpy;
+  let spinner;
+  let disabledAtSubmit;
   let yesButton;
   let noButton;
   let ifNecessaryButton;
@@ -440,29 +442,55 @@ describe('initVoteForm', () => {
       .sort();
   }
 
+  function changeRadio(dateName, value) {
+    const radio = valueByName(dateName, value);
+    radio.checked = true;
+    radio.dispatchEvent(new Event('change', {bubbles: true}));
+  }
+
+  // Simulates the reload the vote POST triggers, which is the only way the
+  // in-flight busy state clears.
+  function reload() {
+    window.dispatchEvent(new Event('pageshow'));
+  }
+
   // Delegated on `document`, so wire it once; wiring per test would stack
   // listeners and multiply the submit spy.
-  beforeAll(() => initVoteForm());
+  beforeAll(() => {
+    spinner = {show: vi.fn()};
+    initVoteForm(spinner);
+  });
 
   beforeEach(() => {
     form = buildVoteForm();
     document.body.appendChild(form);
+    sessionStorage.clear();
     submitSpy = vi.fn();
+    disabledAtSubmit = null;
     vi.spyOn(form, 'submit').mockImplementation(() => {
+      // The body is captured during form.submit(), so controls must still be
+      // enabled at this point.
+      disabledAtSubmit = valueByName('date-1', 'Yes').disabled;
       submitSpy();
     });
+    spinner.show.mockClear();
     cleanup = () => form.remove();
   });
 
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
 
   it('checks the matching radio in every date group and submits the form', () => {
     yesButton.click();
     expect(selectedValues()).toEqual(['Yes', 'Yes']);
     expect(submitSpy).toHaveBeenCalledTimes(1);
+    reload();
     noButton.click();
     expect(selectedValues()).toEqual(['No', 'No']);
     expect(submitSpy).toHaveBeenCalledTimes(2);
+    reload();
     ifNecessaryButton.click();
     expect(selectedValues()).toEqual(['IfNecessary', 'IfNecessary']);
     expect(submitSpy).toHaveBeenCalledTimes(3);
@@ -480,12 +508,85 @@ describe('initVoteForm', () => {
     expect(submitSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('submits the form when a vote radio changes', () => {
-    valueByName('date-1', 'No').checked = true;
-    valueByName('date-1', 'No').dispatchEvent(new Event('change', {bubbles: true}));
+  it('marks the form busy, shows the spinner and disables controls after submit', () => {
+    yesButton.click();
+
+    expect(form.getAttribute('aria-busy')).toBe('true');
+    expect(spinner.show).toHaveBeenCalledTimes(1);
+    expect(disabledAtSubmit).toBe(false);
+    expect(valueByName('date-1', 'Yes').disabled).toBe(true);
+    expect(valueByName('date-2', 'Yes').disabled).toBe(true);
+    expect(yesButton.disabled).toBe(true);
+    expect(noButton.disabled).toBe(true);
+    expect(ifNecessaryButton.disabled).toBe(true);
+  });
+
+  it('submits once after the debounce window when a vote radio changes', () => {
+    vi.useFakeTimers();
+    changeRadio('date-1', 'No');
+
+    expect(submitSpy).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(399);
+    expect(submitSpy).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('submits once for two changes inside the debounce window', () => {
+    vi.useFakeTimers();
+    changeRadio('date-1', 'Yes');
+    vi.advanceTimersByTime(200);
+    changeRadio('date-2', 'No');
+
+    // 400ms after the first change but only 200ms after the second: the timer
+    // reset means nothing fires yet.
+    vi.advanceTimersByTime(200);
+    expect(submitSpy).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(200);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels a pending radio save when a set-all button is clicked', () => {
+    vi.useFakeTimers();
+    changeRadio('date-1', 'No');
+    yesButton.click();
 
     expect(submitSpy).toHaveBeenCalledTimes(1);
-    expect(form.isConnected).toBe(true);
+    expect(selectedValues()).toEqual(['Yes', 'Yes']);
+    vi.advanceTimersByTime(1000);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores further set-all clicks while a save is pending', () => {
+    yesButton.click();
+    noButton.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+    expect(selectedValues()).toEqual(['Yes', 'Yes']);
+  });
+
+  it('ignores a radio change while a save is pending', () => {
+    vi.useFakeTimers();
+    yesButton.click();
+    valueByName('date-1', 'No').dispatchEvent(new Event('change', {bubbles: true}));
+
+    vi.advanceTimersByTime(1000);
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('resets the busy state on pageshow so a back-navigation is not stuck', () => {
+    yesButton.click();
+    expect(form.getAttribute('aria-busy')).toBe('true');
+    expect(yesButton.disabled).toBe(true);
+
+    reload();
+
+    expect(form.hasAttribute('aria-busy')).toBe(false);
+    expect(yesButton.disabled).toBe(false);
+    expect(valueByName('date-1', 'Yes').disabled).toBe(false);
+
+    noButton.click();
+    expect(submitSpy).toHaveBeenCalledTimes(2);
   });
 
   it('ignores changes to radios outside the vote rows', () => {
@@ -501,6 +602,41 @@ describe('initVoteForm', () => {
     expect(submitSpy).not.toHaveBeenCalled();
   });
 
+  it('ignores a set-all button carrying an unknown vote value', () => {
+    const rogue = document.createElement('button');
+    rogue.type = 'button';
+    rogue.setAttribute('data-set-all', 'Maybe');
+    form.appendChild(rogue);
+
+    rogue.click();
+
+    expect(submitSpy).not.toHaveBeenCalled();
+  });
+
+  it('ignores vote controls that are not inside a form', () => {
+    const orphanGroup = document.createElement('fieldset');
+    orphanGroup.className = 'vote-radio-group';
+    const orphanRadio = document.createElement('input');
+    orphanRadio.type = 'radio';
+    orphanRadio.name = 'vote-orphan';
+    orphanRadio.value = 'Yes';
+    orphanGroup.appendChild(orphanRadio);
+    const orphanButton = document.createElement('button');
+    orphanButton.type = 'button';
+    orphanButton.setAttribute('data-set-all', 'Yes');
+    document.body.appendChild(orphanGroup);
+    document.body.appendChild(orphanButton);
+
+    orphanButton.click();
+    orphanRadio.checked = true;
+    orphanRadio.dispatchEvent(new Event('change', {bubbles: true}));
+
+    expect(submitSpy).not.toHaveBeenCalled();
+
+    document.body.removeChild(orphanGroup);
+    document.body.removeChild(orphanButton);
+  });
+
   it('works for a set-all button injected after initialization', () => {
     const late = document.createElement('button');
     late.type = 'button';
@@ -511,6 +647,72 @@ describe('initVoteForm', () => {
 
     expect(selectedValues()).toEqual(['IfNecessary', 'IfNecessary']);
     expect(submitSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('remembers the changed radio (name + value) before submitting', () => {
+    vi.useFakeTimers();
+    changeRadio('date-1', 'No');
+    vi.advanceTimersByTime(400);
+
+    expect(JSON.parse(sessionStorage.getItem('postpony-vote-focus')))
+      .toEqual({name: 'vote-date-1', value: 'No'});
+  });
+
+  it('remembers the set-all button value before submitting', () => {
+    yesButton.click();
+
+    expect(JSON.parse(sessionStorage.getItem('postpony-vote-focus')))
+      .toEqual({value: 'Yes'});
+  });
+
+  it('remembers the last radio when two changes land inside the debounce window', () => {
+    vi.useFakeTimers();
+    changeRadio('date-1', 'Yes');
+    changeRadio('date-2', 'No');
+    vi.advanceTimersByTime(400);
+
+    expect(JSON.parse(sessionStorage.getItem('postpony-vote-focus')))
+      .toEqual({name: 'vote-date-2', value: 'No'});
+  });
+
+  it('restores focus to the changed radio after the reload without scrolling', () => {
+    sessionStorage.setItem('postpony-vote-focus', JSON.stringify({name: 'vote-date-1', value: 'No'}));
+    const radio = valueByName('date-1', 'No');
+    const focusSpy = vi.spyOn(radio, 'focus');
+
+    reload();
+
+    expect(focusSpy).toHaveBeenCalledWith({preventScroll: true});
+    expect(document.activeElement).toBe(radio);
+    expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
+  });
+
+  it('restores focus to the set-all button after the reload', () => {
+    sessionStorage.setItem('postpony-vote-focus', JSON.stringify({value: 'No'}));
+    const focusSpy = vi.spyOn(noButton, 'focus');
+
+    reload();
+
+    expect(focusSpy).toHaveBeenCalledWith({preventScroll: true});
+    expect(document.activeElement).toBe(noButton);
+    expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
+  });
+
+  it('leaves focus untouched and does not throw when the remembered target is gone', () => {
+    sessionStorage.setItem('postpony-vote-focus', JSON.stringify({name: 'vote-deleted', value: 'Yes'}));
+    const before = document.activeElement;
+
+    expect(() => reload()).not.toThrow();
+
+    expect(document.activeElement).toBe(before);
+    expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
+  });
+
+  it('ignores a corrupt focus record without throwing', () => {
+    sessionStorage.setItem('postpony-vote-focus', 'not-json');
+
+    expect(() => reload()).not.toThrow();
+    expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
   });
 });
 

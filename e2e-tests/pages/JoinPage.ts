@@ -9,6 +9,14 @@ const VOTE_LABELS: Record<VoteType, string> = {
   IfNecessary: 'if necessary',
 };
 
+// The set-all buttons carry an aria-label that names the action ("Set all: Yes"),
+// while the visible text stays the short vote label.
+const SET_ALL_ARIA_LABELS: Record<VoteType, string> = {
+  Yes: 'Set all: Yes',
+  No: 'Set all: No',
+  IfNecessary: 'Set all: if necessary',
+};
+
 export class JoinPage {
   constructor(private readonly page: Page) {
   }
@@ -58,6 +66,11 @@ export class JoinPage {
     return this.page.getByRole('radio', {name: VOTE_LABELS[vote]});
   }
 
+  voteGroup(dateIndex: number): Locator {
+    return this.voteForm.locator('.vote-radio-group')
+      .nth(dateIndex);
+  }
+
   voteSummarySection(): Locator {
     return this.page.getByRole('region', {name: 'Vote Summary'});
   }
@@ -89,23 +102,39 @@ export class JoinPage {
   async castVote(dateIndex: number, vote: VoteType): Promise<void> {
     // ponytail: beer.css hides native radio inputs; toggle via label text. The
     // date groups are class-scoped so the "Set all:" button group is skipped.
-    // A radio change posts the form immediately (no submit button), so wait for
-    // the page's own JS to be wired and block on the confirmation toast.
+    // The client debounces a radio change by ~400ms before posting, so the
+    // navigation lands after Playwright's click wait window: await it here.
     await this.page.waitForLoadState('load');
-    await this.voteForm.locator('.vote-radio-group')
-      .nth(dateIndex)
-      .getByText(VOTE_LABELS[vote], {exact: true})
+    const group = this.voteForm.locator('.vote-radio-group')
+      .nth(dateIndex);
+    // Re-selecting the current choice fires no change event, hence no save.
+    if (await group.getByRole('radio', {name: VOTE_LABELS[vote]})
+      .isChecked())
+    {
+      return;
+    }
+    const saved = this.waitForVoteSave();
+    await group.getByText(VOTE_LABELS[vote], {exact: true})
       .click();
-    await expect(this.page.getByText('Your votes have been saved!'))
-      .toBeVisible();
+    await saved;
   }
 
   async setAllVotes(vote: VoteType): Promise<void> {
     await this.page.waitForLoadState('load');
+    const saved = this.waitForVoteSave();
     await this.setAllControls
-      .getByRole('button', {name: VOTE_LABELS[vote]})
+      .getByRole('button', {name: SET_ALL_ARIA_LABELS[vote], exact: true})
       .click();
-    await expect(this.page.getByText('Your votes have been saved!'))
-      .toBeVisible();
+    await saved;
+  }
+
+  // The vote form is a plain POST that reloads the same URL, and a stale
+  // "saved" toast is already visible from the previous save — so wait on the
+  // navigation itself, not the toast, before the next interaction.
+  private async waitForVoteSave(): Promise<void> {
+    await this.page.waitForEvent('framenavigated', {
+      predicate: (frame) => frame === this.page.mainFrame(),
+    });
+    await this.page.waitForLoadState('load');
   }
 }
