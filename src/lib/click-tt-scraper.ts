@@ -218,6 +218,14 @@ function normalizeWhitespace(text: string): string {
 }
 
 /**
+ * Reads a row cell that the caller has already confirmed present with a
+ * `cells.length` guard; a cast keeps an unreachable fallback branch out.
+ */
+function cellAt(cells: HTMLElement[], index: number): HTMLElement {
+  return cells[index] as HTMLElement;
+}
+
+/**
  * Scrapes a plain group page and returns every team of the group together with
  * the `teamtable` id needed to open its team page.
  */
@@ -231,9 +239,9 @@ export async function fetchTeams(
   const seen = new Set<string>();
   const teams: Team[] = [];
   for (const link of links) {
-    const href = link.getAttribute('href');
+    const href = link.getAttribute('href') as string;
     const name = normalizeWhitespace(link.text);
-    if (!href || !name) {
+    if (!name) {
       continue;
     }
     const teamtable = queryParam(href, 'teamtable');
@@ -272,19 +280,29 @@ export async function fetchMatches(
       if (cells.length < 8) {
         continue;
       }
-      const day = (cells[0]?.text ?? '').trim();
-      const date = (cells[1]?.text ?? '').trim();
+      const day = cellAt(cells, 0)
+        .text
+        .trim();
+      const date = cellAt(cells, 1)
+        .text
+        .trim();
       // Only rows whose second cell is an actual date are match rows; this
       // skips the club-info and player-ranking tables on the team page.
       if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) {
         continue;
       }
-      const time = (cells[2]?.text ?? '').trim()
+      const time = cellAt(cells, 2)
+        .text
+        .trim()
         .replace(/\s+/g, ' ');
       // cells[3] = location, cells[4] = round
-      const homeTeam = (cells[5]?.text ?? '').replace(/\u00a0/g, ' ')
+      const homeTeam = cellAt(cells, 5)
+        .text
+        .replace(/\u00a0/g, ' ')
         .trim();
-      const guestTeam = (cells[7]?.text ?? '').replace(/\u00a0/g, ' ')
+      const guestTeam = cellAt(cells, 7)
+        .text
+        .replace(/\u00a0/g, ' ')
         .trim();
       if (!homeTeam || !guestTeam) {
         continue;
@@ -332,12 +350,16 @@ export async function fetchPlayers(
       if (cells.length < 2) {
         continue;
       }
-      const rank = (cells[0]?.text ?? '').trim();
+      const rank = cellAt(cells, 0)
+        .text
+        .trim();
       // Skip summary rows (Einzel/Doppel/Total) — they have no rank.
       if (!rank || !/^\d/.test(rank)) {
         continue;
       }
-      const name = (cells[1]?.text ?? '').replace(/\u00a0/g, ' ')
+      const name = cellAt(cells, 1)
+        .text
+        .replace(/\u00a0/g, ' ')
         .trim();
       if (!name) {
         continue;
@@ -366,15 +388,23 @@ export function extractClubId(root: HTMLElement, identity: MatchIdentity): strin
     if (cells.length < 8) {
       continue;
     }
-    const date = (cells[1]?.text ?? '').trim();
+    const date = cellAt(cells, 1)
+      .text
+      .trim();
     if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) {
       continue;
     }
-    const time = (cells[2]?.text ?? '').trim()
+    const time = cellAt(cells, 2)
+      .text
+      .trim()
       .replace(/\s+/g, ' ');
-    const homeTeam = (cells[5]?.text ?? '').replace(/\u00a0/g, ' ')
+    const homeTeam = cellAt(cells, 5)
+      .text
+      .replace(/\u00a0/g, ' ')
       .trim();
-    const guestTeam = (cells[7]?.text ?? '').replace(/\u00a0/g, ' ')
+    const guestTeam = cellAt(cells, 7)
+      .text
+      .replace(/\u00a0/g, ' ')
       .trim();
     if (
       date !== identity.date || time !== identity.time ||
@@ -383,7 +413,8 @@ export function extractClubId(root: HTMLElement, identity: MatchIdentity): strin
     {
       continue;
     }
-    const href = cells[3]?.querySelector('a[href*="clubInfoDisplay"]')
+    const href = cellAt(cells, 3)
+      .querySelector('a[href*="clubInfoDisplay"]')
       ?.getAttribute('href');
     if (!href) {
       return undefined;
@@ -428,8 +459,7 @@ function parseVenueAddress(line: string): {
   if (parts.length < 2) {
     return null;
   }
-  const last = parts[parts.length - 1];
-  if (last && /^(?:Schweiz|Swiss|Suisse|Svizzera)$/i.test(last)) {
+  if (/^(?:Schweiz|Swiss|Suisse|Svizzera)$/i.test(parts[parts.length - 1] as string)) {
     parts.pop();
   }
   if (parts.length < 2) {
@@ -474,7 +504,7 @@ export async function fetchVenues(clubId: string): Promise<Venue[]> {
     venues.push({
       venueNumber: Number(match[1]),
       name: lines[0],
-      shortName: lines[0].split(', ')[0] ?? lines[0], ...parsed,
+      shortName: lines[0].split(', ')[0] as string, ...parsed,
     });
   }
   venues.sort((a, b) => a.venueNumber - b.venueNumber);
@@ -547,8 +577,12 @@ export async function fetchClubMeetings(clubId: string, from: string, to: string
       if (cells.length < 9) {
         continue;
       }
-      const dayCell = (cells[0]?.text ?? '').trim();
-      const dateCell = (cells[1]?.text ?? '').trim();
+      const dayCell = cellAt(cells, 0)
+        .text
+        .trim();
+      const dateCell = cellAt(cells, 1)
+        .text
+        .trim();
       const day = dayCell || lastDay;
       const date = dateCell || lastDate;
       if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) {
@@ -560,11 +594,17 @@ export async function fetchClubMeetings(clubId: string, from: string, to: string
       if (ortCell === undefined || !isClubHomeMeeting(ortCell, clubId)) {
         continue;
       }
-      const time = (cells[2]?.text ?? '').trim()
+      const time = cellAt(cells, 2)
+        .text
+        .trim()
         .replace(/\s+/g, ' ');
-      const homeTeam = (cells[6]?.text ?? '').replace(/\u00a0/g, ' ')
+      const homeTeam = cellAt(cells, 6)
+        .text
+        .replace(/\u00a0/g, ' ')
         .trim();
-      const guestTeam = (cells[8]?.text ?? '').replace(/\u00a0/g, ' ')
+      const guestTeam = cellAt(cells, 8)
+        .text
+        .replace(/\u00a0/g, ' ')
         .trim();
       if (!homeTeam || !guestTeam) {
         continue;

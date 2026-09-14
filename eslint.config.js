@@ -59,6 +59,10 @@ export default tseslint.config(
         },
       ],
       '@typescript-eslint/no-explicit-any': 'error',
+      // `no-non-null-assertion` (from strictTypeChecked) and this stylistic rule
+      // are mutually exclusive: one forbids `x!`, the other demands it over
+      // `x as T`. Keep the safety rule and allow the explicit `as` cast.
+      '@typescript-eslint/non-nullable-type-assertion-style': 'off',
       '@typescript-eslint/restrict-template-expressions': [
         'error',
         {

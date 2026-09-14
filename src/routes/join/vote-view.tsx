@@ -1,7 +1,7 @@
 import type { App } from '../../app';
 import type { AppLocale } from '../../locales';
 import type { Player, Postponement } from '../../lib/models';
-import { PostponementRules } from '../../lib/postponement';
+import { PostponementRules, type VoteTally } from '../../lib/postponement';
 import { formatProposedDateDisplay } from '../../lib/temporal-utils';
 import { ConfirmedInfoPage } from './confirmed-info';
 import type { Team } from './join-utils';
@@ -61,7 +61,9 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
 
   const proposedDates: VotePageDate[] = visibleDates.map((pd) => {
     const current = session.votes.find((vt) => vt.proposedDateId === pd.id && vt.participantId === player.id);
-    const counts = tallies[pd.id] ?? {yes: 0, no: 0, ifNecessary: 0};
+    // ponytail: tallies are keyed by every proposed date, so the lookup is
+    // guaranteed for a votable date; a cast keeps a dead branch out.
+    const counts = tallies[pd.id] as VoteTally;
     return {
       id: pd.id,
       display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),

@@ -8,8 +8,10 @@ import {
   initGeneratorDatePickers,
   initGeneratorTimePickers,
   initHtmx,
+  initLanguage,
   initOccupancyTooltips,
   initProposedDateTimePicker,
+  initRedesignDisclosures,
   initTheme,
   initVoteForm,
   shouldSwapErrorBody,
@@ -1160,5 +1162,370 @@ describe('initGeneratorDatePickers with a recording AirDatepicker fake', () => {
     document.getElementById('fromDate-picker').click();
     expect(fakeInstances[2].shows).toBe(1);
     expect(fakeInstances[0].shows).toBe(0);
+  });
+});
+
+describe('additional branch coverage', () => {
+  describe('initHtmx with htmx present', () => {
+    it('configures htmx and drives the spinner from the request lifecycle', () => {
+      const spinner = {show: vi.fn(), hide: vi.fn()};
+      vi.stubGlobal('htmx', {config: {defaultSwapStyle: ''}});
+
+      initHtmx(spinner);
+
+      expect(htmx.config.defaultSwapStyle).toBe('outerHTML');
+      document.dispatchEvent(new Event('htmx:beforeRequest'));
+      document.dispatchEvent(new Event('htmx:afterRequest'));
+      document.dispatchEvent(new Event('htmx:responseError'));
+      document.dispatchEvent(new Event('htmx:sendError'));
+      document.dispatchEvent(new Event('htmx:timeout'));
+      document.dispatchEvent(new Event('htmx:historyCacheMiss'));
+      document.dispatchEvent(new Event('htmx:historyRestore'));
+      expect(spinner.show).toHaveBeenCalledTimes(2);
+      expect(spinner.hide).toHaveBeenCalledTimes(5);
+
+      const err = new CustomEvent('htmx:beforeOnLoad', {
+        detail: {xhr: {status: 400, responseText: '<div>base</div>'}, shouldSwap: true, isError: true},
+      });
+      document.dispatchEvent(err);
+      expect(err.detail.shouldSwap).toBe(true);
+      expect(err.detail.isError).toBe(false);
+
+      const ok = new CustomEvent('htmx:beforeOnLoad', {
+        detail: {xhr: {status: 200, responseText: ''}, shouldSwap: true, isError: false},
+      });
+      document.dispatchEvent(ok);
+      expect(ok.detail.shouldSwap).toBe(true);
+
+      vi.unstubAllGlobals();
+    });
+  });
+
+  describe('initTheme with ui present', () => {
+    it('applies the BeerCSS theme', () => {
+      const ui = vi.fn();
+      vi.stubGlobal('ui', ui);
+
+      initTheme();
+
+      expect(ui).toHaveBeenCalledWith('theme', '#1a237e');
+      vi.unstubAllGlobals();
+    });
+  });
+
+  describe('initLanguage', () => {
+    afterEach(() => {
+      localStorage.clear();
+      window.history.replaceState({}, '', '/');
+    });
+
+    it('stores a supported ?lang value', () => {
+      window.history.replaceState({}, '', '/?lang=fr-CH');
+      localStorage.clear();
+
+      initLanguage();
+
+      expect(localStorage.getItem('lang')).toBe('fr-CH');
+    });
+
+    it('ignores an unsupported ?lang value and leaves storage alone', () => {
+      window.history.replaceState({}, '', '/?lang=xx-XX');
+      localStorage.setItem('lang', 'en-US');
+
+      initLanguage();
+
+      expect(localStorage.getItem('lang')).toBe('en-US');
+    });
+  });
+
+  describe('initFocusManagement fallbacks', () => {
+    beforeAll(() => {
+      initFocusManagement();
+    });
+
+    it('handles missing detail, headingless targets, and non-section elements', () => {
+      document.dispatchEvent(new Event('htmx:afterSettle'));
+
+      const main = document.createElement('div');
+      main.id = 'main-content';
+      document.body.append(main);
+      document.dispatchEvent(new CustomEvent('htmx:afterSettle', {detail: {elt: main}}));
+
+      const plain = document.createElement('div');
+      document.body.append(plain);
+      document.dispatchEvent(new CustomEvent('htmx:afterSettle', {detail: {elt: plain}}));
+
+      const section = document.createElement('div');
+      section.id = 'team-management';
+      document.body.append(section);
+      document.dispatchEvent(new CustomEvent('htmx:afterSettle', {detail: {elt: section}}));
+
+      expect(main.querySelector('h2, h3, h4')).toBe(null);
+    });
+  });
+
+  describe('initRedesignDisclosures', () => {
+    let realMatchMedia;
+
+    beforeEach(() => {
+      realMatchMedia = window.matchMedia;
+      document.body.innerHTML = '';
+    });
+
+    afterEach(() => {
+      window.matchMedia = realMatchMedia;
+      document.body.innerHTML = '';
+    });
+
+    function installDisclosure() {
+      const wrap = document.createElement('div');
+      wrap.className = 'edit-redesign';
+      const details = document.createElement('details');
+      details.className = 'side-details';
+      wrap.append(details);
+      document.body.append(wrap);
+      return details;
+    }
+
+    it('collapses side details on phone widths and opens them on desktop', () => {
+      const details = installDisclosure();
+
+      window.matchMedia = vi.fn(() => ({matches: true, addEventListener: vi.fn()}));
+      initRedesignDisclosures();
+      expect(details.open).toBe(false);
+
+      window.matchMedia = vi.fn(() => ({matches: false, addEventListener: vi.fn()}));
+      initRedesignDisclosures();
+      expect(details.open).toBe(true);
+    });
+
+    it('skips the change listener when matchMedia lacks addEventListener', () => {
+      installDisclosure();
+      window.matchMedia = vi.fn(() => ({matches: true}));
+
+      expect(() => initRedesignDisclosures()).not.toThrow();
+    });
+  });
+
+  describe('initOccupancyTooltips outside a trigger', () => {
+    beforeAll(() => {
+      initOccupancyTooltips();
+    });
+
+    it('ignores pointerover, non-Escape keys, and Escape away from a trigger', () => {
+      const plain = document.createElement('div');
+      document.body.append(plain);
+
+      plain.dispatchEvent(new Event('pointerover', {bubbles: true}));
+      plain.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
+      plain.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}));
+
+      expect(plain.classList.contains('is-open')).toBe(false);
+    });
+  });
+
+  describe('initDeleteDialogs without dialog APIs', () => {
+    beforeAll(() => {
+      initDeleteDialogs();
+    });
+
+    it('does nothing when the target lacks showModal or close', () => {
+      const trigger = document.createElement('button');
+      trigger.setAttribute('data-open-dialog', 'not-a-dialog');
+      const notDialog = document.createElement('div');
+      notDialog.id = 'not-a-dialog';
+      const dismiss = document.createElement('button');
+      dismiss.setAttribute('data-dismiss-dialog', '');
+      document.body.append(trigger, notDialog, dismiss);
+
+      trigger.click();
+      dismiss.click();
+
+      expect(notDialog.hasAttribute('open')).toBe(false);
+    });
+  });
+
+  describe('picker locale resolution', () => {
+    let realAirDatepicker;
+    let realLocale;
+
+    beforeEach(() => {
+      realAirDatepicker = window.AirDatepicker;
+      realLocale = window.AirDatepickerLocale;
+      document.body.innerHTML = '';
+    });
+
+    afterEach(() => {
+      window.AirDatepicker = realAirDatepicker;
+      window.AirDatepickerLocale = realLocale;
+      document.body.innerHTML = '';
+    });
+
+    it('falls back to de-CH when the document language has no locale', () => {
+      const instances = [];
+      window.AirDatepicker = class {
+        constructor(_input, options) {
+          this.opts = options;
+          instances.push(this);
+        }
+
+        destroy() {}
+
+        show() {}
+      };
+      window.AirDatepickerLocale = {
+        'de-CH': {dateFormat: 'dd.MM.yyyy', timeFormat: 'HH:mm', hours: 'Stunden', minutes: 'Minuten'},
+      };
+      document.documentElement.lang = 'fr-CH';
+      const input = document.createElement('input');
+      document.body.append(input);
+
+      initDatePicker(input, null);
+
+      expect(instances).toHaveLength(1);
+      expect(instances[0].opts.locale.dateFormat).toBe('dd.MM.yyyy');
+    });
+
+    it('no-ops when neither the language nor de-CH is available', () => {
+      window.AirDatepicker = class {
+        constructor() {
+          throw new Error('should not mount');
+        }
+      };
+      window.AirDatepickerLocale = {};
+      document.documentElement.lang = 'fr-CH';
+      const input = document.createElement('input');
+      document.body.append(input);
+
+      expect(() => initDatePicker(input, null)).not.toThrow();
+    });
+  });
+
+  describe('mountPicker recovery from an unparseable echoed value', () => {
+    it('retries without a selection', () => {
+      const created = [];
+      const realAirDatepicker = window.AirDatepicker;
+      const realLocale = window.AirDatepickerLocale;
+      window.AirDatepicker = class {
+        constructor(_input, options) {
+          if (options.selectedDates.length > 0) {
+            throw new Error('bad date');
+          }
+          created.push(options.selectedDates);
+        }
+
+        destroy() {}
+
+        show() {}
+      };
+      window.AirDatepickerLocale = {
+        'de-CH': {dateFormat: 'dd.MM.yyyy', timeFormat: 'HH:mm', hours: 'H', minutes: 'M'},
+      };
+      document.documentElement.lang = 'de-CH';
+      const input = document.createElement('input');
+      input.id = 'proposedDateTime';
+      input.value = 'not-a-date';
+      document.body.append(input);
+
+      initProposedDateTimePicker();
+
+      expect(created).toEqual([[]]);
+      window.AirDatepicker = realAirDatepicker;
+      window.AirDatepickerLocale = realLocale;
+      document.body.innerHTML = '';
+    });
+  });
+
+  describe('initGeneratorDatePickers with a missing field', () => {
+    it('skips a From/To field that is not in the DOM', () => {
+      const realAirDatepicker = window.AirDatepicker;
+      const realLocale = window.AirDatepickerLocale;
+      window.AirDatepicker = class {
+        constructor() {
+          throw new Error('should not mount');
+        }
+      };
+      window.AirDatepickerLocale = {
+        'de-CH': {dateFormat: 'dd.MM.yyyy', timeFormat: 'HH:mm', hours: 'H', minutes: 'M'},
+      };
+      document.documentElement.lang = 'de-CH';
+      document.body.innerHTML = '';
+
+      expect(() => initGeneratorDatePickers()).not.toThrow();
+      window.AirDatepicker = realAirDatepicker;
+      window.AirDatepickerLocale = realLocale;
+    });
+  });
+
+  describe('patchTimeSliderLabels via the picker onShow', () => {
+    const fakeInstances = [];
+
+    class FakeAirDatepicker {
+      constructor(input, options) {
+        this.input = input;
+        this.opts = options;
+        this.$datepicker = document.createElement('div');
+        this.$datepicker.innerHTML = '<input type="range"><input type="range"><input type="range">';
+        fakeInstances.push(this);
+      }
+
+      destroy() {}
+
+      show() {}
+    }
+
+    let realAirDatepicker;
+    let realLocale;
+
+    beforeEach(() => {
+      realAirDatepicker = window.AirDatepicker;
+      realLocale = window.AirDatepickerLocale;
+      window.AirDatepicker = FakeAirDatepicker;
+      window.AirDatepickerLocale = {
+        'de-CH': {dateFormat: 'dd.MM.yyyy', timeFormat: 'HH:mm', hours: 'Stunden', minutes: 'Minuten'},
+      };
+      document.documentElement.lang = 'de-CH';
+      fakeInstances.length = 0;
+      const input = document.createElement('input');
+      input.id = 'proposedDateTime';
+      const button = document.createElement('button');
+      button.id = 'proposedDateTimePicker';
+      document.body.append(input, button);
+    });
+
+    afterEach(() => {
+      window.AirDatepicker = realAirDatepicker;
+      window.AirDatepickerLocale = realLocale;
+      document.body.innerHTML = '';
+    });
+
+    it('labels the hour and minute sliders and blanks any extra slider', () => {
+      initProposedDateTimePicker();
+      expect(fakeInstances).toHaveLength(1);
+      const picker = fakeInstances[0];
+
+      picker.opts.onShow();
+
+      const sliders = picker.$datepicker.querySelectorAll('input[type="range"]');
+      expect(sliders[0].getAttribute('aria-label')).toBe('Stunden');
+      expect(sliders[1].getAttribute('aria-label')).toBe('Minuten');
+      expect(sliders[2].getAttribute('aria-label')).toBe('');
+    });
+  });
+
+  describe('restoreVoteFocus fallbacks', () => {
+    beforeAll(() => {
+      initVoteForm({show() {}});
+    });
+
+    it('returns quietly without a focus record or a vote form', () => {
+      sessionStorage.clear();
+      window.dispatchEvent(new Event('pageshow'));
+
+      sessionStorage.setItem('postpony-vote-focus', JSON.stringify({name: 'vote-x', value: 'Yes'}));
+      expect(() => window.dispatchEvent(new Event('pageshow'))).not.toThrow();
+      expect(document.querySelector('.vote-radio-group')).toBe(null);
+      sessionStorage.clear();
+    });
   });
 });

@@ -11,12 +11,11 @@ const STATUS_KEYS: Record<PostponementStatus, TranslationKeys> = {
 export interface StatusChipProps {
   status: PostponementStatus;
   t: TranslateFn;
-  oob?: boolean;
 }
 
 export function StatusChip(props: StatusChipProps): JSX.Element {
   return (
-    <p class="chip outline" id="status-chip" hx-swap-oob={props.oob ? 'true' : undefined}>
+    <p class="chip outline" id="status-chip">
       {props.t('status_label', {status: props.t(STATUS_KEYS[props.status])})}
     </p>
   );

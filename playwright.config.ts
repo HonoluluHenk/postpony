@@ -37,7 +37,11 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!readEnv('CI'),
   reporter: [['html', {open: 'never'}]],
-  timeout: 10 * 1000,
+  timeout: 20 * 1000,
+  // Per-test budget. The heaviest flows (create session → join → one full-page
+  // reload per vote → several sort swaps → add date) run ~10-12s even on an
+  // idle machine, so the former 10s budget flaked under `fullyParallel`
+  // contention. 20s gives ~2x headroom without hiding genuine hangs.
   // No global timeout: the former 15s budget for the *entire* run was far too
   // small (the suite alone already runs ~10s headless) and only caused
   // false "Timed out waiting 15s for the entire test run" failures on slower

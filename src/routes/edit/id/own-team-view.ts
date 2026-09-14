@@ -25,7 +25,9 @@ export function buildOwnTeamView(session: Postponement, locale: AppLocale): OwnT
   );
   const ownTeamResults = rules.ownTeamResults(session, session.organizerTeam).map((result) => ({
     ...result,
-    display: displayByDateId.get(result.dateId) ?? '',
+    // ponytail: dateIds come from the same proposedDates array the map is built
+    // from, so the lookup is guaranteed; a cast keeps a dead branch out.
+    display: displayByDateId.get(result.dateId) as string,
   }));
   return {organizerPlayers, ownTeamResults};
 }

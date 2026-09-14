@@ -1,7 +1,7 @@
 import type { Context } from 'hono';
 import { App } from '../../app';
 import { type AppLocale, LOCALE_KEY } from '../../locales';
-import { MemorySessionStore } from '../session-store';
+import { MemorySessionStore, type SessionStore } from '../session-store';
 
 export interface MockOptions {
   params?: Record<string, string>;
@@ -10,6 +10,7 @@ export interface MockOptions {
   body?: Record<string, unknown>;
   locale?: AppLocale;
   url?: string;
+  store?: SessionStore;
 }
 
 const DEFAULT_URL = 'https://game-scheduler.localhost:3000/';
@@ -29,8 +30,8 @@ export function createApp(options: MockOptions = {}): App {
     body = {},
     locale = 'en-US',
     url = DEFAULT_URL,
+    store = new MemorySessionStore(),
   } = options;
-  const store = new MemorySessionStore();
   const responseHeaders: Record<string, string> = {};
   const context = {
     get: (key: string): string | undefined => (key === LOCALE_KEY ? locale : undefined),

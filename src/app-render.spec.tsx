@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import { App, type ViewContext } from './app';
+import config from './config';
+import { defaultLocale } from './locales';
 
 function createMockContext(locale = 'en-US', isPartial = false): any {
   return {
@@ -70,5 +72,26 @@ describe('App.prototype.render JSX seam', () => {
     expect(output).toBe('<p>Hello, &lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt; &amp; &lt;b&gt;bold&lt;/b&gt;!</p>');
     expect(output).not.toContain('<script>');
     expect(output).not.toContain('<b>');
+  });
+
+  it('falls back to the default locale when the context carries none', () => {
+    const context = createMockContext();
+    context.get = vi.fn().mockReturnValue(undefined);
+
+    const app = App.create(context);
+
+    expect(app.locale)
+      .toBe(defaultLocale);
+  });
+
+  it('prefers the configured base URL over the request origin', () => {
+    config.set('base-url', 'https://app.example.test');
+    try {
+      const app = App.create(createMockContext());
+      expect(app.view.baseUrl)
+        .toBe('https://app.example.test');
+    } finally {
+      config.set('base-url', '');
+    }
   });
 });

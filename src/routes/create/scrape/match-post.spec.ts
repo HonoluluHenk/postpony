@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
 import { createApp } from '../../../lib/__test-utils__/create-app';
-import { fetchClubId, fetchVenues } from '../../../lib/click-tt-scraper';
+import { fetchClubId, fetchPlayers, fetchVenues } from '../../../lib/click-tt-scraper';
 import { hashPassword } from '../../../lib/crypto-utils';
 import { DEFAULT_CLUB_ID } from '../../../lib/models';
 import { handleScrapeMatchPost } from './match-post';
@@ -209,6 +209,33 @@ describe('handleScrapeMatchPost', () => {
       .toEqual([]);
     expect(stored?.clubId)
       .toBe(DEFAULT_CLUB_ID);
+  });
+
+  test('accepts a single-string playerName and mixes in the scraped opponent roster', async () => {
+    vi.mocked(fetchPlayers)
+      .mockResolvedValueOnce([{name: 'Widmer, Hans'}]);
+    const app = createApp({
+      body: {...MATCH, teamName: 'Thun', playerName: 'Linder, Christoph', opponentTeamtable: 'tt-opp'},
+    });
+
+    const stored = await storedSession(app);
+
+    expect(fetchPlayers)
+      .toHaveBeenCalledWith('MTTV 26/27', '219397', 'tt-opp');
+    expect(stored?.players)
+      .toMatchObject([
+        {name: 'Linder, Christoph', teamId: 'home'},
+        {name: 'Widmer, Hans', teamId: 'away'},
+      ]);
+  });
+
+  test('accepts an empty playerName list without crashing', async () => {
+    const app = createApp({body: {...MATCH, teamName: 'Thun', playerName: []}});
+
+    const stored = await storedSession(app);
+
+    expect(stored?.players)
+      .toEqual([]);
   });
 });
 

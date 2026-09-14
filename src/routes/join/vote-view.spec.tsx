@@ -2,6 +2,8 @@ import { describe, expect, test } from 'vitest';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../lib/__test-utils__/builders';
 import { createApp } from '../../lib/__test-utils__/create-app';
 import { formatProposedDateDisplay } from '../../lib/temporal-utils';
+import { getTranslation, inputFormat, languageOptions } from '../../locales';
+import { ConfirmedInfoPage, type ConfirmedInfoPageProps } from './confirmed-info';
 import { renderConfirmedInfo, renderVoteStep } from './vote-view';
 
 describe('renderVoteStep date visibility', () => {
@@ -897,5 +899,28 @@ describe('renderConfirmedInfo', () => {
     expect(body)
       .not
       .toContain('/join/test-session/home/calendar.ics');
+  });
+
+  test('ConfirmedInfoPage falls back to the translated title when called without one', () => {
+    const props: ConfirmedInfoPageProps = {
+      t: (key, params) => getTranslation('en-US', key, params),
+      locale: 'en-US',
+      isPartial: false,
+      baseUrl: 'https://game-scheduler.localhost:3000',
+      inputFormat: inputFormat('en-US'),
+      languageOptions: languageOptions(),
+      confirmedDateDisplay: 'Sep 1, 2025, 8:00 PM',
+      reopenCount: 0,
+      sessionId: 'session-1',
+      team: 'home',
+      token: 'token',
+      hasVotableDates: false,
+    };
+
+    const html = (ConfirmedInfoPage(props) as { toString(): string })
+      .toString();
+
+    expect(html)
+      .toContain('<h2>Postponement Confirmed</h2>');
   });
 });

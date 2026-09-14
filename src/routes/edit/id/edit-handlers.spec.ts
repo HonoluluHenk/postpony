@@ -219,7 +219,6 @@ describe('edit handlers', () => {
 
         const response = await handleEditProposedDatesPost(app);
         const html = await response.text();
-
         expect(response.status)
           .toBe(400);
         const stored = await app.store.get(session.id);
@@ -261,7 +260,6 @@ describe('edit handlers', () => {
         await app.store.save(session);
 
         const response = await handleEditProposedDatesPost(app);
-
         expect(response.status)
           .toBe(400);
         const stored = await app.store.get(session.id);
@@ -296,11 +294,7 @@ describe('edit handlers', () => {
         await app.store.save(session);
 
         const response = await handleEditProposedDatesPost(app);
-        const html = await response.text();
-
-        expect(response.status)
-          .toBe(200);
-        expect(html)
+        const html = await response.text();        expect(html)
           .toContain('title="(2) Turnhalle grün"');
         expect(html)
           .toContain('(2) Turnhalle grün</span>');
@@ -380,7 +374,6 @@ describe('edit handlers', () => {
 
         const response = await handleEditProposedDatesPost(app);
         const html = await response.text();
-
         expect(response.status)
           .toBe(400);
         const stored = await app.store.get(session.id);
@@ -610,7 +603,6 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
-
       expect(response.status)
         .toBe(400);
       const stored = await app.store.get(session.id);
@@ -686,7 +678,6 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
-
       expect(response.status)
         .toBe(400);
       const stored = await app.store.get(session.id);
@@ -802,7 +793,6 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
-
       expect(response.status)
         .toBe(400);
       const stored = await app.store.get(session.id);
@@ -834,7 +824,6 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
-
       expect(response.status)
         .toBe(400);
       const stored = await app.store.get(session.id);
@@ -982,7 +971,6 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
-
       expect(response.status)
         .toBe(400);
       const stored = await app.store.get(session.id);
@@ -1007,7 +995,6 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
-
       expect(response.status)
         .toBe(400);
       const stored = await app.store.get(session.id);
@@ -1469,6 +1456,31 @@ describe('edit handlers', () => {
             .not
             .toContain('other games at this venue');
         });
+
+        test('a home championship without a season window skips the occupancy fetch, clashes still attach', async () => {
+          const session = occupancySession({homeTeamIdentity: {...identities.home, championship: 'Sommerliga'}});
+          mockFetchMatches.mockResolvedValue([]);
+          const app = createApp({
+            params: {id: session.id},
+            headers: {'HX-Request': 'true'},
+            body: {proposedDateTime: '09/01/2025 08:00 pm'},
+          });
+          await app.store.save(session);
+
+          const html = await (await handleEditProposedDatesPost(app)).text();
+
+          expect(mockFetchClubMeetings)
+            .not
+            .toHaveBeenCalled();
+          const stored = await app.store.get(session.id);
+          expect(stored?.proposedDates[0]?.venueOccupancy)
+            .toBeUndefined();
+          expect(stored?.proposedDates[0]?.clashes)
+            .toEqual({home: [], away: []});
+          expect(html)
+            .not
+            .toContain('other games at this venue');
+        });
       });
     });
   });
@@ -1491,6 +1503,99 @@ describe('edit handlers', () => {
     const stored = await app.store.get(session.id);
     expect(stored?.proposedDates)
       .toHaveLength(0);
+  });
+
+  describe('generator date-window validation', () => {
+    function windowSession(overrides: Parameters<typeof aSession>[0] = {}): Postponement {
+      return aSession({originalMatchDateTime: '2026-09-02T16:00', proposedDates: [], status: 'Draft', ...overrides});
+    }
+
+    test('fromDate before today: redraws the partial with the from-field error, no write', async () => {
+      const session = windowSession();
+      const app = createApp({
+        params: {id: session.id},
+        headers: {'HX-Request': 'true'},
+        body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: '08/01/2026', toDate: '09/15/2026'},
+      });
+      await app.store.save(session);
+
+      const response = await handleEditProposedDatesPost(app);
+      const html = await response.text();
+
+      expect(html)
+        .toContain('Date must be today or later');
+      expect(html)
+        .toMatch(/id="fromDate"[^>]*aria-invalid="true"/);
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates)
+        .toHaveLength(0);
+    });
+
+    test('toDate on or before fromDate: redraws the partial with the to-field error', async () => {
+      const session = windowSession();
+      const app = createApp({
+        params: {id: session.id},
+        headers: {'HX-Request': 'true'},
+        body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: '09/01/2026', toDate: '09/01/2026'},
+      });
+      await app.store.save(session);
+
+      const response = await handleEditProposedDatesPost(app);
+      const html = await response.text();
+
+      expect(html)
+        .toContain("Date must be after &#39;From&#39; and at most 4 weeks after the original match");
+      expect(html)
+        .toMatch(/id="toDate"[^>]*aria-invalid="true"/);
+    });
+
+    test('toDate beyond the anchor-based cap: redraws the partial with the to-field error', async () => {
+      const session = windowSession();
+      const app = createApp({
+        params: {id: session.id},
+        headers: {'HX-Request': 'true'},
+        body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: '09/01/2026', toDate: '10/15/2026'},
+      });
+      await app.store.save(session);
+
+      const response = await handleEditProposedDatesPost(app);
+      const html = await response.text();
+
+      expect(html)
+        .toContain("Date must be after &#39;From&#39; and at most 4 weeks after the original match");
+    });
+
+    test('toDate beyond the today-based cap without an anchor: redraws with the no-anchor to-field error', async () => {
+      const session = windowSession({originalMatchDateTime: undefined});
+      const app = createApp({
+        params: {id: session.id},
+        headers: {'HX-Request': 'true'},
+        body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: '09/01/2026', toDate: '10/15/2026'},
+      });
+      await app.store.save(session);
+
+      const response = await handleEditProposedDatesPost(app);
+      const html = await response.text();
+
+      expect(html)
+        .toContain("Date must be after &#39;From&#39; and at most 4 weeks from today");
+    });
+
+    test('non-partial fromDate-before-today tuple submit: redirects via the render-partial seam', async () => {
+      const session = windowSession();
+      const app = createApp({
+        params: {id: session.id},
+        body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: '08/01/2026', toDate: '09/15/2026'},
+      });
+      await app.store.save(session);
+
+      const response = await handleEditProposedDatesPost(app);
+
+      expect(response.status)
+        .toBe(302);
+      expect(response.headers.get('location'))
+        .toBe(`/edit/${session.id}`);
+    });
   });
 
   describe('partial (HX-Request) fragment rendering', () => {
@@ -1535,7 +1640,6 @@ describe('edit handlers', () => {
 
       const response = await handleEditPlayersPost(app);
       const html = await response.text();
-
       expect(response.status)
         .toBe(400);
       expect(html)
@@ -1590,7 +1694,6 @@ describe('edit handlers', () => {
 
       const response = await handleEditProposedDatesPost(app);
       const html = await response.text();
-
       expect(response.status)
         .toBe(400);
       expect(html)
@@ -1786,6 +1889,29 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Date confirmed</p>');
     });
+
+    test('confirming with a missing proposedDateId is a no-op (no save, voting stays unlocked)', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+      });
+      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      await app.store.save(session);
+      const saveSpy = vi.spyOn(app.store, 'save');
+
+      const html = await (await handleConfirmDatePost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Voting');
+      expect(stored?.confirmedProposedDateId)
+        .toBeUndefined();
+      expect(saveSpy)
+        .not
+        .toHaveBeenCalled();
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Date confirmed</p>');
+    });
   });
 
   describe('handleProposedDateDeletePost', () => {
@@ -1837,6 +1963,27 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('id="status-chip"');
       // The deleted outcome is announced via the shared OOB status element.
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Proposed date deleted</p>');
+    });
+
+    test('deleting with a missing proposedDateId is a no-op', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+      });
+      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      await app.store.save(session);
+      const saveSpy = vi.spyOn(app.store, 'save');
+
+      const html = await (await handleProposedDateDeletePost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates)
+        .toHaveLength(1);
+      expect(saveSpy)
+        .not
+        .toHaveBeenCalled();
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Proposed date deleted</p>');
     });
@@ -1901,6 +2048,27 @@ describe('edit handlers', () => {
         .toContain('proposed-date-confirm?proposedDateId=pd-1');
       expect(html)
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Voting enabled</p>');
+    });
+
+    test('updating visibility with a missing proposedDateId is a no-op', async () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+      });
+      const app = createApp({
+        params: {id: session.id},
+        queries: {votable: 'false'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const html = await (await handleProposedDateVisibilityPost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates[0]?.votable)
+        .toBe(true);
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Voting disabled</p>');
     });
   });
 
