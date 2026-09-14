@@ -11,7 +11,8 @@
 - [x] The name derivation moves into `create` (route no longer computes it)
 - [x] `timestamp.ts` and `App.timestamp` are deleted, and no code references them
 - [x] A unit test constructs a Postponement through `create` with a fake id/clock and asserts the Draft invariants
-- [ ] E2E create/scrape flow and screenshot baselines are unchanged and green
-- [ ] `npm run verify` passes
+- [x] E2E create/scrape flow and screenshot baselines are unchanged and green
+- [x] `npm run verify` passes
 
 ## Comments
+- d181605 ticket done: 04-creation-seam; bbcaeac review: 04-creation-seam — `PostponementRules.create` owns Draft invariants/name/id/clock, route stops hand-assembling, `timestamp.ts`/`App.timestamp` deleted, unit test added; `npm run verify` green (715 unit/browser, 118 e2e).
