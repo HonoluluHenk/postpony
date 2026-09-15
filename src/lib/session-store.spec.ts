@@ -53,6 +53,29 @@ describe('normalize', () => {
       .toBe(true);
   });
 
+  test('defaults secrets to empty string when neither legacy nor modern fields exist', () => {
+    const session = normalize(legacySession({
+      organizerPasswordHash: undefined,
+      invitationPasswordHash: undefined,
+      invitationPassword: undefined,
+    }));
+
+    expect(session.organizerCaptainPasswordHash)
+      .toBe('');
+    expect(session.opponentCaptainPasswordHash)
+      .toBe('');
+    expect(session.homePlayerPasswordHash)
+      .toBe('');
+    expect(session.awayPlayerPasswordHash)
+      .toBe('');
+    expect(session.opponentCaptainPassword)
+      .toBe('');
+    expect(session.homePlayerPassword)
+      .toBe('');
+    expect(session.awayPlayerPassword)
+      .toBe('');
+  });
+
   test('maps retired dual-password fields onto the four-secret model', () => {
     const session = normalize(legacySession());
 
