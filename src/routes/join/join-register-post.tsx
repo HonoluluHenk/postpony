@@ -28,7 +28,7 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
         team={team}
         token={token}
         players={players}
-        pendingVotes={readPendingVotes(app.query.bind(app), session)}
+        pendingVotes={readPendingVotes(app.query.bind(app), session, team)}
         error={app.t('join_select_required')}
       />,
     );
@@ -37,7 +37,7 @@ export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
 
   await app.store.save(updated);
 
-  const pendingQuery = pendingVoteQuery(readPendingVotes(app.query.bind(app), session));
+  const pendingQuery = pendingVoteQuery(readPendingVotes(app.query.bind(app), session, team));
   return app.redirect(
     `/join/${id}/${team}/vote?playerId=${encodeURIComponent(player.id)}` +
     `&token=${encodeURIComponent(token)}` +

@@ -19,11 +19,11 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
   let updated = session;
   if (canVote) {
     const body = await app.body();
-    const submissions = session.proposedDates.map((pd) => ({
+    const submissions = new PostponementRules().pollDates(session, team).map((pd) => ({
       dateId: pd.id,
       value: body[`vote-${pd.id}`],
     }));
-    updated = new PostponementRules().applyVotes(session, player.id, submissions).session;
+    updated = new PostponementRules().applyVotes(session, player.id, submissions, team).session;
     await app.store.save(updated);
   }
 

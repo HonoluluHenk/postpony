@@ -449,6 +449,36 @@ describe('join handlers', () => {
         .toBe(200);
     });
 
+    test('hides a vetoed date from the opponent team\'s poll', async () => {
+      const session = await seedSession({
+        organizerTeam: 'home',
+        players: [aPlayer({id: 'away-player', teamId: 'away'})],
+        proposedDates: [
+          aProposedDate({id: 'open'}),
+          aProposedDate({id: 'vetoed', vetoed: true}),
+        ],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'away'},
+        queries: {token: TOKEN, playerId: 'away-player', 'vote-open': 'Yes', 'vote-vetoed': 'No'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+      const body = await response.text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.votes)
+        .toMatchObject([{proposedDateId: 'open', participantId: 'away-player', type: 'Yes'}]);
+      expect(stored?.votes)
+        .toHaveLength(1);
+      expect(body)
+        .not
+        .toContain('name="vote-vetoed"');
+      expect(body)
+        .toContain('name="vote-open"');
+    });
+
     test('ignores an out-of-domain vote value in a GET link', async () => {
       const session = await seedSession({
         players: [aPlayer()],

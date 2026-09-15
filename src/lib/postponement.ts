@@ -286,22 +286,24 @@ export class PostponementRules {
   }
 
   /**
-   * Applies a batch of submitted Votes for one participant: casts only submissions that
-   * target a votable Proposed Date and carry a whitelisted value, one `castVote` per
-   * surviving submission. `changed` reports whether any submission was applied — the
-   * shared "was an update made" signal both join vote handlers render (a re-cast of the
-   * same value still counts, matching the GET path's one-click upsert).
+   * Applies a batch of submitted Votes for one participant on `team`: casts only
+   * submissions that target a date in that team's poll (`pollDates`) and carry a
+   * whitelisted value, one `castVote` per surviving submission. `changed` reports
+   * whether any submission was applied — the shared "was an update made" signal both
+   * join vote handlers render (a re-cast of the same value still counts, matching the
+   * GET path's one-click upsert).
    */
   applyVotes(
     session: Postponement,
     participantId: string,
     submitted: readonly VoteSubmission[],
+    team: Team,
   ): {
     session: Postponement;
     changed: boolean
   }
   {
-    const votableIds = new Set(this.votableDates(session).map((pd) => pd.id));
+    const votableIds = new Set(this.pollDates(session, team).map((pd) => pd.id));
     let updated = session;
     let changed = false;
     for (const {dateId, value} of submitted) {

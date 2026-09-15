@@ -53,6 +53,52 @@ describe('normalize', () => {
       .toBe(true);
   });
 
+  test('maps retired dual-password fields onto the four-secret model', () => {
+    const session = normalize(legacySession());
+
+    expect(session.organizerCaptainPasswordHash)
+      .toBe('h-organizer');
+    expect(session.opponentCaptainPasswordHash)
+      .toBe('h-invite');
+    expect(session.homePlayerPasswordHash)
+      .toBe('h-invite');
+    expect(session.awayPlayerPasswordHash)
+      .toBe('h-invite');
+    expect(session.opponentCaptainPassword)
+      .toBe('pw');
+    expect(session.homePlayerPassword)
+      .toBe('pw');
+    expect(session.awayPlayerPassword)
+      .toBe('pw');
+  });
+
+  test('keeps modern four-secret fields when already present', () => {
+    const session = normalize(legacySession({
+      organizerCaptainPasswordHash: 'h-org-cap',
+      homePlayerPasswordHash: 'h-home',
+      awayPlayerPasswordHash: 'h-away',
+      opponentCaptainPasswordHash: 'h-opp-cap',
+      homePlayerPassword: 'home-pw',
+      awayPlayerPassword: 'away-pw',
+      opponentCaptainPassword: 'opp-pw',
+    }));
+
+    expect(session.organizerCaptainPasswordHash)
+      .toBe('h-org-cap');
+    expect(session.homePlayerPasswordHash)
+      .toBe('h-home');
+    expect(session.awayPlayerPasswordHash)
+      .toBe('h-away');
+    expect(session.opponentCaptainPasswordHash)
+      .toBe('h-opp-cap');
+    expect(session.homePlayerPassword)
+      .toBe('home-pw');
+    expect(session.awayPlayerPassword)
+      .toBe('away-pw');
+    expect(session.opponentCaptainPassword)
+      .toBe('opp-pw');
+  });
+
   test('maps the other legacy status to Voting', () => {
     expect(normalize(legacySession({status: 'Confirmed by Opponent'})).status)
       .toBe('Voting');

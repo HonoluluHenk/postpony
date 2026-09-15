@@ -296,7 +296,7 @@ describe('postponement', () => {
       const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
         {dateId: 'pd-1', value: 'Yes'},
         {dateId: 'pd-2', value: 'No'},
-      ]);
+      ], 'home');
 
       expect(changed)
         .toBe(true);
@@ -315,7 +315,7 @@ describe('postponement', () => {
 
       const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
         {dateId: 'pd-1', value: 'No'},
-      ]);
+      ], 'home');
 
       expect(changed)
         .toBe(true);
@@ -328,7 +328,7 @@ describe('postponement', () => {
 
       const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
         {dateId: 'closed', value: 'Yes'},
-      ]);
+      ], 'home');
 
       expect(changed)
         .toBe(false);
@@ -341,7 +341,7 @@ describe('postponement', () => {
 
       const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
         {dateId: 'pd-1', value: 'Maybe'},
-      ]);
+      ], 'home');
 
       expect(changed)
         .toBe(false);
@@ -357,7 +357,7 @@ describe('postponement', () => {
 
       const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
         {dateId: 'pd-1', value: 'Yes'},
-      ]);
+      ], 'home');
 
       expect(changed)
         .toBe(true);
@@ -377,7 +377,7 @@ describe('postponement', () => {
       const {session, changed} = new FakePostponementRules().applyVotes(before, 'player-1', [
         {dateId: 'closed', value: 'No'},
         {dateId: 'open', value: 'Maybe'},
-      ]);
+      ], 'home');
 
       expect(changed)
         .toBe(false);
@@ -388,10 +388,34 @@ describe('postponement', () => {
     test('does not mutate the input session', () => {
       const before = aSession({proposedDates: [aProposedDate({id: 'pd-1'})]});
 
-      new FakePostponementRules().applyVotes(before, 'player-1', [{dateId: 'pd-1', value: 'Yes'}]);
+      new FakePostponementRules().applyVotes(before, 'player-1', [{dateId: 'pd-1', value: 'Yes'}], 'home');
 
       expect(before.votes)
         .toHaveLength(0);
+    });
+
+    test('rejects a vetoed date for the opponent team but not for the organizer team', () => {
+      const before = aSession({
+        proposedDates: [
+          aProposedDate({id: 'open'}),
+          aProposedDate({id: 'vetoed', vetoed: true}),
+        ],
+      });
+
+      const opponent = new FakePostponementRules().applyVotes(before, 'away-1', [
+        {dateId: 'open', value: 'Yes'},
+        {dateId: 'vetoed', value: 'Yes'},
+      ], 'away');
+
+      expect(opponent.session.votes)
+        .toMatchObject([{proposedDateId: 'open', participantId: 'away-1'}]);
+
+      const own = new FakePostponementRules().applyVotes(before, 'player-1', [
+        {dateId: 'vetoed', value: 'Yes'},
+      ], 'home');
+
+      expect(own.session.votes)
+        .toMatchObject([{proposedDateId: 'vetoed', participantId: 'player-1'}]);
     });
   });
 
