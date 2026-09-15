@@ -170,13 +170,38 @@ describe('EditPage redesigned grid and sidebar', () => {
     expect(html)
       .toContain(`href="${BASE_URL}/join/test-session/home?token=home-player-pw"`);
     expect(html)
+      .toContain(`href="${BASE_URL}/opponent/test-session?opponentCaptainPassword=opponent-captain-pw"`);
+    expect(html)
       .toContain(`href="${BASE_URL}/join/test-session/away?token=away-player-pw"`);
     expect(html)
       .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/home\?token=home-player-pw"/);
     expect(html)
+      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/opponent\/test-session\?opponentCaptainPassword=opponent-captain-pw"/);
+    expect(html)
       .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/away\?token=away-player-pw"/);
     expect(html)
       .toContain('aria-label="Copy to clipboard"');
+    expect(html)
+      .toContain('My team invitation link (Home Team)');
+    expect(html)
+      .toContain('Opponent captain link (Guest Team)');
+    expect(html)
+      .toContain('Opponent team invitation link (Guest Team)');
+  });
+
+  it('orders the three invite links my-team, opponent captain, opponent team', () => {
+    const html = renderToString(EditPage(baseProps()));
+
+    const myLink = html.indexOf(`href="${BASE_URL}/join/test-session/home?token=home-player-pw"`);
+    const captainLink = html.indexOf(`href="${BASE_URL}/opponent/test-session?opponentCaptainPassword=opponent-captain-pw"`);
+    const opponentLink = html.indexOf(`href="${BASE_URL}/join/test-session/away?token=away-player-pw"`);
+
+    expect(myLink)
+      .toBeGreaterThanOrEqual(0);
+    expect(captainLink)
+      .toBeGreaterThan(myLink);
+    expect(opponentLink)
+      .toBeGreaterThan(captainLink);
   });
 
   it('offers reopen and shows the reopen count when the postponement is confirmed', () => {

@@ -60,6 +60,11 @@ export class EditPage {
       throw new Error('away invitation link was not rendered');
     }
 
+    const opponentCaptainHref = await editPage.opponentCaptainInviteLink.getAttribute('href');
+    if (!opponentCaptainHref) {
+      throw new Error('opponent captain link was not rendered');
+    }
+
     const url = new URL(homeHref);
     const id = url.pathname.split('/')[2] ?? '';
     const homeToken = url.searchParams.get('token') ?? '';
@@ -68,7 +73,7 @@ export class EditPage {
     const editUrl = page.url();
 
     return {
-      session: {id, homeToken, awayToken, homeHref, awayHref, editUrl},
+      session: {id, homeToken, awayToken, opponentCaptainHref, homeHref, awayHref, editUrl},
       editPage,
     };
   }
@@ -280,6 +285,10 @@ export class EditPage {
 
   get awayInviteLink(): Locator {
     return this.page.locator('a[href*="/away?token="]');
+  }
+
+  get opponentCaptainInviteLink(): Locator {
+    return this.page.locator('a[href*="/opponent/"]');
   }
 
   get exportCalendarLink(): Locator {

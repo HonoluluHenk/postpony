@@ -4,5 +4,6 @@ export interface SessionFixture {
   awayToken: string;
   homeHref: string;
   awayHref: string;
+  opponentCaptainHref: string;
   editUrl: string;
 }

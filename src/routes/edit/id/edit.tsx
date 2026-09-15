@@ -1,9 +1,10 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../../app';
-import type { Postponement } from '../../../lib/models';
+import type { Postponement, Team } from '../../../lib/models';
 import { matchUpLine } from '../../../lib/postponement';
 import { pageLayout } from '../../layouts/main';
+import { opponentTeam } from '../../opponent/opponent-utils';
 import { StatusAnnouncement } from '../../partials/status-announcement';
 import { withOrganizerPassword } from './edit-auth';
 import { inviteLinkLabels } from './invite-link-labels';
@@ -26,36 +27,35 @@ interface InviteLinksProps {
 }
 
 function InviteLinks(props: InviteLinksProps): JSX.Element {
-  const homeLink = `${props.baseUrl}/join/${props.session.id}/home?token=${props.session.homePlayerPassword}`;
-  const awayLink = `${props.baseUrl}/join/${props.session.id}/away?token=${props.session.awayPlayerPassword}`;
-  const labels = inviteLinkLabels(props.session, props.t);
+  const {session, baseUrl, t} = props;
+  const labels = inviteLinkLabels(session, t);
+
+  const joinLink = (side: Team): string =>
+    `${baseUrl}/join/${session.id}/${side}?token=${side === 'home' ? session.homePlayerPassword : session.awayPlayerPassword}`;
+
+  const opponent = opponentTeam(session);
+  const links: {href: string; label: string}[] = [
+    {href: joinLink(session.organizerTeam), label: labels[session.organizerTeam]},
+    {href: `${baseUrl}/opponent/${session.id}?opponentCaptainPassword=${session.opponentCaptainPassword}`, label: labels.opponentCaptain},
+    {href: joinLink(opponent), label: labels[opponent]},
+  ];
 
   return (
     <div class="invite">
-      <span>
-        <a href={homeLink}>{labels.home}</a>
-        <button
-          class="copy-btn"
-          data-copy={homeLink}
-          data-copied-label={props.t('copied_to_clipboard')}
-          aria-label={props.t('copy_to_clipboard')}
-          type="button"
-        >
-          <i aria-hidden="true">content_copy</i>
-        </button>
-      </span>
-      <span>
-        <a href={awayLink}>{labels.away}</a>
-        <button
-          class="copy-btn"
-          data-copy={awayLink}
-          data-copied-label={props.t('copied_to_clipboard')}
-          aria-label={props.t('copy_to_clipboard')}
-          type="button"
-        >
-          <i aria-hidden="true">content_copy</i>
-        </button>
-      </span>
+      {links.map((link) => (
+        <span key={link.href}>
+          <a href={link.href}>{link.label}</a>
+          <button
+            class="copy-btn"
+            data-copy={link.href}
+            data-copied-label={props.t('copied_to_clipboard')}
+            aria-label={props.t('copy_to_clipboard')}
+            type="button"
+          >
+            <i aria-hidden="true">content_copy</i>
+          </button>
+        </span>
+      ))}
     </div>
   );
 }

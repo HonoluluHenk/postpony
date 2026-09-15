@@ -15,6 +15,7 @@ describe('inviteLinkLabels', () => {
     expect(inviteLinkLabels(session, t)).toEqual({
       home: 'My team invitation link (Home Team)',
       away: 'Opponent team invitation link (Guest Team)',
+      opponentCaptain: 'Opponent captain link (Guest Team)',
     });
   });
 
@@ -24,6 +25,7 @@ describe('inviteLinkLabels', () => {
     expect(inviteLinkLabels(session, t)).toEqual({
       home: 'Opponent team invitation link (Home Team)',
       away: 'My team invitation link (Guest Team)',
+      opponentCaptain: 'Opponent captain link (Home Team)',
     });
   });
 
@@ -36,6 +38,7 @@ describe('inviteLinkLabels', () => {
     expect(inviteLinkLabels(session, t)).toEqual({
       home: 'My team invitation link',
       away: 'Opponent team invitation link',
+      opponentCaptain: 'Opponent captain link',
     });
   });
 
@@ -47,6 +50,7 @@ describe('inviteLinkLabels', () => {
     expect(inviteLinkLabels(session, t)).toEqual({
       home: 'My team invitation link',
       away: 'Opponent team invitation link (Guest Team)',
+      opponentCaptain: 'Opponent captain link (Guest Team)',
     });
   });
 
@@ -56,6 +60,7 @@ describe('inviteLinkLabels', () => {
     expect(inviteLinkLabels(session, t)).toEqual({
       home: 'My team invitation link (TT Zürich 1)',
       away: 'Opponent team invitation link (SV Bern A)',
+      opponentCaptain: 'Opponent captain link (SV Bern A)',
     });
   });
 });
