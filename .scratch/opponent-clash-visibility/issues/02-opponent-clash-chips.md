@@ -13,3 +13,6 @@
 - [x] Date rows carry the clash-row marker, the group role, and the clash/clean accessible labels judged on the opponent side only.
 - [x] The shared accessibility checker passes on the opponent surface.
 - [x] End-to-end coverage asserts the clash line, the clean chip, and the continued absence of organizer-side information.
+
+## Comments
+- 1070f0a own-side clash chips + clean chip + four-part dates on opponent page, suites green (967 unit tests, opponent-captain + clash-checks e2e).
