@@ -17,7 +17,8 @@ A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framewo
 * Implement E2E tests for the happy path and some likely error-paths
 * In E2E-Tests: test what the user or screenreader sees. Test behavior. Avoid CSS selectors if alternatives exist.
 * Whe implementing issues: use subagents and commit after each issue
-* Ask questions using the `question` tool.
+* htmx `defaultSwapStyle` is 'outerHTML'
+* **Always** ask questions using the `question` or `ask_user` tool (whichever is available).
 
 ## Quick reference
 
