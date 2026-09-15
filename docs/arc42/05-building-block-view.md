@@ -36,7 +36,8 @@ flowchart TB
 | `postponement.ts`             | `PostponementRules` pure domain ops + `newId()/now()` seam                                                                                                    |
 | `session-store.ts`            | `SessionStore` interface, `normalize()` read-time upgrade, `MemorySessionStore`, `SqliteSessionStore`                                                         |
 | `click-tt-scraper.ts`         | all scraping + HTML parsing + fixture seam                                                                                                                    |
-| `clashes.ts`                  | clash domain (pure): `±2h` buffer, `computeClashes`, auto-deselect                                                                                            |
+| `clashes.ts`                  | clash domain (pure): `±2h` buffer, `computeClashes`, auto-deselect, `mergeOwnSideClashes` (single-side merge, never touches `votable`) |
+| `clash-check.ts`              | shared schedule-check routines: `computeClashesForSession` (both teams + occupancy, edit paths) and `computeOwnSideCheck` (one side, opponent refresh)      |
 | `venue-occupancy.ts`          | pure count of home-club home matches in the buffered window                                                                                                   |
 | `venues.ts`                   | `defaultVenueNumber`, `resolveVenue`, `venueShortName`                                                                                                        |
 | `proposed-dates-generator.ts` | pure weekday-tuple generator (planning window = original + 4 weeks)                                                                                           |
@@ -79,10 +80,11 @@ Routers mounted in `src/build-app.tsx`: `/create`, `/edit`, `/join`, `/opponent`
 | POST   | `/opponent/:id/players`              | `handleOpponentPlayersPost` (add/remove own team)             |
 | POST   | `/opponent/:id/veto`                 | `handleOpponentVetoPost`                                      |
 | POST   | `/opponent/:id/acceptable`           | `handleOpponentAcceptablePost`                                |
+| POST   | `/opponent/:id/refresh-clashes`      | `handleOpponentRefreshPost` (own-side-only re-check, ADR-0026) |
 | —      | `/assets/*`                          | `serveStatic` (Node) / Workers Assets; `.spec.` paths blocked |
 
 Known gap: the home page links `/edit`, but no handler serves bare `GET /edit` (404) — see §11.
 
 ## 5.4 View components and partials
 
-Layout: `src/routes/layouts/main.tsx` (`Layout`, `PartialLayout`, `pageLayout(view, content, title?)` branching on `view.isPartial`). Pages under `src/routes/{index,error}.tsx`, `create/scrape/*.tsx`, `edit/id/*.tsx`, `join/*.tsx`. Shared partials in `src/routes/partials/`. Edit view data is assembled in `src/routes/edit/id/render-edit-partials.tsx` and mutations run through the single `runEditCommand` pipeline in `run-edit-command.ts`.
+Layout: `src/routes/layouts/main.tsx` (`Layout`, `PartialLayout`, `pageLayout(view, content, title?)` branching on `view.isPartial`). Pages under `src/routes/{index,error}.tsx`, `create/scrape/*.tsx`, `edit/id/*.tsx`, `join/*.tsx`. Shared partials in `src/routes/partials/`. Edit view data is assembled in `src/routes/edit/id/render-edit-partials.tsx` and mutations run through the single `runEditCommand` pipeline in `run-edit-command.ts`. Opponent view data is assembled in `src/routes/opponent/render-opponent.tsx` (`buildOpponentViewData` carries only the opponent side's clash lines) and mutations run through `runOpponentCommand` in `run-opponent-command.ts`.

@@ -92,7 +92,9 @@ sequenceDiagram
     H -->> C: re-render opponent partial
 ```
 
-The opponent captain is the side opposite `organizerTeam`, identified only by holding the opponent-captain password. The surface is scoped to their own team: add/remove players (removal cascade-deletes votes), veto votable dates (`setVetoed` no-ops on non-votable), and mark dates acceptable. No propose, `votable`-toggle, or confirm affordance exists here, and the organizer's team tallies are never rendered.
+The opponent captain is the side opposite `organizerTeam`, identified only by holding the opponent-captain password. The surface is scoped to their own team: add/remove players (removal cascade-deletes votes), veto votable dates (`setVetoed` no-ops on non-votable), and mark dates acceptable. No propose, `votable`-toggle, or confirm affordance exists here, and the organizer's team tallies are never rendered. Each date row shows only the opponent side's clash lines (or the clean chip when checked-clean) under a four-part date cell; the organizer side's lines never reach the template.
+
+The opponent re-check (`POST /opponent/:id/refresh-clashes`) flows through the same `runOpponentCommand` pipeline: it scrapes only the opponent side's schedule (`computeOwnSideCheck`), merges the fresh lines over the shared snapshot with `mergeOwnSideClashes` (organizer lines preserved, `votable` untouched), and replaces Venue Occupancy only when the home side's re-fetch succeeds (ADR-0026). A failed check saves nothing — previous snapshot plus warning, or the plain nothing state. The status announcement renders outside `#opponent-view` so the HTMX swap target never destroys it.
 
 ## 6.5 iCal export
 

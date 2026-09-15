@@ -47,7 +47,7 @@ One of the two captains: the person who creates and manages a Postponement, sitt
 
 ## Opponent Captain
 
-The captain of the side opposite the organizer (the team that is not `organizerTeam`). Identity is implicit, like the organizer's. Holds the **opponentCaptain** password and gets scoped edit rights over their own team only: alter opponent Players, set a Proposed Date's `vetoed` flag, and mark `acceptable`. Cannot propose dates, flip the symmetric `votable` switch, or confirm. _Avoid_: away captain, guest captain, co-organizer
+The captain of the side opposite the organizer (the team that is not `organizerTeam`). Identity is implicit, like the organizer's. Holds the **opponentCaptain** password and gets scoped edit rights over their own team only: alter opponent Players, set a Proposed Date's `vetoed` flag, and mark `acceptable`. Cannot propose dates, flip the symmetric `votable` switch, or confirm. Sees only their own team's Clash lines on each votable Proposed Date — never the organizer team's — with a "No other games" chip when their side is checked and clean, and may trigger a schedule re-check from the opponent page that refreshes only their own side's lines (plus Venue Occupancy when sitting on the home side). _Avoid_: away captain, guest captain, co-organizer
 
 ## Captain Password
 
@@ -83,7 +83,7 @@ A Proposed Date flag set by the Opponent Captain after their team has voted, mar
 
 ## Clash
 
-A scheduled Match of the home or the guest team whose start falls within a Proposed Date's `dateTimeRange` plus a two-hour buffer on either side — the hall may be booked or the team double-booked. Computed from both teams' scraped click-tt schedules by checking when dates are proposed and again on a manual refresh; the postponed Match itself is excluded — the game being rescheduled is not a Clash. Each Clash is attributed to the affected team (home or away) and carries the opponent's name and the game's start. A newly proposed date that has a Clash is auto-deselected (its `votable` flag set to `false`), a default the organizer can reverse with the votable switch. A match without team identities has no clash data. _Avoid_: conflict, collision, double booking
+A scheduled Match of the home or the guest team whose start falls within a Proposed Date's `dateTimeRange` plus a two-hour buffer on either side — the hall may be booked or the team double-booked. Computed from both teams' scraped click-tt schedules by checking when dates are proposed and again on a manual refresh; the postponed Match itself is excluded — the game being rescheduled is not a Clash. Each Clash is attributed to the affected team (home or away) and carries the opponent's name and the game's start. A newly proposed date that has a Clash is auto-deselected (its `votable` flag set to `false`), a default the organizer can reverse with the votable switch. A match without team identities has no clash data. Each captain sees only their own side's lines: the edit page shows both teams' lines, the opponent page only the opponent team's, and the vote page none. _Avoid_: conflict, collision, double booking
 
 ## Venue
 

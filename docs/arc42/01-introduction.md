@@ -10,13 +10,14 @@ The following capabilities describe the system **as built** (each is traceable t
 2. **Manage the roster** — add players to the home or away team. (`POST /edit/:id/players`)
 3. **Propose dates** one at a time, or as a weekly slate through the fixed Monday–Sunday generator. (`POST /edit/:id/proposed-dates`, ADR-0021)
 4. **Detect clashes** — flag dates that collide with either team's click-tt schedule (±2 h) and the home venue's occupancy; newly-proposed clashing dates are auto-deselected. (ADR-0023)
+5. **Re-check clashes on demand** — the organizer refreshes both sides from the edit page; the opponent captain refreshes only their own side from the opponent page (plus Venue Occupancy when on the home side), never touching the other side's lines or the votable switch. (`POST /edit/:id/refresh-clashes`, `POST /opponent/:id/refresh-clashes`, ADR-0026)
 5. **Toggle votability** per proposed date. (`POST /edit/:id/proposed-date-visibility`)
 6. **Invite players** via a shareable, per-team token link — each team has its own player password. (`/join/:id/:team?token=`, ADR-0013, ADR-0025)
 7. **Vote** `Yes` / `No` / `IfNecessary`, one vote per participant per date. (`/join/:id/:team/vote`)
 8. **Confirm** a date, locking the postponement to `Confirmed` — only a date that is votable, marked acceptable by the opponent captain, and not vetoed. (`POST /edit/:id/proposed-date-confirm`)
 9. **Reopen** a confirmed postponement back to `Voting`, preserving history and incrementing `reopenCount`. (`POST /edit/:id/reopen`)
 10. **Export** the candidate dates as an iCal feed with per-date one-click vote links. (`/edit/:id/calendar.ics`, `/join/:id/:team/calendar.ics`)
-11. **Opponent-captain scoped view** — the opposing captain manages their own team's roster, vetoes votable dates, and marks dates acceptable, seeing only their own team's tallies. (`/opponent/:id`, ADR-0025)
+11. **Opponent-captain scoped view** — the opposing captain manages their own team's roster, vetoes votable dates, and marks dates acceptable, seeing only their own team's tallies and clash lines (with a clean chip on checked-clean dates), and re-checks their own side's schedule on demand. (`/opponent/:id`, ADR-0025, ADR-0026)
 
 ### 1.1.1 Explicitly not built
 
