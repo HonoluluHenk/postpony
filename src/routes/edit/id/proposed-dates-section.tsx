@@ -22,7 +22,10 @@ export interface ProposedDateTallyItem extends VoteTallyItem {
   /** whether the opponent captain marked this date acceptable; required to confirm. */
   acceptable: boolean;
   /** ISO start/end range of the proposed date (week grouping + date cell). */
-  dateTimeRange: { start: string; end: string };
+  dateTimeRange: {
+    start: string;
+    end: string
+  };
   clashes?: DateClashes;
   /** venue number the date applies to; absent means venue 1 (legacy dates predate venues). */
   venueNumber?: number;
@@ -53,6 +56,8 @@ export type EditPartialsData = OwnTeamView & {
   homeProposedDates: VoteTallyItem[];
   awayProposedDates: VoteTallyItem[];
   clashCheckable: boolean;
+  /** The last schedule check failed transiently; clash data may be out of date. */
+  clashDataStale: boolean;
   venues: Venue[];
 };
 
@@ -87,15 +92,18 @@ export interface EditGridProps extends EditPartialsData {
 
 /* ------------------------------------------------------------------ */
 /* Week grouping (ISO week) helpers                                    */
+
 /* ------------------------------------------------------------------ */
 
 function isoWeekKey(isoStart: string): string {
   const dt = parseIsoToPlainDateTime(isoStart);
-  return `${dt.yearOfWeek}-W${String(dt.weekOfYear).padStart(2, '0')}`;
+  return `${dt.yearOfWeek}-W${String(dt.weekOfYear)
+    .padStart(2, '0')}`;
 }
 
 function isoWeekRange(isoStart: string, locale: AppLocale): string {
-  const date = parseIsoToPlainDateTime(isoStart).toPlainDate();
+  const date = parseIsoToPlainDateTime(isoStart)
+    .toPlainDate();
   const monday = date.subtract({days: date.dayOfWeek - 1});
   const sunday = monday.add({days: 6});
   const a = formatLocalizedDateTime(monday, locale, {month: 'short', day: 'numeric'});
@@ -175,6 +183,7 @@ function sortedRows(rows: readonly ProposedDateTallyItem[]): ProposedDateTallyIt
 
 /* ------------------------------------------------------------------ */
 /* Vote dots (replaces the three vote tables)                          */
+
 /* ------------------------------------------------------------------ */
 
 function dotClass(vote: OwnTeamView['ownTeamResults'][number]['votes'][number]['vote']): string {
@@ -194,7 +203,15 @@ function voteTitle(playerName: string, vote: OwnTeamView['ownTeamResults'][numbe
   return vote ? `${playerName}: ${vote}` : `${playerName}: no vote`;
 }
 
-function VoteDots(props: { row: ProposedDateTallyItem; roster: readonly {id: string; name: string}[]; ownTeamResults: EditGridProps['ownTeamResults']; t: TranslateFn }): JSX.Element {
+function VoteDots(props: {
+  row: ProposedDateTallyItem;
+  roster: readonly {
+    id: string;
+    name: string
+  }[];
+  ownTeamResults: EditGridProps['ownTeamResults'];
+  t: TranslateFn
+}): JSX.Element {
   const result = props.ownTeamResults.find((r) => r.dateId === props.row.id);
   const voteFor = (playerId: string): OwnTeamView['ownTeamResults'][number]['votes'][number]['vote'] =>
     result?.votes.find((v) => v.playerId === playerId)?.vote ?? null;
@@ -206,7 +223,7 @@ function VoteDots(props: { row: ProposedDateTallyItem; roster: readonly {id: str
       <div class="vote-dots-group">
         {props.roster.map((player) => {
           const vote = voteFor(player.id);
-          return <span key={player.id} class={`vote-dot ${dotClass(vote)}`} title={voteTitle(player.name, vote)} />;
+          return <span key={player.id} class={`vote-dot ${dotClass(vote)}`} title={voteTitle(player.name, vote)}/>;
         })}
       </div>
       <span class="vote-dot-count">{props.t('voted_count', {voted: String(voted), total: String(total)})}</span>
@@ -216,9 +233,16 @@ function VoteDots(props: { row: ProposedDateTallyItem; roster: readonly {id: str
 
 /* ------------------------------------------------------------------ */
 /* Date chips (clashes / venue occupancy / clean / unchecked)          */
+
 /* ------------------------------------------------------------------ */
 
-function DateChips(props: { row: ProposedDateTallyItem; clashCheckable: boolean; venues: readonly Venue[]; t: TranslateFn; locale: AppLocale }): JSX.Element {
+function DateChips(props: {
+  row: ProposedDateTallyItem;
+  clashCheckable: boolean;
+  venues: readonly Venue[];
+  t: TranslateFn;
+  locale: AppLocale
+}): JSX.Element {
   const {row, t, locale} = props;
   const venue = venueShortName(row.venueNumber, props.venues);
   const venueLabel = venue ? `${venueNumberToken(row.venueNumber)} ${venue}` : venueNumberToken(row.venueNumber);
@@ -237,14 +261,20 @@ function DateChips(props: { row: ProposedDateTallyItem; clashCheckable: boolean;
     for (const clash of row.clashes?.home ?? []) {
       chips.push(
         <span class="chip chip--error">
-          {t('clash_line_home', {time: formatLocalizedDateTime(parseIsoToPlainDateTime(clash.start), locale, {timeStyle: 'short'}), opponent: clash.opponent})}
+          {t('clash_line_home', {
+            time: formatLocalizedDateTime(parseIsoToPlainDateTime(clash.start), locale, {timeStyle: 'short'}),
+            opponent: clash.opponent,
+          })}
         </span>,
       );
     }
     for (const clash of row.clashes?.away ?? []) {
       chips.push(
         <span class="chip chip--error">
-          {t('clash_line_away', {time: formatLocalizedDateTime(parseIsoToPlainDateTime(clash.start), locale, {timeStyle: 'short'}), opponent: clash.opponent})}
+          {t('clash_line_away', {
+            time: formatLocalizedDateTime(parseIsoToPlainDateTime(clash.start), locale, {timeStyle: 'short'}),
+            opponent: clash.opponent,
+          })}
         </span>,
       );
     }
@@ -260,8 +290,8 @@ function DateChips(props: { row: ProposedDateTallyItem; clashCheckable: boolean;
       chips.push(
         <span class="chip chip--warn">
           {row.venueOccupancy.count === 1
-            ? t('venue_occupancy_line_one')
-            : t('venue_occupancy_line', {count: String(row.venueOccupancy.count)})}
+           ? t('venue_occupancy_line_one')
+           : t('venue_occupancy_line', {count: String(row.venueOccupancy.count)})}
         </span>,
       );
     }
@@ -271,9 +301,16 @@ function DateChips(props: { row: ProposedDateTallyItem; clashCheckable: boolean;
 
 /* ------------------------------------------------------------------ */
 /* Date actions (wired: votable, confirm, delete)                      */
+
 /* ------------------------------------------------------------------ */
 
-function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: TranslateFn; confirmed: boolean; organizerPassword?: string }): JSX.Element {
+function DateActions(props: {
+  row: ProposedDateTallyItem;
+  sessionId: string;
+  t: TranslateFn;
+  confirmed: boolean;
+  organizerPassword?: string
+}): JSX.Element {
   const {row, sessionId, t, organizerPassword} = props;
   return (
     <div class="date-actions">
@@ -306,12 +343,15 @@ function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: 
           {t('confirm_date')}
         </button>
       ) : null}
-      <dialog id={`delete-proposed-date-${row.id}`} class="padding small-round surface" aria-labelledby={`delete-proposed-date-title-${row.id}`}>
+      <dialog id={`delete-proposed-date-${row.id}`} class="padding small-round surface"
+              aria-labelledby={`delete-proposed-date-title-${row.id}`}>
         <h4 id={`delete-proposed-date-title-${row.id}`}>{t('delete_proposed_date_confirm_title')}</h4>
         <p>{t('delete_proposed_date_confirm_message', {date: row.display})}</p>
         <div class="row items-center gap">
           <button type="button" class="button outline" data-dismiss-dialog>{t('cancel')}</button>
-          <form hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-date-delete?proposedDateId=${row.id}`, organizerPassword)} hx-target="#edit-grid">
+          <form
+            hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-date-delete?proposedDateId=${row.id}`, organizerPassword)}
+            hx-target="#edit-grid">
             <button type="submit" class="button">{t('delete_proposed_date')}</button>
           </form>
         </div>
@@ -322,6 +362,7 @@ function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: 
 
 /* ------------------------------------------------------------------ */
 /* Generator form (moved into the sidebar)                             */
+
 /* ------------------------------------------------------------------ */
 
 export interface GenerateFormProps {
@@ -372,7 +413,9 @@ export function GenerateForm(props: GenerateFormProps): JSX.Element {
           />
           <label for="fromDate">{t('proposed_dates_generate_from_label')}</label>
           {fromError ? <span id="fromDate-error" class="error" role="alert">{fromError}</span> : null}
-          <button type="button" id="fromDate-picker" class="button picker-btn" aria-label={t('proposed_dates_generate_from_picker_label')} title={t('proposed_dates_generate_from_picker_label')}>
+          <button type="button" id="fromDate-picker" class="button picker-btn"
+                  aria-label={t('proposed_dates_generate_from_picker_label')}
+                  title={t('proposed_dates_generate_from_picker_label')}>
             <i aria-hidden="true">calendar_today</i>
           </button>
         </div>
@@ -391,7 +434,9 @@ export function GenerateForm(props: GenerateFormProps): JSX.Element {
           />
           <label for="toDate">{t('proposed_dates_generate_to_label')}</label>
           {toError ? <span id="toDate-error" class="error" role="alert">{toError}</span> : null}
-          <button type="button" id="toDate-picker" class="button picker-btn" aria-label={t('proposed_dates_generate_to_picker_label')} title={t('proposed_dates_generate_to_picker_label')}>
+          <button type="button" id="toDate-picker" class="button picker-btn"
+                  aria-label={t('proposed_dates_generate_to_picker_label')}
+                  title={t('proposed_dates_generate_to_picker_label')}>
             <i aria-hidden="true">calendar_today</i>
           </button>
         </div>
@@ -424,8 +469,11 @@ export function GenerateForm(props: GenerateFormProps): JSX.Element {
                   aria-describedby={invalid ? `time-${index}-error` : undefined}
                 />
                 <label for={`time-${index}`}>{timeLabel}</label>
-                {invalid ? <span id={`time-${index}-error`} class="error" role="alert">{t('proposed_date_time_invalid')}</span> : null}
-                <button type="button" id={`time-${index}-picker`} class="button picker-btn" aria-label={t('proposed_dates_generate_time_picker_label')} title={t('proposed_dates_generate_time_picker_label')}>
+                {invalid ? <span id={`time-${index}-error`} class="error"
+                                 role="alert">{t('proposed_date_time_invalid')}</span> : null}
+                <button type="button" id={`time-${index}-picker`} class="button picker-btn"
+                        aria-label={t('proposed_dates_generate_time_picker_label')}
+                        title={t('proposed_dates_generate_time_picker_label')}>
                   <i aria-hidden="true">schedule</i>
                 </button>
               </div>
@@ -451,12 +499,23 @@ export function GenerateForm(props: GenerateFormProps): JSX.Element {
 
 /* ------------------------------------------------------------------ */
 /* The rail: week-grouped dense date list + add-date form              */
+
 /* ------------------------------------------------------------------ */
 
-function AddDateForm(props: { sessionId: string; t: TranslateFn; locale: AppLocale; inputFormat: string; venueOptions: JSX.Element[]; proposedDateTime?: string; error?: string; organizerPassword?: string }): JSX.Element {
+function AddDateForm(props: {
+  sessionId: string;
+  t: TranslateFn;
+  locale: AppLocale;
+  inputFormat: string;
+  venueOptions: JSX.Element[];
+  proposedDateTime?: string;
+  error?: string;
+  organizerPassword?: string
+}): JSX.Element {
   const {sessionId, t, locale, inputFormat, venueOptions} = props;
   return (
-    <form hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-dates`, props.organizerPassword)} hx-target="#edit-grid" class="mt-4">
+    <form hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-dates`, props.organizerPassword)}
+          hx-target="#edit-grid" class="mt-4">
       <div class="row items-center gap">
         <div class={`field label border fill max${props.error ? ' invalid' : ''}`}>
           <input
@@ -473,7 +532,8 @@ function AddDateForm(props: { sessionId: string; t: TranslateFn; locale: AppLoca
           />
           <label for="proposedDateTime">{t('proposed_date_time_label')}</label>
           {props.error ? <span id="proposedDateTime-error" class="error" role="alert">{props.error}</span> : null}
-          <button type="button" id="proposedDateTimePicker" class="button picker-btn" aria-label={t('proposed_date_time_picker_label')} title={t('proposed_date_time_picker_label')}>
+          <button type="button" id="proposedDateTimePicker" class="button picker-btn"
+                  aria-label={t('proposed_date_time_picker_label')} title={t('proposed_date_time_picker_label')}>
             <i aria-hidden="true">calendar_today</i>
           </button>
         </div>
@@ -508,8 +568,8 @@ function TeamTallies(props: {
 }): JSX.Element {
   const format = (team: string, item: VoteTallyItem | undefined): string =>
     item
-      ? `${team}: ${item.yes + item.ifNecessary} (${item.yes}/${item.ifNecessary}/${item.no})`
-      : `${team}: 0 (0/0/0)`;
+    ? `${team}: ${item.yes + item.ifNecessary} (${item.yes}/${item.ifNecessary}/${item.no})`
+    : `${team}: 0 (0/0/0)`;
   return (
     <div class="team-tallies">
       <span class="team-tally">{format(props.homeTeam, props.homeTallies.get(props.row.id))}</span>
@@ -518,7 +578,12 @@ function TeamTallies(props: {
   );
 }
 
-function SortControl(props: { sessionId: string; sort: DateSort; t: TranslateFn; organizerPassword?: string }): JSX.Element {
+function SortControl(props: {
+  sessionId: string;
+  sort: DateSort;
+  t: TranslateFn;
+  organizerPassword?: string
+}): JSX.Element {
   const option = (value: DateSort, label: string): JSX.Element => (
     <label class="sort-option">
       <input
@@ -553,15 +618,15 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
       </option>
     ))
                        : Array.from({length: FALLBACK_VENUE_COUNT}, (_, index) => (
-                         <option key={index + 1} value={index + 1}>{index + 1}</option>
-                       ));
+      <option key={index + 1} value={index + 1}>{index + 1}</option>
+    ));
   const sort = props.sort;
   const rows = sortedRows(props.proposedDates);
   const homeTallies = tallyById(props.homeProposedDates);
   const awayTallies = tallyById(props.awayProposedDates);
   const groups = sort === 'availability'
-    ? groupByAvailability(rows, ownAvailabilityById(props), props.t)
-    : groupByWeek(rows, props.locale, props.t);
+                 ? groupByAvailability(rows, ownAvailabilityById(props), props.t)
+                 : groupByWeek(rows, props.locale, props.t);
   const homeTeam = props.homeTeam ?? props.t('home_team');
   const guestTeam = props.guestTeam ?? props.t('away_team');
 
@@ -570,19 +635,24 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
       <h2>{props.t('proposed_dates_management')}</h2>
       <div class="row items-center gap wrap mt-2">
         {props.proposedDates.some((pd) => pd.votable) ? (
-          <a class="button outline" href={`${props.baseUrl}/edit/${props.sessionId}/calendar.ics`} hx-boost="false" data-no-spinner>
+          <a class="button outline" href={`${props.baseUrl}/edit/${props.sessionId}/calendar.ics`} hx-boost="false"
+             data-no-spinner>
             <i aria-hidden="true">download</i>
             {props.t('export_calendar')}
           </a>
         ) : null}
         {props.clashCheckable && props.proposedDates.length > 0 ? (
-          <button type="button" class="button outline" hx-post={withOrganizerPassword(`/edit/${props.sessionId}/refresh-clashes`, props.organizerPassword)} hx-target="#edit-grid">
+          <button type="button" class="button outline"
+                  hx-post={withOrganizerPassword(`/edit/${props.sessionId}/refresh-clashes`, props.organizerPassword)}
+                  hx-target="#edit-grid">
             <i aria-hidden="true">refresh</i>
             {props.t('clash_check_refresh')}
           </button>
         ) : null}
       </div>
       {props.refreshError ? <p class="error mt-2" role="alert">{props.t('clash_check_refresh_failed')}</p> : null}
+      {props.clashDataStale && !props.refreshError ? <p class="error mt-2"
+                                                        role="alert">{props.t('clash_data_stale')}</p> : null}
       {props.confirmClashWarning ? (
         <p class="confirm-clash-warning mt-2">
           <i aria-hidden="true">warning</i>
@@ -590,7 +660,8 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
         </p>
       ) : null}
 
-      {props.proposedDates.length > 1 ? <SortControl sessionId={props.sessionId} sort={sort} t={props.t} organizerPassword={props.organizerPassword}/> : null}
+      {props.proposedDates.length > 1 ? <SortControl sessionId={props.sessionId} sort={sort} t={props.t}
+                                                     organizerPassword={props.organizerPassword}/> : null}
 
       {groups.map((group) => (
         <section key={group.key}>
@@ -606,18 +677,25 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
                                                                                              ? props.t('clash_row_clean_label', {date: row.display})
                                                                                              : undefined;
             return (
-              <article key={row.id} class={`date-row${hasClashes ? ' clash-row' : ''}`} role={ariaLabel ? 'group' : undefined} aria-label={ariaLabel}>
+              <article key={row.id} class={`date-row${hasClashes ? ' clash-row' : ''}`}
+                       role={ariaLabel ? 'group' : undefined} aria-label={ariaLabel}>
                 <div class="date-cell">
                   <span class="date-day">{weekdayLabels[props.locale][dt.dayOfWeek - 1] ?? ''}</span>
-                  <span class="date-num">{formatLocalizedDateTime(dt, props.locale, {month: 'long', day: 'numeric'})}</span>
+                  <span class="date-num">{formatLocalizedDateTime(dt, props.locale, {
+                    month: 'long',
+                    day: 'numeric',
+                  })}</span>
                   <span class="date-time">{formatLocalizedDateTime(dt, props.locale, {timeStyle: 'short'})}</span>
                   <span class="date-year">{dt.year}</span>
                 </div>
                 <div class="date-main">
-                  <DateChips row={row} clashCheckable={props.clashCheckable} venues={props.venues} t={props.t} locale={props.locale}/>
-                  <TeamTallies row={row} homeTeam={homeTeam} guestTeam={guestTeam} homeTallies={homeTallies} awayTallies={awayTallies}/>
+                  <DateChips row={row} clashCheckable={props.clashCheckable} venues={props.venues} t={props.t}
+                             locale={props.locale}/>
+                  <TeamTallies row={row} homeTeam={homeTeam} guestTeam={guestTeam} homeTallies={homeTallies}
+                               awayTallies={awayTallies}/>
                   <VoteDots row={row} roster={roster} ownTeamResults={props.ownTeamResults} t={props.t}/>
-                  <DateActions row={row} sessionId={props.sessionId} t={props.t} confirmed={confirmed} organizerPassword={props.organizerPassword}/>
+                  <DateActions row={row} sessionId={props.sessionId} t={props.t} confirmed={confirmed}
+                               organizerPassword={props.organizerPassword}/>
                 </div>
               </article>
             );

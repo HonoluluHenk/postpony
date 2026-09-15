@@ -322,7 +322,8 @@ describe('edit handlers', () => {
         await app.store.save(session);
 
         const response = await handleEditProposedDatesPost(app);
-        const html = await response.text();        expect(html)
+        const html = await response.text();
+        expect(html)
           .toContain('title="(2) Turnhalle grün"');
         expect(html)
           .toContain('(2) Turnhalle grün</span>');
@@ -1301,6 +1302,49 @@ describe('edit handlers', () => {
           .toContain('Not checked');
       });
 
+      test('single add: a transient scrape failure marks the clash data stale', async () => {
+        const session = clashSession();
+        mockFetchMatches.mockRejectedValue(new ClickTTError('click-tt is down'));
+        const app = editApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm'},
+        });
+        await app.store.save(session);
+
+        const html = await (await handleEditProposedDatesPost(app)).text();
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.clashDataStale)
+          .toBe(true);
+        expect(stored?.proposedDates[0]?.clashes)
+          .toBeUndefined();
+        expect(html)
+          .toContain('without clash data');
+      });
+
+      test('single add: a successful check clears a previous stale flag', async () => {
+        const session = clashSession({clashDataStale: true});
+        mockFetchMatches.mockResolvedValue([
+          {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
+        ]);
+        const app = editApp({
+          params: {id: session.id},
+          headers: {'HX-Request': 'true'},
+          body: {proposedDateTime: '09/01/2025 08:00 pm'},
+        });
+        await app.store.save(session);
+
+        const html = await (await handleEditProposedDatesPost(app)).text();
+
+        const stored = await app.store.get(session.id);
+        expect(stored?.clashDataStale)
+          .toBeUndefined();
+        expect(html)
+          .not
+          .toContain('without clash data');
+      });
+
       test('generator run: a failed scrape still saves the generated dates without clash data', async () => {
         const session = clashSession();
         session.originalMatchDateTime = '2026-09-02T16:00';
@@ -1572,7 +1616,7 @@ describe('edit handlers', () => {
       const html = await response.text();
 
       expect(html)
-        .toContain("Date must be after &#39;From&#39; and at most 4 weeks after the original match");
+        .toContain('Date must be after &#39;From&#39; and at most 4 weeks after the original match');
       expect(html)
         .toMatch(/id="toDate"[^>]*aria-invalid="true"/);
     });
@@ -1590,7 +1634,7 @@ describe('edit handlers', () => {
       const html = await response.text();
 
       expect(html)
-        .toContain("Date must be after &#39;From&#39; and at most 4 weeks after the original match");
+        .toContain('Date must be after &#39;From&#39; and at most 4 weeks after the original match');
     });
 
     test('toDate beyond the today-based cap without an anchor: redraws with the no-anchor to-field error', async () => {
@@ -1606,7 +1650,7 @@ describe('edit handlers', () => {
       const html = await response.text();
 
       expect(html)
-        .toContain("Date must be after &#39;From&#39; and at most 4 weeks from today");
+        .toContain('Date must be after &#39;From&#39; and at most 4 weeks from today');
     });
 
     test('non-partial fromDate-before-today tuple submit: redirects via the render-partial seam', async () => {
@@ -2290,7 +2334,7 @@ describe('edit handlers', () => {
         .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Schedule check refreshed</p>');
     });
 
-    test('a failed refresh keeps the previous snapshot and renders the failure notice without a write', async () => {
+    test('a failed refresh keeps the previous snapshot, marks the clash data stale, and renders the failure notice', async () => {
       const session = checkedSession();
       mockFetchMatches.mockRejectedValue(new ClickTTError('click-tt is down'));
       const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
@@ -2302,16 +2346,39 @@ describe('edit handlers', () => {
       const stored = await app.store.get(session.id);
       expect(stored?.proposedDates[0]?.clashes)
         .toEqual({home: [{opponent: 'Old Opp', start: '2025-09-01T08:00'}], away: []});
-      // The command seam only writes a changed session; keeping the stale
-      // snapshot is a no-op.
+      // The stale flag is the only change, so the session is written once.
       expect(saveSpy)
-        .not
-        .toHaveBeenCalled();
+        .toHaveBeenCalledTimes(1);
+      expect(stored?.clashDataStale)
+        .toBe(true);
       // The stale snapshot still renders, and the organizer sees the failure notice.
       expect(html)
         .toContain('Home: 8:00 AM vs Old Opp');
       expect(html)
         .toContain('showing the previous results');
+      // The failure notice already explains the state, so the stale notice is suppressed.
+      expect(html)
+        .not
+        .toContain('without clash data');
+    });
+
+    test('a successful refresh clears a previously stale flag', async () => {
+      const session = checkedSession();
+      session.clashDataStale = true;
+      mockFetchMatches.mockResolvedValue([
+        {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
+      ]);
+      const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      await app.store.save(session);
+
+      const html = await (await handleRefreshClashesPost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.clashDataStale)
+        .toBeUndefined();
+      expect(html)
+        .not
+        .toContain('without clash data');
     });
 
     test('hand-entered session: never fetches and renders no failure notice', async () => {
@@ -2471,8 +2538,18 @@ describe('edit handlers', () => {
 
   describe('sort persistence', () => {
     const sortDates = [
-      aProposedDate({id: 'pd-a', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
-      aProposedDate({id: 'pd-b', dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'}, votable: true, venueNumber: 1}),
+      aProposedDate({
+        id: 'pd-a',
+        dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+        votable: true,
+        venueNumber: 1,
+      }),
+      aProposedDate({
+        id: 'pd-b',
+        dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+        votable: true,
+        venueNumber: 1,
+      }),
     ];
 
     test('handleEditGet defaults to date grouping without a sort query', async () => {

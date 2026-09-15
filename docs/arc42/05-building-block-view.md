@@ -30,61 +30,62 @@ flowchart TB
 
 ## 5.2 Level 2 — `src/lib/` (domain + infrastructure)
 
-| Module                        | Responsibility                                                                                                                                                |
-|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `models.ts`                   | type core: `Team`, `PostponementStatus`, `ClickTtTeamIdentity`, `Player`, `Venue`, `Postponement`, `ProposedDate`, `Vote`, `VoteTallyItem`, `DEFAULT_CLUB_ID` |
-| `postponement.ts`             | `PostponementRules` pure domain ops + `newId()/now()` seam                                                                                                    |
-| `session-store.ts`            | `SessionStore` interface, `normalize()` read-time upgrade, `MemorySessionStore`, `SqliteSessionStore`                                                         |
-| `click-tt-scraper.ts`         | all scraping + HTML parsing + fixture seam                                                                                                                    |
-| `clashes.ts`                  | clash domain (pure): `±2h` buffer, `computeClashes`, auto-deselect, `mergeOwnSideClashes` (single-side merge, never touches `votable`) |
-| `clash-check.ts`              | shared schedule-check routines: `computeClashesForSession` (both teams + occupancy, edit paths) and `computeOwnSideCheck` (one side, opponent refresh)      |
-| `venue-occupancy.ts`          | pure count of home-club home matches in the buffered window                                                                                                   |
-| `venues.ts`                   | `defaultVenueNumber`, `resolveVenue`, `venueShortName`                                                                                                        |
-| `proposed-dates-generator.ts` | pure weekday-tuple generator (planning window = original + 4 weeks)                                                                                           |
-| `ical.ts`                     | RFC 5545 builder (one VEVENT per votable date, per-date vote links)                                                                                           |
-| `temporal-utils.ts`           | locale-aware Temporal parse/format; strict ISO round-trips                                                                                                    |
-| `crypto-utils.ts`             | PBKDF2-SHA256 hashing, constant-time compare, id/password generation                                                                                          |
-| `errors.ts`                   | `AppError(400)`, `InternalError(500)`, `StateError(404)`, `ClickTTError`                                                                                      |
-| `map-validation-to-errors.ts` | Valibot result → `{fields, global}`                                                                                                                           |
-| `hono-factory.ts`             | `factory`, `handleAppRequest` adapter Context→`App`                                                                                                           |
-| `logger.ts`                   | `AppLogger` façade; console always, pino on Node                                                                                                              |
-| `middleware/language.ts`      | `?lang=` → cookie → `Accept-Language` → default locale resolution                                                                                             |
+| Module                        | Responsibility                                                                                                                                                                                                                 |
+|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `models.ts`                   | type core: `Team`, `PostponementStatus`, `ClickTtTeamIdentity`, `Player`, `Venue`, `Postponement`, `ProposedDate`, `Vote`, `VoteTallyItem`, `DEFAULT_CLUB_ID`                                                                  |
+| `postponement.ts`             | `PostponementRules` pure domain ops + `newId()/now()` seam                                                                                                                                                                     |
+| `session-store.ts`            | `SessionStore` interface, `normalize()` read-time upgrade, `MemorySessionStore`, `SqliteSessionStore`                                                                                                                          |
+| `click-tt-scraper.ts`         | all scraping + HTML parsing + fixture seam                                                                                                                                                                                     |
+| `clashes.ts`                  | clash domain (pure): `±2h` buffer, `computeClashes`, auto-deselect, `mergeOwnSideClashes` (single-side merge, never touches `votable`)                                                                                         |
+| `clash-check.ts`              | shared schedule-check routines: `computeClashesForSession` (both teams + occupancy, edit paths; returns `ClashCheckOutcome` — `ok` / `transient-failure` / `unchanged`) and `computeOwnSideCheck` (one side, opponent refresh) |
+| `scrape-errors.ts`            | `transientScrapeErrorKey`: classifies a thrown scrape error as retryable (`ClickTTError` → upstream, `TypeError` → unreachable) or non-transient                                                                               |
+| `venue-occupancy.ts`          | pure count of home-club home matches in the buffered window                                                                                                                                                                    |
+| `venues.ts`                   | `defaultVenueNumber`, `resolveVenue`, `venueShortName`                                                                                                                                                                         |
+| `proposed-dates-generator.ts` | pure weekday-tuple generator (planning window = original + 4 weeks)                                                                                                                                                            |
+| `ical.ts`                     | RFC 5545 builder (one VEVENT per votable date, per-date vote links)                                                                                                                                                            |
+| `temporal-utils.ts`           | locale-aware Temporal parse/format; strict ISO round-trips                                                                                                                                                                     |
+| `crypto-utils.ts`             | PBKDF2-SHA256 hashing, constant-time compare, id/password generation                                                                                                                                                           |
+| `errors.ts`                   | `AppError(400)`, `InternalError(500)`, `StateError(404)`, `ClickTTError`                                                                                                                                                       |
+| `map-validation-to-errors.ts` | Valibot result → `{fields, global}`                                                                                                                                                                                            |
+| `hono-factory.ts`             | `factory`, `handleAppRequest` adapter Context→`App`                                                                                                                                                                            |
+| `logger.ts`                   | `AppLogger` façade; console always, pino on Node                                                                                                                                                                               |
+| `middleware/language.ts`      | `?lang=` → cookie → `Accept-Language` → default locale resolution                                                                                                                                                              |
 
 ## 5.3 Routers and routes
 
 Routers mounted in `src/build-app.tsx`: `/create`, `/edit`, `/join`, `/opponent`.
 
-| Method | Path                                 | Handler                                                       |
-|--------|--------------------------------------|---------------------------------------------------------------|
-| GET    | `/`                                  | `handleIndexGet`                                              |
-| GET    | `/create/scrape`                     | `handleScrapeLeaguesGet`                                      |
-| GET    | `/create/scrape/groups`              | `handleScrapeGroupsGet`                                       |
-| GET    | `/create/scrape/teams`               | `handleScrapeTeamsGet`                                        |
-| GET    | `/create/scrape/matches`             | `handleScrapeMatchesGet`                                      |
-| POST   | `/create/scrape/match`               | `handleScrapeMatchPost`                                       |
-| GET    | `/edit/:id`                          | `handleEditGet`                                               |
-| GET    | `/edit/:id/calendar.ics`             | `handleEditIcalGet`                                           |
-| POST   | `/edit/:id/players`                  | `handleEditPlayersPost`                                       |
-| POST   | `/edit/:id/proposed-dates`           | `handleEditProposedDatesPost`                                 |
-| POST   | `/edit/:id/proposed-date-visibility` | `handleProposedDateVisibilityPost`                            |
-| POST   | `/edit/:id/proposed-date-confirm`    | `handleConfirmDatePost`                                       |
-| POST   | `/edit/:id/proposed-date-delete`     | `handleProposedDateDeletePost`                                |
-| POST   | `/edit/:id/refresh-clashes`          | `handleRefreshClashesPost`                                    |
-| POST   | `/edit/:id/reopen`                   | `handleReopenPost`                                            |
-| GET    | `/join/:id/:team`                    | `handleJoinGet`                                               |
-| GET    | `/join/:id/:team/calendar.ics`       | `handleJoinIcalGet`                                           |
-| GET    | `/join/:id/:team/vote`               | `handleJoinVoteGet`                                           |
-| POST   | `/join/:id/:team/register`           | `handleJoinRegisterPost`                                      |
-| POST   | `/join/:id/:team/vote`               | `handleJoinVotePost`                                          |
-| GET    | `/opponent/:id`                      | `handleOpponentGet` (opponent-captain password gated)         |
-| POST   | `/opponent/:id/players`              | `handleOpponentPlayersPost` (add/remove own team)             |
-| POST   | `/opponent/:id/veto`                 | `handleOpponentVetoPost`                                      |
-| POST   | `/opponent/:id/acceptable`           | `handleOpponentAcceptablePost`                                |
+| Method | Path                                 | Handler                                                        |
+|--------|--------------------------------------|----------------------------------------------------------------|
+| GET    | `/`                                  | `handleIndexGet`                                               |
+| GET    | `/create/scrape`                     | `handleScrapeLeaguesGet`                                       |
+| GET    | `/create/scrape/groups`              | `handleScrapeGroupsGet`                                        |
+| GET    | `/create/scrape/teams`               | `handleScrapeTeamsGet`                                         |
+| GET    | `/create/scrape/matches`             | `handleScrapeMatchesGet`                                       |
+| POST   | `/create/scrape/match`               | `handleScrapeMatchPost`                                        |
+| GET    | `/edit/:id`                          | `handleEditGet`                                                |
+| GET    | `/edit/:id/calendar.ics`             | `handleEditIcalGet`                                            |
+| POST   | `/edit/:id/players`                  | `handleEditPlayersPost`                                        |
+| POST   | `/edit/:id/proposed-dates`           | `handleEditProposedDatesPost`                                  |
+| POST   | `/edit/:id/proposed-date-visibility` | `handleProposedDateVisibilityPost`                             |
+| POST   | `/edit/:id/proposed-date-confirm`    | `handleConfirmDatePost`                                        |
+| POST   | `/edit/:id/proposed-date-delete`     | `handleProposedDateDeletePost`                                 |
+| POST   | `/edit/:id/refresh-clashes`          | `handleRefreshClashesPost`                                     |
+| POST   | `/edit/:id/reopen`                   | `handleReopenPost`                                             |
+| GET    | `/join/:id/:team`                    | `handleJoinGet`                                                |
+| GET    | `/join/:id/:team/calendar.ics`       | `handleJoinIcalGet`                                            |
+| GET    | `/join/:id/:team/vote`               | `handleJoinVoteGet`                                            |
+| POST   | `/join/:id/:team/register`           | `handleJoinRegisterPost`                                       |
+| POST   | `/join/:id/:team/vote`               | `handleJoinVotePost`                                           |
+| GET    | `/opponent/:id`                      | `handleOpponentGet` (opponent-captain password gated)          |
+| POST   | `/opponent/:id/players`              | `handleOpponentPlayersPost` (add/remove own team)              |
+| POST   | `/opponent/:id/veto`                 | `handleOpponentVetoPost`                                       |
+| POST   | `/opponent/:id/acceptable`           | `handleOpponentAcceptablePost`                                 |
 | POST   | `/opponent/:id/refresh-clashes`      | `handleOpponentRefreshPost` (own-side-only re-check, ADR-0026) |
-| —      | `/assets/*`                          | `serveStatic` (Node) / Workers Assets; `.spec.` paths blocked |
+| —      | `/assets/*`                          | `serveStatic` (Node) / Workers Assets; `.spec.` paths blocked  |
 
 Known gap: the home page links `/edit`, but no handler serves bare `GET /edit` (404) — see §11.
 
 ## 5.4 View components and partials
 
-Layout: `src/routes/layouts/main.tsx` (`Layout`, `PartialLayout`, `pageLayout(view, content, title?)` branching on `view.isPartial`). Pages under `src/routes/{index,error}.tsx`, `create/scrape/*.tsx`, `edit/id/*.tsx`, `join/*.tsx`. Shared partials in `src/routes/partials/`. Edit view data is assembled in `src/routes/edit/id/render-edit-partials.tsx` and mutations run through the single `runEditCommand` pipeline in `run-edit-command.ts`. Opponent view data is assembled in `src/routes/opponent/render-opponent.tsx` (`buildOpponentViewData` carries only the opponent side's clash lines) and mutations run through `runOpponentCommand` in `run-opponent-command.ts`.
+Layout: `src/routes/layouts/main.tsx` (`Layout`, `PartialLayout`, `pageLayout(view, content, title?)` branching on `view.isPartial`). Pages under `src/routes/{index,error}.tsx`, `create/scrape/*.tsx`, `edit/id/*.tsx`, `join/*.tsx`. Shared partials in `src/routes/partials/`. The scrape wizard's transient-failure shell is `src/routes/create/scrape/scrape-step-error.tsx` (`ScrapeStepError` + `renderScrapeStepError`), rendered in place of a step by the scrape handlers. Edit view data is assembled in `src/routes/edit/id/render-edit-partials.tsx` and mutations run through the single `runEditCommand` pipeline in `run-edit-command.ts`. Opponent view data is assembled in `src/routes/opponent/render-opponent.tsx` (`buildOpponentViewData` carries only the opponent side's clash lines) and mutations run through `runOpponentCommand` in `run-opponent-command.ts`.

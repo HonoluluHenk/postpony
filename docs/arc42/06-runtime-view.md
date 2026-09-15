@@ -23,6 +23,8 @@ sequenceDiagram
 
 Four GETs drill league → group → team → match. The final POST captures both teams' click-tt identities (ADR-0022), generates and hashes the four per-postponement secrets (organizer-captain, opponent-captain, home-player, away-player; ADR-0025), creates a `Draft` postponement, saves it, and redirects to the edit view (the plaintext organizer-captain password is shown once). The three shareable plaintexts (opponent-captain, home-player, away-player) are persisted so the edit page can render share links.
 
+Transient scrape failure: when any step's scrape throws a click-tt error (`ClickTTError`) or a transport failure (`TypeError`), the handler catches it and re-renders the wizard step as `ScrapeStepError` — inline `role="alert"` with the reason and a "Try again" control — instead of letting it fall through to the generic `onError` (whose out-of-band-only body HTMX would not swap). Non-transient errors are rethrown to the central error path. A failed schedule check during an edit mutation never blocks the save: the dates persist without fresh clash data and the session carries `clashDataStale`, which the edit rail surfaces until the next successful check.
+
 ## 6.2 Edit mutations — single pipeline
 
 All seven edit POSTs (`players`, `proposed-dates`, `proposed-date-visibility`, `proposed-date-confirm`, `proposed-date-delete`, `refresh-clashes`, `reopen`) flow through `runEditCommand(app, command)`:

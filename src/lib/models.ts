@@ -58,6 +58,8 @@ export interface Postponement {
   organizerTeam: Team;
   reopenCount: number;
   confirmedProposedDateId?: string;
+  /** True when the last schedule check failed transiently, so dates saved around then may lack fresh clash data. Cleared by the next successful check. */
+  clashDataStale?: boolean;
   players: Player[];
   venues: Venue[];
   proposedDates: ProposedDate[];

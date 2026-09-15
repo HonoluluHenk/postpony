@@ -4,6 +4,7 @@ import { aPlayer, aProposedDate, aSession } from '../../../lib/__test-utils__/bu
 import { createApp } from '../../../lib/__test-utils__/create-app';
 import { fetchClubId, fetchPlayers, fetchVenues } from '../../../lib/click-tt-scraper';
 import { hashPassword, comparePassword } from '../../../lib/crypto-utils';
+import { ClickTTError } from '../../../lib/errors';
 import { DEFAULT_CLUB_ID } from '../../../lib/models';
 import { handleScrapeMatchPost } from './match-post';
 
@@ -283,6 +284,40 @@ describe('handleScrapeMatchPost', () => {
 
     expect(stored?.players)
       .toEqual([]);
+  });
+
+  test('renders a retryable step error when a scrape fails transiently', async () => {
+    vi.mocked(fetchPlayers)
+      .mockRejectedValueOnce(new ClickTTError('click-tt.ch returned 503'));
+    const app = createApp({
+      body: {...MATCH, teamName: 'Thun', opponentTeamtable: 'tt-opp'},
+      headers: {'HX-Current-URL': 'https://game-scheduler.localhost:3000/create/scrape/matches'},
+    });
+
+    const response = await handleScrapeMatchPost(app);
+    const html = await response.text();
+
+    expect(response.status)
+      .toBe(400);
+    expect(html)
+      .toContain('role="alert"');
+    expect(html)
+      .toContain('click-tt.ch is currently reporting an error.');
+    expect(html)
+      .toContain('Try again');
+    // Retry returns to the matches step so the organizer can re-pick.
+    expect(html)
+      .toContain('/create/scrape/matches?championship=MTTV%2026%2F27');
+  });
+
+  test('rethrows a non-transient scrape failure instead of showing a retry', async () => {
+    vi.mocked(fetchPlayers)
+      .mockRejectedValueOnce(new Error('boom'));
+    const app = createApp({body: {...MATCH, teamName: 'Thun', opponentTeamtable: 'tt-opp'}});
+
+    await expect(handleScrapeMatchPost(app))
+      .rejects
+      .toThrow('boom');
   });
 });
 

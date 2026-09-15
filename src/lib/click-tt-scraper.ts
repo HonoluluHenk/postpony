@@ -10,6 +10,12 @@ import type { Venue } from './models';
 
 export type ClickTTLanguage = 'English' | 'German' | 'French' | 'Italian';
 
+/**
+ * Marker embedded in a click-tt URL to force a transient ClickTTError in Fixture
+ * Mode. E2E-only: it exercises the scrape-failure path without a live outage.
+ */
+export const E2E_ERROR_MARKER = 'E2E_ERROR';
+
 const BASE_URL = 'https://www.click-tt.ch';
 const WA_URL = `${BASE_URL}/cgi-bin/WebObjects/nuLigaTTCH.woa/wa`;
 
@@ -126,6 +132,11 @@ async function fetchHtml(url: string): Promise<HTMLElement> {
   // Offline/E2E mode: serve downloaded HTML fixtures instead of live requests.
   const fixturesDir = config.get('click-tt-fixtures-dir');
   if (fixturesDir) {
+    if (url.includes(E2E_ERROR_MARKER)) {
+      // ponytail: E2E-only failure seam — lets e2e force a ClickTTError on any
+      // scrape step without touching the network or the fixture files.
+      throw new ClickTTError(`click-tt.ch returned 503 (e2e error marker) on url ${url}`);
+    }
     // ponytail: dynamic, non-literal import — keeps node:fs out of the Worker bundle.
     const fsMod = 'node:fs';
     const pathMod = 'node:path';

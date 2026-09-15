@@ -29,7 +29,14 @@ function buildSession(overrides: Parameters<typeof aSession>[0] = {}): Postponem
       aPlayer({id: 'p3', name: 'Carol', teamId: 'away'}),
     ],
     venues: [
-      {venueNumber: 1, name: 'Turnhalle orange', shortName: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
+      {
+        venueNumber: 1,
+        name: 'Turnhalle orange',
+        shortName: 'Turnhalle orange',
+        address: 'Dennigkofenweg 169',
+        postalCode: '3072',
+        city: 'Ostermundigen',
+      },
     ],
     proposedDates: [
       aProposedDate({
@@ -61,16 +68,33 @@ function renderToString(node: unknown): string {
   if (node === null || node === undefined) {
     return '';
   }
-  return (node as { toString(): string }).toString();
+  return (node as {
+    toString(): string
+  }).toString();
 }
 
 describe('ProposedDatesRail week grouping', () => {
   it('groups dates into week headings carrying the ISO week label and date range', () => {
     const session = buildSession({
       proposedDates: [
-        aProposedDate({id: 'pd-a', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
-        aProposedDate({id: 'pd-b', dateTimeRange: {start: '2026-09-02T20:00', end: '2026-09-02T22:00'}, votable: true, venueNumber: 1}),
-        aProposedDate({id: 'pd-c', dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'}, votable: true, venueNumber: 1}),
+        aProposedDate({
+          id: 'pd-a',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
+        aProposedDate({
+          id: 'pd-b',
+          dateTimeRange: {start: '2026-09-02T20:00', end: '2026-09-02T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
+        aProposedDate({
+          id: 'pd-c',
+          dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
       ],
     });
     const html = renderToString(ProposedDatesRail(railProps(session)));
@@ -142,7 +166,12 @@ describe('ProposedDatesRail date chips', () => {
   it('renders the not-checked chip when the schedule check cannot run', () => {
     const session = aSession({
       proposedDates: [
-        aProposedDate({id: 'pd-unchecked', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+        aProposedDate({
+          id: 'pd-unchecked',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
       ],
     });
     const html = renderToString(ProposedDatesRail(railProps(session)));
@@ -272,7 +301,12 @@ describe('ProposedDatesRail vote dots', () => {
         aPlayer({id: 'p4', name: 'Dave', teamId: 'home'}),
       ],
       proposedDates: [
-        aProposedDate({id: 'pd-votes', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+        aProposedDate({
+          id: 'pd-votes',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
       ],
       votes: [
         aVote({id: 'v1', proposedDateId: 'pd-votes', participantId: 'p1', type: 'Yes'}),
@@ -296,7 +330,12 @@ describe('ProposedDatesRail vote dots', () => {
   it('classifies an IfNecessary vote with the ifnecessary dot class', () => {
     const session = buildSession({
       proposedDates: [
-        aProposedDate({id: 'pd-ifnec', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+        aProposedDate({
+          id: 'pd-ifnec',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
       ],
       votes: [
         aVote({id: 'v1', proposedDateId: 'pd-ifnec', participantId: 'p1', type: 'IfNecessary'}),
@@ -313,8 +352,18 @@ describe('ProposedDatesRail date actions', () => {
   it('wires the votable toggle, confirm and delete actions to the edit grid', () => {
     const session = buildSession({
       proposedDates: [
-        aProposedDate({id: 'pd-open', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
-        aProposedDate({id: 'pd-closed', dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'}, votable: false, venueNumber: 1}),
+        aProposedDate({
+          id: 'pd-open',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
+        aProposedDate({
+          id: 'pd-closed',
+          dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+          votable: false,
+          venueNumber: 1,
+        }),
       ],
     });
     const html = renderToString(ProposedDatesRail(railProps(session)));
@@ -349,7 +398,12 @@ describe('ProposedDatesRail date actions', () => {
   it('renders the delete opener before the confirm control on a votable row', () => {
     const session = buildSession({
       proposedDates: [
-        aProposedDate({id: 'pd-open', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+        aProposedDate({
+          id: 'pd-open',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
       ],
     });
     const html = renderToString(ProposedDatesRail(railProps(session)));
@@ -368,7 +422,12 @@ describe('ProposedDatesRail date actions', () => {
     const session = buildSession({
       status: 'Confirmed',
       proposedDates: [
-        aProposedDate({id: 'pd-1', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+        aProposedDate({
+          id: 'pd-1',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
       ],
     });
     const html = renderToString(ProposedDatesRail(railProps(session)));
@@ -386,7 +445,13 @@ describe('ProposedDatesRail rail-level controls', () => {
   it('renders the export and refresh-clash controls when there are votable, checked dates', () => {
     const session = buildSession({
       proposedDates: [
-        aProposedDate({id: 'pd-1', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1, clashes: {home: [], away: []}}),
+        aProposedDate({
+          id: 'pd-1',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+          clashes: {home: [], away: []},
+        }),
       ],
     });
     const html = renderToString(ProposedDatesRail(railProps(session)));
@@ -421,9 +486,26 @@ describe('ProposedDatesRail rail-level controls', () => {
     })));
 
     expect(html)
-      .toContain("Couldn&#39;t refresh the schedule check — showing the previous results.");
+      .toContain('Couldn&#39;t refresh the schedule check — showing the previous results.');
     expect(html)
       .toContain('A scheduled game clashes with this date.');
+  });
+
+  it('warns that the clash data is stale when the last check failed transiently', () => {
+    const session = buildSession({clashDataStale: true});
+    const html = renderToString(ProposedDatesRail(railProps(session)));
+
+    expect(html)
+      .toContain('Schedule check failed — the dates were saved without clash data. Refresh the check to try again.');
+  });
+
+  it('hides the stale notice while the refresh-failure notice is shown', () => {
+    const session = buildSession({clashDataStale: true});
+    const html = renderToString(ProposedDatesRail(railProps(session, {refreshError: true})));
+
+    expect(html)
+      .not
+      .toContain('without clash data');
   });
 
   it('renders the success toast after a date is added', () => {
@@ -448,7 +530,12 @@ describe('ProposedDatesRail inline team tallies', () => {
         aPlayer({id: 'a1', name: 'A One', teamId: 'away'}),
       ],
       proposedDates: [
-        aProposedDate({id: 'pd-t', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+        aProposedDate({
+          id: 'pd-t',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
       ],
       votes: [
         aVote({id: 'v1', proposedDateId: 'pd-t', participantId: 'h1', type: 'Yes'}),
@@ -471,10 +558,18 @@ describe('ProposedDatesRail inline team tallies', () => {
     // pd-new has no matching votes (the fixture's votes reference another date).
     const session = buildSession({
       proposedDates: [
-        aProposedDate({id: 'pd-new', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
+        aProposedDate({
+          id: 'pd-new',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
       ],
     });
-    const html = renderToString(ProposedDatesRail(railProps(session, {homeTeam: 'Home Team', guestTeam: 'Guest Team'})));
+    const html = renderToString(ProposedDatesRail(railProps(session, {
+      homeTeam: 'Home Team',
+      guestTeam: 'Guest Team',
+    })));
 
     expect(html)
       .toContain('<span class="team-tally">Home Team: 0 (0/0/0)</span>');
@@ -506,10 +601,30 @@ describe('ProposedDatesRail restored vote tables', () => {
 
 describe('ProposedDatesRail sort control', () => {
   const sortDates = [
-    aProposedDate({id: 'pd-a', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}, votable: true, venueNumber: 1}),
-    aProposedDate({id: 'pd-b', dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'}, votable: true, venueNumber: 1}),
-    aProposedDate({id: 'pd-c', dateTimeRange: {start: '2026-09-15T20:00', end: '2026-09-15T22:00'}, votable: true, venueNumber: 1}),
-    aProposedDate({id: 'pd-d', dateTimeRange: {start: '2026-09-22T20:00', end: '2026-09-22T22:00'}, votable: true, venueNumber: 1}),
+    aProposedDate({
+      id: 'pd-a',
+      dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+      votable: true,
+      venueNumber: 1,
+    }),
+    aProposedDate({
+      id: 'pd-b',
+      dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+      votable: true,
+      venueNumber: 1,
+    }),
+    aProposedDate({
+      id: 'pd-c',
+      dateTimeRange: {start: '2026-09-15T20:00', end: '2026-09-15T22:00'},
+      votable: true,
+      venueNumber: 1,
+    }),
+    aProposedDate({
+      id: 'pd-d',
+      dateTimeRange: {start: '2026-09-22T20:00', end: '2026-09-22T22:00'},
+      votable: true,
+      venueNumber: 1,
+    }),
   ];
   // Home availability: pd-a=1, pd-b=2, pd-c=2 (yes + if-needed), pd-d=0.
   const sortVotes = [

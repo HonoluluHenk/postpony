@@ -2,7 +2,7 @@
 
 ## 8.1 Error handling
 
-Typed hierarchy `AppError(400) → InternalError(500) / StateError(404) / ClickTTError` (`src/lib/errors.ts`). Handlers throw via `App.failure/notFound/internal`. One central `onError` maps to HTTP status and renders a full page or an out-of-band partial into `#error-container`. Client `ui.js` skips swapping bodies that already carry `hx-swap-oob`. Degradation policy: scrape failures never block persistence.
+Typed hierarchy `AppError(400) → InternalError(500) / StateError(404) / ClickTTError` (`src/lib/errors.ts`). Handlers throw via `App.failure/notFound/internal`. One central `onError` maps to HTTP status and renders a full page or an out-of-band partial into `#error-container`. Client `ui.js` skips swapping bodies that already carry `hx-swap-oob`. Degradation policy: scrape failures never block persistence. Transient scrape failures are handled before `onError`: `transientScrapeErrorKey` (`src/lib/scrape-errors.ts`) classifies `ClickTTError` (upstream) and `TypeError` (unreachable) as retryable; the scrape handlers then re-render the step as `ScrapeStepError`, and a failed schedule check during an edit mutation persists the dates and sets `clashDataStale` for a retryable rail notice. Non-transient errors rethrow to `onError`.
 
 ## 8.2 Validation
 

@@ -1,7 +1,12 @@
 import * as v from 'valibot';
 import type { App } from '../../../app';
 import { applyClashCheckResult } from '../../../lib/clashes';
-import { MAX_TUPLES, MAX_FORWARD_WEEKS_FROM_ORIGINAL, generateProposedDates, type ProposedDateTuple } from '../../../lib/proposed-dates-generator';
+import {
+  MAX_TUPLES,
+  MAX_FORWARD_WEEKS_FROM_ORIGINAL,
+  generateProposedDates,
+  type ProposedDateTuple,
+} from '../../../lib/proposed-dates-generator';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import {
   formatIsoToDateOnlyLocaleTokens,
@@ -29,12 +34,17 @@ const TUPLE_DISCRIMINATOR = 'tuple';
 export function defaultGeneratorDateRange(
   locale: App['locale'],
   originalMatchDateTime: string | undefined,
-): {fromDate: string; toDate: string} {
+): {
+  fromDate: string;
+  toDate: string
+}
+{
   const todayDate = Temporal.PlainDate.from(nowPlainDateTimeIso());
   const fromDate = formatIsoToDateOnlyLocaleTokens(todayDate.toString(), locale);
   const toDateRaw = originalMatchDateTime !== undefined
-    ? Temporal.PlainDate.from(originalMatchDateTime).add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL})
-    : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL});
+                    ? Temporal.PlainDate.from(originalMatchDateTime)
+                      .add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL})
+                    : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL});
   const toDate = formatIsoToDateOnlyLocaleTokens(toDateRaw.toString(), locale);
   return {fromDate, toDate};
 }
@@ -86,6 +96,7 @@ interface SingleDateOutput {
 function maxVenueNumber(venues: readonly Venue[]): number {
   return venues.length > 0 ? venues.length : FALLBACK_VENUE_COUNT;
 }
+
 interface TupleOutput {
   generate: typeof TUPLE_DISCRIMINATOR;
   'time[]': string[];
@@ -125,7 +136,10 @@ function dateOnlyFieldSchema(app: App): v.BaseSchema<unknown, string, v.BaseIssu
  * means legacy venue 1; present it must be an integer within `1..venues.length`
  * (or `1..FALLBACK_VENUE_COUNT` when no venues are scraped).
  */
-function venueNumberSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unknown, number | undefined, v.BaseIssue<unknown>> {
+function venueNumberSchema(
+  app: App,
+  venues: readonly Venue[],
+): v.BaseSchema<unknown, number | undefined, v.BaseIssue<unknown>> {
   return v.optional(
     v.pipe(
       v.string(),
@@ -138,7 +152,10 @@ function venueNumberSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unk
   );
 }
 
-function buildTupleSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unknown, TupleOutput, v.BaseIssue<unknown>> {
+function buildTupleSchema(
+  app: App,
+  venues: readonly Venue[],
+): v.BaseSchema<unknown, TupleOutput, v.BaseIssue<unknown>> {
   return v.object({
     generate: v.literal(TUPLE_DISCRIMINATOR, app.t('proposed_date_time_invalid')),
     'time[]': v.array(v.string()),
@@ -153,7 +170,10 @@ function buildTupleSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unkn
   });
 }
 
-function buildSingleDateSchema(app: App, venues: readonly Venue[]): v.BaseSchema<unknown, SingleDateOutput, v.BaseIssue<unknown>> {
+function buildSingleDateSchema(
+  app: App,
+  venues: readonly Venue[],
+): v.BaseSchema<unknown, SingleDateOutput, v.BaseIssue<unknown>> {
   return v.object({
     proposedDateTime: v.pipe(
       v.string(),
@@ -177,18 +197,23 @@ export const handleEditProposedDatesPost = async (app: App): Promise<Response> =
 
 /**
  * Fetches a fresh clash check and applies the pure session rule: attach the
- * snapshot and auto-deselect the newly added clashing dates. A failed check
- * (undefined) leaves the session unchanged — the dates are saved clash-free.
+ * snapshot and auto-deselect the newly added clashing dates. An `unchanged`
+ * outcome leaves the session untouched — the dates are saved clash-free. A
+ * transient scrape failure also saves the dates, but marks `clashDataStale` so
+ * the edit page shows a retryable stale notice until the next good check.
  */
 async function withClashCheck(
   session: Postponement,
   addedIds: readonly string[],
 ): Promise<Postponement> {
-  const checkResult = await computeClashesForSession(session);
-  if (checkResult === undefined) {
-    return session;
+  const outcome = await computeClashesForSession(session);
+  if (outcome.state === 'ok') {
+    return {...applyClashCheckResult(session, outcome.result, addedIds), clashDataStale: undefined};
   }
-  return applyClashCheckResult(session, checkResult, addedIds);
+  if (outcome.state === 'transient-failure') {
+    return {...session, clashDataStale: true};
+  }
+  return session;
 }
 
 function handleTupleSubmit(
@@ -204,15 +229,16 @@ function handleTupleSubmit(
     redirectTo: `/edit/${id}`,
     apply: async (rules, session) => {
       const rawTimes = Array.isArray(values['time[]'])
-        ? values['time[]'].filter((value): value is string => typeof value === 'string')
-        : [];
+                       ? values['time[]'].filter((value): value is string => typeof value === 'string')
+                       : [];
       const validation = v.safeParse(buildTupleSchema(app, session.venues), values);
       if (!validation.success) {
         const errors = mapValidationToErrors(validation);
         if (app.isPartial) {
           return app.html(renderEditPartials(app, session, {
             times: rawTimes,
-            generatorError: errors.fields['venueNumber'] ?? errors.global ?? errors.fields['generate'] ?? app.t('proposed_date_time_invalid'),
+            generatorError: errors.fields['venueNumber'] ?? errors.global ?? errors.fields['generate'] ??
+              app.t('proposed_date_time_invalid'),
             generatorFromError: errors.fields['fromDate'],
             generatorToError: errors.fields['toDate'],
             fromDate: typeof values['fromDate'] === 'string' ? values['fromDate'] : '',
@@ -254,7 +280,12 @@ function handleTupleSubmit(
       }
 
       if (parsed.tuples.length === 0) {
-        return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate: fromDateToken, toDate: toDateToken});
+        return renderPartial(app, session, {
+          times,
+          generatorError: app.t('proposed_dates_generate_none'),
+          fromDate: fromDateToken,
+          toDate: toDateToken,
+        });
       }
 
       // Validate from/to date constraints
@@ -286,13 +317,14 @@ function handleTupleSubmit(
 
       // Validate to <= cap
       const capDate = session.originalMatchDateTime !== undefined
-        ? Temporal.PlainDate.from(session.originalMatchDateTime).add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL})
-        : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL});
+                      ? Temporal.PlainDate.from(session.originalMatchDateTime)
+                        .add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL})
+                      : todayDate.add({weeks: MAX_FORWARD_WEEKS_FROM_ORIGINAL});
 
       if (Temporal.PlainDate.compare(toDatePlain, capDate) > 0) {
         const toErrorKey = session.originalMatchDateTime !== undefined
-          ? 'proposed_dates_generate_to_invalid'
-          : 'proposed_dates_generate_to_invalid_no_anchor';
+                           ? 'proposed_dates_generate_to_invalid'
+                           : 'proposed_dates_generate_to_invalid_no_anchor';
         return renderPartial(app, session, {
           times,
           generatorToError: app.t(toErrorKey),
@@ -322,7 +354,12 @@ function handleTupleSubmit(
       });
 
       if (generated.added.length === 0) {
-        return renderPartial(app, session, {times, generatorError: app.t('proposed_dates_generate_none'), fromDate: fromDateToken, toDate: toDateToken});
+        return renderPartial(app, session, {
+          times,
+          generatorError: app.t('proposed_dates_generate_none'),
+          fromDate: fromDateToken,
+          toDate: toDateToken,
+        });
       }
 
       let updated = session;

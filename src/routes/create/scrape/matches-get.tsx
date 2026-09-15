@@ -1,6 +1,7 @@
 import type { App } from '../../../app';
 import { fetchMatches, fetchPlayers, fetchTeams } from '../../../lib/click-tt-scraper';
 import { ScrapeMatchesPage } from './matches';
+import { renderScrapeStepError } from './scrape-step-error';
 
 export const handleScrapeMatchesGet = async (app: App): Promise<Response> => {
   const championship = app.query('championship');
@@ -19,34 +20,39 @@ export const handleScrapeMatchesGet = async (app: App): Promise<Response> => {
   const groupName = app.query('groupName') ?? '';
   const teamName = app.query('teamName') ?? '';
 
-  const [matches, players, teams] = await Promise.all([
-    fetchMatches(championship, group, teamtable),
-    fetchPlayers(championship, group, teamtable),
-    fetchTeams(championship, group),
-  ]);
+  try {
+    const [matches, players, teams] = await Promise.all([
+      fetchMatches(championship, group, teamtable),
+      fetchPlayers(championship, group, teamtable),
+      fetchTeams(championship, group),
+    ]);
 
-  const teamtableByName: Record<string, string> = {};
-  for (const t of teams) {
-    teamtableByName[t.name] = t.teamtable;
+    const teamtableByName: Record<string, string> = {};
+    for (const t of teams) {
+      teamtableByName[t.name] = t.teamtable;
+    }
+
+    const matchesWithOpponent = matches.map((m) => {
+      const opponentName = m.homeTeam === teamName ? m.guestTeam : m.homeTeam;
+      return {...m, opponentTeamtable: teamtableByName[opponentName] ?? ''};
+    });
+
+    const html = app.render(
+      <ScrapeMatchesPage
+        {...app.view}
+        matches={matchesWithOpponent}
+        players={players}
+        leagueName={leagueName}
+        groupName={groupName}
+        teamName={teamName}
+        teamtable={teamtable}
+        championship={championship}
+        group={group}
+      />,
+    );
+    return app.html(html);
+  } catch (err) {
+    const backHref = `/create/scrape/teams?championship=${encodeURIComponent(championship)}&group=${encodeURIComponent(group)}&leagueName=${encodeURIComponent(leagueName)}&groupName=${encodeURIComponent(groupName)}`;
+    return renderScrapeStepError(app, err, backHref);
   }
-
-  const matchesWithOpponent = matches.map((m) => {
-    const opponentName = m.homeTeam === teamName ? m.guestTeam : m.homeTeam;
-    return {...m, opponentTeamtable: teamtableByName[opponentName] ?? ''};
-  });
-
-  const html = app.render(
-    <ScrapeMatchesPage
-      {...app.view}
-      matches={matchesWithOpponent}
-      players={players}
-      leagueName={leagueName}
-      groupName={groupName}
-      teamName={teamName}
-      teamtable={teamtable}
-      championship={championship}
-      group={group}
-    />,
-  );
-  return app.html(html);
 };

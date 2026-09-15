@@ -4,6 +4,7 @@ import { parse } from 'node-html-parser';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import config from '../config';
 import {
+  E2E_ERROR_MARKER,
   extractClubId,
   fetchClubId,
   fetchClubMeetings,
@@ -551,6 +552,12 @@ describe('click-tt-scraper', () => {
         guestTeam: 'Ostermundigen',
       }))
         .toBeDefined();
+    });
+
+    test('throws a ClickTTError when the URL carries the e2e error marker', async () => {
+      await expect(fetchMatches('MTTV 26/27', '219397', E2E_ERROR_MARKER))
+        .rejects
+        .toThrow(ClickTTError);
     });
   });
 

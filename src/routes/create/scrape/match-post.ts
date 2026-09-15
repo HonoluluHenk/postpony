@@ -5,6 +5,7 @@ import { generateId, generateRandomPassword, hashPassword } from '../../../lib/c
 import type { ClickTtTeamIdentity, Player, Venue } from '../../../lib/models';
 import { PostponementRules } from '../../../lib/postponement';
 import { parseClickTtDateTime } from '../../../lib/temporal-utils';
+import { renderScrapeStepError } from './scrape-step-error';
 
 const MatchSchema = v.object({
   day: v.optional(v.string(), ''),
@@ -57,22 +58,35 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   // cell yields the home club id (the rescheduled match is played at the home
   // team's hall); venues are scraped from that club's page and the id is
   // persisted on the session. No teamtable → no club, no venues.
-  const [opponentPlayers, homeClub] = await Promise.all([
-    m.opponentTeamtable
+  let opponentPlayers: PlayerOnTeam[];
+  let homeClub: {
+    clubId?: string;
+    venues: Venue[]
+  };
+  try {
+    [opponentPlayers, homeClub] = await Promise.all([
+      m.opponentTeamtable
       ? fetchPlayers(m.championship, m.group, m.opponentTeamtable)
       : Promise.resolve([] as PlayerOnTeam[]),
-    (async (): Promise<{clubId?: string; venues: Venue[]}> => {
-      const clubId = m.teamtable
-        ? await fetchClubId(m.championship, m.group, m.teamtable, {
+      (async (): Promise<{
+        clubId?: string;
+        venues: Venue[]
+      }> => {
+        const clubId = m.teamtable
+                       ? await fetchClubId(m.championship, m.group, m.teamtable, {
             date: m.date,
             time: m.time,
             homeTeam: m.homeTeam,
             guestTeam: m.guestTeam,
           })
-        : undefined;
-      return clubId ? {clubId, venues: await fetchVenues(clubId)} : {venues: []};
-    })(),
-  ]);
+                       : undefined;
+        return clubId ? {clubId, venues: await fetchVenues(clubId)} : {venues: []};
+      })(),
+    ]);
+  } catch (err) {
+    const retryHref = `/create/scrape/matches?championship=${encodeURIComponent(m.championship)}&group=${encodeURIComponent(m.group)}&teamtable=${encodeURIComponent(m.teamtable)}&teamName=${encodeURIComponent(m.teamName)}&groupName=${encodeURIComponent(m.groupName)}&leagueName=${encodeURIComponent(m.leagueName)}`;
+    return renderScrapeStepError(app, err, retryHref);
+  }
   const {clubId, venues} = homeClub;
   for (const op of opponentPlayers) {
     players.push(makePlayer(op.name, opponentTeamId));
@@ -83,6 +97,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   function teamIdentity(teamtable: string): ClickTtTeamIdentity | undefined {
     return teamtable ? {championship: m.championship, group: m.group, teamtable} : undefined;
   }
+
   const homeTeamIdentity =
     selectedTeamId === 'home' ? teamIdentity(m.teamtable) : teamIdentity(m.opponentTeamtable);
   const guestTeamIdentity =

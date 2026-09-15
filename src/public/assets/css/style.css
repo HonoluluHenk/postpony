@@ -384,6 +384,7 @@
     height: 2.5rem;
     background: transparent;
     border: none;
+    color: var(--ink);
     z-index: 1;
   }
 

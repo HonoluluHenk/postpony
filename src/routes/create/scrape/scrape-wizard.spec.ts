@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createApp } from '../../../lib/__test-utils__/create-app';
+import { ClickTTError } from '../../../lib/errors';
 import { handleScrapeGroupsGet } from './groups-get';
 import { handleScrapeLeaguesGet } from './leagues-get';
 import { handleScrapeMatchesGet } from './matches-get';
@@ -71,14 +72,19 @@ describe('scrape wizard GET handlers', () => {
       const response = await handleScrapeLeaguesGet(app);
       const html = await response.text();
 
-      expect(html).toContain('<h2>Choose your league</h2>');
-      expect(html).toContain('MTTV 2026/27');
-      expect(html).toContain('Nationalliga 2026/27');
-      expect(html).toContain('href="/create/scrape/groups?championship=MTTV%2026%2F27');
+      expect(html)
+        .toContain('<h2>Choose your league</h2>');
+      expect(html)
+        .toContain('MTTV 2026/27');
+      expect(html)
+        .toContain('Nationalliga 2026/27');
+      expect(html)
+        .toContain('href="/create/scrape/groups?championship=MTTV%2026%2F27');
       expect((html.match(/href="\/create\/scrape\/groups\?/g) ?? []).length)
         .toBe(12);
       // Mint mode: back goes to the wizard start.
-      expect(html).toContain('href="/create/scrape"');
+      expect(html)
+        .toContain('href="/create/scrape"');
     });
 
     test('shows the empty message when no leagues are loadable', async () => {
@@ -88,8 +94,11 @@ describe('scrape wizard GET handlers', () => {
       const response = await handleScrapeLeaguesGet(app);
       const html = await response.text();
 
-      expect(html).toContain('No leagues could be loaded.');
-      expect(html).not.toContain('<ul class="list border">');
+      expect(html)
+        .toContain('No leagues could be loaded.');
+      expect(html)
+        .not
+        .toContain('<ul class="list border">');
     });
   });
 
@@ -100,13 +109,20 @@ describe('scrape wizard GET handlers', () => {
       const response = await handleScrapeGroupsGet(app);
       const html = await response.text();
 
-      expect(html).toContain('<h2>Choose your group</h2>');
-      expect(html).toContain('<strong>MTTV 2026/27</strong>');
-      expect(html).toContain('O40 1. Liga');
-      expect(html).toContain('HE 1. Liga');
-      expect(html).toContain('HE 2. Liga Gr. 1');
-      expect(html).toContain('href="/create/scrape/teams?championship=MTTV%2026%2F27&amp;group=219397');
-      expect(html).toContain('href="/create/scrape"');
+      expect(html)
+        .toContain('<h2>Choose your group</h2>');
+      expect(html)
+        .toContain('<strong>MTTV 2026/27</strong>');
+      expect(html)
+        .toContain('O40 1. Liga');
+      expect(html)
+        .toContain('HE 1. Liga');
+      expect(html)
+        .toContain('HE 2. Liga Gr. 1');
+      expect(html)
+        .toContain('href="/create/scrape/teams?championship=MTTV%2026%2F27&amp;group=219397');
+      expect(html)
+        .toContain('href="/create/scrape"');
     });
 
     test('shows the empty message and ignores leftover change parameters (mint back link)', async () => {
@@ -122,10 +138,16 @@ describe('scrape wizard GET handlers', () => {
       const response = await handleScrapeGroupsGet(app);
       const html = await response.text();
 
-      expect(html).toContain('No groups found for this league.');
-      expect(html).not.toContain('<ul class="list border">');
-      expect(html).not.toContain('href="/edit/sess-1?organizerPassword=organizer-secret"');
-      expect(html).toContain('href="/create/scrape"');
+      expect(html)
+        .toContain('No groups found for this league.');
+      expect(html)
+        .not
+        .toContain('<ul class="list border">');
+      expect(html)
+        .not
+        .toContain('href="/edit/sess-1?organizerPassword=organizer-secret"');
+      expect(html)
+        .toContain('href="/create/scrape"');
     });
 
     test('throws when the championship query parameter is missing', async () => {
@@ -151,11 +173,16 @@ describe('scrape wizard GET handlers', () => {
       const response = await handleScrapeTeamsGet(app);
       const html = await response.text();
 
-      expect(html).toContain('<h2>Choose your team</h2>');
-      expect(html).toContain('Ostermundigen');
-      expect(html).toContain('Thun');
-      expect(html).toContain('href="/create/scrape/matches?championship=MTTV%2026%2F27&amp;group=219397&amp;teamtable=1732193&amp;teamName=Ostermundigen');
-      expect(html).toContain('href="/create/scrape/groups?championship=MTTV%2026%2F27&amp;leagueName=MTTV%202026%2F27"');
+      expect(html)
+        .toContain('<h2>Choose your team</h2>');
+      expect(html)
+        .toContain('Ostermundigen');
+      expect(html)
+        .toContain('Thun');
+      expect(html)
+        .toContain('href="/create/scrape/matches?championship=MTTV%2026%2F27&amp;group=219397&amp;teamtable=1732193&amp;teamName=Ostermundigen');
+      expect(html)
+        .toContain('href="/create/scrape/groups?championship=MTTV%2026%2F27&amp;leagueName=MTTV%202026%2F27"');
     });
 
     test('shows the empty message and ignores leftover change parameters (mint back link)', async () => {
@@ -172,10 +199,16 @@ describe('scrape wizard GET handlers', () => {
       const response = await handleScrapeTeamsGet(app);
       const html = await response.text();
 
-      expect(html).toContain('No teams found for this group.');
-      expect(html).not.toContain('<ul class="list border">');
-      expect(html).not.toContain('href="/edit/sess-1?organizerPassword=organizer-secret"');
-      expect(html).toContain('href="/create/scrape/groups');
+      expect(html)
+        .toContain('No teams found for this group.');
+      expect(html)
+        .not
+        .toContain('<ul class="list border">');
+      expect(html)
+        .not
+        .toContain('href="/edit/sess-1?organizerPassword=organizer-secret"');
+      expect(html)
+        .toContain('href="/create/scrape/groups');
     });
 
     test('throws when the group query parameter is missing', async () => {
@@ -211,11 +244,16 @@ describe('scrape wizard GET handlers', () => {
       const response = await handleScrapeMatchesGet(app);
       const html = await response.text();
 
-      expect(html).toContain('<h2>Choose the match to reschedule</h2>');
-      expect(html).toContain('29.08.2026');
-      expect(html).toContain('16:00');
-      expect(html).toContain('Thun');
-      expect(html).toContain('Ostermundigen');
+      expect(html)
+        .toContain('<h2>Choose the match to reschedule</h2>');
+      expect(html)
+        .toContain('29.08.2026');
+      expect(html)
+        .toContain('16:00');
+      expect(html)
+        .toContain('Thun');
+      expect(html)
+        .toContain('Ostermundigen');
       // 14 match rows + 1 header row in the schedule table.
       expect((html.match(/<tr>/g) ?? []).length)
         .toBe(15);
@@ -223,21 +261,28 @@ describe('scrape wizard GET handlers', () => {
       // none carrying the team as a button value.
       expect((html.match(/<button type="submit"/g) ?? []).length)
         .toBe(14);
-      expect(html).not.toContain('<button type="submit" name="teamName"');
+      expect(html)
+        .not
+        .toContain('<button type="submit" name="teamName"');
       // The chosen team travels in every match form as a hidden field:
       // 14 match rows, each carrying the picked team.
       expect((html.match(/name="teamName"/g) ?? []).length)
         .toBe(14);
-      expect(html).toContain('name="teamName" value="Ostermundigen"');
+      expect(html)
+        .toContain('name="teamName" value="Ostermundigen"');
       // Thun (the 29.08.2026 opponent) resolves to the team-thun teamtable.
-      expect(html).toContain('name="opponentTeamtable" value="1732195"');
+      expect(html)
+        .toContain('name="opponentTeamtable" value="1732195"');
       // The picked team's roster is threaded as playerName hidden inputs in
       // every match form: 3 players × 14 match rows.
       expect((html.match(/name="playerName"/g) ?? []).length)
         .toBe(42);
-      expect(html).toContain('name="playerName" value="Linder, Christoph"');
-      expect(html).toContain('name="playerName" value="Schmid, Oliver"');
-      expect(html).toContain('href="/create/scrape/teams?championship=MTTV%2026%2F27&amp;group=219397&amp;groupName=O40%201.%20Liga&amp;leagueName=MTTV%202026%2F27"');
+      expect(html)
+        .toContain('name="playerName" value="Linder, Christoph"');
+      expect(html)
+        .toContain('name="playerName" value="Schmid, Oliver"');
+      expect(html)
+        .toContain('href="/create/scrape/teams?championship=MTTV%2026%2F27&amp;group=219397&amp;groupName=O40%201.%20Liga&amp;leagueName=MTTV%202026%2F27"');
     });
 
     test('does not thread change-mode context into create forms or links', async () => {
@@ -257,11 +302,18 @@ describe('scrape wizard GET handlers', () => {
       const response = await handleScrapeMatchesGet(app);
       const html = await response.text();
 
-      expect(html).not.toContain('name="sessionId"');
-      expect(html).not.toContain('name="organizerPassword"');
-      expect(html).not.toContain('href="/edit/sess-1?organizerPassword=organizer-secret"');
+      expect(html)
+        .not
+        .toContain('name="sessionId"');
+      expect(html)
+        .not
+        .toContain('name="organizerPassword"');
+      expect(html)
+        .not
+        .toContain('href="/edit/sess-1?organizerPassword=organizer-secret"');
       // Mint back link is threaded as before.
-      expect(html).toContain('href="/create/scrape/teams');
+      expect(html)
+        .toContain('href="/create/scrape/teams');
     });
 
     test('shows the empty message when the team has no matches', async () => {
@@ -273,8 +325,11 @@ describe('scrape wizard GET handlers', () => {
       const response = await handleScrapeMatchesGet(app);
       const html = await response.text();
 
-      expect(html).toContain('No matches found for this team.');
-      expect(html).not.toContain('<table');
+      expect(html)
+        .toContain('No matches found for this team.');
+      expect(html)
+        .not
+        .toContain('<table');
     });
 
     test('throws when a required drill-down parameter is missing', async () => {
@@ -299,6 +354,94 @@ describe('scrape wizard GET handlers', () => {
       await expect(handleScrapeMatchesGet(app))
         .rejects
         .toThrow('Missing required parameter: group');
+    });
+  });
+
+  describe('transient scrape failures', () => {
+    const WIZARD_URL = 'https://game-scheduler.localhost:3000/create/scrape/groups?championship=MTTV%2026%2F27';
+
+    function stubFailedScrape(error: Error): void {
+      vi.stubGlobal('fetch', vi.fn(() => Promise.reject(error)));
+    }
+
+    test('leagues step: an upstream click-tt error renders an inline alert with a retry to the same URL', async () => {
+      stubFailedScrape(new ClickTTError('click-tt.ch returned 503'));
+      const app = createApp({headers: {'HX-Current-URL': WIZARD_URL}});
+
+      const response = await handleScrapeLeaguesGet(app);
+      const html = await response.text();
+
+      expect(response.status)
+        .toBe(400);
+      expect(html)
+        .toContain('role="alert"');
+      expect(html)
+        .toContain('click-tt.ch is currently reporting an error.');
+      expect(html)
+        .toContain('Try again');
+      expect(html)
+        .toContain(`href="${WIZARD_URL}"`);
+    });
+
+    test('groups step: a transport failure renders the unreachable message and the wizard back link', async () => {
+      stubFailedScrape(new TypeError('fetch failed'));
+      const app = createApp({
+        queries: {championship: 'MTTV 26/27'},
+        headers: {'HX-Current-URL': WIZARD_URL},
+      });
+
+      const response = await handleScrapeGroupsGet(app);
+      const html = await response.text();
+
+      expect(html)
+        .toContain('click-tt.ch could not be reached.');
+      expect(html)
+        .toContain('href="/create/scrape"');
+    });
+
+    test('teams step: a failed scrape links back to the groups step', async () => {
+      stubFailedScrape(new ClickTTError('click-tt.ch returned 503'));
+      const app = createApp({
+        queries: {championship: 'MTTV 26/27', group: '219397', leagueName: 'MTTV 2026/27'},
+        headers: {'HX-Current-URL': 'https://game-scheduler.localhost:3000/create/scrape/teams'},
+      });
+
+      const html = await (await handleScrapeTeamsGet(app)).text();
+
+      expect(html)
+        .toContain('Try again');
+      expect(html)
+        .toContain('href="/create/scrape/groups?championship=MTTV%2026%2F27&amp;leagueName=MTTV%202026%2F27"');
+    });
+
+    test('matches step: a failed scrape links back to the teams step', async () => {
+      stubFailedScrape(new ClickTTError('click-tt.ch returned 503'));
+      const app = createApp({
+        queries: {
+          championship: 'MTTV 26/27',
+          group: '219397',
+          teamtable: '1732193',
+          leagueName: 'MTTV 2026/27',
+          groupName: 'O40 1. Liga',
+        },
+        headers: {'HX-Current-URL': 'https://game-scheduler.localhost:3000/create/scrape/matches'},
+      });
+
+      const html = await (await handleScrapeMatchesGet(app)).text();
+
+      expect(html)
+        .toContain('Try again');
+      expect(html)
+        .toContain('href="/create/scrape/teams?championship=MTTV%2026%2F27&amp;group=219397&amp;leagueName=MTTV%202026%2F27&amp;groupName=O40%201.%20Liga"');
+    });
+
+    test('rethrows a non-transient failure to the generic error path', async () => {
+      stubFailedScrape(new Error('boom'));
+      const app = createApp();
+
+      await expect(handleScrapeLeaguesGet(app))
+        .rejects
+        .toThrow('boom');
     });
   });
 });

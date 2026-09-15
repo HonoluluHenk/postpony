@@ -33,7 +33,11 @@ function toVoteTallyItems(
  * per-team tallies, and the organizer-team completion view. Used by edit-id-get and
  * every post handler that re-renders the page.
  */
-export function buildEditPartialsData(session: Postponement, locale: AppLocale, sort: DateSort = 'date'): EditPartialsData {
+export function buildEditPartialsData(
+  session: Postponement,
+  locale: AppLocale,
+  sort: DateSort = 'date',
+): EditPartialsData {
   const rules = new PostponementRules();
   const tallies = rules.tally(session);
   const homeTallies = rules.tally(session, 'home');
@@ -73,6 +77,7 @@ export function buildEditPartialsData(session: Postponement, locale: AppLocale, 
     homeProposedDates: toVoteTallyItems(dates, homeTallies, locale),
     awayProposedDates: toVoteTallyItems(dates, awayTallies, locale),
     clashCheckable: session.homeTeamIdentity !== undefined && session.guestTeamIdentity !== undefined,
+    clashDataStale: session.clashDataStale === true,
     venues: session.venues,
     ...buildOwnTeamView(session, locale),
   };
