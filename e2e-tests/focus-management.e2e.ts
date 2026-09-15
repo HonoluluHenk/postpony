@@ -43,7 +43,7 @@ test.describe('Focus management after HTMX swaps', () => {
   test('should move focus to the section heading after confirming a date', async ({page, checkA11y}) => {
     const {editPage, session} = await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-07T18:00']);
 
-    // The opponent captain marks the second date acceptable before the
+    // The opponent captain accepts the second date before the
     // organizer confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);

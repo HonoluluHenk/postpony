@@ -441,7 +441,7 @@ test.describe('Join and Voting', () => {
     await awayJoinPage.join('Charlie');
     await awayJoinPage.castVote(0, 'No');
 
-    // The opponent captain marks the date acceptable before the organizer
+    // The opponent captain accepts the date before the organizer
     // confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);
@@ -485,7 +485,7 @@ test.describe('Join and Voting', () => {
     const editPage = new EditPage(page);
     await editPage.goto(session.editUrl);
 
-    // The opponent captain marks the date acceptable before the organizer
+    // The opponent captain accepts the date before the organizer
     // confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);

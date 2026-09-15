@@ -101,8 +101,8 @@ describe('withOpponentPassword', () => {
   });
 
   test('appends the password to a URL with an existing query', () => {
-    expect(withOpponentPassword('/opponent/1/veto?proposedDateId=pd-1', 'pw'))
-      .toBe('/opponent/1/veto?proposedDateId=pd-1&opponentCaptainPassword=pw');
+    expect(withOpponentPassword('/opponent/1/votable?proposedDateId=pd-1', 'pw'))
+      .toBe('/opponent/1/votable?proposedDateId=pd-1&opponentCaptainPassword=pw');
   });
 
   test('leaves the URL unchanged when the password is absent', () => {

@@ -78,7 +78,7 @@ export class OpponentPage {
   acceptedCheckbox(dateIndex: number): Locator {
     return this.dateRows
       .nth(dateIndex)
-      .getByRole('checkbox', {name: /Accept this date|Accept .* — the organizer may confirm it/});
+      .getByRole('checkbox', {name: /Accept .+ — the organizer may confirm it/});
   }
 
   async toggleOpponentVotable(dateIndex: number): Promise<void> {

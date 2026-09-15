@@ -284,7 +284,7 @@ test.describe('Proposed Date Generator', () => {
     await expect(editPage.generateForm.locator('input[name="time[]"]'))
       .toHaveCount(7);
 
-    // The opponent captain marks the date acceptable before the organizer
+    // The opponent captain accepts the date before the organizer
     // confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);

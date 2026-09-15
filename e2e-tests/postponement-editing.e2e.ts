@@ -511,7 +511,7 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.confirmButton(0))
       .toBeVisible();
 
-    // The opponent captain marks the date acceptable before the organizer
+    // The opponent captain accepts the date before the organizer
     // confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);
@@ -604,7 +604,7 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.proposedDateRows)
       .toHaveCount(1);
 
-    // The opponent captain marks the date acceptable before the organizer
+    // The opponent captain accepts the date before the organizer
     // confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);
