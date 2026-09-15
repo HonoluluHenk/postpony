@@ -10,3 +10,6 @@
 - [x] The own-side merge rule replaces only the named side's clash lines and preserves the other side plus occupancy, covered at the pure domain seam.
 - [x] A first merge onto dates with no previous snapshot yields own-side lines and an absent other side.
 - [x] The existing unit, handler, and end-to-end suites stay green.
+
+## Comments
+- 53a1028 shared clash check moved to src/lib plus own-side merge rule, suites green (953 tests).
