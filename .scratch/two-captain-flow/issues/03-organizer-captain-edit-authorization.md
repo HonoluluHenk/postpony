@@ -10,3 +10,8 @@
 - [x] A bare session URL, or a wrong password, is refused with a translated 403.
 - [x] The iCal edit endpoint keeps its public-read behaviour explicit and does not require the captain password.
 - [x] e2e covers the unauthenticated (403) path and the authenticated edit path.
+
+## Comments
+
+- `308acad` — `feat(edit): require organizer-captain password for edit access`: shared `requireOrganizerCaptain` guard on the edit GET and the seven edit POSTs (via the command seam), password threaded through every edit HTMX URL, iCal left public, plus unit/e2e coverage.
+
