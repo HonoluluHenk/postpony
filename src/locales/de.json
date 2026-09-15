@@ -14,6 +14,7 @@
   "clash_check_refresh": "Spielplanprüfung aktualisieren",
   "clash_check_refresh_failed": "Spielplanprüfung konnte nicht aktualisiert werden — die vorherigen Ergebnisse werden angezeigt.",
   "clash_check_refreshed": "Spielplanprüfung aktualisiert",
+  "clash_line": "<%= it.time %> gegen <%= it.opponent %>",
   "clash_line_away": "Gast: <%= it.time %> gegen <%= it.opponent %>",
   "clash_line_home": "Heim: <%= it.time %> gegen <%= it.opponent %>",
   "clash_row_label": "Überschneidung: <%= it.date %>",

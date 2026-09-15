@@ -1,7 +1,9 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { ViewContext } from '../../app';
+import type { Clash } from '../../lib/clashes';
 import type { Player, Postponement } from '../../lib/models';
-import type { TranslateFn } from '../../locales';
+import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
+import { type AppLocale, type TranslateFn, weekdayLabels } from '../../locales';
 import { pageLayout } from '../layouts/main';
 import { StatusAnnouncement } from '../partials/status-announcement';
 import { StatusChip } from '../edit/id/status-chip';
@@ -10,6 +12,13 @@ import { withOpponentPassword } from './opponent-utils';
 export interface OpponentDateItem {
   id: string;
   display: string;
+  /** ISO start/end range backing the four-part date cell. */
+  dateTimeRange: { start: string; end: string };
+  /**
+   * The opponent side's own clash lines only: undefined when never checked
+   * (the date renders no clash UI at all), empty when checked clean.
+   */
+  ownClashes?: Clash[];
   vetoed: boolean;
   acceptable: boolean;
   yes: number;
@@ -31,6 +40,35 @@ export interface OpponentPageProps extends ViewContext, OpponentViewData {
   playerError?: string;
   statusMessage?: string;
   globalError?: string;
+}
+
+/**
+ * The opponent page's per-date chip row: the opponent side's own clash lines,
+ * or the clean chip when that side is checked and clean. A date with no clash
+ * data renders no clash UI at all — deliberately no venue, acceptable/vetoed,
+ * not-checked, or occupancy chips, and never the organizer side's lines.
+ */
+function OpponentDateChips(props: { date: OpponentDateItem; t: TranslateFn; locale: AppLocale }): JSX.Element | null {
+  const {date, t, locale} = props;
+  if (date.ownClashes === undefined) {
+    return null;
+  }
+  if (date.ownClashes.length === 0) {
+    return (
+      <div class="date-chips">
+        <span class="chip chip--clean">{t('clash_check_clean')}</span>
+      </div>
+    );
+  }
+  return (
+    <div class="date-chips">
+      {date.ownClashes.map((clash) => (
+        <span class="chip chip--error" key={`${clash.start}-${clash.opponent}`}>
+          {t('clash_line', {time: formatLocalizedDateTime(parseIsoToPlainDateTime(clash.start), locale, {timeStyle: 'short'}), opponent: clash.opponent})}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function DateActions(props: {
@@ -139,24 +177,36 @@ export function OpponentPage(props: OpponentPageProps): JSX.Element {
         {props.dates.length === 0 ? (
           <p class="muted mt-2">{props.t('proposed_dates_none')}</p>
         ) : (
-          props.dates.map((date) => (
-            <article key={date.id} class="date-row">
-              <div class="date-cell">
-                <span class="date-num">{date.display}</span>
-              </div>
-              <div class="date-main">
-                <span class="team-tally">
-                  {props.opponentTeamName}: {date.yes + date.ifNecessary} ({date.yes}/{date.ifNecessary}/{date.no})
-                </span>
-                <DateActions
-                  session={props.session}
-                  date={date}
-                  t={props.t}
-                  opponentCaptainPassword={props.opponentCaptainPassword}
-                />
-              </div>
-            </article>
-          ))
+          props.dates.map((date) => {
+            const dt = parseIsoToPlainDateTime(date.dateTimeRange.start);
+            const hasClashes = date.ownClashes !== undefined && date.ownClashes.length > 0;
+            const isClean = date.ownClashes !== undefined && !hasClashes;
+            const ariaLabel = hasClashes ? props.t('clash_row_label', {date: date.display}) : isClean
+                                                                                              ? props.t('clash_row_clean_label', {date: date.display})
+                                                                                              : undefined;
+            return (
+              <article key={date.id} class={`date-row${hasClashes ? ' clash-row' : ''}`} role={ariaLabel ? 'group' : undefined} aria-label={ariaLabel}>
+                <div class="date-cell">
+                  <span class="date-day">{weekdayLabels[props.locale][dt.dayOfWeek - 1] ?? ''}</span>
+                  <span class="date-num">{formatLocalizedDateTime(dt, props.locale, {month: 'long', day: 'numeric'})}</span>
+                  <span class="date-time">{formatLocalizedDateTime(dt, props.locale, {timeStyle: 'short'})}</span>
+                  <span class="date-year">{dt.year}</span>
+                </div>
+                <div class="date-main">
+                  <OpponentDateChips date={date} t={props.t} locale={props.locale}/>
+                  <span class="team-tally">
+                    {props.opponentTeamName}: {date.yes + date.ifNecessary} ({date.yes}/{date.ifNecessary}/{date.no})
+                  </span>
+                  <DateActions
+                    session={props.session}
+                    date={date}
+                    t={props.t}
+                    opponentCaptainPassword={props.opponentCaptainPassword}
+                  />
+                </div>
+              </article>
+            );
+          })
         )}
       </section>
     </div>

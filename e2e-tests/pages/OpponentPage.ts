@@ -99,4 +99,22 @@ export class OpponentPage {
       .nth(dateIndex)
       .locator('.team-tally');
   }
+
+  dateCell(dateIndex: number): Locator {
+    return this.dateRows
+      .nth(dateIndex)
+      .locator('.date-cell');
+  }
+
+  dateChips(dateIndex: number): Locator {
+    return this.dateRows
+      .nth(dateIndex)
+      .locator('.date-chips');
+  }
+
+  clashChips(dateIndex: number): Locator {
+    return this.dateRows
+      .nth(dateIndex)
+      .locator('.date-chips .chip--error');
+  }
 }

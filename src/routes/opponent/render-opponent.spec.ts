@@ -58,4 +58,74 @@ describe('buildOpponentViewData', () => {
         {id: 'pd-1', vetoed: true, acceptable: true, yes: 1, no: 0, ifNecessary: 0},
       ]);
   });
+
+  test('selects the away side lines when the organizer is home', () => {
+    const session = aSession({
+      organizerTeam: 'home',
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-1',
+          votable: true,
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          clashes: {
+            home: [{opponent: 'Organizer Opp', start: '2026-09-01T19:00'}],
+            away: [{opponent: 'Own Opp', start: '2026-09-01T21:00'}],
+          },
+        }),
+      ],
+    });
+
+    expect(buildOpponentViewData(session, 'en-US').dates)
+      .toMatchObject([
+        {
+          id: 'pd-1',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          ownClashes: [{opponent: 'Own Opp', start: '2026-09-01T21:00'}],
+        },
+      ]);
+  });
+
+  test('selects the home side lines when the organizer is away', () => {
+    const session = aSession({
+      organizerTeam: 'away',
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-1',
+          votable: true,
+          clashes: {
+            home: [{opponent: 'Own Opp', start: '2026-09-01T19:00'}],
+            away: [{opponent: 'Organizer Opp', start: '2026-09-01T21:00'}],
+          },
+        }),
+      ],
+    });
+
+    expect(buildOpponentViewData(session, 'en-US').dates)
+      .toMatchObject([{id: 'pd-1', ownClashes: [{opponent: 'Own Opp', start: '2026-09-01T19:00'}]}]);
+  });
+
+  test('reports an empty own-side selection for a checked-clean date', () => {
+    const session = aSession({
+      organizerTeam: 'home',
+      proposedDates: [
+        aProposedDate({id: 'pd-1', votable: true, clashes: {home: [], away: []}}),
+      ],
+    });
+
+    expect(buildOpponentViewData(session, 'en-US').dates)
+      .toMatchObject([{id: 'pd-1', ownClashes: []}]);
+  });
+
+  test('reports an absent own-side selection for a date with no clash data', () => {
+    const session = aSession({
+      organizerTeam: 'home',
+      proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+    });
+    const dates = buildOpponentViewData(session, 'en-US').dates;
+
+    expect(dates)
+      .toHaveLength(1);
+    expect(dates[0]?.ownClashes)
+      .toBeUndefined();
+  });
 });

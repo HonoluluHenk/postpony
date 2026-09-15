@@ -14,6 +14,7 @@
   "clash_check_refresh": "Refresh Schedule Check",
   "clash_check_refresh_failed": "Couldn't refresh the schedule check — showing the previous results.",
   "clash_check_refreshed": "Schedule check refreshed",
+  "clash_line": "<%= it.time %> vs <%= it.opponent %>",
   "clash_line_away": "Away: <%= it.time %> vs <%= it.opponent %>",
   "clash_line_home": "Home: <%= it.time %> vs <%= it.opponent %>",
   "clash_row_label": "Schedule clash: <%= it.date %>",
