@@ -9,6 +9,17 @@ test.describe('Postponement Editing', () => {
     ({session} = await EditPage.createSession(page));
   });
 
+  test('refuses a bare edit URL without the organizer password', async ({page}) => {
+    const response = await page.goto(`/edit/${session.id}`);
+
+    expect(response?.status())
+      .toBe(403);
+    await expect(page.getByRole('heading', {name: 'Error', level: 2}))
+      .toBeVisible();
+    await expect(page.getByRole('alert'))
+      .toContainText('Invalid organizer password');
+  });
+
   test('should add players to the home team', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addPlayer('John Doe');
@@ -176,14 +187,19 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.votableCheckbox(0))
       .toBeChecked();
 
-    // Toggle it off
+    // Toggle it off. Waiting on the status announcement (not just the native
+    // checkbox) guarantees the HTMX re-render has landed before the next toggle.
     await editPage.toggleVotable(0);
+    await expect(editPage.clipboardStatus)
+      .toHaveText('Voting disabled');
     await expect(editPage.votableCheckbox(0))
       .not
       .toBeChecked();
 
     // Toggle it back on
     await editPage.toggleVotable(0);
+    await expect(editPage.clipboardStatus)
+      .toHaveText('Voting enabled');
     await expect(editPage.votableCheckbox(0))
       .toBeChecked();
 
@@ -332,9 +348,10 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.groupHeads.nth(3))
       .toContainText('Week 26');
 
-    // The URL carries exactly one sort param, so a reload keeps the Date radio checked.
+    // The URL keeps the organizer password and carries exactly one sort param,
+    // so a reload keeps the Date radio checked.
     await expect(page)
-      .toHaveURL(/\/edit\/[^?]+\?sort=date$/);
+      .toHaveURL(/\/edit\/[^?]+\?organizerPassword=[^&]+&sort=date$/);
     await page.reload();
     await expect(editPage.sortRadio('Date'))
       .toBeChecked();

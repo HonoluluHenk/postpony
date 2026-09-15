@@ -8,6 +8,7 @@ import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/t
 import { VoteTally } from '../../partials/vote-tally';
 import { venueShortName } from '../../../lib/venues';
 import { venueNumberToken } from '../../partials/venues';
+import { withOrganizerPassword } from './edit-auth';
 import type { OwnTeamView } from './own-team-view';
 import { OwnTeamVotes } from './own-team-votes';
 
@@ -76,6 +77,8 @@ export interface EditGridProps extends EditPartialsData {
   teamId?: 'home' | 'away';
   playerError?: string;
   statusMessage?: string;
+  /** Organizer-captain password, appended to every edit-mutation URL so the guard passes. */
+  organizerPassword?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -260,14 +263,14 @@ function DateChips(props: { row: ProposedDateTallyItem; clashCheckable: boolean;
 /* Date actions (wired: votable, confirm, delete)                      */
 /* ------------------------------------------------------------------ */
 
-function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: TranslateFn; confirmed: boolean }): JSX.Element {
-  const {row, sessionId, t} = props;
+function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: TranslateFn; confirmed: boolean; organizerPassword?: string }): JSX.Element {
+  const {row, sessionId, t, organizerPassword} = props;
   return (
     <div class="date-actions">
       <label class="action action--votable" title={t('votable_toggle')}>
         <input
           type="checkbox"
-          hx-post={`/edit/${sessionId}/proposed-date-visibility?proposedDateId=${row.id}&votable=${!row.votable}`}
+          hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-date-visibility?proposedDateId=${row.id}&votable=${!row.votable}`, organizerPassword)}
           hx-target="#edit-grid"
           checked={row.votable}
           aria-label={t('votable_toggle')}
@@ -287,7 +290,7 @@ function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: 
         <button
           type="button"
           class="action action--primary"
-          hx-post={`/edit/${sessionId}/proposed-date-confirm?proposedDateId=${row.id}`}
+          hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-date-confirm?proposedDateId=${row.id}`, organizerPassword)}
           hx-target="#edit-grid"
         >
           {t('confirm_date')}
@@ -298,7 +301,7 @@ function DateActions(props: { row: ProposedDateTallyItem; sessionId: string; t: 
         <p>{t('delete_proposed_date_confirm_message', {date: row.display})}</p>
         <div class="row items-center gap">
           <button type="button" class="button outline" data-dismiss-dialog>{t('cancel')}</button>
-          <form hx-post={`/edit/${sessionId}/proposed-date-delete?proposedDateId=${row.id}`} hx-target="#edit-grid">
+          <form hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-date-delete?proposedDateId=${row.id}`, organizerPassword)} hx-target="#edit-grid">
             <button type="submit" class="button">{t('delete_proposed_date')}</button>
           </form>
         </div>
@@ -324,11 +327,12 @@ export interface GenerateFormProps {
   toError?: string;
   fromDate?: string;
   toDate?: string;
+  organizerPassword?: string;
 }
 
 export function GenerateForm(props: GenerateFormProps): JSX.Element {
   const {sessionId, t, locale, times, fromDate, toDate, fromError, toError} = props;
-  const rowAction = `/edit/${sessionId}/proposed-dates`;
+  const rowAction = withOrganizerPassword(`/edit/${sessionId}/proposed-dates`, props.organizerPassword);
   const timeFormat = localeConfig(locale).timeFormat;
   const dateFormat = localeConfig(locale).dateFormat;
   // ponytail: 24-hour locales open a numeric keypad on phones; 12-hour locales
@@ -439,10 +443,10 @@ export function GenerateForm(props: GenerateFormProps): JSX.Element {
 /* The rail: week-grouped dense date list + add-date form              */
 /* ------------------------------------------------------------------ */
 
-function AddDateForm(props: { sessionId: string; t: TranslateFn; locale: AppLocale; inputFormat: string; venueOptions: JSX.Element[]; proposedDateTime?: string; error?: string }): JSX.Element {
+function AddDateForm(props: { sessionId: string; t: TranslateFn; locale: AppLocale; inputFormat: string; venueOptions: JSX.Element[]; proposedDateTime?: string; error?: string; organizerPassword?: string }): JSX.Element {
   const {sessionId, t, locale, inputFormat, venueOptions} = props;
   return (
-    <form hx-post={`/edit/${sessionId}/proposed-dates`} hx-target="#edit-grid" class="mt-4">
+    <form hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-dates`, props.organizerPassword)} hx-target="#edit-grid" class="mt-4">
       <div class="row items-center gap">
         <div class={`field label border fill max${props.error ? ' invalid' : ''}`}>
           <input
@@ -504,7 +508,7 @@ function TeamTallies(props: {
   );
 }
 
-function SortControl(props: { sessionId: string; sort: DateSort; t: TranslateFn }): JSX.Element {
+function SortControl(props: { sessionId: string; sort: DateSort; t: TranslateFn; organizerPassword?: string }): JSX.Element {
   const option = (value: DateSort, label: string): JSX.Element => (
     <label class="sort-option">
       <input
@@ -512,7 +516,7 @@ function SortControl(props: { sessionId: string; sort: DateSort; t: TranslateFn 
         name="sort"
         value={value}
         checked={props.sort === value}
-        hx-get={`/edit/${props.sessionId}`}
+        hx-get={withOrganizerPassword(`/edit/${props.sessionId}`, props.organizerPassword)}
         hx-target="#edit-grid"
         hx-push-url="true"
         hx-trigger="change"
@@ -562,7 +566,7 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
           </a>
         ) : null}
         {props.clashCheckable && props.proposedDates.length > 0 ? (
-          <button type="button" class="button outline" hx-post={`/edit/${props.sessionId}/refresh-clashes`} hx-target="#edit-grid">
+          <button type="button" class="button outline" hx-post={withOrganizerPassword(`/edit/${props.sessionId}/refresh-clashes`, props.organizerPassword)} hx-target="#edit-grid">
             <i aria-hidden="true">refresh</i>
             {props.t('clash_check_refresh')}
           </button>
@@ -576,7 +580,7 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
         </p>
       ) : null}
 
-      {props.proposedDates.length > 1 ? <SortControl sessionId={props.sessionId} sort={sort} t={props.t}/> : null}
+      {props.proposedDates.length > 1 ? <SortControl sessionId={props.sessionId} sort={sort} t={props.t} organizerPassword={props.organizerPassword}/> : null}
 
       {groups.map((group) => (
         <section key={group.key}>
@@ -603,7 +607,7 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
                   <DateChips row={row} clashCheckable={props.clashCheckable} venues={props.venues} t={props.t} locale={props.locale}/>
                   <TeamTallies row={row} homeTeam={homeTeam} guestTeam={guestTeam} homeTallies={homeTallies} awayTallies={awayTallies}/>
                   <VoteDots row={row} roster={roster} ownTeamResults={props.ownTeamResults} t={props.t}/>
-                  <DateActions row={row} sessionId={props.sessionId} t={props.t} confirmed={confirmed}/>
+                  <DateActions row={row} sessionId={props.sessionId} t={props.t} confirmed={confirmed} organizerPassword={props.organizerPassword}/>
                 </div>
               </article>
             );
@@ -624,6 +628,7 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
           venueOptions={venueOptions}
           proposedDateTime={props.proposedDateTime}
           error={props.error}
+          organizerPassword={props.organizerPassword}
         />
       ) : null}
       {props.success ? (

@@ -5,6 +5,7 @@ import type { Postponement } from '../../../lib/models';
 import { matchUpLine } from '../../../lib/postponement';
 import { pageLayout } from '../../layouts/main';
 import { StatusAnnouncement } from '../../partials/status-announcement';
+import { withOrganizerPassword } from './edit-auth';
 import { inviteLinkLabels } from './invite-link-labels';
 import { GenerateForm, ProposedDatesRail, type EditGridProps } from './proposed-dates-section';
 import { StatusChip } from './status-chip';
@@ -13,7 +14,6 @@ import { TeamSection } from './team-section';
 export interface EditPageProps extends ViewContext, EditGridProps {
   title?: string;
   session: Postponement;
-  organizerPassword?: string;
   /** Original match datetime in the locale's Intl reading format (page heading). */
   proposedDateTimeDisplay?: string;
   globalError?: string;
@@ -60,14 +60,14 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
   );
 }
 
-function SidebarStatus(props: { status: EditGridProps['status']; reopenCount: number; sessionId: string; t: ViewContext['t'] }): JSX.Element {
+function SidebarStatus(props: { status: EditGridProps['status']; reopenCount: number; sessionId: string; t: ViewContext['t']; organizerPassword?: string }): JSX.Element {
   const confirmed = props.status === 'Confirmed';
   return (
     <div class="side-block">
       <StatusChip status={props.status} t={props.t}/>
       {props.reopenCount > 0 ? <p class="muted">{props.t('reopened_count', {count: String(props.reopenCount)})}</p> : null}
       {confirmed ? (
-        <form hx-post={`/edit/${props.sessionId}/reopen`} hx-target="#edit-grid" class="mt-4">
+        <form hx-post={withOrganizerPassword(`/edit/${props.sessionId}/reopen`, props.organizerPassword)} hx-target="#edit-grid" class="mt-4">
           <button type="submit" class="button outline">{props.t('reopen')}</button>
         </form>
       ) : null}
@@ -90,7 +90,7 @@ function EditGrid(props: EditPageProps): JSX.Element {
     <div id="edit-grid" class="edit-grid">
       <ProposedDatesRail {...props} />
       <div class="edit-sidebar">
-        <SidebarStatus status={props.status} reopenCount={props.reopenCount} sessionId={props.sessionId} t={props.t}/>
+        <SidebarStatus status={props.status} reopenCount={props.reopenCount} sessionId={props.sessionId} t={props.t} organizerPassword={props.organizerPassword}/>
         <div class="side-block">
           <h3>{props.t('invite_link_label')}</h3>
           <InviteLinks baseUrl={props.baseUrl} session={props.session} t={props.t}/>
@@ -107,6 +107,7 @@ function EditGrid(props: EditPageProps): JSX.Element {
             playerName={props.playerName}
             teamId={props.teamId}
             error={props.playerError}
+            organizerPassword={props.organizerPassword}
           />
         </details>
         <details class="side-block side-details" open>
@@ -124,6 +125,7 @@ function EditGrid(props: EditPageProps): JSX.Element {
             toError={props.generatorToError}
             fromDate={props.fromDate}
             toDate={props.toDate}
+            organizerPassword={props.organizerPassword}
           />
         </details>
       </div>
@@ -148,7 +150,7 @@ export function EditPage(props: EditPageProps): JSX.Element {
 
   const content = (
     <div class="edit-redesign">
-      {props.organizerPassword ? (
+      {props.organizerPassword && !props.isPartial ? (
         <div class="toast primary white-text top" role="status">
           <i aria-hidden="true">info</i>
           <div class="max">

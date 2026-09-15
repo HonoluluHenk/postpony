@@ -2,6 +2,7 @@ import * as v from 'valibot';
 import type { App } from '../../../app';
 import { mapValidationToErrors } from '../../../lib/map-validation-to-errors';
 import type { Team } from '../../../lib/models';
+import { organizerPasswordFromRequest } from './edit-auth';
 import { renderEditPartials } from './render-edit-partials';
 import { runEditCommand } from './run-edit-command';
 
@@ -30,7 +31,7 @@ export const handleEditPlayersPost = (app: App): Promise<Response> => {
           }), {status: 400});
         }
 
-        return app.redirect(`/edit/${id}?organizerPassword=${app.query('organizerPassword') ?? ''}`);
+        return app.redirect(`/edit/${id}?organizerPassword=${organizerPasswordFromRequest(app)}`);
       }
 
       const {playerName, teamId} = validation.output;

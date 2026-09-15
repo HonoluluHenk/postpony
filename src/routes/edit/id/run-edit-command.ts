@@ -1,6 +1,7 @@
 import type { App } from '../../../app';
 import type { Postponement } from '../../../lib/models';
 import { PostponementRules } from '../../../lib/postponement';
+import { requireOrganizerCaptain } from './edit-auth';
 import { type EditPartialExtras, renderEditPartials } from './render-edit-partials';
 
 /** A value computed up front, or derived from the session the command saved. */
@@ -49,6 +50,7 @@ export async function runEditCommand(app: App, command: EditCommand): Promise<Re
   if (!session) {
     app.notFound(app.t('session_not_found'));
   }
+  await requireOrganizerCaptain(app, session);
 
   const updated = await command.apply(new PostponementRules(), session);
   if (updated instanceof Response) {

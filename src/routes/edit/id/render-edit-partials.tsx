@@ -5,6 +5,7 @@ import { PostponementRules, sortedProposedDates, type VoteTally } from '../../..
 import { formatProposedDateDisplay, formatProposedDateDisplayShort } from '../../../lib/temporal-utils';
 import { buildOwnTeamView } from './own-team-view';
 import { EditPage, type EditPageProps } from './edit';
+import { organizerPasswordFromRequest } from './edit-auth';
 import type { DateSort, EditGridProps, EditPartialsData } from './proposed-dates-section';
 
 function toVoteTallyItems(
@@ -115,6 +116,7 @@ export function renderEditPartials(
     ...extra,
     session,
     title: app.t('edit_postponement_title', {name: session.name}),
+    organizerPassword: organizerPasswordFromRequest(app),
   };
   return app.render(<EditPage {...props} />);
 }
