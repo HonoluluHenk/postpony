@@ -11,11 +11,12 @@ The following capabilities describe the system **as built** (each is traceable t
 3. **Propose dates** one at a time, or as a weekly slate through the fixed Monday–Sunday generator. (`POST /edit/:id/proposed-dates`, ADR-0021)
 4. **Detect clashes** — flag dates that collide with either team's click-tt schedule (±2 h) and the home venue's occupancy; newly-proposed clashing dates are auto-deselected. (ADR-0023)
 5. **Toggle votability** per proposed date. (`POST /edit/:id/proposed-date-visibility`)
-6. **Invite players** via a shareable, token-gated link per team. (`/join/:id/:team?token=`, ADR-0013)
+6. **Invite players** via a shareable, per-team token link — each team has its own player password. (`/join/:id/:team?token=`, ADR-0013, ADR-0025)
 7. **Vote** `Yes` / `No` / `IfNecessary`, one vote per participant per date. (`/join/:id/:team/vote`)
-8. **Confirm** a date, locking the postponement to `Confirmed`. (`POST /edit/:id/proposed-date-confirm`)
+8. **Confirm** a date, locking the postponement to `Confirmed` — only a date that is votable, marked acceptable by the opponent captain, and not vetoed. (`POST /edit/:id/proposed-date-confirm`)
 9. **Reopen** a confirmed postponement back to `Voting`, preserving history and incrementing `reopenCount`. (`POST /edit/:id/reopen`)
 10. **Export** the candidate dates as an iCal feed with per-date one-click vote links. (`/edit/:id/calendar.ics`, `/join/:id/:team/calendar.ics`)
+11. **Opponent-captain scoped view** — the opposing captain manages their own team's roster, vetoes votable dates, and marks dates acceptable, seeing only their own team's tallies. (`/opponent/:id`, ADR-0025)
 
 ### 1.1.1 Explicitly not built
 
@@ -25,7 +26,7 @@ These appeared in earlier planning documents and were dropped (see §11 and the 
 - Venue CRUD with operating hours, blackout dates, or maximum-overlap limits.
 - Player availability entry (the `AvailabilityRecord` type is dead code).
 - Participant-side date proposals (only the organizer proposes).
-- Two-step opponent-confirmation approval workflow (single-step confirm by organizer).
+- In-app gating of the voting phases or an "opponent is ready" handshake (the opponent captain marks acceptable in-app, but sequencing stays out-of-app).
 - WhatsApp / Email message template generation (only raw-link clipboard copy).
 - Multi-tenancy (single club; `club_id` is retained as a forward-compatible column).
 
@@ -45,6 +46,7 @@ The quality goals are derived from the code and ADRs, not from a separately-nego
 | Role                 | Interest                                                                     |
 |----------------------|------------------------------------------------------------------------------|
 | Organizer            | creates and manages one postponement; proposes, confirms, reopens            |
-| Player / Participant | joins via invitation link and votes                                          |
+| Opponent Captain     | manages the opposing team's roster; vetoes dates, marks dates acceptable     |
+| Player / Participant | joins via their team's player-password link and votes                        |
 | click-tt.ch          | upstream source of fixtures, rosters, venues, schedules (scraped)            |
 | Operator             | deploys to Cloudflare Workers + Turso; runs local dev with self-signed certs |

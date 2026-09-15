@@ -2,7 +2,7 @@
 
 PostPony is a web app for postponing sports matches (SSR: Hono + JSX + HTMX, no SPA framework). This directory is the architecture documentation, organised per the [arc42](https://arc42.org/) template. The ubiquitous language lives in [`CONTEXT.md`](../../CONTEXT.md); decisions live in [`docs/adr/`](../adr/).
 
-Last verified against commit `175711c6c16f9a2f9ff39b7503c0357614b9bc3a`.
+Last verified against commit `49be935d54da21e59ac3a0e962b1edfa0ef7738b`.
 
 | #  | Section                  | File                                                   |
 |----|--------------------------|--------------------------------------------------------|

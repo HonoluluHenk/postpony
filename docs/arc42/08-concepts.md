@@ -22,10 +22,10 @@ Default swap `outerHTML`; `hx-boost="true"` on the container, disabled per-eleme
 
 ## 8.6 Security
 
-- **Dual password** (ADR-0002/0011): organizer password (edit) + invitation password (join, `?token=`). Hashing is PBKDF2-SHA256, 100 000 iterations, 16-byte salt, 64-byte hash, constant-time compare; ids via `crypto.randomUUID()`.
-- **Invitation password** is stored **plaintext** on the `Postponement` alongside its hash, because the edit page renders share links (`models.ts`, `edit.tsx`).
-- **Organizer password** is generated, hashed, and stored, but **never verified** — `comparePassword` has a single call site in the join path (`join-utils.ts`). Edit routes are unauthenticated by URL. See §11 risk #1.
-- Team param whitelisted to `home|away`; token checked on every join route (403). `readPendingVotes` echoes only structurally-valid ids/values. Assets guard blocks serving co-located `*.spec.*` client tests.
+- **Four secrets** (ADR-0025): organizer-captain (full edit, verified on edit GET/POST), opponent-captain (scoped to the side opposite `organizerTeam`), home-player and away-player (per-team vote access, carried as `?token=`). Hashing is PBKDF2-SHA256, 100 000 iterations, 16-byte salt, 64-byte hash, constant-time compare; ids via `crypto.randomUUID()`.
+- **Shareable plaintexts persisted.** The three shareable secrets — opponent-captain, home-player, away-player — are stored **plaintext** on the `Postponement` alongside their hashes, because the edit page renders share links (`models.ts`, `edit.tsx`). The organizer-captain plaintext is shown once and never persisted.
+- **Verification at the trust boundary.** `comparePassword` verifies the organizer-captain password on every edit GET/POST (`edit-auth.ts`), the opponent-captain password on `/opponent/:id` (`opponent-utils.ts`), and the per-team player password on every join route (`join-utils.ts`).
+- Team param whitelisted to `home|away`; the join token is checked against the matching team's player hash (a team/token mismatch is a 403). `readPendingVotes` echoes only structurally-valid ids/values. Assets guard blocks serving co-located `*.spec.*` client tests.
 
 ## 8.7 Accessibility
 

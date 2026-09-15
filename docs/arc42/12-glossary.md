@@ -1,6 +1,6 @@
 # 12. Glossary
 
-The ubiquitous language is maintained in [`CONTEXT.md`](../../CONTEXT.md) — the canonical glossary of domain terms (Postponement, Match, Organizer, Player, Participant, Proposed Date, Clash, Venue, Venue Occupancy, Vote, Status, Invitation Password, click-tt Team Identity, Fixture Mode, Planning Window, iCal Export, Club, Locale, and their _Avoid_ anti-terms).
+The ubiquitous language is maintained in [`CONTEXT.md`](../../CONTEXT.md) — the canonical glossary of domain terms (Postponement, Match, Organizer, Opponent Captain, Captain Password, Player Password, Player, Participant, Proposed Date, Vetoed, Acceptable, Clash, Venue, Venue Occupancy, Vote, Status, click-tt Team Identity, Fixture Mode, Planning Window, iCal Export, Club, Locale, and their _Avoid_ anti-terms).
 
 Terms specific to the architecture (not domain vocabulary):
 

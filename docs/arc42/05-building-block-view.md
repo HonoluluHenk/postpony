@@ -15,7 +15,7 @@ flowchart TB
     CFG["src/config.ts<br/>convict config"]
     BA --> APP
     BA --> CFG
-    ROUTES["routers: /create, /edit, /join"]
+    ROUTES["routers: /create, /edit, /join, /opponent"]
     BA --> ROUTES
 ```
 
@@ -51,7 +51,7 @@ flowchart TB
 
 ## 5.3 Routers and routes
 
-Routers mounted in `src/build-app.tsx`: `/create`, `/edit`, `/join`.
+Routers mounted in `src/build-app.tsx`: `/create`, `/edit`, `/join`, `/opponent`.
 
 | Method | Path                                 | Handler                                                       |
 |--------|--------------------------------------|---------------------------------------------------------------|
@@ -75,6 +75,10 @@ Routers mounted in `src/build-app.tsx`: `/create`, `/edit`, `/join`.
 | GET    | `/join/:id/:team/vote`               | `handleJoinVoteGet`                                           |
 | POST   | `/join/:id/:team/register`           | `handleJoinRegisterPost`                                      |
 | POST   | `/join/:id/:team/vote`               | `handleJoinVotePost`                                          |
+| GET    | `/opponent/:id`                      | `handleOpponentGet` (opponent-captain password gated)         |
+| POST   | `/opponent/:id/players`              | `handleOpponentPlayersPost` (add/remove own team)             |
+| POST   | `/opponent/:id/veto`                 | `handleOpponentVetoPost`                                      |
+| POST   | `/opponent/:id/acceptable`           | `handleOpponentAcceptablePost`                                |
 | —      | `/assets/*`                          | `serveStatic` (Node) / Workers Assets; `.spec.` paths blocked |
 
 Known gap: the home page links `/edit`, but no handler serves bare `GET /edit` (404) — see §11.
