@@ -13,3 +13,7 @@
 - [x] The opponent captain sees their own team's vote tallies only, never the organizer's team's tallies.
 - [x] The opponent captain has no affordance to propose dates, flip the symmetric `votable` switch, or confirm a date.
 - [x] Unit specs cover the scoped handlers; e2e covers the opponent captain's roster edit, veto, and acceptable flow, with `checkA11y` on the new surface.
+
+## Comments
+
+- `d6cedfa` — `feat(opponent): scoped opponent-captain view`: new `/opponent` router gated by `requireOpponentCaptain` (password compared against `opponentCaptainPasswordHash`), a scoped `OpponentPage` (own roster add/remove with vote cascade, own-team tallies, per-date veto/acceptable toggles), the opponent-captain share link added to the edit page, plus unit and e2e coverage with `checkA11y`.
