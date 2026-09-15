@@ -168,15 +168,40 @@ describe('EditPage redesigned grid and sidebar', () => {
     const html = renderToString(EditPage(baseProps()));
 
     expect(html)
-      .toContain(`href="${BASE_URL}/join/test-session/home?token=invitation-pw"`);
+      .toContain(`href="${BASE_URL}/join/test-session/home?token=home-player-pw"`);
     expect(html)
-      .toContain(`href="${BASE_URL}/join/test-session/away?token=invitation-pw"`);
+      .toContain(`href="${BASE_URL}/opponent/test-session?opponentCaptainPassword=opponent-captain-pw"`);
     expect(html)
-      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/home\?token=invitation-pw"/);
+      .toContain(`href="${BASE_URL}/join/test-session/away?token=away-player-pw"`);
     expect(html)
-      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/away\?token=invitation-pw"/);
+      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/home\?token=home-player-pw"/);
+    expect(html)
+      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/opponent\/test-session\?opponentCaptainPassword=opponent-captain-pw"/);
+    expect(html)
+      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/away\?token=away-player-pw"/);
     expect(html)
       .toContain('aria-label="Copy to clipboard"');
+    expect(html)
+      .toContain('My team invitation link (Home Team)');
+    expect(html)
+      .toContain('Opponent captain link (Guest Team)');
+    expect(html)
+      .toContain('Opponent team invitation link (Guest Team)');
+  });
+
+  it('orders the three invite links my-team, opponent captain, opponent team', () => {
+    const html = renderToString(EditPage(baseProps()));
+
+    const myLink = html.indexOf(`href="${BASE_URL}/join/test-session/home?token=home-player-pw"`);
+    const captainLink = html.indexOf(`href="${BASE_URL}/opponent/test-session?opponentCaptainPassword=opponent-captain-pw"`);
+    const opponentLink = html.indexOf(`href="${BASE_URL}/join/test-session/away?token=away-player-pw"`);
+
+    expect(myLink)
+      .toBeGreaterThanOrEqual(0);
+    expect(captainLink)
+      .toBeGreaterThan(myLink);
+    expect(opponentLink)
+      .toBeGreaterThan(captainLink);
   });
 
   it('offers reopen and shows the reopen count when the postponement is confirmed', () => {
@@ -277,5 +302,40 @@ describe('EditPage sidebar roster and generator', () => {
     expect(html)
       .not
       .toContain('Match:');
+  });
+});
+
+describe('buildEditPartialsData acceptable/vetoed flags', () => {
+  it('exposes the acceptable and vetoed flags per proposed date', () => {
+    const session = buildSession({
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-acc',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          acceptable: true,
+        }),
+        aProposedDate({
+          id: 'pd-veto',
+          dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+          votable: true,
+          vetoed: true,
+        }),
+        aProposedDate({
+          id: 'pd-plain',
+          dateTimeRange: {start: '2026-09-15T20:00', end: '2026-09-15T22:00'},
+          votable: true,
+        }),
+      ],
+    });
+
+    const data = buildEditPartialsData(session, 'en-US');
+
+    expect(data.proposedDates)
+      .toMatchObject([
+        {id: 'pd-acc', acceptable: true, vetoed: false},
+        {id: 'pd-veto', acceptable: false, vetoed: true},
+        {id: 'pd-plain', acceptable: false, vetoed: false},
+      ]);
   });
 });

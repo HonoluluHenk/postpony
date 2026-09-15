@@ -9,10 +9,14 @@ import { handleJoinVoteGet } from './join-vote-get';
 import { handleJoinVotePost } from './join-vote-post';
 import { JoinPage, type JoinPageProps } from './join';
 
-const TOKEN = 'invitation-pw';
+const TOKEN = 'player-pw';
 
 async function seedSession(overrides: Parameters<typeof aSession>[0] = {}): Promise<ReturnType<typeof aSession>> {
-  return aSession({invitationPasswordHash: await hashPassword(TOKEN), ...overrides});
+  return aSession({
+    homePlayerPasswordHash: await hashPassword(TOKEN),
+    awayPlayerPasswordHash: await hashPassword(TOKEN),
+    ...overrides,
+  });
 }
 
 describe('join handlers', () => {
@@ -445,6 +449,36 @@ describe('join handlers', () => {
         .toBe(200);
     });
 
+    test('hides a vetoed date from the opponent team\'s poll', async () => {
+      const session = await seedSession({
+        organizerTeam: 'home',
+        players: [aPlayer({id: 'away-player', teamId: 'away'})],
+        proposedDates: [
+          aProposedDate({id: 'open'}),
+          aProposedDate({id: 'vetoed', vetoed: true}),
+        ],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'away'},
+        queries: {token: TOKEN, playerId: 'away-player', 'vote-open': 'Yes', 'vote-vetoed': 'No'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVoteGet(app);
+      const body = await response.text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.votes)
+        .toMatchObject([{proposedDateId: 'open', participantId: 'away-player', type: 'Yes'}]);
+      expect(stored?.votes)
+        .toHaveLength(1);
+      expect(body)
+        .not
+        .toContain('name="vote-vetoed"');
+      expect(body)
+        .toContain('name="vote-open"');
+    });
+
     test('ignores an out-of-domain vote value in a GET link', async () => {
       const session = await seedSession({
         players: [aPlayer()],
@@ -848,6 +882,70 @@ describe('join handlers', () => {
         .toBe(200);
       expect(body)
         .toContain('value="Yes" checked');
+    });
+  });
+
+  describe('per-team join guard', () => {
+    const HOME_TOKEN = 'home-only-pw';
+    const AWAY_TOKEN = 'away-only-pw';
+
+    async function seedDistinct(): Promise<ReturnType<typeof aSession>> {
+      return aSession({
+        homePlayerPasswordHash: await hashPassword(HOME_TOKEN),
+        awayPlayerPasswordHash: await hashPassword(AWAY_TOKEN),
+      });
+    }
+
+    test('opens the home join page with the home-player password', async () => {
+      const session = await seedDistinct();
+      const app = createApp({params: {id: session.id, team: 'home'}, queries: {token: HOME_TOKEN}});
+      await app.store.save(session);
+
+      const response = await handleJoinGet(app);
+
+      expect(response.status)
+        .toBe(200);
+    });
+
+    test('opens the away join page with the away-player password', async () => {
+      const session = await seedDistinct();
+      const app = createApp({params: {id: session.id, team: 'away'}, queries: {token: AWAY_TOKEN}});
+      await app.store.save(session);
+
+      const response = await handleJoinGet(app);
+
+      expect(response.status)
+        .toBe(200);
+    });
+
+    test('refuses the away-player password on the home path with the wrong-team message', async () => {
+      const session = await seedDistinct();
+      const app = createApp({params: {id: session.id, team: 'home'}, queries: {token: AWAY_TOKEN}});
+      await app.store.save(session);
+
+      await expect(handleJoinGet(app))
+        .rejects
+        .toThrow('This link is for the other team.');
+    });
+
+    test('refuses the home-player password on the away path with the wrong-team message', async () => {
+      const session = await seedDistinct();
+      const app = createApp({params: {id: session.id, team: 'away'}, queries: {token: HOME_TOKEN}});
+      await app.store.save(session);
+
+      await expect(handleJoinGet(app))
+        .rejects
+        .toThrow('This link is for the other team.');
+    });
+
+    test('refuses a token matching no team hash with the invalid-token message', async () => {
+      const session = await seedDistinct();
+      const app = createApp({params: {id: session.id, team: 'home'}, queries: {token: 'bogus'}});
+      await app.store.save(session);
+
+      await expect(handleJoinGet(app))
+        .rejects
+        .toThrow('Invalid or missing invitation token.');
     });
   });
 

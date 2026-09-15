@@ -5,6 +5,7 @@
 ```mermaid
 flowchart LR
     O["Organizer"] --> P["PostPony<br/>(Hono SSR + HTMX)"]
+    OC["Opponent Captain"] --> P
     PL["Player / Participant"] --> P
     P --> CT["click-tt.ch<br/>(nuLiga TT)"]
     P --> DB[("Turso / libSQL<br/>(SQLite)")]
@@ -32,10 +33,11 @@ click-tt URL surface (`src/lib/click-tt-scraper.ts`): leagues → groups → tea
 
 ## 3.4 Users and roles (no accounts, no login)
 
-| Role                     | Access                             | Mechanism                                                                                           |
-|--------------------------|------------------------------------|-----------------------------------------------------------------------------------------------------|
-| **Organizer**            | creates + manages one postponement | organizer password (generated, shown once) — see §11 risk #1: **currently not verified**            |
-| **Player / Participant** | joins + votes                      | invitation link `?token=<invitationPassword>`; identity in `localStorage` per postponement per team |
+| Role                     | Access                                                    | Mechanism                                                                                                        |
+|--------------------------|-----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| **Organizer**            | creates + manages one postponement (full edit)            | organizer-captain password, verified on edit GET/POST (ADR-0025)                                                 |
+| **Opponent Captain**     | own team only: roster, veto, mark acceptable              | opponent-captain password, verified on `/opponent/:id`                                                            |
+| **Player / Participant** | joins + votes on their team only                          | per-team player password `?token=<home/awayPlayerPassword>`; identity in `localStorage` per postponement per team |
 
 The Club Manager role from earlier planning is not implemented (see §1.1.1).
 

@@ -95,9 +95,13 @@ export interface CreatePostponementInput {
   guestTeamIdentity?: ClickTtTeamIdentity;
   players: readonly Player[];
   venues: readonly Venue[];
-  organizerPasswordHash: string;
-  invitationPasswordHash: string;
-  invitationPassword: string;
+  organizerCaptainPasswordHash: string;
+  opponentCaptainPasswordHash: string;
+  homePlayerPasswordHash: string;
+  awayPlayerPasswordHash: string;
+  opponentCaptainPassword: string;
+  homePlayerPassword: string;
+  awayPlayerPassword: string;
 }
 
 export class PostponementRules {
@@ -131,9 +135,13 @@ export class PostponementRules {
       ),
       homeTeam: input.homeTeam,
       guestTeam: input.guestTeam,
-      organizerPasswordHash: input.organizerPasswordHash,
-      invitationPasswordHash: input.invitationPasswordHash,
-      invitationPassword: input.invitationPassword,
+      organizerCaptainPasswordHash: input.organizerCaptainPasswordHash,
+      opponentCaptainPasswordHash: input.opponentCaptainPasswordHash,
+      homePlayerPasswordHash: input.homePlayerPasswordHash,
+      awayPlayerPasswordHash: input.awayPlayerPasswordHash,
+      opponentCaptainPassword: input.opponentCaptainPassword,
+      homePlayerPassword: input.homePlayerPassword,
+      awayPlayerPassword: input.awayPlayerPassword,
       status: 'Draft',
       organizerTeam: input.organizerTeam,
       homeTeamIdentity: input.homeTeamIdentity,
@@ -202,6 +210,21 @@ export class PostponementRules {
   }
 
   /**
+   * Removes a roster player and cascade-deletes their votes so tallies stay consistent.
+   * A no-op for an unknown player id.
+   */
+  removePlayer(session: Postponement, playerId: string): Postponement {
+    if (!session.players.some((p) => p.id === playerId)) {
+      return session;
+    }
+    return {
+      ...session,
+      players: session.players.filter((p) => p.id !== playerId),
+      votes: session.votes.filter((v) => v.participantId !== playerId),
+    };
+  }
+
+  /**
    * Adds a Proposed Date. `start` must already be a normalized ISO datetime string.
    * The first date moves the session from `Draft` to `Voting`; later adds keep `Voting`.
    * New dates are votable by both teams immediately. A `venueNumber` is stored when
@@ -225,6 +248,8 @@ export class PostponementRules {
       dateTimeRange: {start, end: start},
       proposerId,
       votable: true,
+      vetoed: false,
+      acceptable: false,
       ...(venueNumber !== undefined ? {venueNumber} : {}),
     };
     return {
@@ -261,22 +286,24 @@ export class PostponementRules {
   }
 
   /**
-   * Applies a batch of submitted Votes for one participant: casts only submissions that
-   * target a votable Proposed Date and carry a whitelisted value, one `castVote` per
-   * surviving submission. `changed` reports whether any submission was applied — the
-   * shared "was an update made" signal both join vote handlers render (a re-cast of the
-   * same value still counts, matching the GET path's one-click upsert).
+   * Applies a batch of submitted Votes for one participant on `team`: casts only
+   * submissions that target a date in that team's poll (`pollDates`) and carry a
+   * whitelisted value, one `castVote` per surviving submission. `changed` reports
+   * whether any submission was applied — the shared "was an update made" signal both
+   * join vote handlers render (a re-cast of the same value still counts, matching the
+   * GET path's one-click upsert).
    */
   applyVotes(
     session: Postponement,
     participantId: string,
     submitted: readonly VoteSubmission[],
+    team: Team,
   ): {
     session: Postponement;
     changed: boolean
   }
   {
-    const votableIds = new Set(this.votableDates(session).map((pd) => pd.id));
+    const votableIds = new Set(this.pollDates(session, team).map((pd) => pd.id));
     let updated = session;
     let changed = false;
     for (const {dateId, value} of submitted) {
@@ -351,16 +378,64 @@ export class PostponementRules {
   }
 
   /**
+   * Sets the opponent captain's veto on a Proposed Date. Only meaningful on a votable
+   * date: vetoing a non-votable date is a no-op returning the session unchanged.
+   */
+  setVetoed(
+    session: Postponement,
+    proposedDateId: string,
+    vetoed: boolean,
+  ): Postponement {
+    const date = session.proposedDates.find((pd) => pd.id === proposedDateId);
+    if (!date?.votable) {
+      return session;
+    }
+    const proposedDates = session.proposedDates.map((pd) =>
+      pd.id === proposedDateId ? {...pd, vetoed} : pd,
+    );
+    return {...session, proposedDates};
+  }
+
+  /**
+   * Sets whether the opponent captain marks a Proposed Date acceptable. A symmetric
+   * toggle mirroring `setVotable`.
+   */
+  setAcceptable(
+    session: Postponement,
+    proposedDateId: string,
+    acceptable: boolean,
+  ): Postponement {
+    const proposedDates = session.proposedDates.map((pd) =>
+      pd.id === proposedDateId ? {...pd, acceptable} : pd,
+    );
+    return {...session, proposedDates};
+  }
+
+  /**
+   * The Proposed Dates a team's poll shows. The organizer's own team sees every votable
+   * date; the opponent team (the side opposite `organizerTeam`) has vetoed dates hidden
+   * from their poll only. `votableDates` stays symmetric for the organizer view.
+   */
+  pollDates(session: Postponement, team: Team): ProposedDate[] {
+    const votable = this.votableDates(session);
+    if (team === session.organizerTeam) {
+      return votable;
+    }
+    return votable.filter((pd) => !pd.vetoed);
+  }
+
+  /**
    * Locks a date as final: sets `confirmedProposedDateId` and moves the session to
-   * `Confirmed`. A no-op for any date that is not `votable` or unknown.
-   * Idempotent — confirming an already-confirmed date leaves the session unchanged.
+   * `Confirmed`. A no-op for any date that is not `votable`, `acceptable`, and un-vetoed,
+   * or unknown. Idempotent — confirming an already-confirmed date leaves the session
+   * unchanged.
    */
   confirmDate(
     session: Postponement,
     proposedDateId: string,
   ): Postponement {
     const date = session.proposedDates.find((pd) => pd.id === proposedDateId);
-    if (!date?.votable) {
+    if (!date?.votable || !date.acceptable || date.vetoed) {
       return session;
     }
     return {...session, status: 'Confirmed', confirmedProposedDateId: proposedDateId};

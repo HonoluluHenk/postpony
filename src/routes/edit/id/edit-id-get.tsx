@@ -1,6 +1,7 @@
 import type { App } from '../../../app';
 import { formatIsoToLocaleTokens, formatProposedDateDisplay } from '../../../lib/temporal-utils';
 import { EditPage } from './edit';
+import { organizerPasswordFromRequest, requireOrganizerCaptain } from './edit-auth';
 import { defaultGeneratorDateRange } from './proposed-dates-post';
 import { buildEditPartialsData } from './render-edit-partials';
 
@@ -10,8 +11,9 @@ export const handleEditGet = async (app: App): Promise<Response> => {
   if (!session) {
     app.notFound(app.t('session_not_found'));
   }
+  await requireOrganizerCaptain(app, session);
 
-  const organizerPassword = app.query('organizerPassword') ?? null;
+  const organizerPassword = organizerPasswordFromRequest(app) || undefined;
   const locale = app.locale;
 
   const originalMatchDateTime = session.originalMatchDateTime
@@ -29,7 +31,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
       {...app.view}
       title={app.t('edit_postponement_title', {name: session.name})}
       session={session}
-      organizerPassword={organizerPassword ?? undefined}
+      organizerPassword={organizerPassword}
       proposedDateTime={originalMatchDateTime}
       proposedDateTimeDisplay={originalMatchDateTimeDisplay}
       fromDate={fromDate}

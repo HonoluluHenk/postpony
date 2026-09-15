@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../../lib/__test-utils__/builders';
 import { fetchClubMeetings, fetchMatches } from '../../../lib/click-tt-scraper';
-import { ClickTTError } from '../../../lib/errors';
+import { AppError, ClickTTError } from '../../../lib/errors';
 import type { Postponement } from '../../../lib/models';
 import { generateProposedDates } from '../../../lib/proposed-dates-generator';
 import * as temporalUtils from '../../../lib/temporal-utils';
-import { createApp } from '../../../lib/__test-utils__/create-app';
+import { createApp, type MockOptions } from '../../../lib/__test-utils__/create-app';
+import { hashPassword } from '../../../lib/crypto-utils';
 import { handleConfirmDatePost } from './confirm-date-post';
 import { handleEditGet } from './edit-id-get';
 import { buildOwnTeamView } from './own-team-view';
@@ -36,6 +38,32 @@ const FROM_TOKEN = '08/25/2026';
 const TO_TOKEN_ANCHOR = '09/30/2026';
 const TO_TOKEN_TODAY = '09/22/2026';
 
+const ORGANIZER_PASSWORD = 'organizer-pw';
+// ponytail: one precomputed hash shared by every seeded session, so the
+// organizer-captain guard can be satisfied without a PBKDF2 derivation per test.
+const organizerPasswordHash = await hashPassword(ORGANIZER_PASSWORD);
+
+function seedSession(overrides: Parameters<typeof aSession>[0] = {}): Postponement {
+  return aSession({organizerCaptainPasswordHash: organizerPasswordHash, ...overrides});
+}
+
+function editApp(options: MockOptions = {}): App {
+  return createApp({
+    ...options,
+    queries: {...options.queries, organizerPassword: ORGANIZER_PASSWORD},
+  });
+}
+
+async function expectForbidden(promise: Promise<Response>): Promise<void> {
+  const error = await promise.catch((e: unknown) => e);
+  expect(error)
+    .toBeInstanceOf(AppError);
+  expect((error as AppError).status)
+    .toBe(403);
+  expect((error as AppError).message)
+    .toBe('Invalid organizer password.');
+}
+
 describe('edit handlers', () => {
 
   beforeEach(() => {
@@ -51,8 +79,8 @@ describe('edit handlers', () => {
 
   describe('handleEditPlayersPost', () => {
     test('adds a player to a session that has none', async () => {
-      const session = aSession();
-      const app = createApp({params: {id: session.id}, body: {playerName: 'Alice'}});
+      const session = seedSession();
+      const app = editApp({params: {id: session.id}, body: {playerName: 'Alice'}});
       await app.store.save(session);
 
       await handleEditPlayersPost(app);
@@ -67,8 +95,8 @@ describe('edit handlers', () => {
     });
 
     test('appends to the existing players', async () => {
-      const session = aSession({players: [aPlayer()]});
-      const app = createApp({params: {id: session.id}, body: {playerName: 'Bob'}});
+      const session = seedSession({players: [aPlayer()]});
+      const app = editApp({params: {id: session.id}, body: {playerName: 'Bob'}});
       await app.store.save(session);
 
       await handleEditPlayersPost(app);
@@ -81,8 +109,8 @@ describe('edit handlers', () => {
     });
 
     test('redirects without adding a player when the name is missing', async () => {
-      const session = aSession();
-      const app = createApp({params: {id: session.id}, body: {}});
+      const session = seedSession();
+      const app = editApp({params: {id: session.id}, body: {}});
       await app.store.save(session);
 
       const response = await handleEditPlayersPost(app);
@@ -97,8 +125,8 @@ describe('edit handlers', () => {
 
   describe('handleEditProposedDatesPost', () => {
     test('adds a proposed date to the session', async () => {
-      const session = aSession();
-      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '09/01/2025 08:00 pm'}});
+      const session = seedSession();
+      const app = editApp({params: {id: session.id}, body: {proposedDateTime: '09/01/2025 08:00 pm'}});
       await app.store.save(session);
 
       await handleEditProposedDatesPost(app);
@@ -118,8 +146,8 @@ describe('edit handlers', () => {
     });
 
     test('accepts a tolerant en-US input (no leading zeros, no space before pm) and normalizes to ISO on save', async () => {
-      const session = aSession();
-      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '9/1/2025 8:00pm'}});
+      const session = seedSession();
+      const app = editApp({params: {id: session.id}, body: {proposedDateTime: '9/1/2025 8:00pm'}});
       await app.store.save(session);
 
       await handleEditProposedDatesPost(app);
@@ -132,8 +160,8 @@ describe('edit handlers', () => {
     });
 
     test('appends to the existing proposed dates', async () => {
-      const session = aSession({proposedDates: [aProposedDate()]});
-      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '09/02/2025 06:30 pm'}});
+      const session = seedSession({proposedDates: [aProposedDate()]});
+      const app = editApp({params: {id: session.id}, body: {proposedDateTime: '09/02/2025 06:30 pm'}});
       await app.store.save(session);
 
       await handleEditProposedDatesPost(app);
@@ -144,8 +172,8 @@ describe('edit handlers', () => {
     });
 
     test('moves a Draft session to Voting when the first date is added', async () => {
-      const session = aSession();
-      const app = createApp({params: {id: session.id}, body: {proposedDateTime: '09/01/2025 08:00 pm'}});
+      const session = seedSession();
+      const app = editApp({params: {id: session.id}, body: {proposedDateTime: '09/01/2025 08:00 pm'}});
       await app.store.save(session);
 
       await handleEditProposedDatesPost(app);
@@ -158,8 +186,8 @@ describe('edit handlers', () => {
     });
 
     test('redirects without adding when the datetime is invalid', async () => {
-      const session = aSession();
-      const app = createApp({params: {id: session.id}, body: {proposedDateTime: 'not-a-date'}});
+      const session = seedSession();
+      const app = editApp({params: {id: session.id}, body: {proposedDateTime: 'not-a-date'}});
       await app.store.save(session);
 
       const response = await handleEditProposedDatesPost(app);
@@ -192,8 +220,8 @@ describe('edit handlers', () => {
       ];
 
       test('single add with a valid venue number stores it on the ProposedDate', async () => {
-        const session = aSession({venues: twoVenues});
-        const app = createApp({
+        const session = seedSession({venues: twoVenues});
+        const app = editApp({
           params: {id: session.id},
           body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '2'},
         });
@@ -209,8 +237,8 @@ describe('edit handlers', () => {
       });
 
       test('single add with an out-of-range venue number rejects with a translated error in the error container', async () => {
-        const session = aSession({venues: twoVenues});
-        const app = createApp({
+        const session = seedSession({venues: twoVenues});
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '3'},
@@ -234,8 +262,8 @@ describe('edit handlers', () => {
       });
 
       test('single add with no venues accepts any venue number in 1..10', async () => {
-        const session = aSession();
-        const app = createApp({
+        const session = seedSession();
+        const app = editApp({
           params: {id: session.id},
           body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '10'},
         });
@@ -251,8 +279,8 @@ describe('edit handlers', () => {
       });
 
       test('single add with no venues rejects 11 as out of range', async () => {
-        const session = aSession();
-        const app = createApp({
+        const session = seedSession();
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '11'},
@@ -268,8 +296,8 @@ describe('edit handlers', () => {
       });
 
       test('single add without a venue number leaves venueNumber undefined (legacy default = venue 1)', async () => {
-        const session = aSession({venues: twoVenues});
-        const app = createApp({
+        const session = seedSession({venues: twoVenues});
+        const app = editApp({
           params: {id: session.id},
           body: {proposedDateTime: '09/01/2025 08:00 pm'},
         });
@@ -285,8 +313,8 @@ describe('edit handlers', () => {
       });
 
       test('re-renders the list with the venue badge after a successful add', async () => {
-        const session = aSession({venues: twoVenues});
-        const app = createApp({
+        const session = seedSession({venues: twoVenues});
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {proposedDateTime: '09/01/2025 08:00 pm', venueNumber: '2'},
@@ -322,13 +350,13 @@ describe('edit handlers', () => {
       ];
 
       test('generator with a valid venue number stores it on every generated date', async () => {
-        const session = aSession({
+        const session = seedSession({
           venues: twoVenues,
           originalMatchDateTime: '2026-09-02T16:00',
           proposedDates: [],
           status: 'Draft',
         });
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {
@@ -353,13 +381,13 @@ describe('edit handlers', () => {
       });
 
       test('generator with an out-of-range venue number rejects with a translated error and preserves the submitted times', async () => {
-        const session = aSession({
+        const session = seedSession({
           venues: twoVenues,
           originalMatchDateTime: '2026-09-02T16:00',
           proposedDates: [],
           status: 'Draft',
         });
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {
@@ -395,7 +423,7 @@ describe('edit handlers', () => {
       const existingDateIso = '2026-08-31T20:00';
 
       function sessionWithExistingDate(): Postponement {
-        return aSession({
+        return seedSession({
           originalMatchDateTime: '2026-09-02T16:00',
           status: 'Draft',
           proposedDates: [
@@ -410,7 +438,7 @@ describe('edit handlers', () => {
 
       test('duplicate datetime + same venue → only one exists', async () => {
         const session = sessionWithExistingDate();
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {
@@ -438,7 +466,7 @@ describe('edit handlers', () => {
 
       test('duplicate datetime + different venue → both exist', async () => {
         const session = sessionWithExistingDate();
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {
@@ -496,12 +524,12 @@ describe('edit handlers', () => {
     });
 
     test('tuple branch: persists the expected count and renders a success toast with the count', async () => {
-      const session = aSession({
+      const session = seedSession({
         originalMatchDateTime: '2026-09-02T16:00',
         proposedDates: [],
         status: 'Draft',
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -543,12 +571,12 @@ describe('edit handlers', () => {
     });
 
     test('tuple branch: empty rows are skipped at the parse boundary', async () => {
-      const session = aSession({
+      const session = seedSession({
         originalMatchDateTime: '2026-09-02T16:00',
         proposedDates: [],
         status: 'Draft',
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -588,8 +616,8 @@ describe('edit handlers', () => {
     });
 
     test('tuple branch: a row with a bad time returns 400 with a per-row error and preserves the other rows', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00'});
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -633,8 +661,8 @@ describe('edit handlers', () => {
     });
 
     test('tuple branch all-empty submit: no store write and the inline empty-result message', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00'});
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -662,9 +690,9 @@ describe('edit handlers', () => {
     });
 
     test('tuple branch over-cap POST: 15 times are rejected at the handler seam rather than truncated', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00'});
       const times = Array.from({length: 15}, (): string => '8:00 pm');
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -688,11 +716,11 @@ describe('edit handlers', () => {
     });
 
     test('tuple branch anchor missing: uses today-based window and shows success toast', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Draft',
         proposedDates: [],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -724,10 +752,10 @@ describe('edit handlers', () => {
     });
 
     test('tuple branch zero-result path: no store write, renders the inline empty-result message', async () => {
-      const session = aSession({
+      const session = seedSession({
         originalMatchDateTime: undefined,
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -755,8 +783,8 @@ describe('edit handlers', () => {
     });
 
     test('tuple branch with an empty time[] array: inline empty-result message, no store write', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00'});
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -778,8 +806,8 @@ describe('edit handlers', () => {
     });
 
     test('tuple branch empty From: required message on the From field, no Proposed Dates added', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00', proposedDates: [], status: 'Draft'});
-      const app = createApp({
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00', proposedDates: [], status: 'Draft'});
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -809,8 +837,8 @@ describe('edit handlers', () => {
     });
 
     test('tuple branch empty To: required message on the To field, no Proposed Dates added', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00', proposedDates: [], status: 'Draft'});
-      const app = createApp({
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00', proposedDates: [], status: 'Draft'});
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -840,8 +868,8 @@ describe('edit handlers', () => {
     });
 
     test('non-partial tuple submit: redirects to the edit page rather than rendering html', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00'});
+      const app = editApp({
         params: {id: session.id},
         body: {
           generate: 'tuple',
@@ -873,8 +901,8 @@ describe('edit handlers', () => {
     });
 
     test('non-partial row-level invalid time: redirects rather than rendering html', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00'});
+      const app = editApp({
         params: {id: session.id},
         body: {
           generate: 'tuple',
@@ -895,9 +923,9 @@ describe('edit handlers', () => {
     });
 
     test('non-partial over-cap POST: redirects rather than rendering html', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00'});
       const times = Array.from({length: 16}, (): string => '8:00 pm');
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         body: {
           generate: 'tuple',
@@ -919,7 +947,7 @@ describe('edit handlers', () => {
 
     test('tuple branch with existing proposedDates: dedupes against existingStarts and adds the survivors', async () => {
       const existingDateIso = '2026-08-31T20:00';
-      const session = aSession({
+      const session = seedSession({
         originalMatchDateTime: '2026-09-02T16:00',
         proposedDates: [
           aProposedDate({
@@ -928,7 +956,7 @@ describe('edit handlers', () => {
           }),
         ],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -958,8 +986,8 @@ describe('edit handlers', () => {
     });
 
     test('tuple submit with a mismatched-bound-shape payload: 400 error (overrides default single-date fallthrough)', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-      const app = createApp({
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00'});
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -981,8 +1009,8 @@ describe('edit handlers', () => {
     });
 
     test('rogue POST combining tuple branch and proposedDateTime: rejected with 400, no store write', async () => {
-      const session = aSession({originalMatchDateTime: '2026-09-02T16:00', status: 'Draft'});
-      const app = createApp({
+      const session = seedSession({originalMatchDateTime: '2026-09-02T16:00', status: 'Draft'});
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {
@@ -1013,7 +1041,7 @@ describe('edit handlers', () => {
       };
 
       function clashSession(overrides: Parameters<typeof aSession>[0] = {}): Postponement {
-        return aSession({
+        return seedSession({
           homeTeam: 'Home Team',
           guestTeam: 'Guest Team',
           homeTeamIdentity: identities.home,
@@ -1027,7 +1055,7 @@ describe('edit handlers', () => {
         mockFetchMatches.mockResolvedValue([
           {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
         ]);
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1086,7 +1114,7 @@ describe('edit handlers', () => {
             guestTeam: 'Guest Team',
           };
         }));
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
@@ -1113,7 +1141,7 @@ describe('edit handlers', () => {
         mockFetchMatches.mockResolvedValue([
           {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
         ]);
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1139,7 +1167,7 @@ describe('edit handlers', () => {
         mockFetchMatches.mockResolvedValue([
           {day: 'Fr', date: '05.09.2025', time: '10:00', homeTeam: 'Some Team', guestTeam: 'Other Team'},
         ]);
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1189,7 +1217,7 @@ describe('edit handlers', () => {
             guestTeam: 'Guest Team',
           },
         ]);
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {generate: 'tuple', 'time[]': ['8:00 pm', '8:00 pm'], fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
@@ -1223,7 +1251,7 @@ describe('edit handlers', () => {
         mockFetchMatches.mockResolvedValue([
           {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
         ]);
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1247,7 +1275,7 @@ describe('edit handlers', () => {
       test('single add: a failed scrape leaves the date clash-free, votable, still saves and renders', async () => {
         const session = clashSession();
         mockFetchMatches.mockRejectedValue(new ClickTTError('click-tt is down'));
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1279,7 +1307,7 @@ describe('edit handlers', () => {
         session.proposedDates = [];
         session.status = 'Draft';
         mockFetchMatches.mockRejectedValue(new Error('network down'));
-        const app = createApp({
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: FROM_TOKEN, toDate: TO_TOKEN_ANCHOR},
@@ -1299,8 +1327,8 @@ describe('edit handlers', () => {
       });
 
       test('hand-entered session: never fetches and renders the "not checked" hint', async () => {
-        const session = aSession();
-        const app = createApp({
+        const session = seedSession();
+        const app = editApp({
           params: {id: session.id},
           headers: {'HX-Request': 'true'},
           body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1339,7 +1367,7 @@ describe('edit handlers', () => {
               venueNumber: 1,
             },
           ]);
-          const app = createApp({
+          const app = editApp({
             params: {id: session.id},
             headers: {'HX-Request': 'true'},
             body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1375,7 +1403,7 @@ describe('edit handlers', () => {
             {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
           ]);
           mockFetchClubMeetings.mockRejectedValue(new ClickTTError('click-tt is down'));
-          const app = createApp({
+          const app = editApp({
             params: {id: session.id},
             headers: {'HX-Request': 'true'},
             body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1402,7 +1430,7 @@ describe('edit handlers', () => {
         test('a club-id-less session (DEFAULT_CLUB_ID placeholder) never fires the occupancy fetch', async () => {
           const session = clashSession({clubId: 'default-club'});
           mockFetchMatches.mockResolvedValue([]);
-          const app = createApp({
+          const app = editApp({
             params: {id: session.id},
             headers: {'HX-Request': 'true'},
             body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1438,7 +1466,7 @@ describe('edit handlers', () => {
               venueNumber: 1,
             },
           ]);
-          const app = createApp({
+          const app = editApp({
             params: {id: session.id},
             headers: {'HX-Request': 'true'},
             body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1460,7 +1488,7 @@ describe('edit handlers', () => {
         test('a home championship without a season window skips the occupancy fetch, clashes still attach', async () => {
           const session = occupancySession({homeTeamIdentity: {...identities.home, championship: 'Sommerliga'}});
           mockFetchMatches.mockResolvedValue([]);
-          const app = createApp({
+          const app = editApp({
             params: {id: session.id},
             headers: {'HX-Request': 'true'},
             body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1486,8 +1514,8 @@ describe('edit handlers', () => {
   });
 
   test('non-partial tuple submit with malformed body: redirects rather than rendering html', async () => {
-    const session = aSession({originalMatchDateTime: '2026-09-02T16:00'});
-    const app = createApp({
+    const session = seedSession({originalMatchDateTime: '2026-09-02T16:00'});
+    const app = editApp({
       params: {id: session.id},
       body: {
         generate: 'tuple',
@@ -1507,12 +1535,12 @@ describe('edit handlers', () => {
 
   describe('generator date-window validation', () => {
     function windowSession(overrides: Parameters<typeof aSession>[0] = {}): Postponement {
-      return aSession({originalMatchDateTime: '2026-09-02T16:00', proposedDates: [], status: 'Draft', ...overrides});
+      return seedSession({originalMatchDateTime: '2026-09-02T16:00', proposedDates: [], status: 'Draft', ...overrides});
     }
 
     test('fromDate before today: redraws the partial with the from-field error, no write', async () => {
       const session = windowSession();
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: '08/01/2026', toDate: '09/15/2026'},
@@ -1533,7 +1561,7 @@ describe('edit handlers', () => {
 
     test('toDate on or before fromDate: redraws the partial with the to-field error', async () => {
       const session = windowSession();
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: '09/01/2026', toDate: '09/01/2026'},
@@ -1551,7 +1579,7 @@ describe('edit handlers', () => {
 
     test('toDate beyond the anchor-based cap: redraws the partial with the to-field error', async () => {
       const session = windowSession();
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: '09/01/2026', toDate: '10/15/2026'},
@@ -1567,7 +1595,7 @@ describe('edit handlers', () => {
 
     test('toDate beyond the today-based cap without an anchor: redraws with the no-anchor to-field error', async () => {
       const session = windowSession({originalMatchDateTime: undefined});
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         headers: {'HX-Request': 'true'},
         body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: '09/01/2026', toDate: '10/15/2026'},
@@ -1583,7 +1611,7 @@ describe('edit handlers', () => {
 
     test('non-partial fromDate-before-today tuple submit: redirects via the render-partial seam', async () => {
       const session = windowSession();
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         body: {generate: 'tuple', 'time[]': ['8:00 pm'], fromDate: '08/01/2026', toDate: '09/15/2026'},
       });
@@ -1602,8 +1630,8 @@ describe('edit handlers', () => {
     const partialHeaders = {'HX-Request': 'true'};
 
     test('players: renders the team section with an empty error-container on success', async () => {
-      const session = aSession();
-      const app = createApp({
+      const session = seedSession();
+      const app = editApp({
         params: {id: session.id},
         headers: partialHeaders,
         body: {playerName: 'Alice'},
@@ -1634,8 +1662,8 @@ describe('edit handlers', () => {
     });
 
     test('players: renders the error-container and keeps the invalid input on failure', async () => {
-      const session = aSession();
-      const app = createApp({params: {id: session.id}, headers: partialHeaders, body: {playerName: ''}});
+      const session = seedSession();
+      const app = editApp({params: {id: session.id}, headers: partialHeaders, body: {playerName: ''}});
       await app.store.save(session);
 
       const response = await handleEditPlayersPost(app);
@@ -1654,9 +1682,26 @@ describe('edit handlers', () => {
         .toContain('id="clipboard-status"');
     });
 
+    test('players: a missing player name is rendered as an empty field on a partial failure', async () => {
+      const session = seedSession();
+      const app = editApp({params: {id: session.id}, headers: partialHeaders, body: {}});
+      await app.store.save(session);
+
+      const response = await handleEditPlayersPost(app);
+      const html = await response.text();
+      expect(response.status)
+        .toBe(400);
+      expect(html)
+        .toContain('id="error-container" hx-swap-oob="true"');
+      expect(html)
+        .toContain('id="playerName-error"');
+      expect(html)
+        .toContain('id="playerName" name="playerName" value=""');
+    });
+
     test('proposed dates: renders the section and a success toast on success', async () => {
-      const session = aSession();
-      const app = createApp({
+      const session = seedSession();
+      const app = editApp({
         params: {id: session.id},
         headers: partialHeaders,
         body: {proposedDateTime: '09/01/2025 08:00 pm'},
@@ -1684,8 +1729,8 @@ describe('edit handlers', () => {
     });
 
     test('proposed dates: renders the error-container on an invalid datetime', async () => {
-      const session = aSession();
-      const app = createApp({
+      const session = seedSession();
+      const app = editApp({
         params: {id: session.id},
         headers: partialHeaders,
         body: {proposedDateTime: 'not-a-date'},
@@ -1713,11 +1758,11 @@ describe('edit handlers', () => {
 
   describe('handleConfirmDatePost', () => {
     test('confirms a votable date and locks the session', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})],
       });
-      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
+      const app = editApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
 
       await handleConfirmDatePost(app);
@@ -1730,11 +1775,11 @@ describe('edit handlers', () => {
     });
 
     test('is a no-op for a date that is not votable', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [aProposedDate({id: 'pd-1', votable: false})],
       });
-      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
+      const app = editApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
 
       await handleConfirmDatePost(app);
@@ -1747,12 +1792,12 @@ describe('edit handlers', () => {
     });
 
     test('is idempotent: confirming the same date again keeps the locked state', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Confirmed',
         confirmedProposedDateId: 'pd-1',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})],
       });
-      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
+      const app = editApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
 
       await handleConfirmDatePost(app);
@@ -1765,17 +1810,18 @@ describe('edit handlers', () => {
     });
 
     test('confirming a clashing date renders the inline warning and moves to Confirmed', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [
           aProposedDate({
             id: 'pd-1',
             votable: true,
+            acceptable: true,
             clashes: {home: [{opponent: 'Thun', start: '2025-09-01T18:00'}], away: []},
           }),
         ],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         queries: {proposedDateId: 'pd-1'},
         headers: {'HX-Request': 'true'},
@@ -1801,17 +1847,18 @@ describe('edit handlers', () => {
     });
 
     test('confirming a clash-free date renders no warning', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [
           aProposedDate({
             id: 'pd-1',
             votable: true,
+            acceptable: true,
             clashes: {home: [], away: []},
           }),
         ],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         queries: {proposedDateId: 'pd-1'},
         headers: {'HX-Request': 'true'},
@@ -1828,22 +1875,24 @@ describe('edit handlers', () => {
     });
 
     test('judges the warning from the date found via confirmedProposedDateId, not the query', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [
           aProposedDate({
             id: 'pd-clashing',
             votable: true,
+            acceptable: true,
             clashes: {home: [{opponent: 'Thun', start: '2025-09-01T18:00'}], away: []},
           }),
           aProposedDate({
             id: 'pd-clean',
             votable: true,
+            acceptable: true,
             clashes: {home: [], away: []},
           }),
         ],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         queries: {proposedDateId: 'pd-clean'},
         headers: {'HX-Request': 'true'},
@@ -1861,11 +1910,11 @@ describe('edit handlers', () => {
     });
 
     test('renders the partial with the reopen control and no confirm control when partial', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         queries: {proposedDateId: 'pd-1'},
         headers: {'HX-Request': 'true'},
@@ -1877,7 +1926,7 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('<section id="proposed-dates-management"');
       expect(html)
-        .toContain(`hx-post="/edit/${session.id}/reopen"`);
+        .toContain(`hx-post="/edit/${session.id}/reopen?organizerPassword=${ORGANIZER_PASSWORD}"`);
       expect(html)
         .not
         .toContain('proposed-date-confirm');
@@ -1891,11 +1940,11 @@ describe('edit handlers', () => {
     });
 
     test('confirming with a missing proposedDateId is a no-op (no save, voting stays unlocked)', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
-      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
       await app.store.save(session);
       const saveSpy = vi.spyOn(app.store, 'save');
 
@@ -1910,13 +1959,66 @@ describe('edit handlers', () => {
         .not
         .toHaveBeenCalled();
       expect(html)
-        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Date confirmed</p>');
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates that are acceptable and not vetoed can be confirmed.</p>');
+    });
+
+    test('is a no-op for a date that is not acceptable and announces the feedback', async () => {
+      const session = seedSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: false})],
+      });
+      const app = editApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+      const saveSpy = vi.spyOn(app.store, 'save');
+
+      const html = await (await handleConfirmDatePost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Voting');
+      expect(stored?.confirmedProposedDateId)
+        .toBeUndefined();
+      expect(saveSpy)
+        .not
+        .toHaveBeenCalled();
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates that are acceptable and not vetoed can be confirmed.</p>');
+      expect(html)
+        .not
+        .toContain('Date confirmed');
+    });
+
+    test('is a no-op for a date the opponent vetoed and announces the feedback', async () => {
+      const session = seedSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true, vetoed: true})],
+      });
+      const app = editApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const html = await (await handleConfirmDatePost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Voting');
+      expect(stored?.confirmedProposedDateId)
+        .toBeUndefined();
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates that are acceptable and not vetoed can be confirmed.</p>');
     });
   });
 
   describe('handleProposedDateDeletePost', () => {
     test('removes the date and its votes', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [
           aProposedDate({id: 'pd-1'}),
@@ -1924,7 +2026,7 @@ describe('edit handlers', () => {
         ],
         votes: [aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
       });
-      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
+      const app = editApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
 
       await handleProposedDateDeletePost(app);
@@ -1937,14 +2039,14 @@ describe('edit handlers', () => {
     });
 
     test('renders the partial with the remaining date-management controls when partial', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [
           aProposedDate({id: 'pd-1', votable: true}),
           aProposedDate({id: 'pd-2', votable: false}),
         ],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         queries: {proposedDateId: 'pd-1'},
         headers: {'HX-Request': 'true'},
@@ -1968,11 +2070,11 @@ describe('edit handlers', () => {
     });
 
     test('deleting with a missing proposedDateId is a no-op', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
-      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
       await app.store.save(session);
       const saveSpy = vi.spyOn(app.store, 'save');
 
@@ -1991,11 +2093,11 @@ describe('edit handlers', () => {
 
   describe('handleProposedDateVisibilityPost', () => {
     test('flips the votable flag on for a closed date', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [aProposedDate({id: 'pd-1', votable: false})],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         queries: {proposedDateId: 'pd-1', votable: 'true'},
       });
@@ -2009,11 +2111,11 @@ describe('edit handlers', () => {
     });
 
     test('flips the votable flag off for an open date', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         queries: {proposedDateId: 'pd-1', votable: 'false'},
       });
@@ -2027,11 +2129,11 @@ describe('edit handlers', () => {
     });
 
     test('renders the partial with the updated switch state when partial', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [aProposedDate({id: 'pd-1', votable: false})],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         queries: {proposedDateId: 'pd-1', votable: 'true'},
         headers: {'HX-Request': 'true'},
@@ -2051,11 +2153,11 @@ describe('edit handlers', () => {
     });
 
     test('updating visibility with a missing proposedDateId is a no-op', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Voting',
         proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
-      const app = createApp({
+      const app = editApp({
         params: {id: session.id},
         queries: {votable: 'false'},
         headers: {'HX-Request': 'true'},
@@ -2074,7 +2176,7 @@ describe('edit handlers', () => {
 
   describe('handleReopenPost', () => {
     test('reopens a confirmed session: Voting, count + 1, history, votes, and flags kept', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Confirmed',
         reopenCount: 0,
         confirmedProposedDateId: 'pd-1',
@@ -2084,7 +2186,7 @@ describe('edit handlers', () => {
         ],
         votes: [aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
       });
-      const app = createApp({params: {id: session.id}});
+      const app = editApp({params: {id: session.id}});
       await app.store.save(session);
 
       await handleReopenPost(app);
@@ -2103,19 +2205,19 @@ describe('edit handlers', () => {
     });
 
     test('renders the partial with the date-management controls and reopen count when partial', async () => {
-      const session = aSession({
+      const session = seedSession({
         status: 'Confirmed',
         reopenCount: 0,
         confirmedProposedDateId: 'pd-1',
         proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
       });
-      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
       await app.store.save(session);
 
       const html = await (await handleReopenPost(app)).text();
 
       expect(html)
-        .toContain(`hx-post="/edit/${session.id}/proposed-date-confirm?proposedDateId=pd-1"`);
+        .toContain(`hx-post="/edit/${session.id}/proposed-date-confirm?proposedDateId=pd-1&amp;organizerPassword=${ORGANIZER_PASSWORD}"`);
       expect(html)
         .toContain('Reopened 1 time(s)');
       expect(html)
@@ -2135,7 +2237,7 @@ describe('edit handlers', () => {
     };
 
     function checkedSession(): Postponement {
-      return aSession({
+      return seedSession({
         homeTeam: 'Home Team',
         guestTeam: 'Guest Team',
         homeTeamIdentity: identities.home,
@@ -2154,7 +2256,7 @@ describe('edit handlers', () => {
       mockFetchMatches.mockResolvedValue([
         {day: 'Mo', date: '01.09.2025', time: '19:00', homeTeam: 'Home Team', guestTeam: 'Guest Team'},
       ]);
-      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
       await app.store.save(session);
       const saveSpy = vi.spyOn(app.store, 'save');
 
@@ -2191,7 +2293,7 @@ describe('edit handlers', () => {
     test('a failed refresh keeps the previous snapshot and renders the failure notice without a write', async () => {
       const session = checkedSession();
       mockFetchMatches.mockRejectedValue(new ClickTTError('click-tt is down'));
-      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
       await app.store.save(session);
       const saveSpy = vi.spyOn(app.store, 'save');
 
@@ -2213,8 +2315,8 @@ describe('edit handlers', () => {
     });
 
     test('hand-entered session: never fetches and renders no failure notice', async () => {
-      const session = aSession({proposedDates: [aProposedDate()]});
-      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      const session = seedSession({proposedDates: [aProposedDate()]});
+      const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
       await app.store.save(session);
 
       const html = await (await handleRefreshClashesPost(app)).text();
@@ -2228,7 +2330,7 @@ describe('edit handlers', () => {
     });
 
     test('first check fails: no snapshot existed, so no "previous results" notice renders', async () => {
-      const session = aSession({
+      const session = seedSession({
         homeTeam: 'Home Team',
         guestTeam: 'Guest Team',
         homeTeamIdentity: identities.home,
@@ -2236,7 +2338,7 @@ describe('edit handlers', () => {
         proposedDates: [aProposedDate({id: 'pd-1'})],
       });
       mockFetchMatches.mockRejectedValue(new ClickTTError('click-tt is down'));
-      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
       await app.store.save(session);
 
       const html = await (await handleRefreshClashesPost(app)).text();
@@ -2247,7 +2349,7 @@ describe('edit handlers', () => {
     });
 
     test('re-fetches the club meetings and replaces the stored occupancy snapshot alongside the clashes', async () => {
-      const session = aSession({
+      const session = seedSession({
         homeTeam: 'Home Team',
         guestTeam: 'Guest Team',
         clubId: '33282',
@@ -2272,7 +2374,7 @@ describe('edit handlers', () => {
           venueNumber: 1,
         },
       ]);
-      const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+      const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
       await app.store.save(session);
 
       const html = await (await handleRefreshClashesPost(app)).text();
@@ -2296,7 +2398,7 @@ describe('edit handlers', () => {
 
   describe('buildOwnTeamView', () => {
     test('returns the organizer-team roster and per-date results with a localized display', () => {
-      const session = aSession({
+      const session = seedSession({
         organizerTeam: 'home',
         players: [
           aPlayer({id: 'p1', name: 'Voter', teamId: 'home'}),
@@ -2329,7 +2431,7 @@ describe('edit handlers', () => {
     });
 
     test('uses the organizer team even when it is the away side', () => {
-      const session = aSession({
+      const session = seedSession({
         organizerTeam: 'away',
         players: [
           aPlayer({id: 'h1', name: 'Home', teamId: 'home'}),
@@ -2353,7 +2455,7 @@ describe('edit handlers', () => {
     });
 
     test('returns no dates when the organizer team has no proposed dates', () => {
-      const session = aSession({
+      const session = seedSession({
         organizerTeam: 'home',
         players: [aPlayer({id: 'p1', name: 'Voter', teamId: 'home'})],
       });
@@ -2374,8 +2476,8 @@ describe('edit handlers', () => {
     ];
 
     test('handleEditGet defaults to date grouping without a sort query', async () => {
-      const session = aSession({proposedDates: sortDates});
-      const app = createApp({params: {id: session.id}});
+      const session = seedSession({proposedDates: sortDates});
+      const app = editApp({params: {id: session.id}});
       await app.store.save(session);
 
       const html = await (await handleEditGet(app)).text();
@@ -2387,8 +2489,8 @@ describe('edit handlers', () => {
     });
 
     test('handleEditGet renders availability grouping when ?sort=availability', async () => {
-      const session = aSession({proposedDates: sortDates});
-      const app = createApp({params: {id: session.id}, queries: {sort: 'availability'}});
+      const session = seedSession({proposedDates: sortDates});
+      const app = editApp({params: {id: session.id}, queries: {sort: 'availability'}});
       await app.store.save(session);
 
       const html = await (await handleEditGet(app)).text();
@@ -2400,8 +2502,8 @@ describe('edit handlers', () => {
     });
 
     test('renderEditPartials keeps the availability sort from the HX-Current-URL header', () => {
-      const session = aSession({proposedDates: sortDates});
-      const app = createApp({
+      const session = seedSession({proposedDates: sortDates});
+      const app = editApp({
         headers: {'HX-Current-URL': 'https://game-scheduler.localhost:3000/edit/test-session?sort=availability'},
       });
 
@@ -2414,8 +2516,8 @@ describe('edit handlers', () => {
     });
 
     test('renderEditPartials defaults to date grouping without the header', () => {
-      const session = aSession({proposedDates: sortDates});
-      const app = createApp();
+      const session = seedSession({proposedDates: sortDates});
+      const app = editApp();
 
       const html = renderEditPartials(app, session);
 
@@ -2426,8 +2528,8 @@ describe('edit handlers', () => {
     });
 
     test('renderEditPartials falls back to date grouping when the header URL is invalid', () => {
-      const session = aSession({proposedDates: sortDates});
-      const app = createApp({headers: {'HX-Current-URL': 'not a url'}});
+      const session = seedSession({proposedDates: sortDates});
+      const app = editApp({headers: {'HX-Current-URL': 'not a url'}});
 
       const html = renderEditPartials(app, session);
 
@@ -2436,8 +2538,8 @@ describe('edit handlers', () => {
     });
 
     test('renderEditPartials treats an unknown sort value as date', () => {
-      const session = aSession({proposedDates: sortDates});
-      const app = createApp({
+      const session = seedSession({proposedDates: sortDates});
+      const app = editApp({
         headers: {'HX-Current-URL': 'https://game-scheduler.localhost:3000/edit/test-session?sort=bogus'},
       });
 
@@ -2448,14 +2550,51 @@ describe('edit handlers', () => {
     });
 
     test('handleEditGet renders the original match datetime when the session has one', async () => {
-      const session = aSession({proposedDates: sortDates, originalMatchDateTime: '2026-09-01T20:00'});
-      const app = createApp({params: {id: session.id}});
+      const session = seedSession({proposedDates: sortDates, originalMatchDateTime: '2026-09-01T20:00'});
+      const app = editApp({params: {id: session.id}});
       await app.store.save(session);
 
       const html = await (await handleEditGet(app)).text();
 
       expect(html)
         .toContain('Tu, Sep 1, 2026, 8:00 PM');
+    });
+  });
+
+  describe('organizer-captain authorization', () => {
+    test('a bare edit GET without the password is refused with a 403', async () => {
+      const session = seedSession();
+      const app = createApp({params: {id: session.id}});
+      await app.store.save(session);
+
+      await expectForbidden(handleEditGet(app));
+    });
+
+    test('an edit GET with a wrong password is refused with a 403', async () => {
+      const session = seedSession();
+      const app = createApp({params: {id: session.id}, queries: {organizerPassword: 'wrong'}});
+      await app.store.save(session);
+
+      await expectForbidden(handleEditGet(app));
+    });
+
+    test('a bare edit POST without the password is refused with a 403', async () => {
+      const session = seedSession();
+      const app = createApp({params: {id: session.id}, body: {playerName: 'Alice'}});
+      await app.store.save(session);
+
+      await expectForbidden(handleEditPlayersPost(app));
+    });
+
+    test('an edit GET with the correct password renders the edit page', async () => {
+      const session = seedSession();
+      const app = editApp({params: {id: session.id}});
+      await app.store.save(session);
+
+      const response = await handleEditGet(app);
+
+      expect(response.status)
+        .toBe(200);
     });
   });
 

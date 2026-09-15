@@ -5,12 +5,12 @@ import { renderVoteStep } from './vote-view';
 
 export const handleJoinVoteGet = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
-  const {session, token} = await requireSessionAndToken(app);
+  const {session, token} = await requireSessionAndToken(app, team);
 
   const playerId = app.query('playerId') ?? '';
   const player = session.players.find((p) => p.id === playerId && p.teamId === team);
   if (!player) {
-    const pendingQuery = pendingVoteQuery(readPendingVotes(app.query.bind(app), session));
+    const pendingQuery = pendingVoteQuery(readPendingVotes(app.query.bind(app), session, team));
     return app.redirect(
       `/join/${session.id}/${team}?token=${encodeURIComponent(token)}` +
       (pendingQuery ? `&${pendingQuery}` : ''),
@@ -26,11 +26,11 @@ export const handleJoinVoteGet = async (app: App): Promise<Response> => {
   let updated = session;
   let cast = false;
   if (canVote) {
-    const submissions = session.proposedDates.map((pd) => ({
+    const submissions = new PostponementRules().pollDates(session, team).map((pd) => ({
       dateId: pd.id,
       value: app.query(`vote-${pd.id}`),
     }));
-    const applied = new PostponementRules().applyVotes(updated, player.id, submissions);
+    const applied = new PostponementRules().applyVotes(updated, player.id, submissions, team);
     updated = applied.session;
     cast = applied.changed;
     if (cast) {

@@ -53,6 +53,75 @@ describe('normalize', () => {
       .toBe(true);
   });
 
+  test('defaults secrets to empty string when neither legacy nor modern fields exist', () => {
+    const session = normalize(legacySession({
+      organizerPasswordHash: undefined,
+      invitationPasswordHash: undefined,
+      invitationPassword: undefined,
+    }));
+
+    expect(session.organizerCaptainPasswordHash)
+      .toBe('');
+    expect(session.opponentCaptainPasswordHash)
+      .toBe('');
+    expect(session.homePlayerPasswordHash)
+      .toBe('');
+    expect(session.awayPlayerPasswordHash)
+      .toBe('');
+    expect(session.opponentCaptainPassword)
+      .toBe('');
+    expect(session.homePlayerPassword)
+      .toBe('');
+    expect(session.awayPlayerPassword)
+      .toBe('');
+  });
+
+  test('maps retired dual-password fields onto the four-secret model', () => {
+    const session = normalize(legacySession());
+
+    expect(session.organizerCaptainPasswordHash)
+      .toBe('h-organizer');
+    expect(session.opponentCaptainPasswordHash)
+      .toBe('h-invite');
+    expect(session.homePlayerPasswordHash)
+      .toBe('h-invite');
+    expect(session.awayPlayerPasswordHash)
+      .toBe('h-invite');
+    expect(session.opponentCaptainPassword)
+      .toBe('pw');
+    expect(session.homePlayerPassword)
+      .toBe('pw');
+    expect(session.awayPlayerPassword)
+      .toBe('pw');
+  });
+
+  test('keeps modern four-secret fields when already present', () => {
+    const session = normalize(legacySession({
+      organizerCaptainPasswordHash: 'h-org-cap',
+      homePlayerPasswordHash: 'h-home',
+      awayPlayerPasswordHash: 'h-away',
+      opponentCaptainPasswordHash: 'h-opp-cap',
+      homePlayerPassword: 'home-pw',
+      awayPlayerPassword: 'away-pw',
+      opponentCaptainPassword: 'opp-pw',
+    }));
+
+    expect(session.organizerCaptainPasswordHash)
+      .toBe('h-org-cap');
+    expect(session.homePlayerPasswordHash)
+      .toBe('h-home');
+    expect(session.awayPlayerPasswordHash)
+      .toBe('h-away');
+    expect(session.opponentCaptainPasswordHash)
+      .toBe('h-opp-cap');
+    expect(session.homePlayerPassword)
+      .toBe('home-pw');
+    expect(session.awayPlayerPassword)
+      .toBe('away-pw');
+    expect(session.opponentCaptainPassword)
+      .toBe('opp-pw');
+  });
+
   test('maps the other legacy status to Voting', () => {
     expect(normalize(legacySession({status: 'Confirmed by Opponent'})).status)
       .toBe('Voting');
@@ -220,9 +289,13 @@ describe('MemorySessionStore.get', () => {
       id: 'current-1',
       clubId: 'test-club',
       name: 'Current Session',
-      organizerPasswordHash: 'h-organizer',
-      invitationPasswordHash: 'h-invite',
-      invitationPassword: 'pw',
+      organizerCaptainPasswordHash: 'h-org-captain',
+      opponentCaptainPasswordHash: 'h-opp-captain',
+      homePlayerPasswordHash: 'h-home-player',
+      awayPlayerPasswordHash: 'h-away-player',
+      opponentCaptainPassword: 'opp-captain-pw',
+      homePlayerPassword: 'home-player-pw',
+      awayPlayerPassword: 'away-player-pw',
       status: 'Voting',
       organizerTeam: 'away',
       reopenCount: 1,

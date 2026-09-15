@@ -3,7 +3,9 @@ import type { App } from '../../../app';
 import { aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
 import type { Postponement } from '../../../lib/models';
 import * as temporalUtils from '../../../lib/temporal-utils';
-import { createApp } from '../../../lib/__test-utils__/create-app';
+import { createApp, type MockOptions } from '../../../lib/__test-utils__/create-app';
+import { hashPassword } from '../../../lib/crypto-utils';
+import { AppError } from '../../../lib/errors';
 import { handleConfirmDatePost } from './confirm-date-post';
 import { handleEditPlayersPost } from './players-post';
 import { handleProposedDateDeletePost } from './proposed-date-delete-post';
@@ -15,8 +17,34 @@ import { runEditCommand } from './run-edit-command';
 
 const FIXED_TODAY_ISO = '2026-08-25T08:00';
 
+const ORGANIZER_PASSWORD = 'organizer-pw';
+// ponytail: one precomputed hash shared by every seeded session, so the
+// organizer-captain guard can be satisfied without a PBKDF2 derivation per test.
+const organizerPasswordHash = await hashPassword(ORGANIZER_PASSWORD);
+
+function seedSession(overrides: Parameters<typeof aSession>[0] = {}): Postponement {
+  return aSession({organizerCaptainPasswordHash: organizerPasswordHash, ...overrides});
+}
+
+function editApp(options: MockOptions = {}): App {
+  return createApp({
+    ...options,
+    queries: {...options.queries, organizerPassword: ORGANIZER_PASSWORD},
+  });
+}
+
 function occurrenceCount(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1;
+}
+
+async function expectForbidden(promise: Promise<Response>): Promise<void> {
+  const error = await promise.catch((e: unknown) => e);
+  expect(error)
+    .toBeInstanceOf(AppError);
+  expect((error as AppError).status)
+    .toBe(403);
+  expect((error as AppError).message)
+    .toBe('Invalid organizer password.');
 }
 
 describe('runEditCommand', () => {
@@ -25,16 +53,24 @@ describe('runEditCommand', () => {
   });
 
   test('throws the localized not-found error when the session does not exist', async () => {
-    const app = createApp({params: {id: 'missing'}});
+    const app = editApp({params: {id: 'missing'}});
 
     await expect(runEditCommand(app, {apply: (rules, session) => rules.reopen(session)}))
       .rejects
       .toThrow('Session not found');
   });
 
+  test('throws a 403 when the organizer password is missing', async () => {
+    const session = seedSession();
+    const app = createApp({params: {id: session.id}});
+    await app.store.save(session);
+
+    await expectForbidden(runEditCommand(app, {apply: (rules, current) => rules.reopen(current)}));
+  });
+
   test('saves a changed session once and renders the partial with the message', async () => {
-    const session = aSession();
-    const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+    const session = seedSession();
+    const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
     await app.store.save(session);
     const saveSpy = vi.spyOn(app.store, 'save');
 
@@ -50,8 +86,8 @@ describe('runEditCommand', () => {
   });
 
   test('does not save when the operation returns the unchanged session', async () => {
-    const session = aSession();
-    const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+    const session = seedSession();
+    const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
     await app.store.save(session);
     const saveSpy = vi.spyOn(app.store, 'save');
 
@@ -63,8 +99,8 @@ describe('runEditCommand', () => {
   });
 
   test('redirects to the edit page with the organizer password when not partial', async () => {
-    const session = aSession();
-    const app = createApp({params: {id: session.id}, queries: {organizerPassword: 'secret'}});
+    const session = seedSession();
+    const app = editApp({params: {id: session.id}});
     await app.store.save(session);
 
     const response = await runEditCommand(app, {
@@ -74,12 +110,12 @@ describe('runEditCommand', () => {
     expect(response.status)
       .toBe(302);
     expect(response.headers.get('location'))
-      .toBe(`/edit/${session.id}?organizerPassword=secret`);
+      .toBe(`/edit/${session.id}?organizerPassword=${ORGANIZER_PASSWORD}`);
   });
 
   test('honours an explicit redirect target', async () => {
-    const session = aSession();
-    const app = createApp({params: {id: session.id}});
+    const session = seedSession();
+    const app = editApp({params: {id: session.id}});
     await app.store.save(session);
 
     const response = await runEditCommand(app, {
@@ -92,8 +128,8 @@ describe('runEditCommand', () => {
   });
 
   test('derives the message from the updated session', async () => {
-    const session = aSession({reopenCount: 0});
-    const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+    const session = seedSession({reopenCount: 0});
+    const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
     await app.store.save(session);
 
     const html = await (await runEditCommand(app, {
@@ -106,8 +142,8 @@ describe('runEditCommand', () => {
   });
 
   test('merges render extras into the re-render', async () => {
-    const session = aSession({proposedDates: [aProposedDate()]});
-    const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+    const session = seedSession({proposedDates: [aProposedDate()]});
+    const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
     await app.store.save(session);
 
     const html = await (await runEditCommand(app, {
@@ -123,8 +159,8 @@ describe('runEditCommand', () => {
   });
 
   test('returns an escape-hatch response verbatim without saving', async () => {
-    const session = aSession();
-    const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+    const session = seedSession();
+    const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
     await app.store.save(session);
     const saveSpy = vi.spyOn(app.store, 'save');
     const escape = new Response('custom', {status: 400});
@@ -139,8 +175,8 @@ describe('runEditCommand', () => {
   });
 
   test('renders instead of redirecting when alwaysRender is set', async () => {
-    const session = aSession();
-    const app = createApp({params: {id: session.id}});
+    const session = seedSession();
+    const app = editApp({params: {id: session.id}});
     await app.store.save(session);
 
     const response = await runEditCommand(app, {
@@ -156,8 +192,8 @@ describe('runEditCommand', () => {
   });
 
   test('passes the rules object the operation mutates', async () => {
-    const session = aSession();
-    const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+    const session = seedSession();
+    const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
     await app.store.save(session);
     const apply = vi.fn((_rules, current: Postponement) => current);
 
@@ -168,8 +204,8 @@ describe('runEditCommand', () => {
   });
 
   test('does not save when a message function is the only derived field', async () => {
-    const session = aSession();
-    const app = createApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
+    const session = seedSession();
+    const app = editApp({params: {id: session.id}, headers: {'HX-Request': 'true'}});
     await app.store.save(session);
     const saveSpy = vi.spyOn(app.store, 'save');
 
@@ -186,8 +222,8 @@ describe('runEditCommand', () => {
   // The visibility toggle is the one edit POST that answers a plain request
   // with the full page rather than a redirect (the seam's `alwaysRender`).
   test('renders the full page for the visibility toggle without an HTMX request', async () => {
-    const session = aSession({status: 'Voting', proposedDates: [aProposedDate({id: 'pd-1', votable: false})]});
-    const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', votable: 'true'}});
+    const session = seedSession({status: 'Voting', proposedDates: [aProposedDate({id: 'pd-1', votable: false})]});
+    const app = editApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', votable: 'true'}});
     await app.store.save(session);
 
     const response = await handleProposedDateVisibilityPost(app);
@@ -215,30 +251,30 @@ const pipelineCases: PipelineCase[] = [
   {
     name: 'reopen',
     handler: handleReopenPost,
-    session: () => aSession({status: 'Confirmed'}),
+    session: () => seedSession({status: 'Confirmed'}),
     message: 'Postponement reopened',
-    redirectLocation: (id) => `/edit/${id}?organizerPassword=`,
+    redirectLocation: (id) => `/edit/${id}?organizerPassword=${ORGANIZER_PASSWORD}`,
   },
   {
     name: 'delete',
     handler: handleProposedDateDeletePost,
-    session: () => aSession({proposedDates: [aProposedDate({id: 'pd-1'})]}),
+    session: () => seedSession({proposedDates: [aProposedDate({id: 'pd-1'})]}),
     queries: {proposedDateId: 'pd-1'},
     message: 'Proposed date deleted',
-    redirectLocation: (id) => `/edit/${id}?organizerPassword=`,
+    redirectLocation: (id) => `/edit/${id}?organizerPassword=${ORGANIZER_PASSWORD}`,
   },
   {
     name: 'confirm',
     handler: handleConfirmDatePost,
-    session: () => aSession({status: 'Voting', proposedDates: [aProposedDate({id: 'pd-1', votable: true})]}),
+    session: () => seedSession({status: 'Voting', proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})]}),
     queries: {proposedDateId: 'pd-1'},
     message: 'Date confirmed',
-    redirectLocation: (id) => `/edit/${id}?organizerPassword=`,
+    redirectLocation: (id) => `/edit/${id}?organizerPassword=${ORGANIZER_PASSWORD}`,
   },
   {
     name: 'players',
     handler: handleEditPlayersPost,
-    session: () => aSession(),
+    session: () => seedSession(),
     body: {playerName: 'Alice'},
     message: 'Player added',
     redirectLocation: (id) => `/edit/${id}`,
@@ -246,7 +282,7 @@ const pipelineCases: PipelineCase[] = [
   {
     name: 'add-dates (single)',
     handler: handleEditProposedDatesPost,
-    session: () => aSession(),
+    session: () => seedSession(),
     body: {proposedDateTime: '09/01/2025 08:00 pm'},
     message: 'Proposed date added!',
     redirectLocation: (id) => `/edit/${id}`,
@@ -254,9 +290,9 @@ const pipelineCases: PipelineCase[] = [
   {
     name: 'refresh-clashes',
     handler: handleRefreshClashesPost,
-    session: () => aSession({proposedDates: [aProposedDate()]}),
+    session: () => seedSession({proposedDates: [aProposedDate()]}),
     message: 'Schedule check refreshed',
-    redirectLocation: (id) => `/edit/${id}?organizerPassword=`,
+    redirectLocation: (id) => `/edit/${id}?organizerPassword=${ORGANIZER_PASSWORD}`,
     saves: false,
   },
 ];
@@ -268,16 +304,24 @@ describe('edit POST handlers through the command seam', () => {
 
   describe.each(pipelineCases)('$name', ({handler, session: makeSession, queries, body, message, redirectLocation, saves = true}) => {
     test('rejects a missing session with the shared not-found error', async () => {
-      const app = createApp({params: {id: 'missing'}, queries, body});
+      const app = editApp({params: {id: 'missing'}, queries, body});
 
       await expect(handler(app))
         .rejects
         .toThrow('Session not found');
     });
 
+    test('rejects a bare request without the organizer password with a 403', async () => {
+      const session = makeSession();
+      const app = createApp({params: {id: session.id}, queries, body});
+      await app.store.save(session);
+
+      await expectForbidden(handler(app));
+    });
+
     test(`${saves ? 'saves once and renders' : 'renders without saving'} the partial with its outcome message`, async () => {
       const session = makeSession();
-      const app = createApp({params: {id: session.id}, queries, body, headers: {'HX-Request': 'true'}});
+      const app = editApp({params: {id: session.id}, queries, body, headers: {'HX-Request': 'true'}});
       await app.store.save(session);
       const saveSpy = vi.spyOn(app.store, 'save');
 
@@ -293,7 +337,7 @@ describe('edit POST handlers through the command seam', () => {
 
     test('redirects when not partial', async () => {
       const session = makeSession();
-      const app = createApp({params: {id: session.id}, queries, body});
+      const app = editApp({params: {id: session.id}, queries, body});
       await app.store.save(session);
 
       const response = await handler(app);

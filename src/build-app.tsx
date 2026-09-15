@@ -12,6 +12,7 @@ import editRouter from './routes/edit/router';
 import { ErrorPage } from './routes/error';
 import { handleIndexGet } from './routes/index-get';
 import joinRouter from './routes/join/router';
+import opponentRouter from './routes/opponent/router';
 import { ErrorContainer } from './routes/partials/error-container';
 
 type BuiltApp = ReturnType<typeof factory.createApp>;
@@ -64,6 +65,7 @@ export function buildApp(sessionStore: SessionStore): BuiltApp {
   app.route('/create', createRouter);
   app.route('/edit', editRouter);
   app.route('/join', joinRouter);
+  app.route('/opponent', opponentRouter);
 
   app.onError((err, c): Response => {
     const app = App.create(c);

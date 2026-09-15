@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { EditPage, JoinPage } from './pages';
+import { EditPage, JoinPage, OpponentPage } from './pages';
 import type { SessionFixture } from './test-session';
 
 test.describe('Postponement Editing', () => {
@@ -7,6 +7,17 @@ test.describe('Postponement Editing', () => {
 
   test.beforeEach(async ({page}) => {
     ({session} = await EditPage.createSession(page));
+  });
+
+  test('refuses a bare edit URL without the organizer password', async ({page}) => {
+    const response = await page.goto(`/edit/${session.id}`);
+
+    expect(response?.status())
+      .toBe(403);
+    await expect(page.getByRole('heading', {name: 'Error', level: 2}))
+      .toBeVisible();
+    await expect(page.getByRole('alert'))
+      .toContainText('Invalid organizer password');
   });
 
   test('should add players to the home team', async ({page, checkA11y}) => {
@@ -176,14 +187,19 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.votableCheckbox(0))
       .toBeChecked();
 
-    // Toggle it off
+    // Toggle it off. Waiting on the status announcement (not just the native
+    // checkbox) guarantees the HTMX re-render has landed before the next toggle.
     await editPage.toggleVotable(0);
+    await expect(editPage.clipboardStatus)
+      .toHaveText('Voting disabled');
     await expect(editPage.votableCheckbox(0))
       .not
       .toBeChecked();
 
     // Toggle it back on
     await editPage.toggleVotable(0);
+    await expect(editPage.clipboardStatus)
+      .toHaveText('Voting enabled');
     await expect(editPage.votableCheckbox(0))
       .toBeChecked();
 
@@ -332,9 +348,10 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.groupHeads.nth(3))
       .toContainText('Week 26');
 
-    // The URL carries exactly one sort param, so a reload keeps the Date radio checked.
+    // The URL keeps the organizer password and carries exactly one sort param,
+    // so a reload keeps the Date radio checked.
     await expect(page)
-      .toHaveURL(/\/edit\/[^?]+\?sort=date$/);
+      .toHaveURL(/\/edit\/[^?]+\?organizerPassword=[^&]+&sort=date$/);
     await page.reload();
     await expect(editPage.sortRadio('Date'))
       .toBeChecked();
@@ -494,6 +511,13 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.confirmButton(0))
       .toBeVisible();
 
+    // The opponent captain marks the date acceptable before the organizer
+    // confirms it.
+    const opponentPage = new OpponentPage(page);
+    await opponentPage.goto(session.opponentCaptainHref);
+    await opponentPage.toggleAcceptable(0);
+
+    await editPage.goto(session.editUrl);
     await editPage.confirmDate(0);
 
     await expect(editPage.status)
@@ -511,9 +535,50 @@ test.describe('Postponement Editing', () => {
       .toHaveScreenshot('edit-confirmed.png', {fullPage: true});
   });
 
+  test('confirming a non-acceptable date is a no-op until the opponent marks it acceptable', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(1);
+
+    // Confirm without the opponent marking the date acceptable: a no-op that
+    // keeps the session in Voting and announces the feedback.
+    await editPage.confirmDate(0);
+    await expect(editPage.status)
+      .toContainText('Voting');
+    await expect(editPage.clipboardStatus)
+      .toContainText('Only dates that are acceptable and not vetoed can be confirmed.');
+    // The confirm control is still present, so the organizer can retry once the
+    // date is acceptable.
+    await expect(editPage.confirmButton(0))
+      .toBeVisible();
+
+    // The opponent captain marks the date acceptable; confirming now succeeds.
+    const opponentPage = new OpponentPage(page);
+    await opponentPage.goto(session.opponentCaptainHref);
+    await opponentPage.toggleAcceptable(0);
+
+    await editPage.goto(session.editUrl);
+    await editPage.confirmDate(0);
+    await expect(editPage.status)
+      .toContainText('Confirmed');
+
+    await checkA11y();
+  });
+
   test('should reopen a confirmed postponement; new dates stay votable', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(1);
+
+    // The opponent captain marks the date acceptable before the organizer
+    // confirms it.
+    const opponentPage = new OpponentPage(page);
+    await opponentPage.goto(session.opponentCaptainHref);
+    await opponentPage.toggleAcceptable(0);
+
+    await editPage.goto(session.editUrl);
     await editPage.confirmDate(0);
     await expect(editPage.status)
       .toContainText('Confirmed');

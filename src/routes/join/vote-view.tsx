@@ -57,7 +57,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const rules = new PostponementRules();
   const tallies = rules.tally(session, team);
 
-  const visibleDates = rules.votableDates(session);
+  const visibleDates = rules.pollDates(session, team);
 
   const proposedDates: VotePageDate[] = visibleDates.map((pd) => {
     const current = session.votes.find((vt) => vt.proposedDateId === pd.id && vt.participantId === player.id);

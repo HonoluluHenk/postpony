@@ -23,6 +23,13 @@ export function normalize(data: Record<string, unknown>): Postponement {
   const homeTeam = data['homeTeam'] as string | undefined;
   const guestTeam = data['guestTeam'] as string | undefined;
 
+  // Retired dual-password fields (ADR-0025): the old shared invitation secret maps
+  // onto the opponent-captain + both player secrets so pre-migration rows keep a
+  // working credential instead of normalizing to `undefined`.
+  const legacyOrganizerHash = data['organizerPasswordHash'] as string | undefined;
+  const legacyInvitationHash = data['invitationPasswordHash'] as string | undefined;
+  const legacyInvitationPlain = data['invitationPassword'] as string | undefined;
+
   const proposedDates: ProposedDate[] = (
     data['proposedDates'] as Record<string, unknown>[] | undefined ?? []
   ).map((pd): ProposedDate => ({
@@ -39,6 +46,8 @@ export function normalize(data: Record<string, unknown>): Postponement {
           : typeof pd['awayTeamVotable'] === 'boolean'
             ? pd['awayTeamVotable']
             : false,
+    vetoed: typeof pd['vetoed'] === 'boolean' ? pd['vetoed'] : false,
+    acceptable: typeof pd['acceptable'] === 'boolean' ? pd['acceptable'] : false,
     clashes: pd['clashes'] as ProposedDate['clashes'],
     venueOccupancy: pd['venueOccupancy'] as ProposedDate['venueOccupancy'],
   }));
@@ -51,6 +60,13 @@ export function normalize(data: Record<string, unknown>): Postponement {
     guestTeam,
     organizerTeam: data['organizerTeam'] === 'away' ? 'away' : 'home',
     reopenCount: typeof data['reopenCount'] === 'number' ? data['reopenCount'] : 0,
+    organizerCaptainPasswordHash: (data['organizerCaptainPasswordHash'] as string | undefined) ?? legacyOrganizerHash ?? '',
+    opponentCaptainPasswordHash: (data['opponentCaptainPasswordHash'] as string | undefined) ?? legacyInvitationHash ?? '',
+    homePlayerPasswordHash: (data['homePlayerPasswordHash'] as string | undefined) ?? legacyInvitationHash ?? '',
+    awayPlayerPasswordHash: (data['awayPlayerPasswordHash'] as string | undefined) ?? legacyInvitationHash ?? '',
+    opponentCaptainPassword: (data['opponentCaptainPassword'] as string | undefined) ?? legacyInvitationPlain ?? '',
+    homePlayerPassword: (data['homePlayerPassword'] as string | undefined) ?? legacyInvitationPlain ?? '',
+    awayPlayerPassword: (data['awayPlayerPassword'] as string | undefined) ?? legacyInvitationPlain ?? '',
     status,
     proposedDates,
     venues,

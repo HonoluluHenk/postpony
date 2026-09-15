@@ -16,7 +16,7 @@ This use case describes how a Team Captain starts the process of rescheduling a 
     * The system asks for a **ReSchedule name**.
     * Once entered, the system:
         * Creates the `Reschedule` entity.
-        * Generates a random **Organizer Password** (see [ADR 0002](adr/0002-security-model-dual-password.md)).
+        * Generates a random **Organizer Captain Password** (see [ADR 0025](adr/0025-two-captain-security-model.md)).
         * Presents the password to the user.
         * Proceeds to the **Editing Step**.
 4. **Edit Existing ReSchedule**:
@@ -70,7 +70,7 @@ This use case describes how participants (home team players, opponent captain, a
 
 1. **Access Invitation Link**: The participant clicks the link provided in the invitation.
 2. **Authentication**:
-    * The system grants access to the participant dashboard via the tokenized **Invitation Link** (using the `invitationPassword` as the token - see [ADR 0011](adr/0011-token-security-and-structure.md)).
+    * The system grants access to the participant dashboard via the tokenized **Invitation Link** (using that team's **player password** as the token - see [ADR 0025](adr/0025-two-captain-security-model.md)).
     * (No manual password entry is required for participants in the MVP).
 3. **Provide Availability or Propose Date**:
     * **Data Entry Path**: The participant can provide or update their personal/team availability (venue availability, existing matches, etc.) to help the suggestion engine.

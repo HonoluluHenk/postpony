@@ -12,9 +12,9 @@ export interface PendingVote {
 
 /**
  * Reads pending vote-<dateId>=<value> fields from a query-lookup, scoped to the
- * session's votable dates. Only structurally valid dateIds (real votable dates)
- * and whitelisted values (Yes|IfNecessary|No) are returned — arbitrary query
- * strings are never echoed.
+ * dates in the given team's poll (`pollDates`). Only structurally valid dateIds
+ * (real poll dates) and whitelisted values (Yes|IfNecessary|No) are returned —
+ * arbitrary query strings are never echoed.
  *
  * Used by both the fallback redirect (unknown playerId) and the register POST
  * redirect so one mechanism covers both personalized and unpersonalized paths.
@@ -22,10 +22,11 @@ export interface PendingVote {
 export function readPendingVotes(
   lookup: (name: string) => string | undefined,
   session: Postponement,
+  team: Team,
 ): PendingVote[] {
   const rules = new PostponementRules();
   const pending: PendingVote[] = [];
-  for (const pd of rules.votableDates(session)) {
+  for (const pd of rules.pollDates(session, team)) {
     const value = lookup(`vote-${pd.id}`);
     if (isVoteType(value)) {
       pending.push({dateId: pd.id, value});
@@ -59,7 +60,7 @@ export interface JoinContext {
   token: string;
 }
 
-export async function requireSessionAndToken(app: App): Promise<JoinContext> {
+export async function requireSessionAndToken(app: App, team: Team): Promise<JoinContext> {
   const id = app.requireParam('id');
   const session = await app.store.get(id);
   if (!session) {
@@ -67,9 +68,14 @@ export async function requireSessionAndToken(app: App): Promise<JoinContext> {
   }
 
   const token = app.query('token') ?? '';
-  if (!token || !await comparePassword(token, session.invitationPasswordHash)) {
-    app.failure(app.t('join_invalid_token'), 403);
-  }
+  const ownHash = team === 'home' ? session.homePlayerPasswordHash : session.awayPlayerPasswordHash;
+  const otherHash = team === 'home' ? session.awayPlayerPasswordHash : session.homePlayerPasswordHash;
 
-  return {id, session, token};
+  if (token && await comparePassword(token, ownHash)) {
+    return {id, session, token};
+  }
+  if (token && await comparePassword(token, otherHash)) {
+    app.failure(app.t('join_wrong_team_token'), 403);
+  }
+  app.failure(app.t('join_invalid_token'), 403);
 }

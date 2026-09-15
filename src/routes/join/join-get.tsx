@@ -5,14 +5,14 @@ import { renderConfirmedInfo } from './vote-view';
 
 export const handleJoinGet = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
-  const {session, token} = await requireSessionAndToken(app);
+  const {session, token} = await requireSessionAndToken(app, team);
 
   if (session.status === 'Confirmed') {
     return renderConfirmedInfo(app, session, {team, token});
   }
 
   const players = session.players.filter((p) => p.teamId === team);
-  const pendingVotes = readPendingVotes(app.query.bind(app), session);
+  const pendingVotes = readPendingVotes(app.query.bind(app), session, team);
 
   const html = app.render(
     <JoinPage

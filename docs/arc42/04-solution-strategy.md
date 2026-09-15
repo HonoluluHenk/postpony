@@ -10,7 +10,7 @@ The system is a server-rendered, hypermedia-driven web app with a deliberately s
 
 3. **Whole-document persistence behind a `SessionStore` seam.** A `Postponement` serialises to one JSON blob in a `sessions(id, club_id, data)` table. `MemorySessionStore` for tests, `SqliteSessionStore` for dev/prod. The seam isolates storage from the domain and from the HTTP layer.
 
-4. **Dual-password security model.** Organizer password (edit access) + invitation password (join access, carried in `?token=`). No accounts, no recovery, no cookies for auth.
+4. **Four-secret security model.** Four per-postponement secrets replace the old dual-password model (ADR-0025): an organizer-captain password (full edit, hashed, plaintext shown once), an opponent-captain password (scoped to the side opposite `organizerTeam`), and a home/away player password each (per-team vote access). No accounts, no recovery, no cookies for auth; the three shareable plaintexts (opponent-captain, home-player, away-player) are persisted so share links render.
 
 5. **Worker/Node parity.** One codebase runs under `@hono/node-server` (dev) and Cloudflare Workers (prod). Node-only modules (`node:fs`, `node:path`, `node:process`, pino, the libSQL node client) are imported via non-literal dynamic `import()` so they are excluded from the Worker bundle. A `process` shim (`src/worker-runtime.ts`) lets convict load on Workers.
 

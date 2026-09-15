@@ -88,8 +88,21 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
   const guestTeamIdentity =
     selectedTeamId === 'home' ? teamIdentity(m.opponentTeamtable) : teamIdentity(m.teamtable);
 
-  const redirectOrganizerPassword = generateRandomPassword();
-  const invitationPassword = generateRandomPassword();
+  const organizerCaptainPassword = generateRandomPassword();
+  const opponentCaptainPassword = generateRandomPassword();
+  const homePlayerPassword = generateRandomPassword();
+  const awayPlayerPassword = generateRandomPassword();
+  const [
+    organizerCaptainPasswordHash,
+    opponentCaptainPasswordHash,
+    homePlayerPasswordHash,
+    awayPlayerPasswordHash,
+  ] = await Promise.all([
+    hashPassword(organizerCaptainPassword),
+    hashPassword(opponentCaptainPassword),
+    hashPassword(homePlayerPassword),
+    hashPassword(awayPlayerPassword),
+  ]);
   const session = new PostponementRules().create({
     clubId,
     homeTeam: m.homeTeam,
@@ -101,14 +114,18 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     guestTeamIdentity,
     players,
     venues,
-    organizerPasswordHash: await hashPassword(redirectOrganizerPassword),
-    invitationPasswordHash: await hashPassword(invitationPassword),
-    invitationPassword,
+    organizerCaptainPasswordHash,
+    opponentCaptainPasswordHash,
+    homePlayerPasswordHash,
+    awayPlayerPasswordHash,
+    opponentCaptainPassword,
+    homePlayerPassword,
+    awayPlayerPassword,
   });
 
   await app.store.save(session);
 
-  const redirectUrl = `/edit/${session.id}?organizerPassword=${redirectOrganizerPassword}`;
+  const redirectUrl = `/edit/${session.id}?organizerPassword=${organizerCaptainPassword}`;
   if (app.isPartial) {
     app.setHeader('HX-Redirect', redirectUrl);
     return app.text('', 200);

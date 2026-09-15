@@ -1,10 +1,12 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../../app';
-import type { Postponement } from '../../../lib/models';
+import type { Postponement, Team } from '../../../lib/models';
 import { matchUpLine } from '../../../lib/postponement';
 import { pageLayout } from '../../layouts/main';
+import { opponentTeam } from '../../opponent/opponent-utils';
 import { StatusAnnouncement } from '../../partials/status-announcement';
+import { withOrganizerPassword } from './edit-auth';
 import { inviteLinkLabels } from './invite-link-labels';
 import { GenerateForm, ProposedDatesRail, type EditGridProps } from './proposed-dates-section';
 import { StatusChip } from './status-chip';
@@ -13,7 +15,6 @@ import { TeamSection } from './team-section';
 export interface EditPageProps extends ViewContext, EditGridProps {
   title?: string;
   session: Postponement;
-  organizerPassword?: string;
   /** Original match datetime in the locale's Intl reading format (page heading). */
   proposedDateTimeDisplay?: string;
   globalError?: string;
@@ -26,48 +27,47 @@ interface InviteLinksProps {
 }
 
 function InviteLinks(props: InviteLinksProps): JSX.Element {
-  const homeLink = `${props.baseUrl}/join/${props.session.id}/home?token=${props.session.invitationPassword}`;
-  const awayLink = `${props.baseUrl}/join/${props.session.id}/away?token=${props.session.invitationPassword}`;
-  const labels = inviteLinkLabels(props.session, props.t);
+  const {session, baseUrl, t} = props;
+  const labels = inviteLinkLabels(session, t);
+
+  const joinLink = (side: Team): string =>
+    `${baseUrl}/join/${session.id}/${side}?token=${side === 'home' ? session.homePlayerPassword : session.awayPlayerPassword}`;
+
+  const opponent = opponentTeam(session);
+  const links: {href: string; label: string}[] = [
+    {href: joinLink(session.organizerTeam), label: labels[session.organizerTeam]},
+    {href: `${baseUrl}/opponent/${session.id}?opponentCaptainPassword=${session.opponentCaptainPassword}`, label: labels.opponentCaptain},
+    {href: joinLink(opponent), label: labels[opponent]},
+  ];
 
   return (
     <div class="invite">
-      <span>
-        <a href={homeLink}>{labels.home}</a>
-        <button
-          class="copy-btn"
-          data-copy={homeLink}
-          data-copied-label={props.t('copied_to_clipboard')}
-          aria-label={props.t('copy_to_clipboard')}
-          type="button"
-        >
-          <i aria-hidden="true">content_copy</i>
-        </button>
-      </span>
-      <span>
-        <a href={awayLink}>{labels.away}</a>
-        <button
-          class="copy-btn"
-          data-copy={awayLink}
-          data-copied-label={props.t('copied_to_clipboard')}
-          aria-label={props.t('copy_to_clipboard')}
-          type="button"
-        >
-          <i aria-hidden="true">content_copy</i>
-        </button>
-      </span>
+      {links.map((link) => (
+        <span key={link.href}>
+          <a href={link.href}>{link.label}</a>
+          <button
+            class="copy-btn"
+            data-copy={link.href}
+            data-copied-label={props.t('copied_to_clipboard')}
+            aria-label={props.t('copy_to_clipboard')}
+            type="button"
+          >
+            <i aria-hidden="true">content_copy</i>
+          </button>
+        </span>
+      ))}
     </div>
   );
 }
 
-function SidebarStatus(props: { status: EditGridProps['status']; reopenCount: number; sessionId: string; t: ViewContext['t'] }): JSX.Element {
+function SidebarStatus(props: { status: EditGridProps['status']; reopenCount: number; sessionId: string; t: ViewContext['t']; organizerPassword?: string }): JSX.Element {
   const confirmed = props.status === 'Confirmed';
   return (
     <div class="side-block">
       <StatusChip status={props.status} t={props.t}/>
       {props.reopenCount > 0 ? <p class="muted">{props.t('reopened_count', {count: String(props.reopenCount)})}</p> : null}
       {confirmed ? (
-        <form hx-post={`/edit/${props.sessionId}/reopen`} hx-target="#edit-grid" class="mt-4">
+        <form hx-post={withOrganizerPassword(`/edit/${props.sessionId}/reopen`, props.organizerPassword)} hx-target="#edit-grid" class="mt-4">
           <button type="submit" class="button outline">{props.t('reopen')}</button>
         </form>
       ) : null}
@@ -90,7 +90,7 @@ function EditGrid(props: EditPageProps): JSX.Element {
     <div id="edit-grid" class="edit-grid">
       <ProposedDatesRail {...props} />
       <div class="edit-sidebar">
-        <SidebarStatus status={props.status} reopenCount={props.reopenCount} sessionId={props.sessionId} t={props.t}/>
+        <SidebarStatus status={props.status} reopenCount={props.reopenCount} sessionId={props.sessionId} t={props.t} organizerPassword={props.organizerPassword}/>
         <div class="side-block">
           <h3>{props.t('invite_link_label')}</h3>
           <InviteLinks baseUrl={props.baseUrl} session={props.session} t={props.t}/>
@@ -107,6 +107,7 @@ function EditGrid(props: EditPageProps): JSX.Element {
             playerName={props.playerName}
             teamId={props.teamId}
             error={props.playerError}
+            organizerPassword={props.organizerPassword}
           />
         </details>
         <details class="side-block side-details" open>
@@ -124,6 +125,7 @@ function EditGrid(props: EditPageProps): JSX.Element {
             toError={props.generatorToError}
             fromDate={props.fromDate}
             toDate={props.toDate}
+            organizerPassword={props.organizerPassword}
           />
         </details>
       </div>
@@ -148,7 +150,7 @@ export function EditPage(props: EditPageProps): JSX.Element {
 
   const content = (
     <div class="edit-redesign">
-      {props.organizerPassword ? (
+      {props.organizerPassword && !props.isPartial ? (
         <div class="toast primary white-text top" role="status">
           <i aria-hidden="true">info</i>
           <div class="max">

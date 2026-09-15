@@ -1,6 +1,7 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { Player, Team } from '../../../lib/models';
 import type { TranslateFn } from '../../../locales';
+import { withOrganizerPassword } from './edit-auth';
 import type { OwnTeamView } from './own-team-view';
 
 export interface TeamSectionProps extends OwnTeamView {
@@ -10,6 +11,7 @@ export interface TeamSectionProps extends OwnTeamView {
   playerName?: string;
   teamId?: Team;
   error?: string;
+  organizerPassword?: string;
 }
 
 export function TeamSection(props: TeamSectionProps): JSX.Element {
@@ -29,7 +31,7 @@ export function TeamSection(props: TeamSectionProps): JSX.Element {
           </li>
         ))}
       </ul>
-      <form hx-post={`/edit/${props.sessionId}/players`} hx-target="#edit-grid" class="mt-4">
+      <form hx-post={withOrganizerPassword(`/edit/${props.sessionId}/players`, props.organizerPassword)} hx-target="#edit-grid" class="mt-4">
         <input type="hidden" name="teamId" value="home" />
         <div class={`field label border fill${homeInvalid ? ' invalid' : ''}`}>
           {homeInvalid ? (
@@ -62,7 +64,7 @@ export function TeamSection(props: TeamSectionProps): JSX.Element {
           </li>
         ))}
       </ul>
-      <form hx-post={`/edit/${props.sessionId}/players`} hx-target="#edit-grid" class="mt-4">
+      <form hx-post={withOrganizerPassword(`/edit/${props.sessionId}/players`, props.organizerPassword)} hx-target="#edit-grid" class="mt-4">
         <input type="hidden" name="teamId" value="away" />
         <div class={`field label border fill${awayInvalid ? ' invalid' : ''}`}>
           {awayInvalid ? (
