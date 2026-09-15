@@ -12,3 +12,6 @@
 - [x] A failed re-check with a previous snapshot keeps all chips and shows the warning; without a previous snapshot it shows the nothing state.
 - [x] Occupancy refreshes on the home side and is preserved on the away side and on partial fetch failure.
 - [x] End-to-end coverage asserts the refresh flow and the failed-refresh degradation.
+
+## Comments
+- a8188a3 opponent-scoped POST /opponent/:id/refresh-clashes via the opponent pipeline: own-side scrape + merge, home-only occupancy, refresh-failed warning/nothing-state degradation, never flips votable; e2e covers the fixture-backed refresh flow (failed-scrape degradation at handler level — the e2e server pins the complete fixtures dir, same precedent as clash-checks.e2e.ts); also moved the opponent status announcement outside the HTMX swap target so the refreshed announcement (and veto/acceptable ones) survive partial swaps.
