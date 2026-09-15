@@ -15,3 +15,8 @@
 - [x] The opponent-scoped poll hides vetoed dates from the opponent team only; the organizer's view and symmetric `votable` semantics are unchanged.
 - [x] `reopen` preserves `vetoed` and `acceptable` flags, as it already preserves votes and `votable`.
 - [x] Domain specs at the `PostponementRules` seam cover each new operation; the existing suite stays green with legacy fields intact.
+
+## Comments
+
+- `fd5d9cc` — `feat(domain): four-secret model and two-captain rules`: adds the four-secret model and `vetoed`/`acceptable` flags, the `removePlayer`/`setVetoed`/`setAcceptable`/`pollDates` ops, the tightened `confirmDate` invariant, read-time normalization defaults, fixture defaults, and the match-post call-site mapping. Existing confirm-date handler tests updated to mark dates `acceptable` so the suite stays green.
+
