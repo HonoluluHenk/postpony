@@ -1,7 +1,7 @@
 import { Temporal } from '@js-temporal/polyfill';
 import { describe, expect, test } from 'vitest';
 import { aProposedDate, aSession } from './__test-utils__/builders';
-import { CLASH_BUFFER_HOURS, applyClashCheckResult, computeClashes, isDateClashing } from './clashes';
+import { CLASH_BUFFER_HOURS, applyClashCheckResult, computeClashes, isDateClashing, mergeOwnSideClashes } from './clashes';
 import type { ClashCheckResult, OriginalMatchIdentity } from './clashes';
 import type { Match } from './click-tt-scraper';
 
@@ -299,5 +299,87 @@ describe('applyClashCheckResult', () => {
       .toBe(true);
     expect(updated.proposedDates[0]?.clashes)
       .toEqual({home: clash, away: []});
+  });
+});
+
+describe('mergeOwnSideClashes', () => {
+  const homeClash = [{opponent: 'Port', start: '2026-09-05T17:00'}];
+  const awayClash = [{opponent: 'Solothurn', start: '2026-09-05T16:00'}];
+
+  function storedSession(): ReturnType<typeof aSession> {
+    return aSession({
+      homeTeam: HOME,
+      guestTeam: AWAY,
+      originalMatchDateTime: originalMatch.start,
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-1',
+          dateTimeRange: {start: '2026-09-05T18:00', end: '2026-09-05T18:00'},
+          votable: false,
+          clashes: {home: [{opponent: 'Stale', start: '2026-09-05T19:00'}], away: awayClash},
+          venueOccupancy: {count: 1, matches: homeClash},
+        }),
+      ],
+    });
+  }
+
+  test('replaces only the named side and preserves the other side plus occupancy', () => {
+    const updated = mergeOwnSideClashes(
+      storedSession(),
+      'home',
+      [match('05.09.2026', '17:00', HOME, 'Port')],
+    );
+
+    expect(updated.proposedDates[0]?.clashes)
+      .toEqual({home: homeClash, away: awayClash});
+    expect(updated.proposedDates[0]?.venueOccupancy)
+      .toEqual({count: 1, matches: homeClash});
+  });
+
+  test('replaces only the away side when named', () => {
+    const updated = mergeOwnSideClashes(
+      storedSession(),
+      'away',
+      [match('05.09.2026', '16:00', AWAY, 'Solothurn')],
+    );
+
+    expect(updated.proposedDates[0]?.clashes)
+      .toEqual({home: [{opponent: 'Stale', start: '2026-09-05T19:00'}], away: awayClash});
+  });
+
+  test('never flips votable', () => {
+    const updated = mergeOwnSideClashes(
+      storedSession(),
+      'home',
+      [match('05.09.2026', '17:00', HOME, 'Port')],
+    );
+
+    expect(updated.proposedDates[0]?.votable)
+      .toBe(false);
+  });
+
+  test('a first merge onto dates with no snapshot yields own-side lines and an absent other side', () => {
+    const session = aSession({
+      homeTeam: HOME,
+      guestTeam: AWAY,
+      originalMatchDateTime: originalMatch.start,
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-1',
+          dateTimeRange: {start: '2026-09-05T18:00', end: '2026-09-05T18:00'},
+        }),
+      ],
+    });
+
+    const updated = mergeOwnSideClashes(
+      session,
+      'away',
+      [match('05.09.2026', '16:00', AWAY, 'Solothurn')],
+    );
+
+    expect(updated.proposedDates[0]?.clashes)
+      .toEqual({home: [], away: awayClash});
+    expect(updated.proposedDates[0]?.venueOccupancy)
+      .toBeUndefined();
   });
 });

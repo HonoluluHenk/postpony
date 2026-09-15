@@ -1,6 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill';
 import type { Match } from './click-tt-scraper';
-import type { Postponement, ProposedDate } from './models';
+import type { Postponement, ProposedDate, Team } from './models';
 import { PostponementRules } from './postponement';
 import { parseClickTtDateTime, parseIsoToPlainDateTime } from './temporal-utils';
 import type { VenueOccupancyByProposedDate } from './venue-occupancy';
@@ -165,6 +165,44 @@ export function applyClashCheckResult(
     }
   }
   return updated;
+}
+
+/**
+ * The pure own-side merge rule for single-team re-checks: recomputes the named
+ * side's clash lines from a fresh single-team schedule and replaces only those
+ * lines on every Proposed Date, preserving the other side's stored lines and
+ * the Venue Occupancy snapshot. A date with no previous snapshot keeps an
+ * absent (empty) other side. Votable is never touched — a refresh must not
+ * pull dates out of anyone's poll.
+ */
+export function mergeOwnSideClashes(
+  session: Postponement,
+  side: Team,
+  freshSchedule: Match[],
+): Postponement {
+  const originalMatch: OriginalMatchIdentity = {
+    start: session.originalMatchDateTime,
+    homeTeam: session.homeTeam,
+    guestTeam: session.guestTeam,
+  };
+  const fresh = computeClashes(
+    session.proposedDates,
+    side === 'home' ? freshSchedule : [],
+    side === 'away' ? freshSchedule : [],
+    originalMatch,
+  );
+  return {
+    ...session,
+    proposedDates: session.proposedDates.map((pd) => {
+      const own = fresh[pd.id]?.[side] ?? [];
+      return {
+        ...pd,
+        clashes: side === 'home'
+          ? {home: own, away: pd.clashes?.away ?? []}
+          : {home: pd.clashes?.home ?? [], away: own},
+      };
+    }),
+  };
 }
 
 /**

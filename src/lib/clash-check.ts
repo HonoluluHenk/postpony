@@ -1,7 +1,7 @@
-import { computeClashes, type ClashCheckResult } from '../../../lib/clashes';
-import { fetchClubMeetings, fetchMatches, seasonWindow, type Match } from '../../../lib/click-tt-scraper';
-import { DEFAULT_CLUB_ID, type ClickTtTeamIdentity, type Postponement } from '../../../lib/models';
-import { computeVenueOccupancy } from '../../../lib/venue-occupancy';
+import { computeClashes, type ClashCheckResult } from './clashes';
+import { fetchClubMeetings, fetchMatches, seasonWindow, type Match } from './click-tt-scraper';
+import { DEFAULT_CLUB_ID, type ClickTtTeamIdentity, type Postponement } from './models';
+import { computeVenueOccupancy } from './venue-occupancy';
 
 async function fetchHomeClubMeetings(
   session: Pick<Postponement, 'clubId'>,

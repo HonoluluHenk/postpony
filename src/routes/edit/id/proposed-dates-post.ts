@@ -15,7 +15,7 @@ import { defaultVenueNumber } from '../../../lib/venues';
 import { Temporal } from '@js-temporal/polyfill';
 import { type EditPartialExtras, renderEditPartials } from './render-edit-partials';
 import { runEditCommand } from './run-edit-command';
-import { computeClashesForSession } from './clash-check';
+import { computeClashesForSession } from '../../../lib/clash-check';
 import { FALLBACK_VENUE_COUNT } from './proposed-dates-section';
 
 const TUPLE_DISCRIMINATOR = 'tuple';

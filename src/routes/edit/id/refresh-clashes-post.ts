@@ -1,6 +1,6 @@
 import type { App } from '../../../app';
 import { applyClashCheckResult, type ClashCheckResult } from '../../../lib/clashes';
-import { computeClashesForSession } from './clash-check';
+import { computeClashesForSession } from '../../../lib/clash-check';
 import { runEditCommand } from './run-edit-command';
 
 export const handleRefreshClashesPost = (app: App): Promise<Response> => {
