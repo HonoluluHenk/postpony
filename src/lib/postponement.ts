@@ -95,9 +95,6 @@ export interface CreatePostponementInput {
   guestTeamIdentity?: ClickTtTeamIdentity;
   players: readonly Player[];
   venues: readonly Venue[];
-  organizerPasswordHash: string;
-  invitationPasswordHash: string;
-  invitationPassword: string;
   organizerCaptainPasswordHash: string;
   opponentCaptainPasswordHash: string;
   homePlayerPasswordHash: string;
@@ -138,9 +135,6 @@ export class PostponementRules {
       ),
       homeTeam: input.homeTeam,
       guestTeam: input.guestTeam,
-      organizerPasswordHash: input.organizerPasswordHash,
-      invitationPasswordHash: input.invitationPasswordHash,
-      invitationPassword: input.invitationPassword,
       organizerCaptainPasswordHash: input.organizerCaptainPasswordHash,
       opponentCaptainPasswordHash: input.opponentCaptainPasswordHash,
       homePlayerPasswordHash: input.homePlayerPasswordHash,

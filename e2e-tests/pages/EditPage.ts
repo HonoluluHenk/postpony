@@ -62,11 +62,13 @@ export class EditPage {
 
     const url = new URL(homeHref);
     const id = url.pathname.split('/')[2] ?? '';
-    const token = url.searchParams.get('token') ?? '';
+    const homeToken = url.searchParams.get('token') ?? '';
+    const awayUrl = new URL(awayHref);
+    const awayToken = awayUrl.searchParams.get('token') ?? '';
     const editUrl = page.url();
 
     return {
-      session: {id, token, homeHref, awayHref, editUrl},
+      session: {id, homeToken, awayToken, homeHref, awayHref, editUrl},
       editPage,
     };
   }

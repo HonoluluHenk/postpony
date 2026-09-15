@@ -3,7 +3,7 @@ import { App } from '../../../app';
 import { aPlayer, aProposedDate, aSession } from '../../../lib/__test-utils__/builders';
 import { createApp } from '../../../lib/__test-utils__/create-app';
 import { fetchClubId, fetchPlayers, fetchVenues } from '../../../lib/click-tt-scraper';
-import { hashPassword } from '../../../lib/crypto-utils';
+import { hashPassword, comparePassword } from '../../../lib/crypto-utils';
 import { DEFAULT_CLUB_ID } from '../../../lib/models';
 import { handleScrapeMatchPost } from './match-post';
 
@@ -78,6 +78,53 @@ describe('handleScrapeMatchPost', () => {
         {name: 'Schmid, Oliver', teamId: 'away'},
         {name: 'Milcu, Sasha', teamId: 'away'},
       ]);
+  });
+
+  test('mints four distinct secrets: hashes all four and persists the three shareable plaintexts', async () => {
+    const app = createApp({body: {...MATCH, teamName: 'Thun'}});
+
+    const stored = await storedSession(app);
+
+    expect(stored?.organizerCaptainPasswordHash)
+      .toBeTruthy();
+    expect(stored?.opponentCaptainPasswordHash)
+      .toBeTruthy();
+    expect(stored?.homePlayerPasswordHash)
+      .toBeTruthy();
+    expect(stored?.awayPlayerPasswordHash)
+      .toBeTruthy();
+
+    const hashes = new Set([
+      stored?.organizerCaptainPasswordHash,
+      stored?.opponentCaptainPasswordHash,
+      stored?.homePlayerPasswordHash,
+      stored?.awayPlayerPasswordHash,
+    ]);
+    expect(hashes.size)
+      .toBe(4);
+
+    expect(stored?.opponentCaptainPassword)
+      .toBeTruthy();
+    expect(stored?.homePlayerPassword)
+      .toBeTruthy();
+    expect(stored?.awayPlayerPassword)
+      .toBeTruthy();
+
+    // Each shareable plaintext hashes to its stored hash.
+    await expect(comparePassword(stored?.opponentCaptainPassword ?? '', stored?.opponentCaptainPasswordHash ?? ''))
+      .resolves
+      .toBe(true);
+    await expect(comparePassword(stored?.homePlayerPassword ?? '', stored?.homePlayerPasswordHash ?? ''))
+      .resolves
+      .toBe(true);
+    await expect(comparePassword(stored?.awayPlayerPassword ?? '', stored?.awayPlayerPasswordHash ?? ''))
+      .resolves
+      .toBe(true);
+
+    // The organizer-captain plaintext is never persisted on the session.
+    expect(stored)
+      .not
+      .toHaveProperty('organizerPassword');
   });
 
   test('throws when a required match field is missing', async () => {
@@ -244,7 +291,7 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
 
   test('carrying sessionId/organizerPassword mints a fresh Postponement and never mutates the referenced one', async () => {
     const session = aSession({
-      organizerPasswordHash: await hashPassword(organizerPassword),
+      organizerCaptainPasswordHash: await hashPassword(organizerPassword),
       players: [aPlayer({id: 'old-p', name: 'Old Player'})],
       proposedDates: [aProposedDate()],
     });
@@ -263,7 +310,7 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
         name: session.name,
         homeTeam: session.homeTeam,
         guestTeam: session.guestTeam,
-        organizerPasswordHash: session.organizerPasswordHash,
+        organizerCaptainPasswordHash: session.organizerCaptainPasswordHash,
         proposedDates: session.proposedDates,
         votes: session.votes,
       });
@@ -277,9 +324,9 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
     expect(minted?.id)
       .not
       .toBe(session.id);
-    expect(minted?.organizerPasswordHash)
+    expect(minted?.organizerCaptainPasswordHash)
       .not
-      .toBe(session.organizerPasswordHash);
+      .toBe(session.organizerCaptainPasswordHash);
     expect(minted?.name)
       .toBe('Thun vs Ostermundigen – 08/29/2026 04:00 pm');
     expect(minted?.homeTeam)
@@ -289,7 +336,7 @@ describe('handleScrapeMatchPost ignores leftover change parameters', () => {
   });
 
   test('a wrong organizer password does not block the mint', async () => {
-    const session = aSession({organizerPasswordHash: await hashPassword('real-pw')});
+    const session = aSession({organizerCaptainPasswordHash: await hashPassword('real-pw')});
     const app = createApp({body: {...MATCH, teamName: 'Thun', sessionId: session.id, organizerPassword: 'wrong'}});
     await app.store.save(session);
 

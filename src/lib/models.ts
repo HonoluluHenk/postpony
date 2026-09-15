@@ -47,9 +47,6 @@ export interface Postponement {
   guestTeam?: string;
   homeTeamIdentity?: ClickTtTeamIdentity;
   guestTeamIdentity?: ClickTtTeamIdentity;
-  organizerPasswordHash: string;
-  invitationPasswordHash: string;
-  invitationPassword: string;
   organizerCaptainPasswordHash: string;
   opponentCaptainPasswordHash: string;
   homePlayerPasswordHash: string;

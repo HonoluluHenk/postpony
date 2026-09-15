@@ -5,7 +5,7 @@ import { renderConfirmedInfo } from './vote-view';
 
 export const handleJoinGet = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
-  const {session, token} = await requireSessionAndToken(app);
+  const {session, token} = await requireSessionAndToken(app, team);
 
   if (session.status === 'Confirmed') {
     return renderConfirmedInfo(app, session, {team, token});

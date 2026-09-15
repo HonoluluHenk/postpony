@@ -59,6 +59,7 @@
   "join_select_player": "Select your name",
   "join_select_required": "Please select your name or enter a new one.",
   "join_title": "Join the Postponement",
+  "join_wrong_team_token": "This link is for the other team.",
   "language_selection": "Language selection",
   "loading": "Loading…",
   "main_actions": "Main actions",

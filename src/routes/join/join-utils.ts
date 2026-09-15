@@ -59,7 +59,7 @@ export interface JoinContext {
   token: string;
 }
 
-export async function requireSessionAndToken(app: App): Promise<JoinContext> {
+export async function requireSessionAndToken(app: App, team: Team): Promise<JoinContext> {
   const id = app.requireParam('id');
   const session = await app.store.get(id);
   if (!session) {
@@ -67,9 +67,14 @@ export async function requireSessionAndToken(app: App): Promise<JoinContext> {
   }
 
   const token = app.query('token') ?? '';
-  if (!token || !await comparePassword(token, session.invitationPasswordHash)) {
-    app.failure(app.t('join_invalid_token'), 403);
-  }
+  const ownHash = team === 'home' ? session.homePlayerPasswordHash : session.awayPlayerPasswordHash;
+  const otherHash = team === 'home' ? session.awayPlayerPasswordHash : session.homePlayerPasswordHash;
 
-  return {id, session, token};
+  if (token && await comparePassword(token, ownHash)) {
+    return {id, session, token};
+  }
+  if (token && await comparePassword(token, otherHash)) {
+    app.failure(app.t('join_wrong_team_token'), 403);
+  }
+  app.failure(app.t('join_invalid_token'), 403);
 }

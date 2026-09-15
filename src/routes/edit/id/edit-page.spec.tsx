@@ -168,13 +168,13 @@ describe('EditPage redesigned grid and sidebar', () => {
     const html = renderToString(EditPage(baseProps()));
 
     expect(html)
-      .toContain(`href="${BASE_URL}/join/test-session/home?token=invitation-pw"`);
+      .toContain(`href="${BASE_URL}/join/test-session/home?token=home-player-pw"`);
     expect(html)
-      .toContain(`href="${BASE_URL}/join/test-session/away?token=invitation-pw"`);
+      .toContain(`href="${BASE_URL}/join/test-session/away?token=away-player-pw"`);
     expect(html)
-      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/home\?token=invitation-pw"/);
+      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/home\?token=home-player-pw"/);
     expect(html)
-      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/away\?token=invitation-pw"/);
+      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/away\?token=away-player-pw"/);
     expect(html)
       .toContain('aria-label="Copy to clipboard"');
   });

@@ -5,7 +5,7 @@ import { renderVoteStep } from './vote-view';
 
 export const handleJoinVotePost = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
-  const {session, token} = await requireSessionAndToken(app);
+  const {session, token} = await requireSessionAndToken(app, team);
 
   const playerId = app.query('playerId') ?? '';
   const player = session.players.find((p) => p.id === playerId && p.teamId === team);

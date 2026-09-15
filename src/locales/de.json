@@ -59,6 +59,7 @@
   "join_select_player": "Wählen Sie Ihren Namen",
   "join_select_required": "Bitte wählen Sie Ihren Namen oder geben Sie einen neuen ein.",
   "join_title": "Der Verschiebung beitreten",
+  "join_wrong_team_token": "Dieser Link gehört zur anderen Mannschaft.",
   "language_selection": "Sprachauswahl",
   "loading": "Wird geladen…",
   "main_actions": "Hauptaktionen",

@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Creating a postponement mints four random secrets, stores all four hashes, and persists the three shareable plaintexts (opponent-captain, home-player, away-player).
-- [ ] A home player joins via the home-player password; an away player joins via the away-player password.
-- [ ] A token that does not match the team in the join path is refused with a translated 403, and never grants vote access.
-- [ ] The edit page renders home-player and away-player share links carrying the correct per-team tokens.
-- [ ] The legacy shared invitation password field is removed with no dangling references.
-- [ ] Unit specs cover the per-team join guard; e2e covers join-and-vote with the correct team password and refusal with the wrong team's password.
+- [x] Creating a postponement mints four random secrets, stores all four hashes, and persists the three shareable plaintexts (opponent-captain, home-player, away-player).
+- [x] A home player joins via the home-player password; an away player joins via the away-player password.
+- [x] A token that does not match the team in the join path is refused with a translated 403, and never grants vote access.
+- [x] The edit page renders home-player and away-player share links carrying the correct per-team tokens.
+- [x] The legacy shared invitation password field is removed with no dangling references.
+- [x] Unit specs cover the per-team join guard; e2e covers join-and-vote with the correct team password and refusal with the wrong team's password.

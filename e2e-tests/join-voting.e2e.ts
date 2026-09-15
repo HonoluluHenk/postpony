@@ -229,11 +229,37 @@ test.describe('Join and Voting', () => {
   test('rejects an invalid team parameter', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
-    const response = await page.goto(`/join/${session.id}/spectator?token=${session.token}`);
+    const response = await page.goto(`/join/${session.id}/spectator?token=${session.homeToken}`);
     expect(response?.status())
       .toBe(400);
     await expect(page.getByRole('alert'))
       .toContainText('Invalid team');
+
+    await checkA11y();
+  });
+
+  test('rejects the other team\'s password on the home path', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    const response = await page.goto(`/join/${session.id}/home?token=${session.awayToken}`);
+    expect(response?.status())
+      .toBe(403);
+    await expect(page.getByRole('alert'))
+      .toContainText('This link is for the other team');
+
+    await checkA11y();
+  });
+
+  test('an away player joins and votes with the away password', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.awayHref);
+    await joinPage.join('AwayPlayer');
+    await joinPage.castVote(0, 'Yes');
+
+    await expect(joinPage.voteRadio('Yes'))
+      .toBeChecked();
 
     await checkA11y();
   });
@@ -435,7 +461,7 @@ test.describe('Join and Voting', () => {
       (sid) => localStorage.getItem(`postpony-player-${sid}-away`),
       session.id,
     );
-    await page.goto(`/join/${session.id}/away/vote?playerId=${awayPlayerId}&token=${session.token}`);
+    await page.goto(`/join/${session.id}/away/vote?playerId=${awayPlayerId}&token=${session.awayToken}`);
     await expect(confirmedPage.confirmedHeading)
       .toBeVisible();
     await expect(confirmedPage.voteForm)
@@ -512,7 +538,7 @@ test.describe('Click-to-vote from the calendar export', () => {
     const body = await response.text();
     const link = extractVoteLink(body, 'IfNecessary');
     expect(link)
-      .toContain(`token=${session.token}`);
+      .toContain(`token=${session.homeToken}`);
     expect(link)
       .toContain(`playerId=${playerId}`);
 

@@ -27,6 +27,17 @@ test.describe('Invitation Link', () => {
     expect(awayHref)
       .toMatch(new RegExp(`^${expectedBase}/join/.+/away\\?token=.+`));
 
+    // The home and away links carry distinct per-team player passwords.
+    const homeToken = new URL(homeHref ?? '').searchParams.get('token');
+    const awayToken = new URL(awayHref ?? '').searchParams.get('token');
+    expect(homeToken)
+      .toBeTruthy();
+    expect(awayToken)
+      .toBeTruthy();
+    expect(homeToken)
+      .not
+      .toBe(awayToken);
+
     // 3. Labels follow the organizer perspective; the session is created from
     //    the home side with the scraped team names Ostermundigen / Thun.
     await expect(editPage.homeInviteLink)

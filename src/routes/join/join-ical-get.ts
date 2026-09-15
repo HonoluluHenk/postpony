@@ -14,7 +14,7 @@ import { requireSessionAndToken, requireTeam } from './join-utils';
  */
 export const handleJoinIcalGet = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
-  const {session, token} = await requireSessionAndToken(app);
+  const {session, token} = await requireSessionAndToken(app, team);
 
   const playerId = app.query('playerId') ?? '';
   const knownPlayer = session.players.some((p) => p.id === playerId && p.teamId === team);

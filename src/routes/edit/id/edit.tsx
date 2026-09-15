@@ -26,8 +26,8 @@ interface InviteLinksProps {
 }
 
 function InviteLinks(props: InviteLinksProps): JSX.Element {
-  const homeLink = `${props.baseUrl}/join/${props.session.id}/home?token=${props.session.invitationPassword}`;
-  const awayLink = `${props.baseUrl}/join/${props.session.id}/away?token=${props.session.invitationPassword}`;
+  const homeLink = `${props.baseUrl}/join/${props.session.id}/home?token=${props.session.homePlayerPassword}`;
+  const awayLink = `${props.baseUrl}/join/${props.session.id}/away?token=${props.session.awayPlayerPassword}`;
   const labels = inviteLinkLabels(props.session, props.t);
 
   return (

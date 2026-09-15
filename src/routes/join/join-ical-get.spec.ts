@@ -4,12 +4,16 @@ import { createApp } from '../../lib/__test-utils__/create-app';
 import { hashPassword } from '../../lib/crypto-utils';
 import { handleJoinIcalGet } from './join-ical-get';
 
-const TOKEN = 'invitation-pw';
+const TOKEN = 'player-pw';
 
 async function seedSession(
   overrides: Parameters<typeof aSession>[0] = {},
 ): Promise<ReturnType<typeof aSession>> {
-  return aSession({invitationPasswordHash: await hashPassword(TOKEN), ...overrides});
+  return aSession({
+    homePlayerPasswordHash: await hashPassword(TOKEN),
+    awayPlayerPasswordHash: await hashPassword(TOKEN),
+    ...overrides,
+  });
 }
 
 describe('handleJoinIcalGet', () => {

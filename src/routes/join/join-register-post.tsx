@@ -5,7 +5,7 @@ import { pendingVoteQuery, readPendingVotes, requireSessionAndToken, requireTeam
 
 export const handleJoinRegisterPost = async (app: App): Promise<Response> => {
   const team = requireTeam(app);
-  const {id, session, token} = await requireSessionAndToken(app);
+  const {id, session, token} = await requireSessionAndToken(app, team);
 
   if (session.status === 'Confirmed') {
     return app.redirect(`/join/${id}/${team}?token=${encodeURIComponent(token)}`);

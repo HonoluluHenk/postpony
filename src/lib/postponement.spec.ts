@@ -1036,9 +1036,6 @@ describe('postponement', () => {
         organizerTeam: 'home',
         players: [aPlayer()],
         venues: [],
-        organizerPasswordHash: 'organizer-hash',
-        invitationPasswordHash: 'invitation-hash',
-        invitationPassword: 'invitation-pw',
         organizerCaptainPasswordHash: 'organizer-captain-hash',
         opponentCaptainPasswordHash: 'opponent-captain-hash',
         homePlayerPasswordHash: 'home-player-hash',
@@ -1055,9 +1052,6 @@ describe('postponement', () => {
           name: 'Thun vs Ostermundigen – 29.08.2026 16:00',
           homeTeam: 'Thun',
           guestTeam: 'Ostermundigen',
-          organizerPasswordHash: 'organizer-hash',
-          invitationPasswordHash: 'invitation-hash',
-          invitationPassword: 'invitation-pw',
           organizerCaptainPasswordHash: 'organizer-captain-hash',
           opponentCaptainPasswordHash: 'opponent-captain-hash',
           homePlayerPasswordHash: 'home-player-hash',
@@ -1086,9 +1080,6 @@ describe('postponement', () => {
         organizerTeam: 'away',
         players: [],
         venues: [],
-        organizerPasswordHash: 'organizer-hash',
-        invitationPasswordHash: 'invitation-hash',
-        invitationPassword: 'invitation-pw',
         organizerCaptainPasswordHash: 'organizer-captain-hash',
         opponentCaptainPasswordHash: 'opponent-captain-hash',
         homePlayerPasswordHash: 'home-player-hash',
@@ -1102,10 +1093,10 @@ describe('postponement', () => {
         .toBe('club-42');
       expect(session.name)
         .toBe('Home vs Guest');
-      expect(session.organizerPasswordHash)
-        .toBe('organizer-hash');
-      expect(session.invitationPasswordHash)
-        .toBe('invitation-hash');
+      expect(session.organizerCaptainPasswordHash)
+        .toBe('organizer-captain-hash');
+      expect(session.homePlayerPasswordHash)
+        .toBe('home-player-hash');
     });
   });
 
