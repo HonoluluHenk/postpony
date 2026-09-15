@@ -90,6 +90,7 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
 
   const redirectOrganizerPassword = generateRandomPassword();
   const invitationPassword = generateRandomPassword();
+  const invitationPasswordHash = await hashPassword(invitationPassword);
   const session = new PostponementRules().create({
     clubId,
     homeTeam: m.homeTeam,
@@ -102,8 +103,15 @@ export const handleScrapeMatchPost = async (app: App): Promise<Response> => {
     players,
     venues,
     organizerPasswordHash: await hashPassword(redirectOrganizerPassword),
-    invitationPasswordHash: await hashPassword(invitationPassword),
+    invitationPasswordHash,
     invitationPassword,
+    organizerCaptainPasswordHash: await hashPassword(redirectOrganizerPassword),
+    opponentCaptainPasswordHash: invitationPasswordHash,
+    homePlayerPasswordHash: invitationPasswordHash,
+    awayPlayerPasswordHash: invitationPasswordHash,
+    opponentCaptainPassword: invitationPassword,
+    homePlayerPassword: invitationPassword,
+    awayPlayerPassword: invitationPassword,
   });
 
   await app.store.save(session);

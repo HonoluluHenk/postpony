@@ -32,6 +32,8 @@ export function aProposedDate(overrides: DeepPartial<ProposedDate> = {}): Propos
     proposerId: 'player-1',
     // dates are votable by default; tests that want a closed date override it
     votable: true,
+    vetoed: false,
+    acceptable: false,
     venueNumber: 1,
   }, overrides) as ProposedDate;
 }
@@ -58,6 +60,13 @@ export function aSession(overrides: DeepPartial<Postponement> = {}): Postponemen
     organizerPasswordHash: 'hashed-organizer-pw',
     invitationPasswordHash: 'hashed-invitation-pw',
     invitationPassword: 'invitation-pw',
+    organizerCaptainPasswordHash: 'hashed-organizer-captain-pw',
+    opponentCaptainPasswordHash: 'hashed-opponent-captain-pw',
+    homePlayerPasswordHash: 'hashed-home-player-pw',
+    awayPlayerPasswordHash: 'hashed-away-player-pw',
+    opponentCaptainPassword: 'opponent-captain-pw',
+    homePlayerPassword: 'home-player-pw',
+    awayPlayerPassword: 'away-player-pw',
     status: 'Draft',
     organizerTeam: 'home',
     reopenCount: 0,

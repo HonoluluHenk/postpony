@@ -39,6 +39,8 @@ export function normalize(data: Record<string, unknown>): Postponement {
           : typeof pd['awayTeamVotable'] === 'boolean'
             ? pd['awayTeamVotable']
             : false,
+    vetoed: typeof pd['vetoed'] === 'boolean' ? pd['vetoed'] : false,
+    acceptable: typeof pd['acceptable'] === 'boolean' ? pd['acceptable'] : false,
     clashes: pd['clashes'] as ProposedDate['clashes'],
     venueOccupancy: pd['venueOccupancy'] as ProposedDate['venueOccupancy'],
   }));

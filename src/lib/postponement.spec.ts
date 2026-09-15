@@ -104,6 +104,51 @@ describe('postponement', () => {
     });
   });
 
+  describe('removePlayer', () => {
+    test('removes the player and cascade-deletes their votes', () => {
+      const before = aSession({
+        players: [
+          aPlayer({id: 'keep', name: 'Keep', teamId: 'home'}),
+          aPlayer({id: 'drop', name: 'Drop', teamId: 'home'}),
+        ],
+        votes: [
+          aVote({proposedDateId: 'pd-1', participantId: 'drop', type: 'Yes'}),
+          aVote({proposedDateId: 'pd-1', participantId: 'keep', type: 'No'}),
+        ],
+      });
+
+      const updated = new FakePostponementRules().removePlayer(before, 'drop');
+
+      expect(updated.players.map((p) => p.id))
+        .toEqual(['keep']);
+      expect(updated.votes)
+        .toMatchObject([{participantId: 'keep'}]);
+    });
+
+    test('is a no-op for an unknown player id', () => {
+      const before = aSession({players: [aPlayer({id: 'p1'})]});
+
+      const updated = new FakePostponementRules().removePlayer(before, 'ghost');
+
+      expect(updated)
+        .toBe(before);
+    });
+
+    test('does not mutate the input session', () => {
+      const before = aSession({
+        players: [aPlayer({id: 'p1'})],
+        votes: [aVote({participantId: 'p1'})],
+      });
+
+      new FakePostponementRules().removePlayer(before, 'p1');
+
+      expect(before.players)
+        .toHaveLength(1);
+      expect(before.votes)
+        .toHaveLength(1);
+    });
+  });
+
   describe('registerParticipant', () => {
     test('creates a new player for the team', () => {
       const {session, player} = new FakePostponementRules().registerParticipant(aSession(), 'away', {name: 'Alice'});
@@ -476,6 +521,78 @@ describe('postponement', () => {
     });
   });
 
+  describe('setVetoed', () => {
+    test('vetoes a votable date', () => {
+      const session = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, vetoed: false})],
+      });
+
+      const updated = new FakePostponementRules().setVetoed(session, 'pd-1', true);
+
+      expect(updated.proposedDates[0]?.vetoed)
+        .toBe(true);
+    });
+
+    test('un-vetoes a votable date', () => {
+      const session = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, vetoed: true})],
+      });
+
+      const updated = new FakePostponementRules().setVetoed(session, 'pd-1', false);
+
+      expect(updated.proposedDates[0]?.vetoed)
+        .toBe(false);
+    });
+
+    test('is a no-op for a non-votable date, leaving the session unchanged', () => {
+      const session = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1', votable: false, vetoed: false})],
+      });
+
+      const updated = new FakePostponementRules().setVetoed(session, 'pd-1', true);
+
+      expect(updated)
+        .toBe(session);
+      expect(updated.proposedDates[0]?.vetoed)
+        .toBe(false);
+    });
+  });
+
+  describe('setAcceptable', () => {
+    test('marks a date acceptable', () => {
+      const session = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1', acceptable: false})],
+      });
+
+      const updated = new FakePostponementRules().setAcceptable(session, 'pd-1', true);
+
+      expect(updated.proposedDates[0]?.acceptable)
+        .toBe(true);
+    });
+
+    test('un-marks a date acceptable', () => {
+      const session = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1', acceptable: true})],
+      });
+
+      const updated = new FakePostponementRules().setAcceptable(session, 'pd-1', false);
+
+      expect(updated.proposedDates[0]?.acceptable)
+        .toBe(false);
+    });
+
+    test('does not mutate the input session', () => {
+      const session = aSession({
+        proposedDates: [aProposedDate({id: 'pd-1', acceptable: false})],
+      });
+
+      new FakePostponementRules().setAcceptable(session, 'pd-1', true);
+
+      expect(session.proposedDates[0]?.acceptable)
+        .toBe(false);
+    });
+  });
+
   describe('votableDates', () => {
     test('returns only the votable dates, in date order', () => {
       const session = aSession({
@@ -519,11 +636,56 @@ describe('postponement', () => {
     });
   });
 
+  describe('pollDates', () => {
+    test('returns every votable date, vetoed included, for the organizer team', () => {
+      const session = aSession({
+        organizerTeam: 'home',
+        proposedDates: [
+          aProposedDate({id: 'pd-1', votable: true, vetoed: true}),
+          aProposedDate({id: 'pd-2', votable: true, vetoed: false}),
+          aProposedDate({id: 'pd-3', votable: false}),
+        ],
+      });
+
+      expect(new FakePostponementRules().pollDates(session, 'home')
+        .map((pd) => pd.id))
+        .toEqual(['pd-1', 'pd-2']);
+    });
+
+    test('hides vetoed dates from the opponent team poll only', () => {
+      const session = aSession({
+        organizerTeam: 'home',
+        proposedDates: [
+          aProposedDate({id: 'pd-1', votable: true, vetoed: true}),
+          aProposedDate({id: 'pd-2', votable: true, vetoed: false}),
+        ],
+      });
+
+      expect(new FakePostponementRules().pollDates(session, 'away')
+        .map((pd) => pd.id))
+        .toEqual(['pd-2']);
+    });
+
+    test('treats the non-organizer side as the opponent regardless of home/away', () => {
+      const session = aSession({
+        organizerTeam: 'away',
+        proposedDates: [
+          aProposedDate({id: 'pd-1', votable: true, vetoed: true}),
+          aProposedDate({id: 'pd-2', votable: true, vetoed: false}),
+        ],
+      });
+
+      expect(new FakePostponementRules().pollDates(session, 'home')
+        .map((pd) => pd.id))
+        .toEqual(['pd-2']);
+    });
+  });
+
   describe('confirmDate', () => {
-    test('confirms a votable date and locks the session', () => {
+    test('confirms a votable, acceptable, un-vetoed date and locks the session', () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true, vetoed: false})],
       });
 
       const updated = new FakePostponementRules().confirmDate(session, 'pd-1');
@@ -537,7 +699,7 @@ describe('postponement', () => {
     test('is a no-op for a date that is not votable', () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: false})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: false, acceptable: true, vetoed: false})],
       });
 
       const updated = new FakePostponementRules().confirmDate(session, 'pd-1');
@@ -548,6 +710,34 @@ describe('postponement', () => {
         .toBe('Voting');
       expect(updated.confirmedProposedDateId)
         .toBeUndefined();
+    });
+
+    test('is a no-op for a votable date that is not acceptable', () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: false, vetoed: false})],
+      });
+
+      const updated = new FakePostponementRules().confirmDate(session, 'pd-1');
+
+      expect(updated)
+        .toBe(session);
+      expect(updated.status)
+        .toBe('Voting');
+    });
+
+    test('is a no-op for a votable, acceptable date that is vetoed', () => {
+      const session = aSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true, vetoed: true})],
+      });
+
+      const updated = new FakePostponementRules().confirmDate(session, 'pd-1');
+
+      expect(updated)
+        .toBe(session);
+      expect(updated.status)
+        .toBe('Voting');
     });
 
     test('is a no-op for an unknown date', () => {
@@ -562,7 +752,7 @@ describe('postponement', () => {
     test('is idempotent: confirming the same date twice keeps the same state', () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})],
       });
 
       const first = new FakePostponementRules().confirmDate(session, 'pd-1');
@@ -584,8 +774,8 @@ describe('postponement', () => {
         reopenCount: 0,
         confirmedProposedDateId: 'pd-1',
         proposedDates: [
-          aProposedDate({id: 'pd-1', votable: true}),
-          aProposedDate({id: 'pd-2', votable: false}),
+          aProposedDate({id: 'pd-1', votable: true, vetoed: true, acceptable: true}),
+          aProposedDate({id: 'pd-2', votable: false, vetoed: false, acceptable: false}),
         ],
         votes: [aVote({proposedDateId: 'pd-1', participantId: 'player-1', type: 'Yes'})],
       });
@@ -849,6 +1039,13 @@ describe('postponement', () => {
         organizerPasswordHash: 'organizer-hash',
         invitationPasswordHash: 'invitation-hash',
         invitationPassword: 'invitation-pw',
+        organizerCaptainPasswordHash: 'organizer-captain-hash',
+        opponentCaptainPasswordHash: 'opponent-captain-hash',
+        homePlayerPasswordHash: 'home-player-hash',
+        awayPlayerPasswordHash: 'away-player-hash',
+        opponentCaptainPassword: 'opponent-captain-pw',
+        homePlayerPassword: 'home-player-pw',
+        awayPlayerPassword: 'away-player-pw',
       });
 
       expect(session)
@@ -861,6 +1058,13 @@ describe('postponement', () => {
           organizerPasswordHash: 'organizer-hash',
           invitationPasswordHash: 'invitation-hash',
           invitationPassword: 'invitation-pw',
+          organizerCaptainPasswordHash: 'organizer-captain-hash',
+          opponentCaptainPasswordHash: 'opponent-captain-hash',
+          homePlayerPasswordHash: 'home-player-hash',
+          awayPlayerPasswordHash: 'away-player-hash',
+          opponentCaptainPassword: 'opponent-captain-pw',
+          homePlayerPassword: 'home-player-pw',
+          awayPlayerPassword: 'away-player-pw',
           status: 'Draft',
           organizerTeam: 'home',
           reopenCount: 0,
@@ -885,6 +1089,13 @@ describe('postponement', () => {
         organizerPasswordHash: 'organizer-hash',
         invitationPasswordHash: 'invitation-hash',
         invitationPassword: 'invitation-pw',
+        organizerCaptainPasswordHash: 'organizer-captain-hash',
+        opponentCaptainPasswordHash: 'opponent-captain-hash',
+        homePlayerPasswordHash: 'home-player-hash',
+        awayPlayerPasswordHash: 'away-player-hash',
+        opponentCaptainPassword: 'opponent-captain-pw',
+        homePlayerPassword: 'home-player-pw',
+        awayPlayerPassword: 'away-player-pw',
       });
 
       expect(session.clubId)

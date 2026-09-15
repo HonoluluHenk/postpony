@@ -36,6 +36,8 @@ describe('builders', () => {
           },
           proposerId: 'player-1',
           votable: true,
+          vetoed: false,
+          acceptable: false,
           venueNumber: 1,
         });
     });
@@ -78,6 +80,13 @@ describe('builders', () => {
           organizerPasswordHash: 'hashed-organizer-pw',
           invitationPasswordHash: 'hashed-invitation-pw',
           invitationPassword: 'invitation-pw',
+          organizerCaptainPasswordHash: 'hashed-organizer-captain-pw',
+          opponentCaptainPasswordHash: 'hashed-opponent-captain-pw',
+          homePlayerPasswordHash: 'hashed-home-player-pw',
+          awayPlayerPasswordHash: 'hashed-away-player-pw',
+          opponentCaptainPassword: 'opponent-captain-pw',
+          homePlayerPassword: 'home-player-pw',
+          awayPlayerPassword: 'away-player-pw',
           status: 'Draft',
           organizerTeam: 'home',
           reopenCount: 0,

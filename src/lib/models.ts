@@ -50,6 +50,13 @@ export interface Postponement {
   organizerPasswordHash: string;
   invitationPasswordHash: string;
   invitationPassword: string;
+  organizerCaptainPasswordHash: string;
+  opponentCaptainPasswordHash: string;
+  homePlayerPasswordHash: string;
+  awayPlayerPasswordHash: string;
+  opponentCaptainPassword: string;
+  homePlayerPassword: string;
+  awayPlayerPassword: string;
   status: PostponementStatus;
   organizerTeam: Team;
   reopenCount: number;
@@ -74,6 +81,10 @@ export interface ProposedDate {
   venueNumber?: number;
   /** whether either team may vote on this date; closed dates are hidden from all polls and cannot be confirmed. */
   votable: boolean;
+  /** whether the opponent captain vetoed this date; only settable on votable dates and blocks confirmation. */
+  vetoed: boolean;
+  /** whether the opponent captain marked this date acceptable; a date must be acceptable to be confirmed. */
+  acceptable: boolean;
   /** per-team schedule Clashes from the last check that ran on this date; absent when never checked or the scrape failed. */
   clashes?: DateClashes;
   /** Venue Occupancy snapshot from the last check; absent when never checked, the occupancy scrape failed, or the session has no club id. */

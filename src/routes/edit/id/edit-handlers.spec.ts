@@ -1715,7 +1715,7 @@ describe('edit handlers', () => {
     test('confirms a votable date and locks the session', async () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})],
       });
       const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
@@ -1750,7 +1750,7 @@ describe('edit handlers', () => {
       const session = aSession({
         status: 'Confirmed',
         confirmedProposedDateId: 'pd-1',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})],
       });
       const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
@@ -1771,6 +1771,7 @@ describe('edit handlers', () => {
           aProposedDate({
             id: 'pd-1',
             votable: true,
+            acceptable: true,
             clashes: {home: [{opponent: 'Thun', start: '2025-09-01T18:00'}], away: []},
           }),
         ],
@@ -1807,6 +1808,7 @@ describe('edit handlers', () => {
           aProposedDate({
             id: 'pd-1',
             votable: true,
+            acceptable: true,
             clashes: {home: [], away: []},
           }),
         ],
@@ -1834,11 +1836,13 @@ describe('edit handlers', () => {
           aProposedDate({
             id: 'pd-clashing',
             votable: true,
+            acceptable: true,
             clashes: {home: [{opponent: 'Thun', start: '2025-09-01T18:00'}], away: []},
           }),
           aProposedDate({
             id: 'pd-clean',
             votable: true,
+            acceptable: true,
             clashes: {home: [], away: []},
           }),
         ],
@@ -1863,7 +1867,7 @@ describe('edit handlers', () => {
     test('renders the partial with the reopen control and no confirm control when partial', async () => {
       const session = aSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})],
       });
       const app = createApp({
         params: {id: session.id},
