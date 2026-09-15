@@ -445,7 +445,7 @@ test.describe('Join and Voting', () => {
     // confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);
-    await opponentPage.toggleAcceptable(0);
+    await opponentPage.toggleAccepted(0);
 
     // Confirm the date.
     await editPage.goto(session.editUrl);
@@ -489,7 +489,7 @@ test.describe('Join and Voting', () => {
     // confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);
-    await opponentPage.toggleAcceptable(0);
+    await opponentPage.toggleAccepted(0);
 
     await editPage.goto(session.editUrl);
     await editPage.confirmDate(0);

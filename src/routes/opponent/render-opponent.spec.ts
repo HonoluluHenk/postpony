@@ -47,7 +47,7 @@ describe('buildOpponentViewData', () => {
       organizerTeam: 'home',
       players: [aPlayer({id: 'ap', teamId: 'away'})],
       proposedDates: [
-        aProposedDate({id: 'pd-1', votable: true, vetoed: true, acceptable: true}),
+        aProposedDate({id: 'pd-1', votable: true, opponentVotable: false, accepted: true}),
         aProposedDate({id: 'pd-2', votable: false}),
       ],
       votes: [aVote({proposedDateId: 'pd-1', participantId: 'ap', type: 'Yes'})],
@@ -55,7 +55,7 @@ describe('buildOpponentViewData', () => {
 
     expect(buildOpponentViewData(session, 'en-US').dates)
       .toMatchObject([
-        {id: 'pd-1', vetoed: true, acceptable: true, yes: 1, no: 0, ifNecessary: 0},
+        {id: 'pd-1', opponentVotable: false, accepted: true, yes: 1, no: 0, ifNecessary: 0},
       ]);
   });
 

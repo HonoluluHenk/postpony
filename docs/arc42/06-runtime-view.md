@@ -47,7 +47,7 @@ sequenceDiagram
     end
 ```
 
-The organizer-captain password is verified on every edit GET and POST (`edit-auth.ts`); it travels as `?organizerPassword=` and is threaded through every HTMX request URL the edit page renders. `confirmDate` succeeds only for a date that is votable, acceptable, and not vetoed — otherwise it is a no-op and the handler announces a "not acceptable" message.
+The organizer-captain password is verified on every edit GET and POST (`edit-auth.ts`); it travels as `?organizerPassword=` and is threaded through every HTMX request URL the edit page renders. `confirmDate` succeeds only for a date that is votable, opponent-votable, and accepted — otherwise it is a no-op and the handler announces a "not accepted / no longer votable" message.
 
 Proposing dates branches on `generate === 'tuple'` (single date vs generator). Both paths end in `withClashCheck`, which scrapes both teams' schedules and the home club's meetings, computes clashes + venue occupancy, and auto-deselects newly-added clashing dates (ADR-0023). A failed scrape degrades silently: dates are saved clash-free.
 
@@ -87,14 +87,14 @@ sequenceDiagram
     participant DB as SessionStore
     C ->> H: GET /opponent/:id?opponentCaptainPassword=…
     H ->> H: store.get(id) → 404 guard, verify opponent-captain password → 403
-    H -->> C: OpponentPage (own roster + own tallies + veto/acceptable controls)
-    C ->> H: POST /opponent/:id/players | /veto | /acceptable
-    H ->> R: removePlayer | setVetoed | setAcceptable
+    H -->> C: OpponentPage (own roster + own tallies + Votable/Accepted controls)
+    C ->> H: POST /opponent/:id/players | /votable | /accepted
+    H ->> R: removePlayer | setOpponentVotable | setAccepted
     H ->> DB: save if changed
     H -->> C: re-render opponent partial
 ```
 
-The opponent captain is the side opposite `organizerTeam`, identified only by holding the opponent-captain password. The surface is scoped to their own team: add/remove players (removal cascade-deletes votes), veto votable dates (`setVetoed` no-ops on non-votable), and mark dates acceptable. No propose, `votable`-toggle, or confirm affordance exists here, and the organizer's team tallies are never rendered. Each date row shows only the opponent side's clash lines (or the clean chip when checked-clean) under a four-part date cell; the organizer side's lines never reach the template.
+The opponent captain is the side opposite `organizerTeam`, identified only by holding the opponent-captain password. The surface is scoped to their own team: add/remove players (removal cascade-deletes votes), toggle each date's own-side Votable (`setOpponentVotable` no-ops on non-votable dates; off also hides the date from the opponent team's poll and blocks confirmation), and mark dates accepted. No propose, symmetric `votable`-toggle, or confirm affordance exists here, and the organizer's team tallies are never rendered. Each date row shows only the opponent side's clash lines (or the clean chip when checked-clean) under a four-part date cell; the organizer side's lines never reach the template.
 
 The opponent re-check (`POST /opponent/:id/refresh-clashes`) flows through the same `runOpponentCommand` pipeline: it scrapes only the opponent side's schedule (`computeOwnSideCheck`), merges the fresh lines over the shared snapshot with `mergeOwnSideClashes` (organizer lines preserved, `votable` untouched), and replaces Venue Occupancy only when the home side's re-fetch succeeds (ADR-0026). A failed check saves nothing — previous snapshot plus warning, or the plain nothing state. The status announcement renders outside `#opponent-view` so the HTMX swap target never destroys it.
 

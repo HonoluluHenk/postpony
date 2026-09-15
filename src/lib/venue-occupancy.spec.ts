@@ -121,8 +121,8 @@ describe('computeVenueOccupancy', () => {
       dateTimeRange: {start: '2026-09-05T18:00', end: '2026-09-05T18:00'},
       proposerId: 'player-1',
       votable: true,
-      vetoed: false,
-      acceptable: false,
+      opponentVotable: true,
+      accepted: false,
     };
 
     const occupancy = computeVenueOccupancy(

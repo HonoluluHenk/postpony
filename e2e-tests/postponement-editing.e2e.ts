@@ -515,7 +515,7 @@ test.describe('Postponement Editing', () => {
     // confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);
-    await opponentPage.toggleAcceptable(0);
+    await opponentPage.toggleAccepted(0);
 
     await editPage.goto(session.editUrl);
     await editPage.confirmDate(0);
@@ -535,29 +535,61 @@ test.describe('Postponement Editing', () => {
       .toHaveScreenshot('edit-confirmed.png', {fullPage: true});
   });
 
-  test('confirming a non-acceptable date is a no-op until the opponent marks it acceptable', async ({page, checkA11y}) => {
+  test('confirming a non-accepted date is a no-op until the opponent accepts it', async ({page, checkA11y}) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
     await expect(editPage.proposedDateRows)
       .toHaveCount(1);
 
-    // Confirm without the opponent marking the date acceptable: a no-op that
-    // keeps the session in Voting and announces the feedback.
+    // Confirm without the opponent accepting the date: a no-op that keeps the
+    // session in Voting and announces the feedback.
     await editPage.confirmDate(0);
     await expect(editPage.status)
       .toContainText('Voting');
     await expect(editPage.clipboardStatus)
-      .toContainText('Only dates that are acceptable and not vetoed can be confirmed.');
+      .toContainText('Only dates the opponent has accepted and that are still votable can be confirmed.');
     // The confirm control is still present, so the organizer can retry once the
-    // date is acceptable.
+    // date is accepted.
     await expect(editPage.confirmButton(0))
       .toBeVisible();
 
-    // The opponent captain marks the date acceptable; confirming now succeeds.
+    // The opponent captain accepts the date; confirming now succeeds.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);
-    await opponentPage.toggleAcceptable(0);
+    await opponentPage.toggleAccepted(0);
 
+    await editPage.goto(session.editUrl);
+    await editPage.confirmDate(0);
+    await expect(editPage.status)
+      .toContainText('Confirmed');
+
+    await checkA11y();
+  });
+
+  test('confirming a date the opponent made non-votable is refused until it is turned back on', async ({page, checkA11y}) => {
+    const editPage = new EditPage(page);
+    await editPage.addProposedDate('2026-06-01T20:00');
+    await expect(editPage.proposedDateRows)
+      .toHaveCount(1);
+
+    // The opponent captain accepts the date but takes it out of their own poll.
+    const opponentPage = new OpponentPage(page);
+    await opponentPage.goto(session.opponentCaptainHref);
+    await opponentPage.toggleAccepted(0);
+    await opponentPage.toggleOpponentVotable(0);
+
+    // Confirming is a no-op while the opponent's Votable is off: the date is
+    // not in the opponent's poll.
+    await editPage.goto(session.editUrl);
+    await editPage.confirmDate(0);
+    await expect(editPage.status)
+      .toContainText('Voting');
+    await expect(editPage.clipboardStatus)
+      .toContainText('Only dates the opponent has accepted and that are still votable can be confirmed.');
+
+    // Turning the opponent's Votable back on unblocks confirmation.
+    await opponentPage.goto(session.opponentCaptainHref);
+    await opponentPage.toggleOpponentVotable(0);
     await editPage.goto(session.editUrl);
     await editPage.confirmDate(0);
     await expect(editPage.status)
@@ -576,7 +608,7 @@ test.describe('Postponement Editing', () => {
     // confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);
-    await opponentPage.toggleAcceptable(0);
+    await opponentPage.toggleAccepted(0);
 
     await editPage.goto(session.editUrl);
     await editPage.confirmDate(0);

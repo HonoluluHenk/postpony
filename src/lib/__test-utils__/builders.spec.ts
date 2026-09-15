@@ -36,8 +36,8 @@ describe('builders', () => {
           },
           proposerId: 'player-1',
           votable: true,
-          vetoed: false,
-          acceptable: false,
+          opponentVotable: true,
+          accepted: false,
           venueNumber: 1,
         });
     });

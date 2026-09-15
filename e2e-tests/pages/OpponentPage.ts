@@ -12,7 +12,7 @@ export class OpponentPage {
 
   // The global HTMX spinner shows while a toggle's round-trip is in flight;
   // waiting for it to hide guarantees the re-render has settled before the next
-  // toggle/assertion, so rapid veto/acceptable toggles don't race.
+  // toggle/assertion, so rapid votable/accepted toggles don't race.
   get spinner(): Locator {
     return this.page.locator('#global-spinner');
   }
@@ -55,40 +55,41 @@ export class OpponentPage {
   }
 
   // beer.css hides the native checkbox; toggle via the visible label (the
-  // `.action--veto` / `.action--acceptable` hooks scope each toggle).
-  vetoToggle(dateIndex: number): Locator {
+  // `.action--opponent-votable` / `.action--accepted` hooks scope each toggle).
+  // The accessible names carry the row's date, so match them by their prefix.
+  opponentVotableToggle(dateIndex: number): Locator {
     return this.dateRows
       .nth(dateIndex)
-      .locator('label.action--veto');
+      .locator('label.action--opponent-votable');
   }
 
-  acceptableToggle(dateIndex: number): Locator {
+  acceptedToggle(dateIndex: number): Locator {
     return this.dateRows
       .nth(dateIndex)
-      .locator('label.action--acceptable');
+      .locator('label.action--accepted');
   }
 
-  vetoCheckbox(dateIndex: number): Locator {
+  opponentVotableCheckbox(dateIndex: number): Locator {
     return this.dateRows
       .nth(dateIndex)
-      .getByRole('checkbox', {name: 'Veto this date'});
+      .getByRole('checkbox', {name: /Your team may vote on/});
   }
 
-  acceptableCheckbox(dateIndex: number): Locator {
+  acceptedCheckbox(dateIndex: number): Locator {
     return this.dateRows
       .nth(dateIndex)
-      .getByRole('checkbox', {name: 'Mark this date acceptable'});
+      .getByRole('checkbox', {name: /Accept this date|Accept .* — the organizer may confirm it/});
   }
 
-  async toggleVeto(dateIndex: number): Promise<void> {
-    await this.vetoToggle(dateIndex)
+  async toggleOpponentVotable(dateIndex: number): Promise<void> {
+    await this.opponentVotableToggle(dateIndex)
       .click();
     await expect(this.spinner)
       .toBeHidden();
   }
 
-  async toggleAcceptable(dateIndex: number): Promise<void> {
-    await this.acceptableToggle(dateIndex)
+  async toggleAccepted(dateIndex: number): Promise<void> {
+    await this.acceptedToggle(dateIndex)
       .click();
     await expect(this.spinner)
       .toBeHidden();

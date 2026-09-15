@@ -17,10 +17,8 @@ export type DateSort = 'date' | 'availability';
 
 export interface ProposedDateTallyItem extends VoteTallyItem {
   votable: boolean;
-  /** whether the opponent captain vetoed this date; blocks confirmation. */
-  vetoed: boolean;
-  /** whether the opponent captain marked this date acceptable; required to confirm. */
-  acceptable: boolean;
+  /** whether the opponent captain accepted this date; required to confirm. */
+  accepted: boolean;
   /** ISO start/end range of the proposed date (week grouping + date cell). */
   dateTimeRange: {
     start: string;
@@ -251,11 +249,8 @@ function DateChips(props: {
   const chips: JSX.Element[] = [
     <span class="chip" title={venueLabel}>{venueLabel}</span>,
   ];
-  if (row.acceptable) {
-    chips.push(<span class="chip chip--clean">{t('date_acceptable')}</span>);
-  }
-  if (row.vetoed) {
-    chips.push(<span class="chip chip--error">{t('date_vetoed')}</span>);
+  if (row.accepted) {
+    chips.push(<span class="chip chip--clean">{t('date_accepted')}</span>);
   }
   if (hasClashes) {
     for (const clash of row.clashes?.home ?? []) {

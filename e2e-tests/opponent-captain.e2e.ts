@@ -1,8 +1,8 @@
 import { expect, test } from './fixtures';
-import { EditPage, OpponentPage } from './pages';
+import { EditPage, JoinPage, OpponentPage } from './pages';
 
 test.describe('Opponent Captain', () => {
-  test('manages the own roster, vetoes, and acceptable flags within the scoped view', async ({page, checkA11y}) => {
+  test('manages the own roster, votable and accepted flags within the scoped view', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const opponentPage = await new OpponentPage(page)
@@ -27,21 +27,21 @@ test.describe('Opponent Captain', () => {
     await expect(opponentPage.teamTally(0))
       .toContainText('Thun:');
 
-    // Veto a votable date, then un-veto it.
-    await opponentPage.toggleVeto(0);
-    await expect(opponentPage.vetoCheckbox(0))
-      .toBeChecked();
-    await opponentPage.toggleVeto(0);
-    await expect(opponentPage.vetoCheckbox(0))
+    // Turn the opponent team's Votable off, then back on.
+    await opponentPage.toggleOpponentVotable(0);
+    await expect(opponentPage.opponentVotableCheckbox(0))
       .not
       .toBeChecked();
-
-    // Mark a date acceptable, then un-mark it.
-    await opponentPage.toggleAcceptable(0);
-    await expect(opponentPage.acceptableCheckbox(0))
+    await opponentPage.toggleOpponentVotable(0);
+    await expect(opponentPage.opponentVotableCheckbox(0))
       .toBeChecked();
-    await opponentPage.toggleAcceptable(0);
-    await expect(opponentPage.acceptableCheckbox(0))
+
+    // Mark a date accepted, then un-mark it.
+    await opponentPage.toggleAccepted(0);
+    await expect(opponentPage.acceptedCheckbox(0))
+      .toBeChecked();
+    await opponentPage.toggleAccepted(0);
+    await expect(opponentPage.acceptedCheckbox(0))
       .not
       .toBeChecked();
 
@@ -52,6 +52,44 @@ test.describe('Opponent Captain', () => {
       .toHaveCount(0);
     await expect(page.getByText('Allow voting'))
       .toHaveCount(0);
+
+    await checkA11y();
+  });
+
+  test('takes a date out of the opponent team\'s vote view and restores it', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    // The opponent player joins and sees the date in their vote view.
+    const joinPage = new JoinPage(page);
+    await joinPage.goto(session.awayHref);
+    await joinPage.join('Opponent Charlie');
+    await expect(joinPage.voteGroup(0))
+      .toBeVisible();
+
+    const playerId = await page.evaluate(
+      (sid) => localStorage.getItem(`postpony-player-${sid}-away`),
+      session.id,
+    );
+    const voteUrl = `/join/${session.id}/away/vote?playerId=${playerId}&token=${session.awayToken}`;
+
+    // The captain takes the date out of their own team's poll.
+    const opponentPage = await new OpponentPage(page)
+      .goto(session.opponentCaptainHref);
+    await opponentPage.toggleOpponentVotable(0);
+
+    // The opponent player's vote view hides the date.
+    await page.goto(voteUrl);
+    await expect(joinPage.voteGroup(0))
+      .toHaveCount(0);
+    await expect(joinPage.noDatesMessage)
+      .toBeVisible();
+
+    // Turning it back on restores the date.
+    await opponentPage.goto(session.opponentCaptainHref);
+    await opponentPage.toggleOpponentVotable(0);
+    await page.goto(voteUrl);
+    await expect(joinPage.voteGroup(0))
+      .toBeVisible();
 
     await checkA11y();
   });

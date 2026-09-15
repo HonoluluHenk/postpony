@@ -23,7 +23,7 @@ export interface OpponentCommand {
   extras?: Derived<Partial<Pick<OpponentPageProps, 'playerName' | 'playerError' | 'refreshError'>>>;
   /** Override for the non-partial redirect target. */
   redirectTo?: string;
-  /** Render even without an HTMX request (the veto/acceptable toggles). */
+  /** Render even without an HTMX request (the votable/accepted toggles). */
   alwaysRender?: boolean;
 }
 

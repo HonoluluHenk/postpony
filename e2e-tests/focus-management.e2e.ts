@@ -47,7 +47,7 @@ test.describe('Focus management after HTMX swaps', () => {
     // organizer confirms it.
     const opponentPage = new OpponentPage(page);
     await opponentPage.goto(session.opponentCaptainHref);
-    await opponentPage.toggleAcceptable(1);
+    await opponentPage.toggleAccepted(1);
 
     await editPage.goto(session.editUrl);
     await editPage.confirmDate(1);

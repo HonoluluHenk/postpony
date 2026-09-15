@@ -9,7 +9,7 @@ import { OpponentPage, type OpponentPageProps, type OpponentViewData } from './o
 
 /**
  * Shapes the opponent-captain scope from the session: the opponent team name and roster,
- * and per votable date the opponent team's tally plus the vetoed/acceptable flags.
+ * and per votable date the opponent team's tally plus the opponent-votable/accepted flags.
  * Each date also carries its ISO range (for the four-part date cell) and only the
  * opponent side's own clash lines — undefined when never checked (no clash UI),
  * empty when checked clean. The organizer side's lines never reach the template.
@@ -32,8 +32,8 @@ export function buildOpponentViewData(session: Postponement, locale: AppLocale):
       display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
       dateTimeRange: pd.dateTimeRange,
       ownClashes,
-      vetoed: pd.vetoed,
-      acceptable: pd.acceptable,
+      opponentVotable: pd.opponentVotable,
+      accepted: pd.accepted,
       yes: counts.yes,
       no: counts.no,
       ifNecessary: counts.ifNecessary,

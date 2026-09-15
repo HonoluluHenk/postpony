@@ -266,7 +266,7 @@ const pipelineCases: PipelineCase[] = [
   {
     name: 'confirm',
     handler: handleConfirmDatePost,
-    session: () => seedSession({status: 'Voting', proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})]}),
+    session: () => seedSession({status: 'Voting', proposedDates: [aProposedDate({id: 'pd-1', votable: true, accepted: true})]}),
     queries: {proposedDateId: 'pd-1'},
     message: 'Date confirmed',
     redirectLocation: (id) => `/edit/${id}?organizerPassword=${ORGANIZER_PASSWORD}`,

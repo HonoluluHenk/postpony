@@ -79,8 +79,8 @@ Routers mounted in `src/build-app.tsx`: `/create`, `/edit`, `/join`, `/opponent`
 | POST   | `/join/:id/:team/vote`               | `handleJoinVotePost`                                           |
 | GET    | `/opponent/:id`                      | `handleOpponentGet` (opponent-captain password gated)          |
 | POST   | `/opponent/:id/players`              | `handleOpponentPlayersPost` (add/remove own team)              |
-| POST   | `/opponent/:id/veto`                 | `handleOpponentVetoPost`                                       |
-| POST   | `/opponent/:id/acceptable`           | `handleOpponentAcceptablePost`                                 |
+| POST   | `/opponent/:id/votable`              | `handleOpponentVotablePost` (own-side Votable toggle)          |
+| POST   | `/opponent/:id/accepted`             | `handleOpponentAcceptedPost`                                   |
 | POST   | `/opponent/:id/refresh-clashes`      | `handleOpponentRefreshPost` (own-side-only re-check, ADR-0026) |
 | —      | `/assets/*`                          | `serveStatic` (Node) / Workers Assets; `.spec.` paths blocked  |
 

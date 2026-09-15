@@ -449,18 +449,18 @@ describe('join handlers', () => {
         .toBe(200);
     });
 
-    test('hides a vetoed date from the opponent team\'s poll', async () => {
+    test('hides an opponent-non-votable date from the opponent team\'s poll', async () => {
       const session = await seedSession({
         organizerTeam: 'home',
         players: [aPlayer({id: 'away-player', teamId: 'away'})],
         proposedDates: [
           aProposedDate({id: 'open'}),
-          aProposedDate({id: 'vetoed', vetoed: true}),
+          aProposedDate({id: 'opponent-off', opponentVotable: false}),
         ],
       });
       const app = createApp({
         params: {id: session.id, team: 'away'},
-        queries: {token: TOKEN, playerId: 'away-player', 'vote-open': 'Yes', 'vote-vetoed': 'No'},
+        queries: {token: TOKEN, playerId: 'away-player', 'vote-open': 'Yes', 'vote-opponent-off': 'No'},
       });
       await app.store.save(session);
 
@@ -474,7 +474,7 @@ describe('join handlers', () => {
         .toHaveLength(1);
       expect(body)
         .not
-        .toContain('name="vote-vetoed"');
+        .toContain('name="vote-opponent-off"');
       expect(body)
         .toContain('name="vote-open"');
     });

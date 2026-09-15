@@ -36,7 +36,7 @@ click-tt URL surface (`src/lib/click-tt-scraper.ts`): leagues → groups → tea
 | Role                     | Access                                                    | Mechanism                                                                                                        |
 |--------------------------|-----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
 | **Organizer**            | creates + manages one postponement (full edit)            | organizer-captain password, verified on edit GET/POST (ADR-0025)                                                 |
-| **Opponent Captain**     | own team only: roster, veto, mark acceptable              | opponent-captain password, verified on `/opponent/:id`                                                            |
+| **Opponent Captain**     | own team only: roster, own-side Votable, accept dates     | opponent-captain password, verified on `/opponent/:id`                                                            |
 | **Player / Participant** | joins + votes on their team only                          | per-team player password `?token=<home/awayPlayerPassword>`; identity in `localStorage` per postponement per team |
 
 The Club Manager role from earlier planning is not implemented (see §1.1.1).

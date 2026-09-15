@@ -19,11 +19,11 @@ export const handleConfirmDatePost = (app: App): Promise<Response> => {
   return runEditCommand(app, {
     apply: (rules, session) => rules.confirmDate(session, proposedDateId),
     // One polite announcement per action. `confirmDate` is a no-op (returns the
-    // session unchanged) for any date that is not votable, acceptable, and
-    // un-vetoed; that outcome is announced instead of a false "confirmed".
+    // session unchanged) for any date that is not votable, opponent-votable, and
+    // accepted; that outcome is announced instead of a false "confirmed".
     message: (updated) => {
       if (updated.status !== 'Confirmed') {
-        return app.t('confirm_not_acceptable');
+        return app.t('confirm_not_accepted');
       }
       return confirmedDateHasClashes(updated)
         ? app.t('clash_check_confirm_warning')

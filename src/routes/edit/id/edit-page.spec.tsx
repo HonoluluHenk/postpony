@@ -305,21 +305,15 @@ describe('EditPage sidebar roster and generator', () => {
   });
 });
 
-describe('buildEditPartialsData acceptable/vetoed flags', () => {
-  it('exposes the acceptable and vetoed flags per proposed date', () => {
+describe('buildEditPartialsData accepted flag', () => {
+  it('exposes the accepted flag per proposed date', () => {
     const session = buildSession({
       proposedDates: [
         aProposedDate({
-          id: 'pd-acc',
+          id: 'pd-accepted',
           dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
           votable: true,
-          acceptable: true,
-        }),
-        aProposedDate({
-          id: 'pd-veto',
-          dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
-          votable: true,
-          vetoed: true,
+          accepted: true,
         }),
         aProposedDate({
           id: 'pd-plain',
@@ -333,9 +327,8 @@ describe('buildEditPartialsData acceptable/vetoed flags', () => {
 
     expect(data.proposedDates)
       .toMatchObject([
-        {id: 'pd-acc', acceptable: true, vetoed: false},
-        {id: 'pd-veto', acceptable: false, vetoed: true},
-        {id: 'pd-plain', acceptable: false, vetoed: false},
+        {id: 'pd-accepted', accepted: true},
+        {id: 'pd-plain', accepted: false},
       ]);
   });
 });

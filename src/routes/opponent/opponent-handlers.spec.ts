@@ -6,11 +6,11 @@ import { createApp, type MockOptions } from '../../lib/__test-utils__/create-app
 import { hashPassword } from '../../lib/crypto-utils';
 import { AppError, ClickTTError } from '../../lib/errors';
 import type { Postponement } from '../../lib/models';
-import { handleOpponentAcceptablePost } from './acceptable-post';
+import { handleOpponentAcceptedPost } from './accepted-post';
 import { handleOpponentGet } from './opponent-get';
 import { handleOpponentPlayersPost } from './players-post';
 import { handleOpponentRefreshPost } from './refresh-clashes-post';
-import { handleOpponentVetoPost } from './veto-post';
+import { handleOpponentVotablePost } from './votable-post';
 
 vi.mock('../../lib/click-tt-scraper', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../lib/click-tt-scraper')>();
@@ -239,61 +239,61 @@ describe('opponent handlers', () => {
     });
   });
 
-  describe('handleOpponentVetoPost', () => {
-    test('vetoes a votable date', async () => {
-      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, vetoed: false})]});
-      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', vetoed: 'true'}});
+  describe('handleOpponentVotablePost', () => {
+    test('turns the opponent team votable off', async () => {
+      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, opponentVotable: true})]});
+      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', opponentVotable: 'false'}});
       await app.store.save(session);
 
-      await handleOpponentVetoPost(app);
+      await handleOpponentVotablePost(app);
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates[0]?.vetoed)
+      expect(stored?.proposedDates[0]?.opponentVotable)
+        .toBe(false);
+    });
+
+    test('turns the opponent team votable back on', async () => {
+      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, opponentVotable: false})]});
+      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', opponentVotable: 'true'}});
+      await app.store.save(session);
+
+      await handleOpponentVotablePost(app);
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.proposedDates[0]?.opponentVotable)
         .toBe(true);
     });
 
-    test('un-vetoes a votable date', async () => {
-      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, vetoed: true})]});
-      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', vetoed: 'false'}});
-      await app.store.save(session);
-
-      await handleOpponentVetoPost(app);
-
-      const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates[0]?.vetoed)
-        .toBe(false);
-    });
-
     test('is a no-op on a non-votable date', async () => {
-      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: false, vetoed: false})]});
-      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', vetoed: 'true'}});
+      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: false, opponentVotable: true})]});
+      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', opponentVotable: 'false'}});
       await app.store.save(session);
 
-      await handleOpponentVetoPost(app);
+      await handleOpponentVotablePost(app);
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates[0]?.vetoed)
-        .toBe(false);
+      expect(stored?.proposedDates[0]?.opponentVotable)
+        .toBe(true);
     });
 
     test('is a no-op when the proposedDateId is missing', async () => {
-      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, vetoed: false})]});
-      const app = opponentApp({params: {id: session.id}, queries: {vetoed: 'true'}});
+      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, opponentVotable: true})]});
+      const app = opponentApp({params: {id: session.id}, queries: {opponentVotable: 'false'}});
       await app.store.save(session);
 
-      await handleOpponentVetoPost(app);
+      await handleOpponentVotablePost(app);
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates[0]?.vetoed)
-        .toBe(false);
+      expect(stored?.proposedDates[0]?.opponentVotable)
+        .toBe(true);
     });
 
     test('renders the page instead of redirecting (alwaysRender)', async () => {
       const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true})]});
-      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', vetoed: 'true'}});
+      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', opponentVotable: 'false'}});
       await app.store.save(session);
 
-      const response = await handleOpponentVetoPost(app);
+      const response = await handleOpponentVotablePost(app);
 
       expect(response.status)
         .toBe(200);
@@ -303,56 +303,56 @@ describe('opponent handlers', () => {
 
     test('rejects a wrong opponent-captain password', async () => {
       const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1'})]});
-      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', vetoed: 'true'}});
+      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', opponentVotable: 'false'}});
       await app.store.save(session);
 
-      await expectForbidden(handleOpponentVetoPost(app));
+      await expectForbidden(handleOpponentVotablePost(app));
     });
   });
 
-  describe('handleOpponentAcceptablePost', () => {
-    test('marks a date acceptable', async () => {
-      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: false})]});
-      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', acceptable: 'true'}});
+  describe('handleOpponentAcceptedPost', () => {
+    test('marks a date accepted', async () => {
+      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, accepted: false})]});
+      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', accepted: 'true'}});
       await app.store.save(session);
 
-      await handleOpponentAcceptablePost(app);
+      await handleOpponentAcceptedPost(app);
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates[0]?.acceptable)
+      expect(stored?.proposedDates[0]?.accepted)
         .toBe(true);
     });
 
-    test('un-marks a date acceptable', async () => {
-      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})]});
-      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', acceptable: 'false'}});
+    test('un-marks a date accepted', async () => {
+      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, accepted: true})]});
+      const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', accepted: 'false'}});
       await app.store.save(session);
 
-      await handleOpponentAcceptablePost(app);
+      await handleOpponentAcceptedPost(app);
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates[0]?.acceptable)
+      expect(stored?.proposedDates[0]?.accepted)
         .toBe(false);
     });
 
     test('is a no-op when the proposedDateId is missing', async () => {
-      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: false})]});
-      const app = opponentApp({params: {id: session.id}, queries: {acceptable: 'true'}});
+      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, accepted: false})]});
+      const app = opponentApp({params: {id: session.id}, queries: {accepted: 'true'}});
       await app.store.save(session);
 
-      await handleOpponentAcceptablePost(app);
+      await handleOpponentAcceptedPost(app);
 
       const stored = await app.store.get(session.id);
-      expect(stored?.proposedDates[0]?.acceptable)
+      expect(stored?.proposedDates[0]?.accepted)
         .toBe(false);
     });
 
     test('rejects a wrong opponent-captain password', async () => {
       const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1'})]});
-      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', acceptable: 'true'}});
+      const app = createApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', accepted: 'true'}});
       await app.store.save(session);
 
-      await expectForbidden(handleOpponentAcceptablePost(app));
+      await expectForbidden(handleOpponentAcceptedPost(app));
     });
   });
 

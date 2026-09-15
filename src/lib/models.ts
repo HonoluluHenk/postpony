@@ -80,10 +80,10 @@ export interface ProposedDate {
   venueNumber?: number;
   /** whether either team may vote on this date; closed dates are hidden from all polls and cannot be confirmed. */
   votable: boolean;
-  /** whether the opponent captain vetoed this date; only settable on votable dates and blocks confirmation. */
-  vetoed: boolean;
-  /** whether the opponent captain marked this date acceptable; a date must be acceptable to be confirmed. */
-  acceptable: boolean;
+  /** whether the opponent team may vote on this date; only settable on votable dates. Off hides the date from the opponent team's poll and blocks confirmation. */
+  opponentVotable: boolean;
+  /** whether the opponent captain accepted this date; a date must be accepted to be confirmed. */
+  accepted: boolean;
   /** per-team schedule Clashes from the last check that ran on this date; absent when never checked or the scrape failed. */
   clashes?: DateClashes;
   /** Venue Occupancy snapshot from the last check; absent when never checked, the occupancy scrape failed, or the session has no club id. */

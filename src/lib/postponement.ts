@@ -248,8 +248,8 @@ export class PostponementRules {
       dateTimeRange: {start, end: start},
       proposerId,
       votable: true,
-      vetoed: false,
-      acceptable: false,
+      opponentVotable: true,
+      accepted: false,
       ...(venueNumber !== undefined ? {venueNumber} : {}),
     };
     return {
@@ -378,64 +378,66 @@ export class PostponementRules {
   }
 
   /**
-   * Sets the opponent captain's veto on a Proposed Date. Only meaningful on a votable
-   * date: vetoing a non-votable date is a no-op returning the session unchanged.
+   * Sets whether the opponent team may vote on a Proposed Date. Only meaningful on a
+   * votable date: turning a non-votable date's opponent votable off is a no-op
+   * returning the session unchanged.
    */
-  setVetoed(
+  setOpponentVotable(
     session: Postponement,
     proposedDateId: string,
-    vetoed: boolean,
+    opponentVotable: boolean,
   ): Postponement {
     const date = session.proposedDates.find((pd) => pd.id === proposedDateId);
     if (!date?.votable) {
       return session;
     }
     const proposedDates = session.proposedDates.map((pd) =>
-      pd.id === proposedDateId ? {...pd, vetoed} : pd,
+      pd.id === proposedDateId ? {...pd, opponentVotable} : pd,
     );
     return {...session, proposedDates};
   }
 
   /**
-   * Sets whether the opponent captain marks a Proposed Date acceptable. A symmetric
-   * toggle mirroring `setVotable`.
+   * Sets whether the opponent captain accepts a Proposed Date. A symmetric toggle
+   * mirroring `setVotable`.
    */
-  setAcceptable(
+  setAccepted(
     session: Postponement,
     proposedDateId: string,
-    acceptable: boolean,
+    accepted: boolean,
   ): Postponement {
     const proposedDates = session.proposedDates.map((pd) =>
-      pd.id === proposedDateId ? {...pd, acceptable} : pd,
+      pd.id === proposedDateId ? {...pd, accepted} : pd,
     );
     return {...session, proposedDates};
   }
 
   /**
    * The Proposed Dates a team's poll shows. The organizer's own team sees every votable
-   * date; the opponent team (the side opposite `organizerTeam`) has vetoed dates hidden
-   * from their poll only. `votableDates` stays symmetric for the organizer view.
+   * date; the opponent team (the side opposite `organizerTeam`) has dates whose
+   * `opponentVotable` is off hidden from their poll only. `votableDates` stays symmetric
+   * for the organizer view.
    */
   pollDates(session: Postponement, team: Team): ProposedDate[] {
     const votable = this.votableDates(session);
     if (team === session.organizerTeam) {
       return votable;
     }
-    return votable.filter((pd) => !pd.vetoed);
+    return votable.filter((pd) => pd.opponentVotable);
   }
 
   /**
    * Locks a date as final: sets `confirmedProposedDateId` and moves the session to
-   * `Confirmed`. A no-op for any date that is not `votable`, `acceptable`, and un-vetoed,
-   * or unknown. Idempotent — confirming an already-confirmed date leaves the session
-   * unchanged.
+   * `Confirmed`. A no-op for any date that is not `votable`, `opponentVotable`, and
+   * `accepted`, or unknown. Idempotent — confirming an already-confirmed date leaves the
+   * session unchanged.
    */
   confirmDate(
     session: Postponement,
     proposedDateId: string,
   ): Postponement {
     const date = session.proposedDates.find((pd) => pd.id === proposedDateId);
-    if (!date?.votable || !date.acceptable || date.vetoed) {
+    if (!date?.votable || !date.opponentVotable || !date.accepted) {
       return session;
     }
     return {...session, status: 'Confirmed', confirmedProposedDateId: proposedDateId};

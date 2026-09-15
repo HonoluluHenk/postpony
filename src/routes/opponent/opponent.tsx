@@ -19,8 +19,8 @@ export interface OpponentDateItem {
    * (the date renders no clash UI at all), empty when checked clean.
    */
   ownClashes?: Clash[];
-  vetoed: boolean;
-  acceptable: boolean;
+  opponentVotable: boolean;
+  accepted: boolean;
   yes: number;
   no: number;
   ifNecessary: number;
@@ -52,7 +52,7 @@ export interface OpponentPageProps extends ViewContext, OpponentViewData {
 /**
  * The opponent page's per-date chip row: the opponent side's own clash lines,
  * or the clean chip when that side is checked and clean. A date with no clash
- * data renders no clash UI at all — deliberately no venue, acceptable/vetoed,
+ * data renders no clash UI at all — deliberately no venue, accepted/opponent-votable,
  * not-checked, or occupancy chips, and never the organizer side's lines.
  */
 function OpponentDateChips(props: { date: OpponentDateItem; t: TranslateFn; locale: AppLocale }): JSX.Element | null {
@@ -87,25 +87,25 @@ function DateActions(props: {
   const {session, date, t, opponentCaptainPassword} = props;
   return (
     <div class="date-actions">
-      <label class="action action--votable action--veto" title={t('opponent_veto_toggle')}>
+      <label class="action action--votable action--opponent-votable" title={t('opponent_votable_toggle')}>
         <input
           type="checkbox"
-          hx-post={withOpponentPassword(`/opponent/${session.id}/veto?proposedDateId=${date.id}&vetoed=${!date.vetoed}`, opponentCaptainPassword)}
+          hx-post={withOpponentPassword(`/opponent/${session.id}/votable?proposedDateId=${date.id}&opponentVotable=${!date.opponentVotable}`, opponentCaptainPassword)}
           hx-target="#opponent-view"
-          checked={date.vetoed}
-          aria-label={t('opponent_veto_toggle')}
+          checked={date.opponentVotable}
+          aria-label={t('opponent_votable_toggle_aria', {date: date.display})}
         />
-        {t('opponent_veto')}: {date.vetoed ? t('votable_on') : t('votable_off')}
+        {t('opponent_votable')}: {date.opponentVotable ? t('votable_on') : t('votable_off')}
       </label>
-      <label class="action action--votable action--acceptable" title={t('opponent_acceptable_toggle')}>
+      <label class="action action--votable action--accepted" title={t('opponent_accepted_toggle')}>
         <input
           type="checkbox"
-          hx-post={withOpponentPassword(`/opponent/${session.id}/acceptable?proposedDateId=${date.id}&acceptable=${!date.acceptable}`, opponentCaptainPassword)}
+          hx-post={withOpponentPassword(`/opponent/${session.id}/accepted?proposedDateId=${date.id}&accepted=${!date.accepted}`, opponentCaptainPassword)}
           hx-target="#opponent-view"
-          checked={date.acceptable}
-          aria-label={t('opponent_acceptable_toggle')}
+          checked={date.accepted}
+          aria-label={t('opponent_accepted_toggle_aria', {date: date.display})}
         />
-        {t('opponent_acceptable')}: {date.acceptable ? t('votable_on') : t('votable_off')}
+        {t('opponent_accepted')}: {date.accepted ? t('votable_on') : t('votable_off')}
       </label>
     </div>
   );

@@ -30,10 +30,11 @@ export function aProposedDate(overrides: DeepPartial<ProposedDate> = {}): Propos
       end: '2025-09-01T22:00:00',
     },
     proposerId: 'player-1',
-    // dates are votable by default; tests that want a closed date override it
+    // dates are votable by both teams by default; tests that want a closed or
+    // opponent-excluded date override the matching flag
     votable: true,
-    vetoed: false,
-    acceptable: false,
+    opponentVotable: true,
+    accepted: false,
     venueNumber: 1,
   }, overrides) as ProposedDate;
 }

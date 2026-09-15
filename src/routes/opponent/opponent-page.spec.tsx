@@ -254,8 +254,8 @@ describe('OpponentPage row-level labels', () => {
         display: 'Tu, Sep 1, 2026, 8:00 PM',
         dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
         ownClashes: [{opponent: 'Own Opp', start: '2026-09-01T19:00'}],
-        vetoed: false,
-        acceptable: false,
+        opponentVotable: true,
+        accepted: false,
         yes: 0,
         no: 0,
         ifNecessary: 0,
@@ -268,6 +268,29 @@ describe('OpponentPage row-level labels', () => {
       .toHaveLength(1);
     expect(html)
       .toContain('7:00 PM vs Own Opp');
+  });
+});
+
+describe('OpponentPage toggle accessible names', () => {
+  it('includes each row\'s date so repeated switches are distinguishable', () => {
+    const session = aSession({
+      organizerTeam: 'home',
+      players: [aPlayer({id: 'ap', teamId: 'away'})],
+      proposedDates: [
+        aProposedDate({id: 'pd-a', dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'}}),
+        aProposedDate({id: 'pd-b', dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'}}),
+      ],
+    });
+    const html = renderToString(OpponentPage(pageProps(session)));
+
+    expect(html)
+      .toContain('aria-label="Your team may vote on Tu, Sep 1, 2026, 8:00 PM"');
+    expect(html)
+      .toContain('aria-label="Your team may vote on Tu, Sep 8, 2026, 8:00 PM"');
+    expect(html)
+      .toContain('aria-label="Accept Tu, Sep 1, 2026, 8:00 PM — the organizer may confirm it"');
+    expect(html)
+      .toContain('aria-label="Accept Tu, Sep 8, 2026, 8:00 PM — the organizer may confirm it"');
   });
 });
 

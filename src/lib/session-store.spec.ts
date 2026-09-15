@@ -51,6 +51,11 @@ describe('normalize', () => {
     // row only carries the pre-rename awayTeamVotable key; the legacy value surfaces as votable
     expect(session.proposedDates[0]?.votable)
       .toBe(true);
+    // no opponent flags on the row: read as fully votable by the opponent, not accepted
+    expect(session.proposedDates[0]?.opponentVotable)
+      .toBe(true);
+    expect(session.proposedDates[0]?.accepted)
+      .toBe(false);
   });
 
   test('defaults secrets to empty string when neither legacy nor modern fields exist', () => {
@@ -189,6 +194,98 @@ describe('normalize', () => {
 
     expect(normalize(raw).proposedDates[0]?.votable)
       .toBe(false);
+  });
+
+  test('maps a legacy vetoed date to opponentVotable off', () => {
+    const session = normalize(legacySession({
+      proposedDates: [
+        {
+          id: 'pd-1',
+          sessionId: 'legacy-1',
+          dateTimeRange: {start: '2025-09-01T20:00:00', end: '2025-09-01T22:00:00'},
+          proposerId: 'player-1',
+          votable: true,
+          vetoed: true,
+        },
+      ],
+    }));
+
+    expect(session.proposedDates[0]?.opponentVotable)
+      .toBe(false);
+  });
+
+  test('maps a legacy acceptable date to accepted', () => {
+    const session = normalize(legacySession({
+      proposedDates: [
+        {
+          id: 'pd-1',
+          sessionId: 'legacy-1',
+          dateTimeRange: {start: '2025-09-01T20:00:00', end: '2025-09-01T22:00:00'},
+          proposerId: 'player-1',
+          votable: true,
+          acceptable: true,
+        },
+      ],
+    }));
+
+    expect(session.proposedDates[0]?.accepted)
+      .toBe(true);
+  });
+
+  test('reads absent opponent flags as fully votable and not accepted', () => {
+    const raw = legacySession();
+    const rawDates = raw['proposedDates'] as Record<string, unknown>[];
+    delete rawDates[0]?.['awayTeamVotable'];
+
+    const session = normalize(raw);
+
+    expect(session.proposedDates[0]?.opponentVotable)
+      .toBe(true);
+    expect(session.proposedDates[0]?.accepted)
+      .toBe(false);
+  });
+
+  test('keeps the modern opponent flags when present', () => {
+    const session = normalize(legacySession({
+      proposedDates: [
+        {
+          id: 'pd-1',
+          sessionId: 'legacy-1',
+          dateTimeRange: {start: '2025-09-01T20:00:00', end: '2025-09-01T22:00:00'},
+          proposerId: 'player-1',
+          votable: true,
+          opponentVotable: false,
+          accepted: true,
+        },
+      ],
+    }));
+
+    expect(session.proposedDates[0]?.opponentVotable)
+      .toBe(false);
+    expect(session.proposedDates[0]?.accepted)
+      .toBe(true);
+  });
+
+  test('does not write the derived flags back into the input row (read-time migration only)', () => {
+    const raw = legacySession({
+      proposedDates: [
+        {
+          id: 'pd-1',
+          sessionId: 'legacy-1',
+          dateTimeRange: {start: '2025-09-01T20:00:00', end: '2025-09-01T22:00:00'},
+          proposerId: 'player-1',
+          votable: true,
+          vetoed: true,
+          acceptable: true,
+        },
+      ],
+    });
+    const before = JSON.stringify(raw);
+
+    normalize(raw);
+
+    expect(JSON.stringify(raw))
+      .toBe(before);
   });
 
   test('leaves a session without proposed dates alone', () => {

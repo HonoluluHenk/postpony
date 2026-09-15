@@ -1804,7 +1804,7 @@ describe('edit handlers', () => {
     test('confirms a votable date and locks the session', async () => {
       const session = seedSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, accepted: true})],
       });
       const app = editApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
@@ -1839,7 +1839,7 @@ describe('edit handlers', () => {
       const session = seedSession({
         status: 'Confirmed',
         confirmedProposedDateId: 'pd-1',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, accepted: true})],
       });
       const app = editApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1'}});
       await app.store.save(session);
@@ -1860,7 +1860,7 @@ describe('edit handlers', () => {
           aProposedDate({
             id: 'pd-1',
             votable: true,
-            acceptable: true,
+            accepted: true,
             clashes: {home: [{opponent: 'Thun', start: '2025-09-01T18:00'}], away: []},
           }),
         ],
@@ -1897,7 +1897,7 @@ describe('edit handlers', () => {
           aProposedDate({
             id: 'pd-1',
             votable: true,
-            acceptable: true,
+            accepted: true,
             clashes: {home: [], away: []},
           }),
         ],
@@ -1925,13 +1925,13 @@ describe('edit handlers', () => {
           aProposedDate({
             id: 'pd-clashing',
             votable: true,
-            acceptable: true,
+            accepted: true,
             clashes: {home: [{opponent: 'Thun', start: '2025-09-01T18:00'}], away: []},
           }),
           aProposedDate({
             id: 'pd-clean',
             votable: true,
-            acceptable: true,
+            accepted: true,
             clashes: {home: [], away: []},
           }),
         ],
@@ -1956,7 +1956,7 @@ describe('edit handlers', () => {
     test('renders the partial with the reopen control and no confirm control when partial', async () => {
       const session = seedSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, accepted: true})],
       });
       const app = editApp({
         params: {id: session.id},
@@ -2003,13 +2003,13 @@ describe('edit handlers', () => {
         .not
         .toHaveBeenCalled();
       expect(html)
-        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates that are acceptable and not vetoed can be confirmed.</p>');
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates the opponent has accepted and that are still votable can be confirmed.</p>');
     });
 
-    test('is a no-op for a date that is not acceptable and announces the feedback', async () => {
+    test('is a no-op for a date that is not accepted and announces the feedback', async () => {
       const session = seedSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: false})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, accepted: false})],
       });
       const app = editApp({
         params: {id: session.id},
@@ -2030,16 +2030,16 @@ describe('edit handlers', () => {
         .not
         .toHaveBeenCalled();
       expect(html)
-        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates that are acceptable and not vetoed can be confirmed.</p>');
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates the opponent has accepted and that are still votable can be confirmed.</p>');
       expect(html)
         .not
         .toContain('Date confirmed');
     });
 
-    test('is a no-op for a date the opponent vetoed and announces the feedback', async () => {
+    test('is a no-op for a date the opponent made non-votable and announces the feedback', async () => {
       const session = seedSession({
         status: 'Voting',
-        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true, vetoed: true})],
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, accepted: true, opponentVotable: false})],
       });
       const app = editApp({
         params: {id: session.id},
@@ -2056,7 +2056,7 @@ describe('edit handlers', () => {
       expect(stored?.confirmedProposedDateId)
         .toBeUndefined();
       expect(html)
-        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates that are acceptable and not vetoed can be confirmed.</p>');
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates the opponent has accepted and that are still votable can be confirmed.</p>');
     });
   });
 

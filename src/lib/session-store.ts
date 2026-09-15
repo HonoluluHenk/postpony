@@ -12,7 +12,8 @@ export interface SessionStore {
 /**
  * Upgrades a session read from the store to the current shape. Old rows predate
  * `votable`, `organizerTeam`, `reopenCount`, `confirmedProposedDateId`, and `venues`,
- * and used removed statuses. Pure read-time normalization — nothing is rewritten.
+ * used removed statuses, and carried the retired `vetoed`/`acceptable` date flags.
+ * Pure read-time normalization — nothing is rewritten.
  */
 export function normalize(data: Record<string, unknown>): Postponement {
   const status: PostponementStatus =
@@ -32,25 +33,33 @@ export function normalize(data: Record<string, unknown>): Postponement {
 
   const proposedDates: ProposedDate[] = (
     data['proposedDates'] as Record<string, unknown>[] | undefined ?? []
-  ).map((pd): ProposedDate => ({
-    id: pd['id'] as string,
-    sessionId: pd['sessionId'] as string,
-    dateTimeRange: pd['dateTimeRange'] as ProposedDate['dateTimeRange'],
-    proposerId: pd['proposerId'] as string,
-    venueNumber: pd['venueNumber'] as ProposedDate['venueNumber'],
-    votable:
-      typeof pd['votable'] === 'boolean'
-        ? pd['votable']
-        : typeof pd['votableByOpponent'] === 'boolean'
-          ? pd['votableByOpponent']
-          : typeof pd['awayTeamVotable'] === 'boolean'
-            ? pd['awayTeamVotable']
-            : false,
-    vetoed: typeof pd['vetoed'] === 'boolean' ? pd['vetoed'] : false,
-    acceptable: typeof pd['acceptable'] === 'boolean' ? pd['acceptable'] : false,
-    clashes: pd['clashes'] as ProposedDate['clashes'],
-    venueOccupancy: pd['venueOccupancy'] as ProposedDate['venueOccupancy'],
-  }));
+  ).map((pd): ProposedDate => {
+    // Retired opponent flags: derive the current flags from legacy rows.
+    // `vetoed` was the negation of `opponentVotable`; `acceptable` became `accepted`.
+    // Absent flags read as fully votable and not accepted.
+    const legacyVetoed = typeof pd['vetoed'] === 'boolean' ? pd['vetoed'] : false;
+    const legacyAcceptable = typeof pd['acceptable'] === 'boolean' ? pd['acceptable'] : false;
+    return {
+      id: pd['id'] as string,
+      sessionId: pd['sessionId'] as string,
+      dateTimeRange: pd['dateTimeRange'] as ProposedDate['dateTimeRange'],
+      proposerId: pd['proposerId'] as string,
+      venueNumber: pd['venueNumber'] as ProposedDate['venueNumber'],
+      votable:
+        typeof pd['votable'] === 'boolean'
+          ? pd['votable']
+          : typeof pd['votableByOpponent'] === 'boolean'
+            ? pd['votableByOpponent']
+            : typeof pd['awayTeamVotable'] === 'boolean'
+              ? pd['awayTeamVotable']
+              : false,
+      opponentVotable:
+        typeof pd['opponentVotable'] === 'boolean' ? pd['opponentVotable'] : !legacyVetoed,
+      accepted: typeof pd['accepted'] === 'boolean' ? pd['accepted'] : legacyAcceptable,
+      clashes: pd['clashes'] as ProposedDate['clashes'],
+      venueOccupancy: pd['venueOccupancy'] as ProposedDate['venueOccupancy'],
+    };
+  });
 
   const venues: Venue[] = data['venues'] as Venue[] | undefined ?? [];
 
