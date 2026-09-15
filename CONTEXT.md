@@ -19,9 +19,12 @@ The primary entity: one postponed match, from draft to a confirmed new date. Per
     - `tally` / `splitTallies` — aggregate Votes per Proposed Date, optionally per team.
     - `votableDates` — list the Proposed Dates that are votable.
     - `setVotable` — toggle whether either team may vote on a Proposed Date (formerly `setVotableByOpponent`, now symmetric for home and away).
-    - `confirmDate` — lock a Proposed Date as final: sets `confirmedProposedDateId` and moves to `Confirmed`; a no-op for dates not `votable`.
+    - `confirmDate` — lock a Proposed Date as final: sets `confirmedProposedDateId` and moves to `Confirmed`; a no-op for dates that are not `votable`, not `acceptable`, or `vetoed`.
     - `reopen` — soft-reopen a Confirmed session back to `Voting`; `reopenCount` + 1, history/votes/flags preserved.
     - `deleteProposedDate` — delete a Proposed Date; cascade-deletes its Votes and clears a dangling `confirmedProposedDateId` if that date was the confirmed-history date. A no-op for an unknown date id; status is left untouched.
+    - `removePlayer` — remove a roster Player; cascade-deletes their Votes.
+    - `setVetoed` — toggle a Proposed Date's `vetoed` flag (only on votable dates).
+    - `setAcceptable` — toggle a Proposed Date's `acceptable` flag.
     - `teamCompletion` — whether a team has voted on all votable dates.
     - `ownTeamResults` — the organizer's own team's votes, for the edit view.
 - **Seam** — non-determinism sits behind two overridable methods, `newId` and `now` (an id generator and a clock): real defaults in production, overridden by a `FakePostponementRules` subclass in tests. The class is the test surface.
@@ -40,11 +43,19 @@ An offline mode where the scraper reads local HTML files instead of the click-tt
 
 ## Organizer
 
-The person who creates and manages a Postponement. Holds administrative control through the **organizer password** (edit access, ADR-0002): no account, no recovery in the initial version. Manages the organizer's own team (`organizerTeam`), proposes dates, flips the `votable` switch, confirms and reopens. The organizer may also join their team as a Participant via the invitation link. Identity is implicit — nothing on the Postponement names the organizer beyond `organizerTeam` and the password. _Avoid_: owner, admin
+One of the two captains: the person who creates and manages a Postponement, sitting on `organizerTeam` (`'home' | 'away'`). Holds full edit rights through the **organizerCaptain** password (no account, no recovery): proposes dates, flips the `votable` switch, adds/removes players, confirms and reopens. The organizer may also join their own team as a Participant via that team's player-password link. Identity is implicit — nothing names the organizer beyond `organizerTeam` and the password. _Avoid_: owner, admin, home captain (ambiguous — the organizer may sit on the away side)
 
-## Invitation Password
+## Opponent Captain
 
-The participant-facing secret that grants join access to a Postponement, carried in the invitation link as `?token=`. Generated randomly at creation; its hash is stored as `invitationPasswordHash`, and the plaintext is also persisted on the Postponement so the edit page can render share links. Distinct from the organizer password. _Avoid_: invite token, join code, reschedule token
+The captain of the side opposite the organizer (the team that is not `organizerTeam`). Identity is implicit, like the organizer's. Holds the **opponentCaptain** password and gets scoped edit rights over their own team only: alter opponent Players, set a Proposed Date's `vetoed` flag, and mark `acceptable`. Cannot propose dates, flip the symmetric `votable` switch, or confirm. _Avoid_: away captain, guest captain, co-organizer
+
+## Captain Password
+
+One of the two captain-facing secrets: **organizerCaptain** (full edit) or **opponentCaptain** (scoped to the opponent team). Generated at creation; stored hashed, with the opponentCaptain plaintext also persisted so its share link can be rendered. _Avoid_: organizer password, admin token
+
+## Player Password
+
+A per-team secret — **home** or **away** — that grants vote access to that team's Players, carried in the join link as `?token=`. Replaces the single shared invitation password (ADR-0013): each team now has its own, so a captain invites only their own players. Generated at creation; stored hashed, with the plaintext persisted for share links. _Avoid_: invitation password, invite token, join code, reschedule token
 
 ## Club
 
@@ -52,15 +63,23 @@ The tenant a Postponement belongs to. Every Postponement carries a `clubId`, def
 
 ## Player
 
-A raw player from the roster, scraped from click-tt.ch or added by the organizer: `{id, name, teamId}` with `teamId` `'home' | 'away'`. No login; identity is per-postponement, held client-side in `localStorage` (see ADR-0013). _Avoid_: member, user
+A raw player from the roster, scraped from click-tt.ch or added by a captain: `{id, name, teamId}` with `teamId` `'home' | 'away'`. No login; identity is per-postponement, held client-side in `localStorage` (see ADR-0013). _Avoid_: member, user
 
 ## Participant
 
-A Player taking part in a Postponement — joined via the invitation link and able to Vote. Every Vote and availability record references a Participant (`participantId`). _Avoid_: player (when meaning "has joined"), attendee
+A Player taking part in a Postponement — joined via their team's player-password link and able to Vote. Every Vote and availability record references a Participant (`participantId`). _Avoid_: player (when meaning "has joined"), attendee
 
 ## Proposed Date
 
-A candidate new date/time for the postponed Match, proposed by the organizer. Carries a `dateTimeRange` and a `votable` flag — a pure access toggle deciding whether either team may vote on it, flipped by the organizer. New dates are votable by default; non-votable dates are hidden from both teams' polls and cannot be confirmed.
+A candidate new date/time for the postponed Match, proposed by the organizer. Carries three flags: `votable` (organizer, symmetric — whether either team may vote; new dates are votable by default, non-votable dates are hidden from both polls and cannot be confirmed), `vetoed` (opponent, see Vetoed), and `acceptable` (opponent, see Acceptable).
+
+## Vetoed
+
+A Proposed Date flag set by the Opponent Captain: the opponent side will not consider this date, so it is removed from the opponent team's poll only (the organizer's symmetric `votable` switch is untouched) and it cannot be confirmed. Only votable dates may be vetoed. _Avoid_: disabled, declined, removed
+
+## Acceptable
+
+A Proposed Date flag set by the Opponent Captain after their team has voted, marking the dates the opponent side will accept as the postponed Match's new date. Confirmation is restricted to acceptable dates. _Avoid_: eligible, shortlisted, suitable
 
 ## Clash
 

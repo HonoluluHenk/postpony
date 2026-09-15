@@ -1,7 +1,7 @@
 # ADR 0013: Join Participant Identity and Team Role
 
 ## Status
-Accepted
+Accepted. Amended by ADR-0025: the single shared `invitationPassword` is replaced by per-team player passwords (`home` / `away`); the `:team`-in-path routing and localStorage identity are unchanged.
 
 ## Context
 Invited participants (players from both teams) join a `RescheduleSession` via a tokenized link to vote on
