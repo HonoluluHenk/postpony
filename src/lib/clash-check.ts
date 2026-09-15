@@ -1,7 +1,15 @@
-import { computeClashes, type ClashCheckResult } from './clashes';
+import { computeClashes, type ClashCheckResult, type OriginalMatchIdentity } from './clashes';
 import { fetchClubMeetings, fetchMatches, seasonWindow, type Match } from './click-tt-scraper';
-import { DEFAULT_CLUB_ID, type ClickTtTeamIdentity, type Postponement } from './models';
-import { computeVenueOccupancy } from './venue-occupancy';
+import { DEFAULT_CLUB_ID, type ClickTtTeamIdentity, type Postponement, type Team } from './models';
+import { computeVenueOccupancy, type VenueOccupancyByProposedDate } from './venue-occupancy';
+
+function originalMatchOf(session: Pick<Postponement, 'originalMatchDateTime' | 'homeTeam' | 'guestTeam'>): OriginalMatchIdentity {
+  return {
+    start: session.originalMatchDateTime,
+    homeTeam: session.homeTeam,
+    guestTeam: session.guestTeam,
+  };
+}
 
 async function fetchHomeClubMeetings(
   session: Pick<Postponement, 'clubId'>,
@@ -44,11 +52,7 @@ export async function computeClashesForSession(session: Postponement): Promise<C
       // when the club id exists but its scrape failed.
       fetchHomeClubMeetings(session, homeIdentity).catch(() => undefined),
     ]);
-    const originalMatch = {
-      start: session.originalMatchDateTime,
-      homeTeam: session.homeTeam,
-      guestTeam: session.guestTeam,
-    };
+    const originalMatch = originalMatchOf(session);
     return {
       clashes: computeClashes(
         session.proposedDates,
@@ -64,6 +68,49 @@ export async function computeClashesForSession(session: Postponement): Promise<C
     // ponytail: a failed scrape never blocks adding dates — the dates are saved
     // without clash data and render without clash lines. On manual refresh the
     // caller keeps the previous snapshot instead.
+    return undefined;
+  }
+}
+
+/** The fresh input for a single-side re-check: that side's schedule, plus the home club's Venue Occupancy when that side can compute it. */
+export interface OwnSideCheckResult {
+  schedule: Match[];
+  venueOccupancy?: VenueOccupancyByProposedDate;
+}
+
+/**
+ * Scrapes only the named side's click-tt schedule for an opponent-triggered
+ * re-check; the caller merges it over the stored snapshot with
+ * `mergeOwnSideClashes`, leaving the other side's lines untouched. Venue
+ * Occupancy is re-fetched only for the home side (only it can compute hall
+ * data); when that fetch fails while the team scrape succeeds, occupancy
+ * resolves to undefined and the caller preserves the previous snapshot. The
+ * away side never touches occupancy. Returns undefined when the side has no
+ * team identity (hand-entered match) or its scrape fails — the caller then
+ * keeps the previous snapshot and renders the refresh-failed warning.
+ */
+export async function computeOwnSideCheck(
+  session: Postponement,
+  side: Team,
+): Promise<OwnSideCheckResult | undefined> {
+  const identity = side === 'home' ? session.homeTeamIdentity : session.guestTeamIdentity;
+  if (!identity) {
+    return undefined;
+  }
+  try {
+    const schedule = await fetchMatches(identity.championship, identity.group, identity.teamtable);
+    let venueOccupancy: VenueOccupancyByProposedDate | undefined;
+    if (side === 'home') {
+      // ponytail: occupancy degrades on its own like the full check above — a
+      // failed club scrape resolves to undefined and the previous occupancy
+      // snapshot is preserved instead of wiped.
+      const homeMeetings = await fetchHomeClubMeetings(session, identity).catch(() => undefined);
+      if (homeMeetings !== undefined) {
+        venueOccupancy = computeVenueOccupancy(session.proposedDates, homeMeetings, originalMatchOf(session));
+      }
+    }
+    return {schedule, venueOccupancy};
+  } catch {
     return undefined;
   }
 }

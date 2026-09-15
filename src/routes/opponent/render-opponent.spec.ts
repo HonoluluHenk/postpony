@@ -128,4 +128,21 @@ describe('buildOpponentViewData', () => {
     expect(dates[0]?.ownClashes)
       .toBeUndefined();
   });
+
+  test('marks the check runnable when the opponent side carries a team identity', () => {
+    const session = aSession({
+      organizerTeam: 'home',
+      guestTeamIdentity: {championship: 'MTTV 26/27', group: '219397', teamtable: '1732193'},
+    });
+
+    expect(buildOpponentViewData(session, 'en-US').refreshCheckable)
+      .toBe(true);
+  });
+
+  test('marks the check unrunnable when the opponent side has no team identity', () => {
+    const session = aSession({organizerTeam: 'home'});
+
+    expect(buildOpponentViewData(session, 'en-US').refreshCheckable)
+      .toBe(false);
+  });
 });

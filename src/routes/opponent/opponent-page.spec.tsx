@@ -248,8 +248,7 @@ describe('OpponentPage row-level labels', () => {
       .toContain('aria-label="No other games:');
   });
 
-  it('judges the row on the opponent side only when both sides clash', () => {
-    const dates: OpponentDateItem[] = [
+  it('judges the row on the opponent side only when both sides clash', () => {    const dates: OpponentDateItem[] = [
       {
         id: 'pd-both',
         display: 'Tu, Sep 1, 2026, 8:00 PM',
@@ -269,5 +268,70 @@ describe('OpponentPage row-level labels', () => {
       .toHaveLength(1);
     expect(html)
       .toContain('7:00 PM vs Own Opp');
+  });
+});
+
+describe('OpponentPage schedule re-check', () => {
+  const identities = {
+    home: {championship: 'MTTV 26/27', group: '219397', teamtable: '1732195'},
+    away: {championship: 'MTTV 26/27', group: '219397', teamtable: '1732193'},
+  };
+
+  function checkableSession(): Postponement {
+    return aSession({
+      organizerTeam: 'home',
+      homeTeamIdentity: identities.home,
+      guestTeamIdentity: identities.away,
+      players: [aPlayer({id: 'ap', teamId: 'away'})],
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-1',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          clashes: {home: [], away: []},
+        }),
+      ],
+    });
+  }
+
+  it('renders the re-check button when the opponent side has a team identity', () => {
+    const html = renderToString(OpponentPage(pageProps(checkableSession())));
+
+    expect(html)
+      .toContain('/opponent/test-session/refresh-clashes');
+    expect(html)
+      .toContain('Refresh Schedule Check');
+  });
+
+  it('offers no re-check button when the opponent side has no team identity', () => {
+    const session = checkableSession();
+    session.guestTeamIdentity = undefined;
+    const html = renderToString(OpponentPage(pageProps(session)));
+
+    expect(html)
+      .not
+      .toContain('refresh-clashes');
+    expect(html)
+      .not
+      .toContain('Refresh Schedule Check');
+  });
+
+  it('offers no re-check button when no dates exist', () => {
+    const session = checkableSession();
+    session.proposedDates = [];
+    const html = renderToString(OpponentPage(pageProps(session)));
+
+    expect(html)
+      .not
+      .toContain('refresh-clashes');
+  });
+
+  it('renders the refresh-failed warning when the re-check failed on a previous snapshot', () => {
+    const html = renderToString(OpponentPage(pageProps(checkableSession(), 'en-US', {refreshError: true})));
+
+    expect(html)
+      .toContain('role="alert"');
+    expect(html)
+      .toContain('showing the previous results');
   });
 });

@@ -155,4 +155,75 @@ test.describe('Opponent Captain', () => {
 
     await checkA11y();
   });
+
+  test('refreshes the own clash snapshot without touching the organizer side', async ({page, checkA11y}) => {
+    // Scrape-created session (fixture mode): organizer claims the home side
+    // (Ostermundigen), the opponent captain sits on the away side (Thun).
+    const {session, editPage} = await EditPage.createSession(page);
+
+    // Organizer-only clash (07.09), clean (10.10), both-sides (26.10),
+    // opponent-only (04.12) — the same verified candidate dates as above.
+    const dates = [
+      '2026-09-07T01:00',
+      '2026-10-10T18:00',
+      '2026-10-26T01:00',
+      '2026-12-04T18:00',
+    ];
+    for (const [i, dt] of dates.entries()) {
+      await editPage.addProposedDate(dt);
+      await expect(editPage.proposedDateRows)
+        .toHaveCount(i + 1);
+    }
+
+    // Clashing dates arrive auto-deselected; re-enable them so they reach the
+    // opponent poll.
+    for (const index of [0, 2, 3]) {
+      await editPage.toggleVotable(index);
+      await expect(editPage.proposedDateRows.nth(index).getByText('Votable: on'))
+        .toBeVisible();
+    }
+
+    const opponentPage = await new OpponentPage(page)
+      .goto(session.opponentCaptainHref);
+    await expect(opponentPage.dateRows)
+      .toHaveCount(4);
+
+    // The re-check button is offered because the opponent side has a team identity.
+    await expect(opponentPage.refreshButton)
+      .toBeVisible();
+    await opponentPage.refreshClashes();
+
+    // Success surfaces the reused refreshed announcement (a visually-hidden
+    // live region: assert by id and text rather than by role/visibility).
+    await expect(opponentPage.announcement)
+      .toContainText('Schedule check refreshed');
+    // The refreshed snapshot keeps the scoping: the both-sides date shows
+    // exactly the opponent side's line, the clean date its clean chip, and no
+    // failure notice renders.
+    await expect(opponentPage.clashChips(2))
+      .toHaveCount(1);
+    await expect(opponentPage.clashChips(2))
+      .toContainText('12:00 AM vs Aarberg');
+    await expect(opponentPage.dateChips(1))
+      .toContainText('No other games');
+    await expect(opponentPage.clashChips(3))
+      .toContainText('7:30 PM vs Burgdorf');
+    await expect(page.getByText('showing the previous results'))
+      .toHaveCount(0);
+
+    // The organizer side's snapshot survived the opponent refresh
+    // byte-identical: the edit page still shows both lines, and the symmetric
+    // votable switch never flipped.
+    await editPage.goto(session.editUrl);
+    await expect(editPage.proposedDateList.getByText('Home: 12:00 AM vs Heimberg'))
+      .toBeVisible();
+    await expect(editPage.proposedDateList.getByText('Away: 12:00 AM vs Aarberg'))
+      .toBeVisible();
+    for (const index of [0, 2, 3]) {
+      await expect(editPage.votableCheckbox(index))
+        .toBeChecked();
+    }
+
+    await checkA11y();
+  });
 });

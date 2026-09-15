@@ -20,7 +20,7 @@ export interface OpponentCommand {
   /** Polite outcome announcement; a function sees the updated session. */
   message?: Derived<string | undefined>;
   /** Extra fields for the re-rendered page/partial. */
-  extras?: Derived<Partial<Pick<OpponentPageProps, 'playerName' | 'playerError'>>>;
+  extras?: Derived<Partial<Pick<OpponentPageProps, 'playerName' | 'playerError' | 'refreshError'>>>;
   /** Override for the non-partial redirect target. */
   redirectTo?: string;
   /** Render even without an HTMX request (the veto/acceptable toggles). */

@@ -117,4 +117,18 @@ export class OpponentPage {
       .nth(dateIndex)
       .locator('.date-chips .chip--error');
   }
+
+  get refreshButton(): Locator {
+    return this.page.getByRole('button', {name: 'Refresh Schedule Check'});
+  }
+
+  get announcement(): Locator {
+    return this.page.locator('#clipboard-status');
+  }
+
+  async refreshClashes(): Promise<void> {
+    await this.refreshButton.click();
+    await expect(this.spinner)
+      .toBeHidden();
+  }
 }

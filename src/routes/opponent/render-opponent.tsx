@@ -44,6 +44,7 @@ export function buildOpponentViewData(session: Postponement, locale: AppLocale):
     opponentTeamName,
     players: session.players.filter((p) => p.teamId === team),
     dates,
+    refreshCheckable: (team === 'home' ? session.homeTeamIdentity : session.guestTeamIdentity) !== undefined,
   };
 }
 
@@ -54,7 +55,7 @@ export function buildOpponentViewData(session: Postponement, locale: AppLocale):
 export function renderOpponent(
   app: App,
   session: Postponement,
-  extra: Partial<Pick<OpponentPageProps, 'playerName' | 'playerError' | 'statusMessage' | 'globalError'>> = {},
+  extra: Partial<Pick<OpponentPageProps, 'playerName' | 'playerError' | 'statusMessage' | 'refreshError' | 'globalError'>> = {},
 ): string {
   const props: OpponentPageProps = {
     ...app.view,
