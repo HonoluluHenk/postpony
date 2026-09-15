@@ -12,3 +12,7 @@
 - [x] The edit page renders home-player and away-player share links carrying the correct per-team tokens.
 - [x] The legacy shared invitation password field is removed with no dangling references.
 - [x] Unit specs cover the per-team join guard; e2e covers join-and-vote with the correct team password and refusal with the wrong team's password.
+
+## Comments
+
+- `83266c0` feat(join): per-team player secrets and creation minting
