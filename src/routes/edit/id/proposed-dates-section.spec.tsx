@@ -204,6 +204,63 @@ describe('ProposedDatesRail date chips', () => {
     expect(html)
       .toContain('<span class="chip chip--warn">1 other game at this venue</span>');
   });
+
+  it('renders the Acceptable chip for a date the opponent marked acceptable', () => {
+    const session = buildSession({
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-acc',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+          acceptable: true,
+        }),
+      ],
+    });
+    const html = renderToString(ProposedDatesRail(railProps(session)));
+
+    expect(html)
+      .toContain('<span class="chip chip--clean">Acceptable</span>');
+  });
+
+  it('renders the Vetoed chip for a date the opponent vetoed', () => {
+    const session = buildSession({
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-veto',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+          vetoed: true,
+        }),
+      ],
+    });
+    const html = renderToString(ProposedDatesRail(railProps(session)));
+
+    expect(html)
+      .toContain('<span class="chip chip--error">Vetoed</span>');
+  });
+
+  it('renders neither chip for a normal date', () => {
+    const session = buildSession({
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-normal',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
+      ],
+    });
+    const html = renderToString(ProposedDatesRail(railProps(session)));
+
+    expect(html)
+      .not
+      .toContain('Acceptable');
+    expect(html)
+      .not
+      .toContain('Vetoed');
+  });
 });
 
 describe('ProposedDatesRail vote dots', () => {

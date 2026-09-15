@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { EditPage } from './pages';
+import { EditPage, OpponentPage } from './pages';
 import { isoToLocaleDateTokens } from './pages/locale-tokens';
 import { setViewport, viewports } from './viewports';
 
@@ -276,7 +276,7 @@ test.describe('Proposed Date Generator', () => {
   });
 
   test('hides the single-date add form and shows the reopen control once a date is confirmed', async ({page, checkA11y}) => {
-    const {editPage} = await EditPage.createSession(page, ['2026-09-20T20:00']);
+    const {editPage, session} = await EditPage.createSession(page, ['2026-09-20T20:00']);
 
     // In a votable state the generator grid is present with all seven rows.
     await expect(editPage.generateForm)
@@ -284,6 +284,13 @@ test.describe('Proposed Date Generator', () => {
     await expect(editPage.generateForm.locator('input[name="time[]"]'))
       .toHaveCount(7);
 
+    // The opponent captain marks the date acceptable before the organizer
+    // confirms it.
+    const opponentPage = new OpponentPage(page);
+    await opponentPage.goto(session.opponentCaptainHref);
+    await opponentPage.toggleAcceptable(0);
+
+    await editPage.goto(session.editUrl);
     await editPage.confirmDate(0);
     await expect(editPage.status)
       .toContainText('Confirmed');

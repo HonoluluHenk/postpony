@@ -1959,7 +1959,60 @@ describe('edit handlers', () => {
         .not
         .toHaveBeenCalled();
       expect(html)
-        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Date confirmed</p>');
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates that are acceptable and not vetoed can be confirmed.</p>');
+    });
+
+    test('is a no-op for a date that is not acceptable and announces the feedback', async () => {
+      const session = seedSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: false})],
+      });
+      const app = editApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+      const saveSpy = vi.spyOn(app.store, 'save');
+
+      const html = await (await handleConfirmDatePost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Voting');
+      expect(stored?.confirmedProposedDateId)
+        .toBeUndefined();
+      expect(saveSpy)
+        .not
+        .toHaveBeenCalled();
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates that are acceptable and not vetoed can be confirmed.</p>');
+      expect(html)
+        .not
+        .toContain('Date confirmed');
+    });
+
+    test('is a no-op for a date the opponent vetoed and announces the feedback', async () => {
+      const session = seedSession({
+        status: 'Voting',
+        proposedDates: [aProposedDate({id: 'pd-1', votable: true, acceptable: true, vetoed: true})],
+      });
+      const app = editApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-1'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const html = await (await handleConfirmDatePost(app)).text();
+
+      const stored = await app.store.get(session.id);
+      expect(stored?.status)
+        .toBe('Voting');
+      expect(stored?.confirmedProposedDateId)
+        .toBeUndefined();
+      expect(html)
+        .toContain('<p id="clipboard-status" class="visually-hidden" role="status" hx-swap-oob="true">Only dates that are acceptable and not vetoed can be confirmed.</p>');
     });
   });
 

@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] The edit UI shows, per Proposed Date, whether it is acceptable and whether it is vetoed.
-- [ ] The confirm affordance succeeds only for a date that is votable, acceptable, and not vetoed.
-- [ ] Confirming a date that is not acceptable or is vetoed is a no-op and surfaces feedback to the organizer.
-- [ ] e2e covers confirming a valid date end-to-end and attempting an invalid confirmation.
+- [x] The edit UI shows, per Proposed Date, whether it is acceptable and whether it is vetoed.
+- [x] The confirm affordance succeeds only for a date that is votable, acceptable, and not vetoed.
+- [x] Confirming a date that is not acceptable or is vetoed is a no-op and surfaces feedback to the organizer.
+- [x] e2e covers confirming a valid date end-to-end and attempting an invalid confirmation.

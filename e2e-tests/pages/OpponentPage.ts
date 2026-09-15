@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { expect } from '../fixtures';
 
 export class OpponentPage {
   constructor(private readonly page: Page) {
@@ -7,6 +8,13 @@ export class OpponentPage {
   async goto(href: string): Promise<OpponentPage> {
     await this.page.goto(href);
     return this;
+  }
+
+  // The global HTMX spinner shows while a toggle's round-trip is in flight;
+  // waiting for it to hide guarantees the re-render has settled before the next
+  // toggle/assertion, so rapid veto/acceptable toggles don't race.
+  get spinner(): Locator {
+    return this.page.locator('#global-spinner');
   }
 
   // The layout h1 shows the opponent team name as the headline.
@@ -75,11 +83,15 @@ export class OpponentPage {
   async toggleVeto(dateIndex: number): Promise<void> {
     await this.vetoToggle(dateIndex)
       .click();
+    await expect(this.spinner)
+      .toBeHidden();
   }
 
   async toggleAcceptable(dateIndex: number): Promise<void> {
     await this.acceptableToggle(dateIndex)
       .click();
+    await expect(this.spinner)
+      .toBeHidden();
   }
 
   teamTally(dateIndex: number): Locator {

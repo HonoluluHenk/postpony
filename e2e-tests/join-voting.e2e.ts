@@ -1,5 +1,5 @@
 import { expect, test } from './fixtures';
-import { EditPage, JoinPage } from './pages';
+import { EditPage, JoinPage, OpponentPage } from './pages';
 
 // Pulls one `vote-<dateId>=<choice>` link out of an exported .ics, proving the
 // external contract a calendar client consumes. Unfolds RFC 5545 line folding
@@ -441,6 +441,12 @@ test.describe('Join and Voting', () => {
     await awayJoinPage.join('Charlie');
     await awayJoinPage.castVote(0, 'No');
 
+    // The opponent captain marks the date acceptable before the organizer
+    // confirms it.
+    const opponentPage = new OpponentPage(page);
+    await opponentPage.goto(session.opponentCaptainHref);
+    await opponentPage.toggleAcceptable(0);
+
     // Confirm the date.
     await editPage.goto(session.editUrl);
     await editPage.confirmDate(0);
@@ -477,6 +483,14 @@ test.describe('Join and Voting', () => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
     const editPage = new EditPage(page);
+    await editPage.goto(session.editUrl);
+
+    // The opponent captain marks the date acceptable before the organizer
+    // confirms it.
+    const opponentPage = new OpponentPage(page);
+    await opponentPage.goto(session.opponentCaptainHref);
+    await opponentPage.toggleAcceptable(0);
+
     await editPage.goto(session.editUrl);
     await editPage.confirmDate(0);
     await expect(editPage.status)
