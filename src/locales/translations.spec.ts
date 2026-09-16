@@ -53,6 +53,17 @@ describe('translations registry', () => {
     });
   });
 
+  describe('opponent accepted wording (de-CH)', () => {
+    it('reads "Passt uns" with the suggest-to-organizer tooltip', () => {
+      expect(translations['de-CH'].opponent_accepted)
+        .toBe('Passt uns');
+      expect(translations['de-CH'].opponent_accepted_toggle)
+        .toBe('Diesen Termin dem Organisator vorschlagen');
+      expect(getTranslation('de-CH', 'opponent_accepted_toggle_aria', {date: 'Fr, 5. Sept.'}))
+        .toBe('Fr, 5. Sept. dem Organisator vorschlagen');
+    });
+  });
+
   describe('venue_legend_occupancy pluralisation', () => {
     it('has a dedicated singular key in both locales', () => {
       expect(translations['en-US'].venue_legend_occupancy_one)
