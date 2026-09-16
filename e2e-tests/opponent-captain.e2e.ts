@@ -117,13 +117,14 @@ test.describe('Opponent Captain', () => {
 
     // Clashing dates arrive auto-deselected; re-enable them so they reach the
     // opponent poll. Chronological rows: 07.09 (0), 10.10 (1), 26.10 (2), 04.12 (3).
-    // Each toggle waits for its server-rendered "Votable: on" label (the native
-    // checkbox flips instantly, before the round-trip settles) so concurrent
-    // full-session saves cannot clobber each other last-write-wins style.
+    // Each toggle waits for its server-rendered hx-post to flip to votable=false
+    // (the native checkbox flips instantly, before the round-trip settles) so
+    // concurrent full-session saves cannot clobber each other last-write-wins
+    // style.
     for (const index of [0, 2, 3]) {
       await editPage.toggleVotable(index);
-      await expect(editPage.proposedDateRows.nth(index).getByText('Votable: on'))
-        .toBeVisible();
+      await expect(editPage.votableCheckbox(index))
+        .toHaveAttribute('hx-post', /votable=false/);
     }
 
     // The edit page shows both sides: the both-sides date carries a Home and
@@ -214,11 +215,11 @@ test.describe('Opponent Captain', () => {
     }
 
     // Clashing dates arrive auto-deselected; re-enable them so they reach the
-    // opponent poll.
+    // opponent poll, waiting for each server-rendered hx-post to flip.
     for (const index of [0, 2, 3]) {
       await editPage.toggleVotable(index);
-      await expect(editPage.proposedDateRows.nth(index).getByText('Votable: on'))
-        .toBeVisible();
+      await expect(editPage.votableCheckbox(index))
+        .toHaveAttribute('hx-post', /votable=false/);
     }
 
     const opponentPage = await new OpponentPage(page)

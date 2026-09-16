@@ -285,7 +285,7 @@ describe('OpponentPage team tally label', () => {
     expect(renderToString(OpponentPage(pageProps(session))))
       .toContain('Votes team Thun: 0 (0/0/1)');
     expect(renderToString(OpponentPage(pageProps(session, 'de-CH'))))
-      .toContain('Stimmen Team Thun: 0 (0/0/1)');
+      .toContain('Stimmen der Mannschaft Thun: 0 (0/0/1)');
   });
 });
 

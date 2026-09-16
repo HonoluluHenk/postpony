@@ -372,10 +372,12 @@ describe('ProposedDatesRail date actions', () => {
       .toContain('hx-post="/edit/test-session/proposed-date-visibility?proposedDateId=pd-closed&amp;votable=true"');
     expect(html)
       .toContain('aria-label="Allow voting"');
+    // The switch label stays plain; the checkbox itself carries the state.
     expect(html)
-      .toContain('Votable: on');
+      .toContain('Votable');
     expect(html)
-      .toContain('Votable: off');
+      .not
+      .toContain('Votable:');
 
     expect(html)
       .toContain('hx-post="/edit/test-session/proposed-date-confirm?proposedDateId=pd-open"');

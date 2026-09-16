@@ -317,7 +317,7 @@ function DateActions(props: {
           checked={row.votable}
           aria-label={t('votable_toggle')}
         />
-        {t('votable_short')}: {row.votable ? t('votable_on') : t('votable_off')}
+        {t('votable_short')}
       </label>
       <button
         type="button"

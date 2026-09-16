@@ -167,8 +167,6 @@
   "venue_occupancy_line": "<%= it.count %> other games at this venue",
   "venue_occupancy_line_one": "1 other game at this venue",
   "venue_occupancy_match": "<%= it.time %> vs <%= it.opponent %>",
-  "votable_off": "off",
-  "votable_on": "on",
   "votable_short": "Votable",
   "votable_toggle": "Allow voting",
   "vote_action_label": "Vote",

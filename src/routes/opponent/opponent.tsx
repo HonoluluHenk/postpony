@@ -95,7 +95,7 @@ function DateActions(props: {
           checked={date.opponentVotable}
           aria-label={t('opponent_votable_toggle_aria', {date: date.display})}
         />
-        {t('opponent_votable')}: {date.opponentVotable ? t('votable_on') : t('votable_off')}
+        {t('opponent_votable')}
       </label>
       <label class="action action--votable action--accepted" title={t('opponent_accepted_toggle')}>
         <input
@@ -105,7 +105,7 @@ function DateActions(props: {
           checked={date.accepted}
           aria-label={t('opponent_accepted_toggle_aria', {date: date.display})}
         />
-        {t('opponent_accepted')}: {date.accepted ? t('votable_on') : t('votable_off')}
+        {t('opponent_accepted')}
       </label>
     </div>
   );
