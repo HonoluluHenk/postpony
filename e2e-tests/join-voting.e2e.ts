@@ -59,16 +59,10 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
-  test('restores focus to the changed radio after the save reload without scrolling', async ({
-                                                                                               page,
-                                                                                               checkA11y,
-                                                                                             }) => {
-    // Pin scroll restoration so the reloaded page deterministically starts at
-    // the top; a focus() without preventScroll would then scroll the below-fold
-    // radio into view and fail the scrollY assertion.
-    await page.addInitScript(() => {
-      history.scrollRestoration = 'manual';
-    });
+  test('restores focus to the changed radio after the save swap without scrolling', async ({
+                                                                                             page,
+                                                                                             checkA11y,
+                                                                                           }) => {
     await page.setViewportSize({width: 1024, height: 400});
     const dates = [
       '2026-03-05T20:00',
@@ -85,11 +79,17 @@ test.describe('Join and Voting', () => {
     await joinPage.join('Alice');
 
     // The last date sits below the 400px fold, so the browser scrolls to it
-    // before the click; the reload must not keep that scroll once focus lands.
-    await joinPage.castVote(5, 'No');
+    // before the click. Scroll back to the top before the debounced save lands:
+    // the preventScroll focus restore must not scroll the radio back into view.
+    await page.waitForLoadState('load');
+    const group = joinPage.voteGroup(5);
+    await group.getByText('No', {exact: true})
+      .click();
+    await page.evaluate(() => {
+      window.scrollTo(0, 0);
+    });
 
-    await expect(joinPage.voteGroup(5)
-      .getByRole('radio', {name: 'No'}))
+    await expect(group.getByRole('radio', {name: 'No'}))
       .toBeFocused();
     expect(await page.evaluate(() => window.scrollY))
       .toBe(0);
@@ -97,7 +97,7 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
-  test('set-all buttons fill every date, overwrite earlier picks, and submit directly', async ({page, checkA11y}) => {
+  test('set-all buttons fill every date, overwrite earlier picks, and save directly', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-12T18:30']);
 
     const joinPage = await new JoinPage(page)
@@ -149,9 +149,9 @@ test.describe('Join and Voting', () => {
   });
 
   test('announces the set-all buttons by their full accessible name and the save as a status', async ({
-                                                                                                      page,
-                                                                                                      checkA11y,
-                                                                                                    }) => {
+                                                                                                        page,
+                                                                                                        checkA11y,
+                                                                                                      }) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00', '2026-03-12T18:30']);
 
     const joinPage = await new JoinPage(page)

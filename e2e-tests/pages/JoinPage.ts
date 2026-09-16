@@ -102,8 +102,8 @@ export class JoinPage {
   async castVote(dateIndex: number, vote: VoteType): Promise<void> {
     // ponytail: beer.css hides native radio inputs; toggle via label text. The
     // date groups are class-scoped so the "Set all:" button group is skipped.
-    // The client debounces a radio change by ~400ms before posting, so the
-    // navigation lands after Playwright's click wait window: await it here.
+    // The client debounces a radio change by ~400ms before posting, so the swap
+    // lands after Playwright's click wait window: await it here.
     await this.page.waitForLoadState('load');
     const group = this.voteForm.locator('.vote-radio-group')
       .nth(dateIndex);
@@ -128,13 +128,14 @@ export class JoinPage {
     await saved;
   }
 
-  // The vote form is a plain POST that reloads the same URL, and a stale
-  // "saved" toast is already visible from the previous save — so wait on the
-  // navigation itself, not the toast, before the next interaction.
+  // The vote form saves with an HTMX swap of #vote-region, so there is no
+  // navigation to wait on: wait for the vote POST response, then for htmx to
+  // drop its request class, which it only does once the swap is applied.
   private async waitForVoteSave(): Promise<void> {
-    await this.page.waitForEvent('framenavigated', {
-      predicate: (frame) => frame === this.page.mainFrame(),
-    });
-    await this.page.waitForLoadState('load');
+    const response = this.page.waitForResponse((resp) =>
+      resp.request()
+        .method() === 'POST' && new URL(resp.url()).pathname.endsWith('/vote'));
+    await response;
+    await this.page.waitForFunction(() => !document.querySelector('.htmx-request'));
   }
 }

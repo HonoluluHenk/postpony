@@ -450,10 +450,23 @@ describe('initVoteForm', () => {
     radio.dispatchEvent(new Event('change', {bubbles: true}));
   }
 
-  // Simulates the reload the vote POST triggers, which is the only way the
-  // in-flight busy state clears.
+  // Simulates the full-page reload / bfcache restore that clears the in-flight
+  // busy state.
   function reload() {
     window.dispatchEvent(new Event('pageshow'));
+  }
+
+  // Simulates the HTMX swap that replaces #vote-region after a save.
+  function swap() {
+    document.dispatchEvent(new CustomEvent('htmx:afterSwap', {
+      bubbles: true,
+      detail: {elt: {nodeType: 1, id: 'vote-region'}},
+    }));
+  }
+
+  // Simulates a failed save request: HTMX fires afterRequest without a swap.
+  function failRequest() {
+    form.dispatchEvent(new CustomEvent('htmx:afterRequest', {bubbles: true}));
   }
 
   // Delegated on `document`, so wire it once; wiring per test would stack
@@ -469,9 +482,9 @@ describe('initVoteForm', () => {
     sessionStorage.clear();
     submitSpy = vi.fn();
     disabledAtSubmit = null;
-    vi.spyOn(form, 'submit').mockImplementation(() => {
-      // The body is captured during form.submit(), so controls must still be
-      // enabled at this point.
+    vi.spyOn(form, 'requestSubmit').mockImplementation(() => {
+      // HTMX captures the form values during requestSubmit(), so controls must
+      // still be enabled at this point.
       disabledAtSubmit = valueByName('date-1', 'Yes').disabled;
       submitSpy();
     });
@@ -677,23 +690,23 @@ describe('initVoteForm', () => {
       .toEqual({name: 'vote-date-2', value: 'No'});
   });
 
-  it('restores focus to the changed radio after the reload without scrolling', () => {
+  it('restores focus to the changed radio after the swap without scrolling', () => {
     sessionStorage.setItem('postpony-vote-focus', JSON.stringify({name: 'vote-date-1', value: 'No'}));
     const radio = valueByName('date-1', 'No');
     const focusSpy = vi.spyOn(radio, 'focus');
 
-    reload();
+    swap();
 
     expect(focusSpy).toHaveBeenCalledWith({preventScroll: true});
     expect(document.activeElement).toBe(radio);
     expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
   });
 
-  it('restores focus to the set-all button after the reload', () => {
+  it('restores focus to the set-all button after the swap', () => {
     sessionStorage.setItem('postpony-vote-focus', JSON.stringify({value: 'No'}));
     const focusSpy = vi.spyOn(noButton, 'focus');
 
-    reload();
+    swap();
 
     expect(focusSpy).toHaveBeenCalledWith({preventScroll: true});
     expect(document.activeElement).toBe(noButton);
@@ -704,7 +717,7 @@ describe('initVoteForm', () => {
     sessionStorage.setItem('postpony-vote-focus', JSON.stringify({name: 'vote-deleted', value: 'Yes'}));
     const before = document.activeElement;
 
-    expect(() => reload()).not.toThrow();
+    expect(() => swap()).not.toThrow();
 
     expect(document.activeElement).toBe(before);
     expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
@@ -713,8 +726,36 @@ describe('initVoteForm', () => {
   it('ignores a corrupt focus record without throwing', () => {
     sessionStorage.setItem('postpony-vote-focus', 'not-json');
 
-    expect(() => reload()).not.toThrow();
+    expect(() => swap()).not.toThrow();
     expect(sessionStorage.getItem('postpony-vote-focus')).toBe(null);
+  });
+
+  it('ignores a swap outside the vote region', () => {
+    sessionStorage.setItem('postpony-vote-focus', JSON.stringify({name: 'vote-date-1', value: 'No'}));
+    const radio = valueByName('date-1', 'No');
+    const focusSpy = vi.spyOn(radio, 'focus');
+
+    document.dispatchEvent(new CustomEvent('htmx:afterSwap', {
+      bubbles: true,
+      detail: {elt: {nodeType: 1, id: 'edit-grid'}},
+    }));
+
+    expect(focusSpy).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem('postpony-vote-focus')).not.toBe(null);
+  });
+
+  it('resets the busy state when the save request fails without a swap', () => {
+    yesButton.click();
+    expect(form.getAttribute('aria-busy')).toBe('true');
+    expect(yesButton.disabled).toBe(true);
+
+    failRequest();
+
+    expect(form.hasAttribute('aria-busy')).toBe(false);
+    expect(yesButton.disabled).toBe(false);
+
+    noButton.click();
+    expect(submitSpy).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -1369,9 +1410,11 @@ describe('additional branch coverage', () => {
           instances.push(this);
         }
 
-        destroy() {}
+        destroy() {
+        }
 
-        show() {}
+        show() {
+        }
       };
       window.AirDatepickerLocale = {
         'de-CH': {dateFormat: 'dd.MM.yyyy', timeFormat: 'HH:mm', hours: 'Stunden', minutes: 'Minuten'},
@@ -1414,9 +1457,11 @@ describe('additional branch coverage', () => {
           created.push(options.selectedDates);
         }
 
-        destroy() {}
+        destroy() {
+        }
 
-        show() {}
+        show() {
+        }
       };
       window.AirDatepickerLocale = {
         'de-CH': {dateFormat: 'dd.MM.yyyy', timeFormat: 'HH:mm', hours: 'H', minutes: 'M'},
@@ -1469,9 +1514,11 @@ describe('additional branch coverage', () => {
         fakeInstances.push(this);
       }
 
-      destroy() {}
+      destroy() {
+      }
 
-      show() {}
+      show() {
+      }
     }
 
     let realAirDatepicker;
@@ -1515,7 +1562,10 @@ describe('additional branch coverage', () => {
 
   describe('restoreVoteFocus fallbacks', () => {
     beforeAll(() => {
-      initVoteForm({show() {}});
+      initVoteForm({
+        show() {
+        }
+      });
     });
 
     it('returns quietly without a focus record or a vote form', () => {

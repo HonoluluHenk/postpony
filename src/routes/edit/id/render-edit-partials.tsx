@@ -4,8 +4,10 @@ import type { Postponement, ProposedDate, VoteTallyItem } from '../../../lib/mod
 import { PostponementRules, sortedProposedDates, type VoteTally } from '../../../lib/postponement';
 import { formatProposedDateDisplay, formatProposedDateDisplayShort } from '../../../lib/temporal-utils';
 import { buildOwnTeamView } from './own-team-view';
-import { EditPage, type EditPageProps } from './edit';
+import { EditGrid, EditPage, type EditPageProps } from './edit';
 import { organizerPasswordFromRequest } from './edit-auth';
+import { ErrorContainer } from '../../partials/error-container';
+import { StatusAnnouncement } from '../../partials/status-announcement';
 import type { DateSort, EditGridProps, EditPartialsData } from './proposed-dates-section';
 
 function toVoteTallyItems(
@@ -83,7 +85,7 @@ export function buildEditPartialsData(
 }
 
 /**
- * What a mutation may override when re-rendering the edit page: every
+ * What a mutation may override when re-rendering the edit grid: every
  * `EditGridProps` field that is neither view context nor data-builder output,
  * plus the page-level `globalError`. Derived by exclusion, so a new form/error
  * field is declared once on `EditGridProps` and lands here automatically.
@@ -106,9 +108,11 @@ function currentSort(app: App): 'date' | 'availability' {
 }
 
 /**
- * Renders the redesigned edit page as an HTMX partial (isPartial → fragment). The page
- * re-renders in full so the sidebar and rail stay in sync after any mutation; the
- * out-of-band error container and status announcement are emitted by the layout.
+ * Renders the redesigned edit grid as an HTMX partial: the swap target's own
+ * element (`#edit-grid`) so the sidebar and rail stay in sync after any
+ * mutation, plus the out-of-band error container and status announcement. The
+ * OOB elements live outside the grid, so replacing the grid never destroys
+ * their targets.
  */
 export function renderEditPartials(
   app: App,
@@ -124,5 +128,16 @@ export function renderEditPartials(
     title: app.t('edit_postponement_title', {name: session.name}),
     organizerPassword: organizerPasswordFromRequest(app),
   };
-  return app.render(<EditPage {...props} />);
+  // A plain (non-HTMX) request still gets the full page; only the HTMX partial
+  // is scoped to the grid so the swap target matches the response root.
+  if (!app.isPartial) {
+    return app.render(<EditPage {...props} />);
+  }
+  return app.render(
+    <>
+      <ErrorContainer globalError={extra.globalError} isOob={true}/>
+      <StatusAnnouncement message={extra.statusMessage} isOob={true}/>
+      <EditGrid {...props}/>
+    </>,
+  );
 }

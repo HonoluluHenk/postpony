@@ -395,13 +395,13 @@ export function initDeleteDialogs() {
   });
 }
 
-// Session-scoped record of the vote control to refocus after the full-page
-// save reload; written by initVoteForm just before the POST and cleared by
-// restoreVoteFocus on the reloaded page. JSON `{name?, value}`.
+// Session-scoped record of the vote control to refocus after the HTMX save
+// swap; written by initVoteForm just before the submit and cleared by
+// restoreVoteFocus once the fresh #vote-region lands. JSON `{name?, value}`.
 const VOTE_FOCUS_KEY = 'postpony-vote-focus';
 
 /**
- * Records the vote control to refocus after the save reload. Storage is
+ * Records the vote control to refocus after the save swap. Storage is
  * best-effort: a browser with sessionStorage disabled just skips the
  * enhancement.
  * @param {{name?: string, value: string}} target
@@ -416,7 +416,7 @@ function rememberVoteFocus(target) {
 
 /**
  * Moves focus, without scrolling, to the control recorded before the save
- * reload, then clears the record. Best-effort: a missing key, form, or target
+ * swap, then clears the record. Best-effort: a missing key, form, or target
  * (date deleted, status Confirmed) leaves focus untouched and does not throw.
  */
 function restoreVoteFocus() {
@@ -443,17 +443,18 @@ function restoreVoteFocus() {
 /**
  * Wires the vote form for direct submission. Each "Set all: Yes / No / if
  * necessary" button checks every `vote-<dateId>` radio of its target value and
- * then posts the form immediately; a change to any single vote radio posts the
- * form too, after a short debounce so arrowing through the options saves once.
- * There is no separate submit button — the server casts only the dates present
- * in the request, so votes are saved incrementally per change.
+ * then submits the form immediately; a change to any single vote radio submits
+ * the form too, after a short debounce so arrowing through the options saves
+ * once. There is no separate submit button — the server casts only the dates
+ * present in the request, so votes are saved incrementally per change.
  *
- * While a save is in flight the form is `aria-busy`, its controls are disabled
- * and the global spinner shows; further clicks/changes are ignored. The busy
- * state resets on `pageshow` because a bfcache restore brings the frozen DOM
- * back, and `pageshow` also restores focus to the control the Participant just
- * changed. Delegated on `document`, so a set-all row injected after
- * initialization still works.
+ * The form carries `hx-post`, so `requestSubmit()` becomes an HTMX swap of
+ * `#vote-region` instead of a full page load. While a save is in flight the
+ * form is `aria-busy`, its controls are disabled and the global spinner shows;
+ * further clicks/changes are ignored. The busy state resets on `pageshow`
+ * (bfcache restore) and on `htmx:afterRequest` (failed request); focus returns
+ * to the changed control once the fresh region is swapped in. Delegated on
+ * `document`, so a set-all row injected after initialization still works.
  * @param {import('./spinner-module.js').Spinner} [spinner] global spinner to show while saving
  */
 export function initVoteForm(spinner) {
@@ -464,33 +465,51 @@ export function initVoteForm(spinner) {
   let pendingForms = new WeakSet();
   let timer = null;
 
+  const resetForm = (form) => {
+    pendingForms.delete(form);
+    form.removeAttribute('aria-busy');
+    form.querySelectorAll(voteControls)
+      .forEach((control) => {
+        control.disabled = false;
+      });
+  };
+
   window.addEventListener('pageshow', () => {
     clearTimeout(timer);
     timer = null;
     pendingForms = new WeakSet();
     document.querySelectorAll('form[aria-busy="true"]')
-      .forEach((form) => {
-        form.removeAttribute('aria-busy');
-        form.querySelectorAll(voteControls)
-          .forEach((control) => {
-            control.disabled = false;
-          });
-      });
+      .forEach((form) => resetForm(form));
     restoreVoteFocus();
   });
 
+  // The vote POST swaps a fresh #vote-region through HTMX: focus the control
+  // the Participant changed once it lands. A failed request swaps nothing, so
+  // reset the busy state instead and leave the form usable.
+  document.addEventListener('htmx:afterSwap', (event) => {
+    const el = event.detail?.elt ?? event.target;
+    if (el?.nodeType === 1 && el.id === 'vote-region') {
+      restoreVoteFocus();
+    }
+  });
+
+  document.addEventListener('htmx:afterRequest', (event) => {
+    const form = event.target?.closest?.('form');
+    if (form) resetForm(form);
+  });
+
   // The single submit path both handlers share; it remembers the control the
-  // Participant changed so the reload can put focus back on it.
+  // Participant changed so the swap can put focus back on it.
   const submit = (form, focusTarget) => {
     if (pendingForms.has(form)) return;
     pendingForms.add(form);
     form.setAttribute('aria-busy', 'true');
     spinner?.show();
     rememberVoteFocus(focusTarget);
-    // ponytail: form.submit() captures the entry list synchronously, so
-    // disabling the controls afterwards keeps them out of the *next* submission
-    // without dropping any changed vote from this one.
-    form.submit();
+    // ponytail: requestSubmit() dispatches the submit event synchronously, so
+    // HTMX captures the values before the controls are disabled below (a
+    // disabled control is dropped from the next submission).
+    form.requestSubmit();
     form.querySelectorAll(voteControls)
       .forEach((control) => {
         control.disabled = true;
@@ -578,11 +597,13 @@ export function initRedesignDisclosures() {
   // the first thing the organizer sees. Re-applied on load, on HTMX swaps and
   // on the breakpoint crossing; a manual toggle survives until one of those.
   var mq = window.matchMedia('(max-width: 1023px)');
+
   function apply() {
     document.querySelectorAll('.edit-redesign details.side-details').forEach(function (details) {
       details.open = !mq.matches;
     });
   }
+
   apply();
   if (mq.addEventListener) {
     mq.addEventListener('change', apply);

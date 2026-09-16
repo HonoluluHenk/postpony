@@ -312,6 +312,7 @@ function DateActions(props: {
       <label class="action action--votable" title={t('votable_toggle')}>
         <input
           type="checkbox"
+          id={`votable-${row.id}`}
           hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-date-visibility?proposedDateId=${row.id}&votable=${!row.votable}`, organizerPassword)}
           hx-target="#edit-grid"
           checked={row.votable}

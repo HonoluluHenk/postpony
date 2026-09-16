@@ -20,7 +20,9 @@ function renderToString(node: unknown): string {
   if (node === null || node === undefined) {
     return '';
   }
-  return (node as { toString(): string }).toString();
+  return (node as {
+    toString(): string
+  }).toString();
 }
 
 describe('Layout page shell', () => {
@@ -57,5 +59,19 @@ describe('pageLayout', () => {
       .toContain('<title>PostPony</title>');
     expect(html)
       .toContain('<p>content</p>');
+  });
+
+  it('renders a bare fragment without the document shell for partial views', () => {
+    const html = renderToString(pageLayout({...baseProps(), isPartial: true}, <p>content</p>));
+
+    expect(html)
+      .toContain('<main id="main-content" class="responsive">');
+    expect(html)
+      .toContain('<article>');
+    expect(html)
+      .toContain('<p>content</p>');
+    expect(html)
+      .not
+      .toContain('<!DOCTYPE html>');
   });
 });

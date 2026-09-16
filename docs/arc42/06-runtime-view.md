@@ -40,11 +40,11 @@ sequenceDiagram
     H ->> R: command.apply(rules, session)
     R -->> H: new session
     H ->> DB: save only if identity changed
-    alt partial / alwaysRender
-        H -->> B: renderEditPartials (full-page fragment + OOB error/status)
+alt partial / alwaysRender
+H -->> B: renderEditPartials (#edit-grid fragment + OOB error/status; full page when not HTMX)
     else
-        H -->> B: redirect to /edit/:id?organizerPassword=…
-    end
+H -->> B: redirect to /edit/:id?organizerPassword=…
+end
 ```
 
 The organizer-captain password is verified on every edit GET and POST (`edit-auth.ts`); it travels as `?organizerPassword=` and is threaded through every HTMX request URL the edit page renders. `confirmDate` succeeds only for a date that is votable, opponent-votable, and accepted — otherwise it is a no-op and the handler announces a "not accepted / no longer votable" message.
@@ -69,11 +69,17 @@ sequenceDiagram
     P ->> H: POST /join/:id/:team/register
     H ->> H: rules.registerParticipant
     H -->> P: redirect to /vote?playerId=…&token=…&(pending)
-    P ->> H: POST /join/:id/:team/vote
+    P ->> H: POST /join/:id/:team/vote (HTMX, hx-post)
     H ->> H: rules.applyVotes (drops non-votable / non-whitelisted)
     H ->> DB: save if changed
-    H -->> P: VotePage (tally + own votes)
+alt HTMX (HX-Request)
+H -->> P: #vote-region fragment (toast + form + tally), swapped in place
+else full navigation
+H -->> P: VotePage
+end
 ```
+
+A vote save is an in-place HTMX swap of `#vote-region` (`VoteRegion` in `vote.tsx`), not a page reload: `ui.js` fills the set-all radios, calls `requestSubmit()`, debounces single-radio changes, and restores focus to the changed control after the swap. An unknown `playerId` answers an HTMX save with `HX-Redirect`, and a save that finds the session Confirmed answers `HX-Refresh` so the info view loads whole.
 
 A documented deliberate **state-changing GET** (`GET /join/:id/:team/vote`) applies votes read from `?vote-<dateId>` query params, so one-click calendar vote links work (`join-vote-get.ts`). Player identity is stored in `localStorage` key `postpony-player-<sessionId>-<team>`. The join token is the matching team's player password (home path → home-player password, away path → away-player password); a team/token mismatch is a 403.
 

@@ -31,12 +31,20 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
   const labels = inviteLinkLabels(session, t);
 
   const joinLink = (side: Team): string =>
-    `${baseUrl}/join/${session.id}/${side}?token=${side === 'home' ? session.homePlayerPassword : session.awayPlayerPassword}`;
+    `${baseUrl}/join/${session.id}/${side}?token=${side === 'home'
+                                                   ? session.homePlayerPassword
+                                                   : session.awayPlayerPassword}`;
 
   const opponent = opponentTeam(session);
-  const links: {href: string; label: string}[] = [
+  const links: {
+    href: string;
+    label: string
+  }[] = [
     {href: joinLink(session.organizerTeam), label: labels[session.organizerTeam]},
-    {href: `${baseUrl}/opponent/${session.id}?opponentCaptainPassword=${session.opponentCaptainPassword}`, label: labels.opponentCaptain},
+    {
+      href: `${baseUrl}/opponent/${session.id}?opponentCaptainPassword=${session.opponentCaptainPassword}`,
+      label: labels.opponentCaptain,
+    },
     {href: joinLink(opponent), label: labels[opponent]},
   ];
 
@@ -60,14 +68,23 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
   );
 }
 
-function SidebarStatus(props: { status: EditGridProps['status']; reopenCount: number; sessionId: string; t: ViewContext['t']; organizerPassword?: string }): JSX.Element {
+function SidebarStatus(props: {
+  status: EditGridProps['status'];
+  reopenCount: number;
+  sessionId: string;
+  t: ViewContext['t'];
+  organizerPassword?: string
+}): JSX.Element {
   const confirmed = props.status === 'Confirmed';
   return (
     <div class="side-block">
       <StatusChip status={props.status} t={props.t}/>
-      {props.reopenCount > 0 ? <p class="muted">{props.t('reopened_count', {count: String(props.reopenCount)})}</p> : null}
+      {props.reopenCount > 0
+       ? <p class="muted">{props.t('reopened_count', {count: String(props.reopenCount)})}</p>
+       : null}
       {confirmed ? (
-        <form hx-post={withOrganizerPassword(`/edit/${props.sessionId}/reopen`, props.organizerPassword)} hx-target="#edit-grid" class="mt-4">
+        <form hx-post={withOrganizerPassword(`/edit/${props.sessionId}/reopen`, props.organizerPassword)}
+              hx-target="#edit-grid" class="mt-4">
           <button type="submit" class="button outline">{props.t('reopen')}</button>
         </form>
       ) : null}
@@ -75,22 +92,26 @@ function SidebarStatus(props: { status: EditGridProps['status']; reopenCount: nu
   );
 }
 
-function EditGrid(props: EditPageProps): JSX.Element {
+export function EditGrid(props: EditPageProps): JSX.Element {
   const venueOptions = props.venues.length > 0
                        ? props.venues.map((venue) => (
       <option key={venue.venueNumber} value={venue.venueNumber}>
         ({venue.venueNumber}) - {venue.shortName}
       </option>
     ))
-                       : Array.from({length: props.proposedDates.length === 0 ? 10 : props.venues.length}, (_, index) => (
-                         <option key={index + 1} value={index + 1}>{index + 1}</option>
-                       ));
+                       : Array.from({length: props.proposedDates.length === 0 ? 10 : props.venues.length}, (
+      _,
+      index,
+    ) => (
+      <option key={index + 1} value={index + 1}>{index + 1}</option>
+    ));
 
   return (
     <div id="edit-grid" class="edit-grid">
       <ProposedDatesRail {...props} />
       <div class="edit-sidebar">
-        <SidebarStatus status={props.status} reopenCount={props.reopenCount} sessionId={props.sessionId} t={props.t} organizerPassword={props.organizerPassword}/>
+        <SidebarStatus status={props.status} reopenCount={props.reopenCount} sessionId={props.sessionId} t={props.t}
+                       organizerPassword={props.organizerPassword}/>
         <div class="side-block">
           <h3>{props.t('invite_link_label')}</h3>
           <InviteLinks baseUrl={props.baseUrl} session={props.session} t={props.t}/>
@@ -156,7 +177,8 @@ export function EditPage(props: EditPageProps): JSX.Element {
           <div class="max">
             <p><strong>{props.t('postponement_created_success')}</strong></p>
             <p>
-              {raw(props.t('organizer_password_label'))} <span class="password-display" translate="no">{props.organizerPassword}</span>
+              {raw(props.t('organizer_password_label'))} <span class="password-display"
+                                                               translate="no">{props.organizerPassword}</span>
               <button
                 class="copy-btn"
                 data-copy={props.organizerPassword}

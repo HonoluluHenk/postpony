@@ -192,6 +192,86 @@ describe('renderVoteStep', () => {
       .toContain('data-set-all');
   });
 
+  test('posts the vote as an HTMX swap of #vote-region', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({id: 'date-1', votable: true})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('<div id="vote-region">');
+    expect(body)
+      .toContain('hx-post="/join/test-session/home/vote?playerId=player-1&amp;token=token"');
+    expect(body)
+      .toContain('hx-target="#vote-region"');
+  });
+
+  test('renders just the vote region for an HTMX request', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({id: 'date-1', votable: true})],
+    });
+    const app = createApp({headers: {'HX-Request': 'true'}});
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('<div id="vote-region">');
+    expect(body)
+      .toContain('name="vote-date-1"');
+    expect(body)
+      .not
+      .toContain('<!DOCTYPE html>');
+    expect(body)
+      .not
+      .toContain('id="main-content"');
+  });
+
+  test('asks HTMX to refresh the page when a partial save finds the session confirmed', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Confirmed',
+      confirmedProposedDateId: 'proposed-date-1',
+      players: [player],
+      proposedDates: [aProposedDate()],
+    });
+    const app = createApp({headers: {'HX-Request': 'true'}});
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+
+    expect(response.headers.get('HX-Refresh'))
+      .toBe('true');
+    expect(await response.text())
+      .toContain('Voting is closed');
+  });
+
   test('renders the votable dates chronologically and keeps the results table aligned', async () => {
     const player = aPlayer({id: 'player-1', name: 'Alice'});
     const session = aSession({
@@ -917,7 +997,9 @@ describe('renderConfirmedInfo', () => {
       hasVotableDates: false,
     };
 
-    const html = (ConfirmedInfoPage(props) as { toString(): string })
+    const html = (ConfirmedInfoPage(props) as {
+      toString(): string
+    })
       .toString();
 
     expect(html)

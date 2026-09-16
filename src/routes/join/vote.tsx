@@ -28,15 +28,17 @@ export interface VotePageProps extends ViewContext {
   globalError?: string;
 }
 
-export function VotePage(props: VotePageProps): JSX.Element {
-  const title = props.title ?? props.t('vote_title');
+/**
+ * The swap target of an HTMX vote save: the saved-toast, the calendar export
+ * link, the vote form and the shared tally. Rendered inside `VotePage` on a full
+ * load and on its own for the partial swap, so an AJAX save replaces exactly
+ * what changes without touching the page heading.
+ */
+export function VoteRegion(props: VotePageProps): JSX.Element {
+  const action = `/join/${props.sessionId}/${props.team}/vote?playerId=${props.playerId}&token=${props.token}`;
 
-  const content = (
-    <>
-      <header>
-        <h2>{title}</h2>
-      </header>
-
+  return (
+    <div id="vote-region">
       {props.updated ? (
         <div class="toast success top" role="status">
           <i aria-hidden="true">check_circle</i>
@@ -61,106 +63,122 @@ export function VotePage(props: VotePageProps): JSX.Element {
       {props.proposedDates.length === 0 ? (
         <p>{props.t('vote_no_dates')}</p>
       ) : (
-        <>
-          <form
-            method="post"
-            action={`/join/${props.sessionId}/${props.team}/vote?playerId=${props.playerId}&token=${props.token}`}
-            hx-boost="false"
-            aria-label={props.t('vote_title')}
-          >
-            <fieldset class="vote-set-all">
-              <legend>{props.t('vote_set_all')}</legend>
-              <div class="row wrap">
-                <button
-                  type="button"
-                  class="button"
-                  data-set-all="Yes"
-                  aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_yes')})}
-                >
-                  {props.t('vote_yes')}
-                </button>
-                <button
-                  type="button"
-                  class="button"
-                  data-set-all="IfNecessary"
-                  aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_if_necessary')})}
-                >
-                  {props.t('vote_if_necessary')}
-                </button>
-                <button
-                  type="button"
-                  class="button"
-                  data-set-all="No"
-                  aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_no')})}
-                >
-                  {props.t('vote_no')}
-                </button>
-              </div>
-            </fieldset>
+         <>
+           <form
+             method="post"
+             action={action}
+             hx-post={action}
+             hx-target="#vote-region"
+             hx-swap="outerHTML"
+             aria-label={props.t('vote_title')}
+           >
+             <fieldset class="vote-set-all">
+               <legend>{props.t('vote_set_all')}</legend>
+               <div class="row wrap">
+                 <button
+                   type="button"
+                   class="button"
+                   data-set-all="Yes"
+                   aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_yes')})}
+                 >
+                   {props.t('vote_yes')}
+                 </button>
+                 <button
+                   type="button"
+                   class="button"
+                   data-set-all="IfNecessary"
+                   aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_if_necessary')})}
+                 >
+                   {props.t('vote_if_necessary')}
+                 </button>
+                 <button
+                   type="button"
+                   class="button"
+                   data-set-all="No"
+                   aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_no')})}
+                 >
+                   {props.t('vote_no')}
+                 </button>
+               </div>
+             </fieldset>
 
-            {props.proposedDates.map((pd) => (
-              <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
-                <legend>
-                  {pd.display}{' '}
-                  <VenueBadge
-                    venueNumber={pd.venueNumber}
-                    venues={props.venues}
-                    label={venuePillLabel(
-                      pd.venueNumber,
-                      props.venues,
-                      pd.venueOccupancy !== undefined && pd.venueOccupancy.count > 0
-                        ? pd.venueOccupancy.count === 1
-                          ? props.t('venue_legend_occupancy_one')
-                          : props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})
-                        : undefined,
-                    )}
-                  />
-                </legend>
-                <label class="radio">
-                  <input
-                    type="radio"
-                    name={`vote-${pd.id}`}
-                    value="Yes"
-                    checked={pd.currentVote === 'Yes'}
-                  />
-                  <span>{props.t('vote_yes')}</span>
-                </label>
-                <label class="radio">
-                  <input
-                    type="radio"
-                    name={`vote-${pd.id}`}
-                    value="IfNecessary"
-                    checked={pd.currentVote === 'IfNecessary'}
-                  />
-                  <span>{props.t('vote_if_necessary')}</span>
-                </label>
-                <label class="radio">
-                  <input
-                    type="radio"
-                    name={`vote-${pd.id}`}
-                    value="No"
-                    checked={pd.currentVote === 'No'}
-                  />
-                  <span>{props.t('vote_no')}</span>
-                </label>
-              </fieldset>
-            ))}
-          </form>
+             {props.proposedDates.map((pd) => (
+               <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
+                 <legend>
+                   {pd.display}{' '}
+                   <VenueBadge
+                     venueNumber={pd.venueNumber}
+                     venues={props.venues}
+                     label={venuePillLabel(
+                       pd.venueNumber,
+                       props.venues,
+                       pd.venueOccupancy !== undefined && pd.venueOccupancy.count > 0
+                       ? pd.venueOccupancy.count === 1
+                         ? props.t('venue_legend_occupancy_one')
+                         : props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})
+                       : undefined,
+                     )}
+                   />
+                 </legend>
+                 <label class="radio">
+                   <input
+                     type="radio"
+                     name={`vote-${pd.id}`}
+                     value="Yes"
+                     checked={pd.currentVote === 'Yes'}
+                   />
+                   <span>{props.t('vote_yes')}</span>
+                 </label>
+                 <label class="radio">
+                   <input
+                     type="radio"
+                     name={`vote-${pd.id}`}
+                     value="IfNecessary"
+                     checked={pd.currentVote === 'IfNecessary'}
+                   />
+                   <span>{props.t('vote_if_necessary')}</span>
+                 </label>
+                 <label class="radio">
+                   <input
+                     type="radio"
+                     name={`vote-${pd.id}`}
+                     value="No"
+                     checked={pd.currentVote === 'No'}
+                   />
+                   <span>{props.t('vote_no')}</span>
+                 </label>
+               </fieldset>
+             ))}
+           </form>
 
-          <section aria-labelledby="vote-summary-title">
-            <VoteTally
-              proposedDates={props.proposedDates}
-              t={props.t}
-              headingLevel={3}
-              titleId="vote-summary-title"
-            />
-          </section>
-        </>
-      )}
+           <section aria-labelledby="vote-summary-title">
+             <VoteTally
+               proposedDates={props.proposedDates}
+               t={props.t}
+               headingLevel={3}
+               titleId="vote-summary-title"
+             />
+           </section>
+         </>
+       )}
+    </div>
+  );
+}
+
+export function VotePage(props: VotePageProps): JSX.Element {
+  const title = props.title ?? props.t('vote_title');
+
+  const content = (
+    <>
+      <header>
+        <h2>{title}</h2>
+      </header>
+
+      <VoteRegion {...props}/>
 
       {/* ponytail: sessionId/team/playerId are generated or validated server-side, so
-          raw() interpolation cannot carry user-typed markup; upgrade to a data
-          attribute if that invariant ever changes. */}
+       raw() interpolation cannot carry user-typed markup; upgrade to a data
+       attribute if that invariant ever changes. */}
       {raw(`<script>
   window.localStorage.setItem('postpony-player-${props.sessionId}-${props.team}', '${props.playerId}');
 </script>`)}

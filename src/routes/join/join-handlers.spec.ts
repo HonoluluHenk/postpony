@@ -100,7 +100,7 @@ describe('join handlers', () => {
       expect(body)
         .toContain(`action="/join/${session.id}/home/register?token=${TOKEN}&amp;vote-proposed-date-1=Yes`);
       expect(body)
-        .toContain("key.indexOf('vote-') === 0");
+        .toContain('key.indexOf(\'vote-\') === 0');
     });
   });
 
@@ -421,7 +421,10 @@ describe('join handlers', () => {
         .toBe(200);
     });
 
-    test.each(['home', 'away'] as const)('ignores the Vote in a GET link for a closed date for the %s team', async (team) => {
+    test.each([
+      'home',
+      'away',
+    ] as const)('ignores the Vote in a GET link for a closed date for the %s team', async (team) => {
       const session = await seedSession({
         players: [aPlayer({teamId: team})],
         proposedDates: [
@@ -563,7 +566,10 @@ describe('join handlers', () => {
         .toContain('Voting is closed');
     });
 
-    test.each(['home', 'away'] as const)('renders the pre-proposal empty-state hint for the %s team with no votable dates', async (team) => {
+    test.each([
+      'home',
+      'away',
+    ] as const)('renders the pre-proposal empty-state hint for the %s team with no votable dates', async (team) => {
       const session = await seedSession({
         status: 'Draft',
         players: [aPlayer({teamId: team})],
@@ -793,6 +799,53 @@ describe('join handlers', () => {
       expect(stored?.votes)
         .toHaveLength(0);
     });
+
+    test('renders just the vote region for an HTMX save', async () => {
+      const session = await seedSession({
+        players: [aPlayer()],
+        proposedDates: [aProposedDate()],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'player-1'},
+        body: {'vote-proposed-date-1': 'Yes'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVotePost(app);
+      const body = await response.text();
+
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain('<div id="vote-region">');
+      expect(body)
+        .not
+        .toContain('<!DOCTYPE html>');
+    });
+
+    test('tells HTMX to redirect when an HTMX save carries an unknown playerId', async () => {
+      const session = await seedSession({
+        players: [aPlayer({id: 'player-1', name: 'Alice'})],
+        proposedDates: [aProposedDate()],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'ghost'},
+        body: {'vote-proposed-date-1': 'Yes'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVotePost(app);
+
+      expect(response.headers.get('HX-Redirect'))
+        .toBe(`/join/${session.id}/home?token=${TOKEN}`);
+      const stored = await app.store.get(session.id);
+      expect(stored?.votes)
+        .toHaveLength(0);
+    });
   });
 
   describe('JoinPage direct render', () => {
@@ -813,7 +866,9 @@ describe('join handlers', () => {
     }
 
     test('falls back to the translated title when no title is provided', () => {
-      const html = (JoinPage(joinPageProps()) as { toString(): string })
+      const html = (JoinPage(joinPageProps()) as {
+        toString(): string
+      })
         .toString();
 
       expect(html)
@@ -821,7 +876,9 @@ describe('join handlers', () => {
     });
 
     test('defaults pending votes to empty, leaving the register action unpolluted', () => {
-      const html = (JoinPage(joinPageProps()) as { toString(): string })
+      const html = (JoinPage(joinPageProps()) as {
+        toString(): string
+      })
         .toString();
 
       expect(html)

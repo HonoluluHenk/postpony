@@ -5,7 +5,7 @@ import { PostponementRules, type VoteTally } from '../../lib/postponement';
 import { formatProposedDateDisplay } from '../../lib/temporal-utils';
 import { ConfirmedInfoPage } from './confirmed-info';
 import type { Team } from './join-utils';
-import { VotePage, type VotePageDate } from './vote';
+import { VotePage, VoteRegion, type VotePageDate, type VotePageProps } from './vote';
 
 export interface VoteViewOptions {
   session: Postponement;
@@ -25,7 +25,11 @@ export function confirmedDateDisplay(session: Postponement, locale: AppLocale): 
 export function renderConfirmedInfo(
   app: App,
   session: Postponement,
-  context: {team: Team; token: string; playerId?: string},
+  context: {
+    team: Team;
+    token: string;
+    playerId?: string
+  },
 ): Response {
   const {team, token} = context;
   const hasVotableDates = new PostponementRules().votableDates(session).length > 0;
@@ -51,6 +55,11 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
   const locale = app.locale;
 
   if (session.status === 'Confirmed') {
+    // ponytail: an HTMX save that races the organizer's confirmation cannot swap
+    // the info page into #vote-region, so tell htmx to reload the page instead.
+    if (app.isPartial) {
+      app.setHeader('HX-Refresh', 'true');
+    }
     return renderConfirmedInfo(app, session, {team, token, playerId: player.id});
   }
 
@@ -76,19 +85,24 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
     };
   });
 
-  const html = app.render(
-    <VotePage
-      {...app.view}
-      title={app.t('vote_title')}
-      sessionId={session.id}
-      team={team}
-      token={token}
-      playerId={player.id}
-      proposedDates={proposedDates}
-      venues={session.venues}
-      updated={updated}
-    />,
-  );
+  const pageProps: VotePageProps = {
+    ...app.view,
+    title: app.t('vote_title'),
+    sessionId: session.id,
+    team,
+    token,
+    playerId: player.id,
+    proposedDates,
+    venues: session.venues,
+    updated,
+  };
 
-  return app.html(html);
+  // ponytail: a vote save is an HTMX swap of #vote-region, so a partial request
+  // gets just that fragment; a full navigation (calendar link, reload) gets the
+  // whole page with the same region inside.
+  return app.html(
+    app.isPartial
+    ? app.render(<VoteRegion {...pageProps}/>)
+    : app.render(<VotePage {...pageProps}/>),
+  );
 }

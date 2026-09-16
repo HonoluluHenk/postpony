@@ -18,7 +18,7 @@ Valibot schemas at every trust boundary (`MatchSchema`, `PlayerSchema`, `buildSi
 
 ## 8.5 HTMX / partial rendering
 
-Default swap `outerHTML`; `hx-boost="true"` on the container, disabled per-element for join/vote forms and `.ics` links. Partial detection = `HX-Request` header. Edit mutations re-render the whole page as a fragment (rail + sidebar stay in sync); `?sort` is recovered from `HX-Current-URL`. Out-of-band targets: `#error-container`, `#clipboard-status`/status announcement, `#status-chip`. Rule: any element a partial renders must also exist in the initial render.
+Default swap `outerHTML`; `hx-boost="true"` on the container, disabled per-element for the join register form and `.ics` links. Partial detection = `HX-Request` header. Edit mutations re-render the `#edit-grid` fragment (rail + sidebar stay in sync) and opponent mutations the `#opponent-view` fragment, each with its OOB error/status; both render the full page when not HTMX, and the fragment root matches the swap target so swaps never nest. `?sort` is recovered from `HX-Current-URL`. Vote saves are AJAX too: the vote form carries `hx-post` and swaps the `#vote-region` fragment (saved-toast + form + tally) in place, rendered standalone for an HTMX request and inside the full page otherwise; `ui.js` restores focus to the changed control after the swap. A vote save that races confirmation gets `HX-Refresh`. Out-of-band targets: `#error-container`, `#clipboard-status`/status announcement, `#status-chip`. Rule: any element a partial renders must also exist in the initial render.
 
 ## 8.6 Security
 

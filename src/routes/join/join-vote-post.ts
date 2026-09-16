@@ -10,7 +10,14 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
   const playerId = app.query('playerId') ?? '';
   const player = session.players.find((p) => p.id === playerId && p.teamId === team);
   if (!player) {
-    return app.redirect(`/join/${session.id}/${team}?token=${encodeURIComponent(token)}`);
+    const target = `/join/${session.id}/${team}?token=${encodeURIComponent(token)}`;
+    // ponytail: htmx follows a 302 and would swap the register page into
+    // #vote-region, so an HTMX save gets a full-page redirect instruction instead.
+    if (app.isPartial) {
+      app.setHeader('HX-Redirect', target);
+      return app.text('');
+    }
+    return app.redirect(target);
   }
 
   // ponytail: voting is locked once the admin confirms; a locked POST just
@@ -19,10 +26,11 @@ export const handleJoinVotePost = async (app: App): Promise<Response> => {
   let updated = session;
   if (canVote) {
     const body = await app.body();
-    const submissions = new PostponementRules().pollDates(session, team).map((pd) => ({
-      dateId: pd.id,
-      value: body[`vote-${pd.id}`],
-    }));
+    const submissions = new PostponementRules().pollDates(session, team)
+      .map((pd) => ({
+        dateId: pd.id,
+        value: body[`vote-${pd.id}`],
+      }));
     updated = new PostponementRules().applyVotes(session, player.id, submissions, team).session;
     await app.store.save(updated);
   }
