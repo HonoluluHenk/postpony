@@ -217,7 +217,7 @@ export function OpponentPage(props: OpponentPageProps): JSX.Element {
                   <div class="date-main">
                     <OpponentDateChips date={date} t={props.t} locale={props.locale}/>
                     <span class="team-tally">
-                      {props.opponentTeamName}: {date.yes + date.ifNecessary} ({date.yes}/{date.ifNecessary}/{date.no})
+                      {props.t('opponent_team_votes', {team: props.opponentTeamName})}: {date.yes + date.ifNecessary} ({date.yes}/{date.ifNecessary}/{date.no})
                     </span>
                     <DateActions
                       session={props.session}

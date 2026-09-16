@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aPlayer, aProposedDate, aSession } from '../../lib/__test-utils__/builders';
+import { aPlayer, aProposedDate, aSession, aVote } from '../../lib/__test-utils__/builders';
 import type { Postponement } from '../../lib/models';
 import { getTranslation, inputFormat, languageOptions, type AppLocale, type TranslationKeys } from '../../locales';
 import { OpponentPage, type OpponentDateItem, type OpponentPageProps } from './opponent';
@@ -268,6 +268,24 @@ describe('OpponentPage row-level labels', () => {
       .toHaveLength(1);
     expect(html)
       .toContain('7:00 PM vs Own Opp');
+  });
+});
+
+describe('OpponentPage team tally label', () => {
+  it('prefixes the tally with the localized votes label', () => {
+    const session = aSession({
+      organizerTeam: 'home',
+      homeTeam: 'Ostermundigen',
+      guestTeam: 'Thun',
+      players: [aPlayer({id: 'ap', teamId: 'away'})],
+      proposedDates: [aProposedDate({id: 'pd-1'})],
+      votes: [aVote({id: 'v1', proposedDateId: 'pd-1', participantId: 'ap', type: 'No'})],
+    });
+
+    expect(renderToString(OpponentPage(pageProps(session))))
+      .toContain('Votes team Thun: 0 (0/0/1)');
+    expect(renderToString(OpponentPage(pageProps(session, 'de-CH'))))
+      .toContain('Stimmen Team Thun: 0 (0/0/1)');
   });
 });
 

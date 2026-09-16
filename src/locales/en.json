@@ -82,6 +82,7 @@
   "opponent_accepted_toggle_aria": "Accept <%= it.date %> — the organizer may confirm it",
   "opponent_accepted_unset": "Accepted removed",
   "opponent_roster_heading": "Your Team Roster",
+  "opponent_team_votes": "Votes team <%= it.team %>",
   "opponent_title": "Opponent Captain",
   "opponent_votable": "Votable",
   "opponent_votable_disabled": "Date removed from your poll",

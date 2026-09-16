@@ -25,7 +25,7 @@ test.describe('Opponent Captain', () => {
 
     // Only the opponent team's tally is shown.
     await expect(opponentPage.teamTally(0))
-      .toContainText('Thun:');
+      .toContainText('Votes team Thun:');
 
     // Turn the opponent team's Votable off, then back on.
     await opponentPage.toggleOpponentVotable(0);

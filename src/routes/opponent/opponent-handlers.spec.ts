@@ -104,7 +104,7 @@ describe('opponent handlers', () => {
       expect(body)
         .toContain('Opponent Player');
       expect(body)
-        .toContain('Opponent Squad: 0 (0/0/1)');
+        .toContain('Votes team Opponent Squad: 0 (0/0/1)');
       expect(body)
         .not
         .toContain('Organizer Squad');
