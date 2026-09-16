@@ -4,6 +4,7 @@ import { EditPage, type EditPageProps } from './edit';
 import { organizerPasswordFromRequest, requireOrganizerCaptain } from './edit-auth';
 import { defaultGeneratorDateRange } from './proposed-dates-post';
 import { buildEditPartialsData, renderEditGridPartial } from './render-edit-partials';
+import { currentSortParam } from '../../partials/sort-control';
 
 export const handleEditGet = async (app: App): Promise<Response> => {
   const id = app.requireParam('id');
@@ -24,7 +25,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
                                        : '';
 
   const {fromDate, toDate} = defaultGeneratorDateRange(locale, session.originalMatchDateTime);
-  const sort = app.query('sort') === 'availability' ? 'availability' : 'date';
+  const sort = currentSortParam(app);
 
   const props: EditPageProps = {
     ...app.view,

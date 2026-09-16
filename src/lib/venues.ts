@@ -14,8 +14,3 @@ export function defaultVenueNumber(venueNumber: number | undefined): number {
 export function resolveVenue(venueNumber: number | undefined, venues: readonly Venue[]): Venue | undefined {
   return venues.find((v) => v.venueNumber === defaultVenueNumber(venueNumber));
 }
-
-/** The venue's short display name, e.g. "Turnhalle orange"; undefined when no venue resolves. */
-export function venueShortName(venueNumber: number | undefined, venues: readonly Venue[]): string | undefined {
-  return resolveVenue(venueNumber, venues)?.shortName;
-}

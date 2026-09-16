@@ -132,6 +132,78 @@ describe('opponent handlers', () => {
     });
   });
 
+  describe('sort handling', () => {
+    const sortDates = [
+      aProposedDate({
+        id: 'pd-a',
+        dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+        votable: true,
+      }),
+      aProposedDate({
+        id: 'pd-b',
+        dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+        votable: true,
+      }),
+    ];
+
+    test('handleOpponentGet defaults to date grouping without a sort query', async () => {
+      const session = seedSession({proposedDates: sortDates});
+      const app = opponentApp({params: {id: session.id}});
+      await app.store.save(session);
+
+      const html = await (await handleOpponentGet(app)).text();
+
+      expect(html)
+        .toContain('name="sort" value="date" checked');
+      expect(html)
+        .toContain('>Week 36<');
+    });
+
+    test('handleOpponentGet renders availability grouping when ?sort=availability', async () => {
+      const session = seedSession({proposedDates: sortDates});
+      const app = opponentApp({params: {id: session.id}, queries: {sort: 'availability'}});
+      await app.store.save(session);
+
+      const html = await (await handleOpponentGet(app)).text();
+
+      expect(html)
+        .toContain('name="sort" value="availability" checked');
+      expect(html)
+        .toContain('<span>Available: 0</span>');
+    });
+
+    test('handleOpponentGet treats an unknown sort value as date', async () => {
+      const session = seedSession({proposedDates: sortDates});
+      const app = opponentApp({params: {id: session.id}, queries: {sort: 'bogus'}});
+      await app.store.save(session);
+
+      const html = await (await handleOpponentGet(app)).text();
+
+      expect(html)
+        .toContain('name="sort" value="date" checked');
+    });
+
+    test('a mutation keeps the availability sort from the HX-Current-URL header', async () => {
+      const session = seedSession({proposedDates: sortDates});
+      const app = opponentApp({
+        params: {id: session.id},
+        queries: {proposedDateId: 'pd-a', opponentVotable: 'false'},
+        headers: {
+          'HX-Request': 'true',
+          'HX-Current-URL': `https://game-scheduler.localhost:3000/opponent/${session.id}?opponentCaptainPassword=${OPPONENT_PASSWORD}&sort=availability`,
+        },
+      });
+      await app.store.save(session);
+
+      const html = await (await handleOpponentVotablePost(app)).text();
+
+      expect(html)
+        .toContain('name="sort" value="availability" checked');
+      expect(html)
+        .toContain('<span>Available: 0</span>');
+    });
+  });
+
   describe('handleOpponentPlayersPost', () => {
     test('adds a player to the opponent team, not the organizer team', async () => {
       const session = seedSession();
@@ -253,7 +325,15 @@ describe('opponent handlers', () => {
     });
 
     test('turns the opponent team votable back on', async () => {
-      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: true, opponentVotable: false})]});
+      const session = seedSession({
+        proposedDates: [
+          aProposedDate({
+            id: 'pd-1',
+            votable: true,
+            opponentVotable: false,
+          }),
+        ],
+      });
       const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', opponentVotable: 'true'}});
       await app.store.save(session);
 
@@ -265,7 +345,15 @@ describe('opponent handlers', () => {
     });
 
     test('is a no-op on a non-votable date', async () => {
-      const session = seedSession({proposedDates: [aProposedDate({id: 'pd-1', votable: false, opponentVotable: true})]});
+      const session = seedSession({
+        proposedDates: [
+          aProposedDate({
+            id: 'pd-1',
+            votable: false,
+            opponentVotable: true,
+          }),
+        ],
+      });
       const app = opponentApp({params: {id: session.id}, queries: {proposedDateId: 'pd-1', opponentVotable: 'false'}});
       await app.store.save(session);
 

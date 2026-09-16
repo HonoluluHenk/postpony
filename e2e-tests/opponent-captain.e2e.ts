@@ -56,6 +56,61 @@ test.describe('Opponent Captain', () => {
     await checkA11y();
   });
 
+  test('sorts the proposed dates by availability and keeps the sort across a mutation', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, [
+      '2026-03-05T20:00',
+      '2026-03-12T20:00',
+      '2026-03-19T20:00',
+    ]);
+
+    // Alice (opponent side) can play the first two dates but not the third.
+    const joinPage = await new JoinPage(page)
+      .goto(session.awayHref);
+    await joinPage.join('Alice');
+    await joinPage.castVote(0, 'Yes');
+    await joinPage.castVote(1, 'Yes');
+    await joinPage.castVote(2, 'No');
+
+    const opponentPage = await new OpponentPage(page)
+      .goto(session.opponentCaptainHref);
+
+    // Default Date sort: one ISO-week group per date.
+    await expect(opponentPage.sortRadio('Date'))
+      .toBeChecked();
+    await expect(opponentPage.groupHeads)
+      .toHaveCount(3);
+
+    // Availability sort: two groups, dates ascending within the first group.
+    await opponentPage.sortBy('Availability');
+    await expect(opponentPage.sortRadio('Availability'))
+      .toBeChecked();
+    await expect(page)
+      .toHaveURL(/sort=availability/);
+    await expect(opponentPage.groupHeads)
+      .toHaveText(['Available: 1', 'Available: 0']);
+
+    // A mutation (accepted toggle) recovers the sort from the current URL.
+    await opponentPage.toggleAccepted(0);
+    await expect(opponentPage.sortRadio('Availability'))
+      .toBeChecked();
+    await expect(page)
+      .toHaveURL(/sort=availability/);
+    await expect(opponentPage.groupHeads)
+      .toHaveText(['Available: 1', 'Available: 0']);
+
+    // Switching back restores the ISO-week grouping; a reload keeps the sort.
+    await opponentPage.sortBy('Date');
+    await expect(opponentPage.groupHeads)
+      .toHaveCount(3);
+    await expect(page)
+      .toHaveURL(/\/opponent\/[^?]+\?opponentCaptainPassword=[^&]+&sort=date$/);
+    await page.reload();
+    await expect(opponentPage.sortRadio('Date'))
+      .toBeChecked();
+
+    await checkA11y();
+  });
+
   test('takes a date out of the opponent team\'s vote view and restores it', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
@@ -144,13 +199,17 @@ test.describe('Opponent Captain', () => {
       .toHaveCount(4);
 
     // Four-part date cell on the opponent row.
-    await expect(opponentPage.dateCell(3).locator('.date-day'))
+    await expect(opponentPage.dateCell(3)
+      .locator('.date-day'))
       .toContainText('Fr');
-    await expect(opponentPage.dateCell(3).locator('.date-num'))
+    await expect(opponentPage.dateCell(3)
+      .locator('.date-num'))
       .toContainText('December 4');
-    await expect(opponentPage.dateCell(3).locator('.date-time'))
+    await expect(opponentPage.dateCell(3)
+      .locator('.date-time'))
       .toContainText('6:00 PM');
-    await expect(opponentPage.dateCell(3).locator('.date-year'))
+    await expect(opponentPage.dateCell(3)
+      .locator('.date-year'))
       .toContainText('2026');
 
     // Opponent-only clash: the neutral line without a home/away prefix.

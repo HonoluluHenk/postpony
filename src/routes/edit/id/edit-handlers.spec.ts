@@ -324,9 +324,7 @@ describe('edit handlers', () => {
         const response = await handleEditProposedDatesPost(app);
         const html = await response.text();
         expect(html)
-          .toContain('title="(2) Turnhalle grün"');
-        expect(html)
-          .toContain('(2) Turnhalle grün</span>');
+          .toContain('>(2) Turnhalle grün<span class="visually-hidden">2 – Turnhalle grün</span>');
       });
     });
 

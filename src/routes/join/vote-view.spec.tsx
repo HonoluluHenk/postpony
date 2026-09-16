@@ -410,9 +410,9 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>(2) – Turnhalle grün<span class="visually-hidden">2 – Turnhalle grün</span>');
+      .toContain('>(2) Turnhalle grün<span class="visually-hidden">2 – Turnhalle grün</span>');
     expect(body)
-      .toContain('>(1) – Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange</span>');
+      .toContain('>(1) Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange</span>');
   });
 
   test('renders just the venue number in the pill when no venue name is known', async () => {
@@ -437,6 +437,35 @@ describe('renderVoteStep', () => {
 
     expect(body)
       .toContain('>(4)</span></legend>');
+  });
+
+  test('appends the occupancy count to the number-only pill when the venue is unknown', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [
+        aProposedDate({
+          id: 'date-1',
+          votable: true,
+          venueNumber: 4,
+          venueOccupancy: {count: 2, matches: [{opponent: 'Port', start: '2025-09-01T20:15'}]},
+        }),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('>(4), 2 other games</span></legend>');
   });
 
   test('truncates a multi-line venue name at the first comma in the vote pill', async () => {
@@ -472,10 +501,43 @@ describe('renderVoteStep', () => {
     // Visible pill text is the first comma-segment; the full name is exposed to
     // assistive tech as visually-hidden text instead of an unreachable title.
     expect(body)
-      .toContain('>(1) – Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange, UG, Schule Dennigkofen</span>');
+      .toContain('>(1) Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange, UG, Schule Dennigkofen</span>');
     expect(body)
       .not
       .toContain('title="1 – Turnhalle orange');
+  });
+
+  test('falls back to the full venue name when the venue predates shortName', async () => {
+    const player = aPlayer();
+    const session = aSession({
+      status: 'Voting',
+      venues: [
+        {
+          venueNumber: 1,
+          name: 'Turnhalle orange, UG, Schule Dennigkofen',
+          address: 'Dennigkofenweg 169',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
+      ],
+      players: [player],
+      proposedDates: [
+        aProposedDate({id: 'date-1', votable: true, venueNumber: 1}),
+      ],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('>(1) Turnhalle orange, UG, Schule Dennigkofen<span');
   });
 
   test('renders the export-calendar link when votable dates exist', async () => {
@@ -696,7 +758,7 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>(1) – Turnhalle orange, 2 other games<span class="visually-hidden">1 – Turnhalle orange</span>');
+      .toContain('>(1) Turnhalle orange, 2 other games<span class="visually-hidden">1 – Turnhalle orange</span>');
     expect(body)
       .not
       .toContain('2 other games at this venue');
@@ -739,7 +801,7 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>(1) – Turnhalle orange, 1 other game<span class="visually-hidden">1 – Turnhalle orange</span>');
+      .toContain('>(1) Turnhalle orange, 1 other game<span class="visually-hidden">1 – Turnhalle orange</span>');
     expect(body)
       .not
       .toContain('1 other games');
@@ -813,7 +875,7 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>(1) – Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange</span>');
+      .toContain('>(1) Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange</span>');
     expect(body)
       .not
       .toContain('other games');

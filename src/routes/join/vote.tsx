@@ -4,7 +4,7 @@ import type { ViewContext } from '../../app';
 import type { Venue, VoteTallyItem } from '../../lib/models';
 import type { VenueOccupancy } from '../../lib/venue-occupancy';
 import { pageLayout } from '../layouts/main';
-import { VenueBadge, venuePillLabel } from '../partials/venues';
+import { VenueChip } from '../partials/venues';
 import { VoteTally } from '../partials/vote-tally';
 import type { Team } from './join-utils';
 
@@ -106,18 +106,14 @@ export function VoteRegion(props: VotePageProps): JSX.Element {
                <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
                  <legend>
                    {pd.display}{' '}
-                   <VenueBadge
+                   <VenueChip
                      venueNumber={pd.venueNumber}
                      venues={props.venues}
-                     label={venuePillLabel(
-                       pd.venueNumber,
-                       props.venues,
-                       pd.venueOccupancy !== undefined && pd.venueOccupancy.count > 0
-                       ? pd.venueOccupancy.count === 1
-                         ? props.t('venue_legend_occupancy_one')
-                         : props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})
-                       : undefined,
-                     )}
+                     extra={pd.venueOccupancy !== undefined && pd.venueOccupancy.count > 0
+                            ? pd.venueOccupancy.count === 1
+                              ? props.t('venue_legend_occupancy_one')
+                              : props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})
+                            : undefined}
                    />
                  </legend>
                  <label class="radio">

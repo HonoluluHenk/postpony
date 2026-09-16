@@ -142,7 +142,7 @@ describe('ProposedDatesRail date chips', () => {
     expect(html)
       .toContain('<span class="chip chip--error">Home: 7:00 PM vs Opponent</span>');
     expect(html)
-      .toContain('<span class="chip" title="(1) Turnhalle orange">(1) Turnhalle orange</span>');
+      .toContain('<span class="chip venue-chip">(1) Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange</span></span>');
   });
 
   it('renders the clean chip when the schedule check found no clashes', () => {

@@ -8,6 +8,7 @@ import { opponentPasswordFromRequest, opponentTeam } from './opponent-utils';
 import { OpponentPage, OpponentView, type OpponentPageProps, type OpponentViewData } from './opponent';
 import { ErrorContainer } from '../partials/error-container';
 import { StatusAnnouncement } from '../partials/status-announcement';
+import { currentSortParam, type DateSort } from '../partials/sort-control';
 
 /**
  * Shapes the opponent-captain scope from the session: the opponent team name and roster,
@@ -16,7 +17,11 @@ import { StatusAnnouncement } from '../partials/status-announcement';
  * opponent side's own clash lines — undefined when never checked (no clash UI),
  * empty when checked clean. The organizer side's lines never reach the template.
  */
-export function buildOpponentViewData(session: Postponement, locale: AppLocale): OpponentViewData {
+export function buildOpponentViewData(
+  session: Postponement,
+  locale: AppLocale,
+  sort: DateSort = 'date',
+): OpponentViewData {
   const rules = new PostponementRules();
   const team = opponentTeam(session);
   const tallies = rules.tally(session, team);
@@ -47,6 +52,7 @@ export function buildOpponentViewData(session: Postponement, locale: AppLocale):
     opponentTeamName,
     players: session.players.filter((p) => p.teamId === team),
     dates,
+    sort,
     refreshCheckable: (team === 'home' ? session.homeTeamIdentity : session.guestTeamIdentity) !== undefined,
   };
 }
@@ -64,7 +70,7 @@ export function renderOpponent(
 ): string {
   const props: OpponentPageProps = {
     ...app.view,
-    ...buildOpponentViewData(session, app.locale),
+    ...buildOpponentViewData(session, app.locale, currentSortParam(app)),
     ...extra,
     session,
     title: app.t('opponent_title'),

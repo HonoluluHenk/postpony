@@ -4,9 +4,10 @@ import type { Clash } from '../../lib/clashes';
 import type { Player, Postponement } from '../../lib/models';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
 import { type AppLocale, type TranslateFn, weekdayLabels } from '../../locales';
-import { pageLayout } from '../layouts/main';
-import { StatusAnnouncement } from '../partials/status-announcement';
 import { StatusChip } from '../edit/id/status-chip';
+import { pageLayout } from '../layouts/main';
+import { type DateSort, groupByAvailability, groupByWeek, SortControl, sortedRows } from '../partials/sort-control';
+import { StatusAnnouncement } from '../partials/status-announcement';
 import { withOpponentPassword } from './opponent-utils';
 
 export interface OpponentDateItem {
@@ -33,6 +34,8 @@ export interface OpponentViewData {
   opponentTeamName: string;
   players: Player[];
   dates: OpponentDateItem[];
+  /** List ordering; `date` is week-grouped, `availability` groups by the opponent team's own votes. */
+  sort: DateSort;
   /**
    * Whether the opponent side carries a click-tt team identity, i.e. the
    * re-check button can run. Without an identity the page offers no check.
@@ -148,6 +151,12 @@ export function OpponentPage(props: OpponentPageProps): JSX.Element {
  * target and never nests.
  */
 export function OpponentView(props: OpponentPageProps): JSX.Element {
+  const rows = sortedRows(props.dates);
+  const ownAvailability = new Map(props.dates.map((date) => [date.id, date.yes + date.ifNecessary]));
+  const groups = props.sort === 'availability'
+                 ? groupByAvailability(rows, ownAvailability, props.t)
+                 : groupByWeek(rows, props.locale, props.t);
+
   return (
     <div id="opponent-view" class="opponent-view">
       <div class="side-block">
@@ -223,44 +232,55 @@ export function OpponentView(props: OpponentPageProps): JSX.Element {
           ) : null}
         </div>
         {props.refreshError ? <p class="error mt-2" role="alert">{props.t('clash_check_refresh_failed')}</p> : null}
+        {props.dates.length > 1 ? <SortControl sort={props.sort} t={props.t}
+                                               selectUrl={withOpponentPassword(`/opponent/${props.session.id}`, props.opponentCaptainPassword)}
+                                               target="#opponent-view"/> : null}
         {props.dates.length === 0 ? (
           <p class="muted mt-2">{props.t('proposed_dates_none')}</p>
         ) : (
-           props.dates.map((date) => {
-             const dt = parseIsoToPlainDateTime(date.dateTimeRange.start);
-             const hasClashes = date.ownClashes !== undefined && date.ownClashes.length > 0;
-             const isClean = date.ownClashes !== undefined && !hasClashes;
-             const ariaLabel = hasClashes ? props.t('clash_row_label', {date: date.display}) : isClean
-                                                                                               ? props.t('clash_row_clean_label', {date: date.display})
-                                                                                               : undefined;
-             return (
-               <article key={date.id} class={`date-row${hasClashes ? ' clash-row' : ''}`}
-                        role={ariaLabel ? 'group' : undefined} aria-label={ariaLabel}>
-                 <div class="date-cell">
-                   <span class="date-day">{weekdayLabels[props.locale][dt.dayOfWeek - 1] ?? ''}</span>
-                   <span class="date-num">{formatLocalizedDateTime(dt, props.locale, {
-                     month: 'long',
-                     day: 'numeric',
-                   })}</span>
-                   <span class="date-time">{formatLocalizedDateTime(dt, props.locale, {timeStyle: 'short'})}</span>
-                   <span class="date-year">{dt.year}</span>
-                 </div>
-                 <div class="date-main">
-                   <OpponentDateChips date={date} t={props.t} locale={props.locale}/>
-                   <span class="team-tally">
-                      {props.t('opponent_team_votes', {team: props.opponentTeamName})}: {date.yes +
-                     date.ifNecessary} ({date.yes}/{date.ifNecessary}/{date.no})
-                    </span>
-                   <DateActions
-                     session={props.session}
-                     date={date}
-                     t={props.t}
-                     opponentCaptainPassword={props.opponentCaptainPassword}
-                   />
-                 </div>
-               </article>
-             );
-           })
+           groups.map((group) => (
+             <section key={group.key}>
+               <h3 class="week-head">
+                 <span>{group.label}</span>
+                 {group.range ? <span class="week-range">{group.range}</span> : null}
+               </h3>
+               {group.rows.map((date) => {
+                 const dt = parseIsoToPlainDateTime(date.dateTimeRange.start);
+                 const hasClashes = date.ownClashes !== undefined && date.ownClashes.length > 0;
+                 const isClean = date.ownClashes !== undefined && !hasClashes;
+                 const ariaLabel = hasClashes ? props.t('clash_row_label', {date: date.display}) : isClean
+                                                                                                   ? props.t('clash_row_clean_label', {date: date.display})
+                                                                                                   : undefined;
+                 return (
+                   <article key={date.id} class={`date-row${hasClashes ? ' clash-row' : ''}`}
+                            role={ariaLabel ? 'group' : undefined} aria-label={ariaLabel}>
+                     <div class="date-cell">
+                       <span class="date-day">{weekdayLabels[props.locale][dt.dayOfWeek - 1] ?? ''}</span>
+                       <span class="date-num">{formatLocalizedDateTime(dt, props.locale, {
+                         month: 'long',
+                         day: 'numeric',
+                       })}</span>
+                       <span class="date-time">{formatLocalizedDateTime(dt, props.locale, {timeStyle: 'short'})}</span>
+                       <span class="date-year">{dt.year}</span>
+                     </div>
+                     <div class="date-main">
+                       <OpponentDateChips date={date} t={props.t} locale={props.locale}/>
+                       <span class="team-tally">
+                          {props.t('opponent_team_votes', {team: props.opponentTeamName})}: {date.yes +
+                         date.ifNecessary} ({date.yes}/{date.ifNecessary}/{date.no})
+                       </span>
+                       <DateActions
+                         session={props.session}
+                         date={date}
+                         t={props.t}
+                         opponentCaptainPassword={props.opponentCaptainPassword}
+                       />
+                     </div>
+                   </article>
+                 );
+               })}
+             </section>
+           ))
          )}
       </section>
     </div>

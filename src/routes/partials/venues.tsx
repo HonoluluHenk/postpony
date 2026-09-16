@@ -1,46 +1,45 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { Venue } from '../../lib/models';
-import { defaultVenueNumber, resolveVenue, venueShortName } from '../../lib/venues';
+import { defaultVenueNumber, resolveVenue } from '../../lib/venues';
 
-/** Display token for a proposed date's venue in list/poll views, e.g. "(1)". */
-export function venueNumberToken(venueNumber: number | undefined): string {
+/** "(1)" number token for a proposed date's venue; absent number resolves to venue 1. */
+function venueNumberToken(venueNumber: number | undefined): string {
   return `(${defaultVenueNumber(venueNumber)})`;
 }
 
 /**
- * Tooltip text for the venue badge: "1 – Turnhalle orange, UG, Schule Dennigkofen" when the venue's
- * name is known, otherwise just the number.
+ * Short display name; prefers `shortName`, falls back to `name` (venues scraped
+ * before `shortName` existed carry only `name`). Undefined when no venue resolves.
  */
-export function venueTooltip(venueNumber: number | undefined, venues: readonly Venue[]): string {
+function venueDisplayName(venueNumber: number | undefined, venues: readonly Venue[]): string | undefined {
+  const venue = resolveVenue(venueNumber, venues);
+  return venue ? venue.shortName || venue.name : undefined;
+}
+
+/** Full name for the chip's visually-hidden text: "1 – Turnhalle orange, UG, Schule Dennigkofen". */
+function venueFullName(venueNumber: number | undefined, venues: readonly Venue[]): string {
   const venue = resolveVenue(venueNumber, venues);
   return venue ? `${venue.venueNumber} – ${venue.name}` : String(defaultVenueNumber(venueNumber));
 }
 
 /**
- * The "(1)" pill shown next to a proposed date; the full venue name is exposed
- * as visually-hidden text when it differs from the visible label. `label`
- * overrides the visible text (the vote page shows the number, short name, and
- * occupancy count inside the pill).
+ * The one venue chip shared by the edit list and the vote polls: "(1) Turnhalle
+ * orange". `extra` (e.g. the venue occupancy count) appends after a comma. When
+ * the venue resolves, its full name is exposed to assistive tech as
+ * visually-hidden text wherever it differs from the visible label.
  */
-export function VenueBadge(props: { venueNumber?: number; venues: readonly Venue[]; label?: string }): JSX.Element {
-  const visible = props.label ?? venueNumberToken(props.venueNumber);
-  const full = venueTooltip(props.venueNumber, props.venues);
-  const hasName = resolveVenue(props.venueNumber, props.venues) !== undefined;
+export function VenueChip(props: {
+  venueNumber?: number;
+  venues: readonly Venue[];
+  extra?: string
+}): JSX.Element {
+  const name = venueDisplayName(props.venueNumber, props.venues);
+  const base = name ? `${venueNumberToken(props.venueNumber)} ${name}` : venueNumberToken(props.venueNumber);
+  const visible = props.extra ? `${base}, ${props.extra}` : base;
   return (
-    <span class="chip venue-badge">
+    <span class="chip venue-chip">
       {visible}
-      {hasName && full !== visible ? <span class="visually-hidden">{full}</span> : null}
+      {name ? <span class="visually-hidden">{venueFullName(props.venueNumber, props.venues)}</span> : null}
     </span>
   );
-}
-
-/**
- * The vote pill label: "(1) – Turnhalle orange" (short name only, so the pill
- * stays short) plus the occupancy suffix when the hall is busy. The pill's
- * tooltip still carries the full name.
- */
-export function venuePillLabel(venueNumber: number | undefined, venues: readonly Venue[], occupancySuffix?: string): string {
-  const shortName = venueShortName(venueNumber, venues);
-  const base = shortName ? `${venueNumberToken(venueNumber)} – ${shortName}` : venueNumberToken(venueNumber);
-  return occupancySuffix ? `${base}, ${occupancySuffix}` : base;
 }

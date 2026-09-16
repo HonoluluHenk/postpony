@@ -101,6 +101,27 @@ export class OpponentPage {
       .locator('.team-tally');
   }
 
+  get sortControl(): Locator {
+    return this.page.getByRole('radiogroup', {name: 'Sort by'});
+  }
+
+  sortRadio(name: 'Date' | 'Availability'): Locator {
+    return this.sortControl.getByRole('radio', {name});
+  }
+
+  async sortBy(name: 'Date' | 'Availability'): Promise<void> {
+    // beer.css hides native radios; toggle via the visible label text.
+    await this.sortControl.getByText(name, {exact: true})
+      .click();
+    await expect(this.spinner)
+      .toBeHidden();
+  }
+
+  // Availability groups ("Available: 1") and ISO-week groups share `.week-head`.
+  get groupHeads(): Locator {
+    return this.page.locator('#opponent-dates .week-head');
+  }
+
   dateCell(dateIndex: number): Locator {
     return this.dateRows
       .nth(dateIndex)

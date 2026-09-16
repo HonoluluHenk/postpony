@@ -145,4 +145,11 @@ describe('buildOpponentViewData', () => {
     expect(buildOpponentViewData(session, 'en-US').refreshCheckable)
       .toBe(false);
   });
+
+  test('carries the requested sort, defaulting to date', () => {
+    expect(buildOpponentViewData(aSession(), 'en-US').sort)
+      .toBe('date');
+    expect(buildOpponentViewData(aSession(), 'en-US', 'availability').sort)
+      .toBe('availability');
+  });
 });

@@ -32,7 +32,9 @@ function pageProps(
 }
 
 function renderToString(node: unknown): string {
-  return (node as { toString(): string }).toString();
+  return (node as {
+    toString(): string
+  }).toString();
 }
 
 function clashingSession(): Postponement {
@@ -248,7 +250,8 @@ describe('OpponentPage row-level labels', () => {
       .toContain('aria-label="No other games:');
   });
 
-  it('judges the row on the opponent side only when both sides clash', () => {    const dates: OpponentDateItem[] = [
+  it('judges the row on the opponent side only when both sides clash', () => {
+    const dates: OpponentDateItem[] = [
       {
         id: 'pd-both',
         display: 'Tu, Sep 1, 2026, 8:00 PM',
@@ -309,6 +312,141 @@ describe('OpponentPage toggle accessible names', () => {
       .toContain('aria-label="Accept Tu, Sep 1, 2026, 8:00 PM — the organizer may confirm it"');
     expect(html)
       .toContain('aria-label="Accept Tu, Sep 8, 2026, 8:00 PM — the organizer may confirm it"');
+  });
+});
+
+describe('OpponentPage sort control', () => {
+  const sortDates = [
+    aProposedDate({
+      id: 'pd-a',
+      dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+      votable: true,
+    }),
+    aProposedDate({
+      id: 'pd-b',
+      dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+      votable: true,
+    }),
+    aProposedDate({
+      id: 'pd-c',
+      dateTimeRange: {start: '2026-09-15T20:00', end: '2026-09-15T22:00'},
+      votable: true,
+    }),
+    aProposedDate({
+      id: 'pd-d',
+      dateTimeRange: {start: '2026-09-22T20:00', end: '2026-09-22T22:00'},
+      votable: true,
+    }),
+  ];
+  // Opponent-side availability: pd-a=1, pd-b=2, pd-c=2 (yes + if-necessary), pd-d=0.
+  const sortVotes = [
+    aVote({proposedDateId: 'pd-a', participantId: 'ap1', type: 'Yes'}),
+    aVote({proposedDateId: 'pd-b', participantId: 'ap1', type: 'Yes'}),
+    aVote({proposedDateId: 'pd-b', participantId: 'ap2', type: 'Yes'}),
+    aVote({proposedDateId: 'pd-c', participantId: 'ap1', type: 'Yes'}),
+    aVote({proposedDateId: 'pd-c', participantId: 'ap2', type: 'IfNecessary'}),
+  ];
+  const session = aSession({
+    organizerTeam: 'home',
+    players: [aPlayer({id: 'ap1', teamId: 'away'}), aPlayer({id: 'ap2', teamId: 'away'})],
+    proposedDates: sortDates,
+    votes: sortVotes,
+  });
+
+  it('renders the Date/Availability radiogroup that requests the opponent view', () => {
+    const html = renderToString(OpponentPage(pageProps(session)));
+
+    expect(html)
+      .toContain('class="sort-control" role="radiogroup" aria-label="Sort by"');
+    expect(html)
+      .toContain('name="sort" value="date" checked');
+    expect(html)
+      .toContain('name="sort" value="availability"');
+    expect(html)
+      .toContain('hx-get="/opponent/test-session"');
+    expect(html)
+      .toContain('hx-target="#opponent-view"');
+    expect(html)
+      .toContain('hx-push-url="true"');
+  });
+
+  it('groups by the opponent team availability when sorted by availability', () => {
+    const html = renderToString(OpponentPage(pageProps(session, 'en-US', {sort: 'availability'})));
+
+    expect(html)
+      .toContain('<span>Available: 2</span>');
+    expect(html)
+      .toContain('<span>Available: 1</span>');
+    expect(html)
+      .toContain('<span>Available: 0</span>');
+    // Availability grouping labels the groups by count, not ISO week.
+    expect(html)
+      .not
+      .toContain('>Week ');
+
+    // Within "Available: 2" Sep 8 precedes Sep 15; then the 1s and 0s groups.
+    const sep8 = html.indexOf('>September 8<');
+    const sep15 = html.indexOf('>September 15<');
+    const sep1 = html.indexOf('>September 1<');
+    const sep22 = html.indexOf('>September 22<');
+    expect(sep8)
+      .toBeGreaterThan(-1);
+    expect(sep8)
+      .toBeLessThan(sep15);
+    expect(sep15)
+      .toBeLessThan(sep1);
+    expect(sep1)
+      .toBeLessThan(sep22);
+  });
+
+  it('restores ISO-week grouping when sorted by date', () => {
+    const html = renderToString(OpponentPage(pageProps(session, 'en-US', {sort: 'date'})));
+
+    expect(html)
+      .toContain('Week 36');
+    expect(html)
+      .toContain('Week 37');
+    expect(html)
+      .toContain('Week 38');
+    expect(html)
+      .toContain('Week 39');
+    expect(html)
+      .not
+      .toContain('Available:');
+  });
+
+  it('drives the availability grouping from the opponent team when the organizer is away', () => {
+    const awaySession = aSession({
+      organizerTeam: 'away',
+      players: [aPlayer({id: 'hp1', teamId: 'home'}), aPlayer({id: 'hp2', teamId: 'home'})],
+      proposedDates: sortDates,
+      votes: [aVote({proposedDateId: 'pd-a', participantId: 'hp1', type: 'Yes'})],
+    });
+    const html = renderToString(OpponentPage(pageProps(awaySession, 'en-US', {sort: 'availability'})));
+
+    expect(html)
+      .toContain('<span>Available: 1</span>');
+    expect(html)
+      .not
+      .toContain('<span>Available: 2</span>');
+    // Only pd-a has home availability, so it leads the list.
+    expect(html.indexOf('>September 1<'))
+      .toBeLessThan(html.indexOf('>September 8<'));
+  });
+
+  it('hides the sort control when only one date exists', () => {
+    const single = aSession({
+      organizerTeam: 'home',
+      proposedDates: [aProposedDate({id: 'pd-1', votable: true})],
+    });
+    const html = renderToString(OpponentPage(pageProps(single)));
+
+    expect(html)
+      .not
+      .toContain('sort-control');
+    expect(html)
+      .not
+      .toContain('role="radiogroup"');
   });
 });
 

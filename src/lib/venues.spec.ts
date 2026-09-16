@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Venue } from './models';
-import { defaultVenueNumber, resolveVenue, venueShortName } from './venues';
+import { defaultVenueNumber, resolveVenue } from './venues';
 
 function aVenue(overrides: Partial<Venue> = {}): Venue {
   return {
@@ -50,18 +50,6 @@ describe('venues', () => {
 
     it('returns undefined for an absent venue number when venue 1 is unknown', () => {
       expect(resolveVenue(undefined, [aVenue({venueNumber: 2})]))
-        .toBeUndefined();
-    });
-  });
-
-  describe('venueShortName', () => {
-    it('returns the resolved venue short name', () => {
-      expect(venueShortName(undefined, [aVenue()]))
-        .toBe('Turnhalle orange');
-    });
-
-    it('returns undefined when no venue matches', () => {
-      expect(venueShortName(9, [aVenue()]))
         .toBeUndefined();
     });
   });

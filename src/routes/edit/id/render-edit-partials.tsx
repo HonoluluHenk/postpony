@@ -8,7 +8,8 @@ import { EditGrid, EditPage, type EditPageProps } from './edit';
 import { organizerPasswordFromRequest } from './edit-auth';
 import { ErrorContainer } from '../../partials/error-container';
 import { StatusAnnouncement } from '../../partials/status-announcement';
-import type { DateSort, EditGridProps, EditPartialsData } from './proposed-dates-section';
+import { currentSortParam, type DateSort } from '../../partials/sort-control';
+import type { EditGridProps, EditPartialsData } from './proposed-dates-section';
 
 function toVoteTallyItems(
   proposedDates: ProposedDate[],
@@ -96,18 +97,6 @@ export type EditPartialExtras = Pick<
 > & Pick<EditPageProps, 'globalError'>;
 
 /**
- * The rail's sort lives in the page URL, so a mutation (which posts to a URL
- * without it) recovers it from the browser's current URL that HTMX forwards.
- */
-function currentSort(app: App): 'date' | 'availability' {
-  try {
-    return new URL(app.currentUrl()).searchParams.get('sort') === 'availability' ? 'availability' : 'date';
-  } catch {
-    return 'date';
-  }
-}
-
-/**
  * The `#edit-grid` swap target as a standalone HTMX fragment, plus the
  * out-of-band error container and status announcement. The OOB elements live
  * outside the grid, so replacing the grid never destroys their targets.
@@ -132,7 +121,7 @@ export function renderEditPartials(
   session: Postponement,
   extra: EditPartialExtras = {},
 ): string {
-  const data = buildEditPartialsData(session, app.locale, currentSort(app));
+  const data = buildEditPartialsData(session, app.locale, currentSortParam(app));
   const props: EditPageProps = {
     ...app.view,
     ...data,
