@@ -550,6 +550,37 @@ export function initVoteForm(spinner) {
 }
 
 /**
+ * Re-asserts the edit rail's sort radio group from the URL's `?sort` param.
+ * The server already renders the matching `checked`, but Firefox restores form
+ * controls from its own snapshot on reload (F5) after an HTMX swap + pushState
+ * and can leave the whole radio group unchecked even though the grouping still
+ * matches the URL. Re-applying the checked state keeps the visible selection in
+ * sync. No-op when the rail (with fewer than two dates) is absent.
+ * @param {string} [search] - query string to read `sort` from
+ */
+export function resyncSortRadios(search = window.location.search) {
+  const group = document.querySelector('.sort-control');
+  if (!group) return;
+  const sort = new URLSearchParams(search).get('sort') === 'availability' ? 'availability' : 'date';
+  group.querySelectorAll('input[name="sort"]')
+    .forEach((radio) => {
+      radio.checked = radio.value === sort;
+    });
+}
+
+/**
+ * Wires the sort-radio resync: once for the initial load (after Firefox's own
+ * reload restore) and once per HTMX swap or history restore.
+ */
+export function initSortRadios() {
+  resyncSortRadios();
+  window.addEventListener('load', () => resyncSortRadios());
+  window.addEventListener('pageshow', () => resyncSortRadios());
+  document.addEventListener('htmx:load', () => resyncSortRadios());
+  document.addEventListener('htmx:historyRestore', () => resyncSortRadios());
+}
+
+/**
  * Focuses a heading inside the swap target, or the error alert when validation fails.
  * Called from hx-on::after-request on forms that trigger partial swaps.
  */

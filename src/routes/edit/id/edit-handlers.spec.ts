@@ -2578,6 +2578,27 @@ describe('edit handlers', () => {
         .toContain('<span>Available: 0</span>');
     });
 
+    test('handleEditGet answers an HTMX sort request with the bare grid fragment', async () => {
+      const session = seedSession({proposedDates: sortDates});
+      const app = editApp({
+        params: {id: session.id},
+        queries: {sort: 'availability'},
+        headers: {'HX-Request': 'true'},
+      });
+      await app.store.save(session);
+
+      const html = await (await handleEditGet(app)).text();
+
+      expect(html)
+        .toContain('<div id="edit-grid" class="edit-grid">');
+      expect(html)
+        .not
+        .toContain('<main id="main-content"');
+      expect(html)
+        .not
+        .toContain('<!DOCTYPE html>');
+    });
+
     test('renderEditPartials keeps the availability sort from the HX-Current-URL header', () => {
       const session = seedSession({proposedDates: sortDates});
       const app = editApp({

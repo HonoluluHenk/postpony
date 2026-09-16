@@ -108,11 +108,24 @@ function currentSort(app: App): 'date' | 'availability' {
 }
 
 /**
- * Renders the redesigned edit grid as an HTMX partial: the swap target's own
- * element (`#edit-grid`) so the sidebar and rail stay in sync after any
- * mutation, plus the out-of-band error container and status announcement. The
- * OOB elements live outside the grid, so replacing the grid never destroys
- * their targets.
+ * The `#edit-grid` swap target as a standalone HTMX fragment, plus the
+ * out-of-band error container and status announcement. The OOB elements live
+ * outside the grid, so replacing the grid never destroys their targets.
+ */
+export function renderEditGridPartial(app: App, props: EditPageProps): string {
+  return app.render(
+    <>
+      <ErrorContainer globalError={props.globalError} isOob={true}/>
+      <StatusAnnouncement message={props.statusMessage} isOob={true}/>
+      <EditGrid {...props}/>
+    </>,
+  );
+}
+
+/**
+ * Renders a mutation result: the full page for a plain request, the
+ * `#edit-grid` fragment for an HTMX one so the swap target matches the
+ * response root.
  */
 export function renderEditPartials(
   app: App,
@@ -128,16 +141,8 @@ export function renderEditPartials(
     title: app.t('edit_postponement_title', {name: session.name}),
     organizerPassword: organizerPasswordFromRequest(app),
   };
-  // A plain (non-HTMX) request still gets the full page; only the HTMX partial
-  // is scoped to the grid so the swap target matches the response root.
   if (!app.isPartial) {
     return app.render(<EditPage {...props} />);
   }
-  return app.render(
-    <>
-      <ErrorContainer globalError={extra.globalError} isOob={true}/>
-      <StatusAnnouncement message={extra.statusMessage} isOob={true}/>
-      <EditGrid {...props}/>
-    </>,
-  );
+  return renderEditGridPartial(app, props);
 }

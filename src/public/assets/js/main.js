@@ -7,6 +7,7 @@ import {
   initDeleteDialogs,
   initFocusManagement,
   initOccupancyTooltips,
+  initSortRadios,
   initVoteForm,
   initGeneratorTimePickers,
   initGeneratorDatePickers,
@@ -23,6 +24,10 @@ const spinner = new Spinner();
 // Delegated on document, so it needs no ready DOM. Wired here rather than in the
 // load callback so a vote click that races the page's load event is never lost.
 initVoteForm(spinner);
+
+// Registered before the load/pageshow events so the sort radio group is
+// re-synced after Firefox's form-state restore on reload.
+initSortRadios();
 
 window.addEventListener('load', () => {
   initTheme();

@@ -12,8 +12,10 @@ import {
   initOccupancyTooltips,
   initProposedDateTimePicker,
   initRedesignDisclosures,
+  initSortRadios,
   initTheme,
   initVoteForm,
+  resyncSortRadios,
   shouldSwapErrorBody,
 } from './ui.js';
 
@@ -391,6 +393,76 @@ describe('initFocusManagement', () => {
       detail: {target: document.createTextNode('text')},
     });
     expect(() => document.dispatchEvent(event)).not.toThrow();
+  });
+});
+
+describe('resyncSortRadios', () => {
+  const buildSortControl = () => {
+    document.body.innerHTML = '<div class="sort-control" role="radiogroup" aria-label="Sort by">'
+      + '<input type="radio" name="sort" value="date">'
+      + '<input type="radio" name="sort" value="availability">'
+      + '</div>';
+  };
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('checks availability when the URL sorts by availability', () => {
+    buildSortControl();
+    resyncSortRadios('?organizerPassword=x&sort=availability');
+    expect(document.querySelector('input[value="availability"]').checked).toBe(true);
+    expect(document.querySelector('input[value="date"]').checked).toBe(false);
+  });
+
+  it('checks date when the URL sorts by date', () => {
+    buildSortControl();
+    resyncSortRadios('?sort=date');
+    expect(document.querySelector('input[value="date"]').checked).toBe(true);
+    expect(document.querySelector('input[value="availability"]').checked).toBe(false);
+  });
+
+  it('falls back to date for an unknown sort', () => {
+    buildSortControl();
+    resyncSortRadios('?sort=bogus');
+    expect(document.querySelector('input[value="date"]').checked).toBe(true);
+  });
+
+  it('repairs the both-unchecked state Firefox restores on reload', () => {
+    buildSortControl();
+    document.querySelectorAll('input[name="sort"]')
+      .forEach((radio) => {
+        radio.checked = false;
+      });
+    resyncSortRadios('?sort=availability');
+    expect(document.querySelector('input[value="availability"]').checked).toBe(true);
+  });
+
+  it('does nothing when the rail is absent', () => {
+    document.body.innerHTML = '';
+    expect(() => resyncSortRadios('?sort=availability')).not.toThrow();
+  });
+});
+
+describe('initSortRadios', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('re-syncs the radios on pageshow', () => {
+    document.body.innerHTML = '<div class="sort-control">'
+      + '<input type="radio" name="sort" value="date">'
+      + '<input type="radio" name="sort" value="availability">'
+      + '</div>';
+    initSortRadios();
+    document.querySelectorAll('input[name="sort"]')
+      .forEach((radio) => {
+        radio.checked = false;
+      });
+
+    window.dispatchEvent(new Event('pageshow'));
+
+    expect(document.querySelector('input[value="date"]').checked).toBe(true);
   });
 });
 
