@@ -19,6 +19,7 @@ A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framewo
 * Whe implementing issues: use subagents and commit after each issue
 * htmx `defaultSwapStyle` is 'outerHTML'
 * **Always** ask questions using the `question` or `ask_user` tool (whichever is available).
+* When writing instructions for users, be informal (esp. in german: use "du" instead of "sie").
 
 ## Quick reference
 
