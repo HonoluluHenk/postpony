@@ -26,6 +26,16 @@ export class OpponentPage {
     return this.page.getByRole('list', {name: 'Your Team Roster'});
   }
 
+  // The invite block lives inside the roster section; the link is the away/home
+  // join URL with the player token, scoped to the opponent side.
+  get teamInviteLink(): Locator {
+    return this.page.locator('#opponent-roster a[href*="/join/"]');
+  }
+
+  get teamInviteCopyButton(): Locator {
+    return this.page.locator('#opponent-roster button.copy-btn');
+  }
+
   get playerItems(): Locator {
     return this.roster.locator('li');
   }

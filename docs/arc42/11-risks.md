@@ -24,7 +24,7 @@ All creation depends on click-tt.ch HTML structure. The scraper already carries 
 
 ### R5 — Three shareable secrets stored in plaintext
 
-The three shareable secrets — opponent-captain, home-player, away-player — are persisted plaintext on the `Postponement` so the edit page can render share links. Risk: any read of the session JSON exposes working credentials. Accepted trade-off; documented here for awareness. The organizer-captain plaintext is never persisted.
+The three shareable secrets — opponent-captain, home-player, away-player — are persisted plaintext on the `Postponement` so the share links can render (the organizer team's link on the edit page, the opponent team's link on the opponent-captain page). Risk: any read of the session JSON exposes working credentials. Accepted trade-off; documented here for awareness. The organizer-captain plaintext is never persisted.
 
 ## 11.2 Technical debt (documentation and code drift)
 

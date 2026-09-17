@@ -315,6 +315,56 @@ describe('OpponentPage toggle accessible names', () => {
   });
 });
 
+describe('OpponentPage team invitation link', () => {
+  it('renders the opponent team\'s join link with its player token and own-team label', () => {
+    const session = aSession({
+      organizerTeam: 'home',
+      homeTeam: 'Ostermundigen',
+      guestTeam: 'Thun',
+      players: [aPlayer({id: 'ap', teamId: 'away'})],
+    });
+    const html = renderToString(OpponentPage(pageProps(session)));
+
+    expect(html)
+      .toContain(`href="${BASE_URL}/join/test-session/away?token=away-player-pw"`);
+    expect(html)
+      .toContain('My team invitation link (Thun)');
+    expect(html)
+      .toContain(`data-copy="${BASE_URL}/join/test-session/away?token=away-player-pw"`);
+    expect(html)
+      .toContain('aria-label="Copy to clipboard"');
+    expect(html)
+      .not
+      .toContain(`href="${BASE_URL}/join/test-session/home?token=home-player-pw"`);
+  });
+
+  it('points at the home side when the organizer sits on the away side', () => {
+    const session = aSession({
+      organizerTeam: 'away',
+      homeTeam: 'Ostermundigen',
+      guestTeam: 'Thun',
+    });
+    const html = renderToString(OpponentPage(pageProps(session)));
+
+    expect(html)
+      .toContain(`href="${BASE_URL}/join/test-session/home?token=home-player-pw"`);
+    expect(html)
+      .toContain('My team invitation link (Ostermundigen)');
+  });
+
+  it('renders the plain label when the opponent side has no team name', () => {
+    const session = aSession({organizerTeam: 'home'});
+    session.homeTeam = undefined;
+    session.guestTeam = undefined;
+    const html = renderToString(OpponentPage(pageProps(session)));
+
+    expect(html)
+      .toContain(`href="${BASE_URL}/join/test-session/away?token=away-player-pw"`);
+    expect(html)
+      .toContain('>My team invitation link</a>');
+  });
+});
+
 describe('OpponentPage sort control', () => {
   const sortDates = [
     aProposedDate({

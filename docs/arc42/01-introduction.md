@@ -12,12 +12,12 @@ The following capabilities describe the system **as built** (each is traceable t
 4. **Detect clashes** — flag dates that collide with either team's click-tt schedule (±2 h) and the home venue's occupancy; newly-proposed clashing dates are auto-deselected. (ADR-0023)
 5. **Re-check clashes on demand** — the organizer refreshes both sides from the edit page; the opponent captain refreshes only their own side from the opponent page (plus Venue Occupancy when on the home side), never touching the other side's lines or the votable switch. (`POST /edit/:id/refresh-clashes`, `POST /opponent/:id/refresh-clashes`, ADR-0026)
 5. **Toggle votability** per proposed date. (`POST /edit/:id/proposed-date-visibility`)
-6. **Invite players** via a shareable, per-team token link — each team has its own player password. (`/join/:id/:team?token=`, ADR-0013, ADR-0025)
+6. **Invite players** via a shareable, per-team token link — each team has its own player password. The organizer shares his own team's link from the edit page; the opponent captain shares their team's link from the opponent page. (`/join/:id/:team?token=`, ADR-0013, ADR-0025)
 7. **Vote** `Yes` / `No` / `IfNecessary`, one vote per participant per date. (`/join/:id/:team/vote`)
 8. **Confirm** a date, locking the postponement to `Confirmed` — only a date that is votable, still in the opponent's poll (opponent-votable), and accepted by the opponent captain. (`POST /edit/:id/proposed-date-confirm`)
 9. **Reopen** a confirmed postponement back to `Voting`, preserving history and incrementing `reopenCount`. (`POST /edit/:id/reopen`)
 10. **Export** the candidate dates as an iCal feed with per-date one-click vote links. (`/edit/:id/calendar.ics`, `/join/:id/:team/calendar.ics`)
-11. **Opponent-captain scoped view** — the opposing captain manages their own team's roster, turns a date's Votable off (which also takes it out of their own team's poll), and marks dates accepted, seeing only their own team's tallies and clash lines (with a clean chip on checked-clean dates), and re-checks their own side's schedule on demand. (`/opponent/:id`, ADR-0025, ADR-0026)
+11. **Opponent-captain scoped view** — the opposing captain manages their own team's roster, shares their team's player invitation link, turns a date's Votable off (which also takes it out of their own team's poll), and marks dates accepted, seeing only their own team's tallies and clash lines (with a clean chip on checked-clean dates), and re-checks their own side's schedule on demand. (`/opponent/:id`, ADR-0025, ADR-0026)
 
 ### 1.1.1 Explicitly not built
 

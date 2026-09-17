@@ -181,6 +181,34 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
+  test('keyboard focus reveals a date choice\'s tooltip', async ({page}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+
+    // beer.css shows .tooltip only on :hover; the vote form revives it on
+    // keyboard focus (the .vote-option wrapper uses :focus-within). Beer hides
+    // the native radio visually but keeps it focusable, so .focus() works.
+    const group = joinPage.voteGroup(0);
+    const tooltip = group.locator('.tooltip')
+      .first();
+    await group.getByRole('radio', {name: 'Yes'})
+      .focus();
+    await expect(tooltip)
+      .toBeVisible();
+    // toBeVisible ignores opacity, so assert the beer.css fade-in actually ran
+    // (toHaveCSS retries past the transition).
+    await expect(tooltip)
+      .toHaveCSS('opacity', '1');
+
+    // Moving focus hides the tooltip again.
+    await page.keyboard.press('Tab');
+    await expect(tooltip)
+      .toBeHidden();
+  });
+
   test('remembers the player on return visits via localStorage', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 

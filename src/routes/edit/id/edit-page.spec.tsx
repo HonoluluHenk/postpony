@@ -22,8 +22,22 @@ function buildSession(overrides: Parameters<typeof aSession>[0] = {}): Postponem
       aPlayer({id: 'p3', name: 'Carol', teamId: 'away'}),
     ],
     venues: [
-      {venueNumber: 1, name: 'Turnhalle orange', shortName: 'Turnhalle orange', address: 'Dennigkofenweg 169', postalCode: '3072', city: 'Ostermundigen'},
-      {venueNumber: 2, name: 'Turnhalle grün', shortName: 'Turnhalle grün', address: 'Dennigkofenweg 170', postalCode: '3072', city: 'Ostermundigen'},
+      {
+        venueNumber: 1,
+        name: 'Turnhalle orange',
+        shortName: 'Turnhalle orange',
+        address: 'Dennigkofenweg 169',
+        postalCode: '3072',
+        city: 'Ostermundigen',
+      },
+      {
+        venueNumber: 2,
+        name: 'Turnhalle grün',
+        shortName: 'Turnhalle grün',
+        address: 'Dennigkofenweg 170',
+        postalCode: '3072',
+        city: 'Ostermundigen',
+      },
     ],
     proposedDates: [
       aProposedDate({
@@ -72,7 +86,9 @@ function renderToString(node: unknown): string {
   if (node === null || node === undefined) {
     return '';
   }
-  return (node as { toString(): string }).toString();
+  return (node as {
+    toString(): string
+  }).toString();
 }
 
 describe('EditPage single-line header', () => {
@@ -172,13 +188,12 @@ describe('EditPage redesigned grid and sidebar', () => {
     expect(html)
       .toContain(`href="${BASE_URL}/opponent/test-session?opponentCaptainPassword=opponent-captain-pw"`);
     expect(html)
+      .not
       .toContain(`href="${BASE_URL}/join/test-session/away?token=away-player-pw"`);
     expect(html)
       .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/home\?token=home-player-pw"/);
     expect(html)
       .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/opponent\/test-session\?opponentCaptainPassword=opponent-captain-pw"/);
-    expect(html)
-      .toMatch(/class="copy-btn"[^>]*data-copy="https:\/\/game-scheduler.localhost:3000\/join\/test-session\/away\?token=away-player-pw"/);
     expect(html)
       .toContain('aria-label="Copy to clipboard"');
     expect(html)
@@ -186,22 +201,20 @@ describe('EditPage redesigned grid and sidebar', () => {
     expect(html)
       .toContain('Opponent captain link (Guest Team)');
     expect(html)
+      .not
       .toContain('Opponent team invitation link (Guest Team)');
   });
 
-  it('orders the three invite links my-team, opponent captain, opponent team', () => {
+  it('orders the two invite links my-team then opponent captain', () => {
     const html = renderToString(EditPage(baseProps()));
 
     const myLink = html.indexOf(`href="${BASE_URL}/join/test-session/home?token=home-player-pw"`);
     const captainLink = html.indexOf(`href="${BASE_URL}/opponent/test-session?opponentCaptainPassword=opponent-captain-pw"`);
-    const opponentLink = html.indexOf(`href="${BASE_URL}/join/test-session/away?token=away-player-pw"`);
 
     expect(myLink)
       .toBeGreaterThanOrEqual(0);
     expect(captainLink)
       .toBeGreaterThan(myLink);
-    expect(opponentLink)
-      .toBeGreaterThan(captainLink);
   });
 
   it('offers reopen and shows the reopen count when the postponement is confirmed', () => {

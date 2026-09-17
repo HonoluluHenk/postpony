@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import type { SessionFixture } from '../test-session';
 import { isoToLocaleDateTokens, isoToLocaleTokens } from './locale-tokens';
+import { OpponentPage } from './OpponentPage';
 import { ScrapePage } from './ScrapePage';
 
 // The fixture drilldown that backs every e2e session: MTTV 2026/27 → O40
@@ -55,22 +56,25 @@ export class EditPage {
       throw new Error('home invitation link was not rendered');
     }
 
-    const awayHref = await editPage.awayInviteLink.getAttribute('href');
-    if (!awayHref) {
-      throw new Error('away invitation link was not rendered');
-    }
-
     const opponentCaptainHref = await editPage.opponentCaptainInviteLink.getAttribute('href');
     if (!opponentCaptainHref) {
       throw new Error('opponent captain link was not rendered');
     }
+
+    // The away invite link moved to the opponent captain page; read it there,
+    // then return to the edit page so callers land on the editor as before.
+    const editUrl = page.url();
+    const awayHref = await editPage.getOpponentTeamInviteHref();
+    if (!awayHref) {
+      throw new Error('away invitation link was not rendered on the opponent page');
+    }
+    await editPage.goto(editUrl);
 
     const url = new URL(homeHref);
     const id = url.pathname.split('/')[2] ?? '';
     const homeToken = url.searchParams.get('token') ?? '';
     const awayUrl = new URL(awayHref);
     const awayToken = awayUrl.searchParams.get('token') ?? '';
-    const editUrl = page.url();
 
     return {
       session: {id, homeToken, awayToken, opponentCaptainHref, homeHref, awayHref, editUrl},
@@ -175,9 +179,10 @@ export class EditPage {
   get generateForm(): Locator {
     // ponytail: filter by the hidden `generate=tuple` discriminator so the
     // generator form never collides with the single-date form above it.
-    return this.page.locator('form').filter({
-      has: this.page.locator('input[name="generate"][value="tuple"]'),
-    });
+    return this.page.locator('form')
+      .filter({
+        has: this.page.locator('input[name="generate"][value="tuple"]'),
+      });
   }
 
   // The date-cell is split across `.date-day/.date-num/.date-time/.date-year`
@@ -270,7 +275,10 @@ export class EditPage {
     return this.generateForm.getByLabel('Venue');
   }
 
-  async generateProposedDates(rows: { weekday: number; time: string }[]): Promise<void> {
+  async generateProposedDates(rows: {
+    weekday: number;
+    time: string
+  }[]): Promise<void> {
     // Fixed Monday-Sunday grid: weekday N maps to row index N-1.
     for (const row of rows) {
       await this.generateTimeInput(row.weekday - 1)
@@ -281,10 +289,6 @@ export class EditPage {
 
   get homeInviteLink(): Locator {
     return this.page.locator('a[href*="/home?token="]');
-  }
-
-  get awayInviteLink(): Locator {
-    return this.page.locator('a[href*="/away?token="]');
   }
 
   get opponentCaptainInviteLink(): Locator {
@@ -366,12 +370,6 @@ export class EditPage {
   homeCopyButton(): Locator {
     return this.page.locator('.invite span')
       .filter({has: this.homeInviteLink})
-      .locator('button.copy-btn');
-  }
-
-  awayCopyButton(): Locator {
-    return this.page.locator('.invite span')
-      .filter({has: this.awayInviteLink})
       .locator('button.copy-btn');
   }
 
@@ -458,13 +456,10 @@ export class EditPage {
       .click();
   }
 
-  async getInviteLinks(): Promise<{
-    homeHref: string;
-    awayHref: string
-  }>
-  {
-    const homeHref = await this.homeInviteLink.getAttribute('href');
-    const awayHref = await this.awayInviteLink.getAttribute('href');
-    return {homeHref: homeHref ?? '', awayHref: awayHref ?? ''};
+  async getOpponentTeamInviteHref(): Promise<string> {
+    const captainHref = (await this.opponentCaptainInviteLink.getAttribute('href')) ?? '';
+    const opponentPage = new OpponentPage(this.page);
+    await opponentPage.goto(captainHref);
+    return (await opponentPage.teamInviteLink.getAttribute('href')) ?? '';
   }
 }

@@ -192,6 +192,40 @@ describe('renderVoteStep', () => {
       .toContain('data-set-all');
   });
 
+  test('explains each yes/no/if-necessary choice in a tooltip on both the set-all buttons and the radios', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({id: 'date-1', votable: true})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    for (const text of ['Yes, I have time', 'I don&#39;t have time', 'I&#39;ll make it work if needed']) {
+      expect(body)
+        .toContain(text);
+    }
+    expect(body)
+      .toContain('aria-describedby="set-all-yes-tooltip"');
+    expect(body)
+      .toContain('id="set-all-ifnecessary-tooltip"');
+    expect(body)
+      .toContain('role="tooltip"');
+    expect(body)
+      .toContain('aria-describedby="vote-yes-date-1-tooltip"');
+    expect(body)
+      .toContain('id="vote-no-date-1-tooltip"');
+  });
+
   test('posts the vote as an HTMX swap of #vote-region', async () => {
     const player = aPlayer({id: 'player-1', name: 'Alice'});
     const session = aSession({
@@ -807,7 +841,7 @@ describe('renderVoteStep venue occupancy info', () => {
       .toContain('1 other games');
   });
 
-  test('renders no occupancy button or tooltip on the vote page', async () => {
+  test('renders no venue-occupancy trigger on the vote page', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -830,15 +864,11 @@ describe('renderVoteStep venue occupancy info', () => {
     });
     const body = await response.text();
 
-    expect(body)
-      .not
-      .toContain('role="tooltip"');
+    // The occupancy count surfaces in the legend, never as a clickable trigger
+    // (vote-choice tooltips carry role="tooltip"/aria-describedby legitimately).
     expect(body)
       .not
       .toContain('data-occupancy-trigger');
-    expect(body)
-      .not
-      .toContain('aria-describedby');
   });
 
   test('omits the count clause from the legend when the occupancy check ran clean', async () => {

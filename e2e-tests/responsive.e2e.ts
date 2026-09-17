@@ -1,6 +1,6 @@
 import type { Locator } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { EditPage } from './pages';
+import { EditPage, OpponentPage } from './pages';
 import { setViewport, viewportNames } from './viewports';
 
 const PHONE_VIEWPORT = {width: 375, height: 667};
@@ -56,7 +56,7 @@ async function expectNotHorizontallyTruncated(locator: Locator): Promise<void> {
 test.describe('Responsive Layout', () => {
   test('phone viewport: no horizontal overflow, wrapped header, vote dots, reachable invite links', async ({page}) => {
     await page.setViewportSize(PHONE_VIEWPORT);
-    const {editPage} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+    const {editPage, session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
     await page.evaluate(() => {
       window.scrollTo(0, 0);
     });
@@ -85,13 +85,19 @@ test.describe('Responsive Layout', () => {
 
     // Invitation links wrap and stay reachable; copy buttons are clickable.
     await expectFullyInViewport(editPage.homeInviteLink);
-    await expectFullyInViewport(editPage.awayInviteLink);
     await expectFullyInViewport(editPage.homeCopyButton());
-    await expectFullyInViewport(editPage.awayCopyButton());
     await expect(editPage.homeCopyButton())
       .toBeEnabled();
-    await expect(editPage.awayCopyButton())
+
+    // The opponent captain's own team-invite link stays reachable on his page
+    // at the phone width; return to the editor afterwards.
+    const opponentPage = await new OpponentPage(page)
+      .goto(session.opponentCaptainHref);
+    await expectFullyInViewport(opponentPage.teamInviteLink);
+    await expectFullyInViewport(opponentPage.teamInviteCopyButton);
+    await expect(opponentPage.teamInviteCopyButton)
       .toBeEnabled();
+    await editPage.goto(session.editUrl);
 
     // The week rail sits above the sidebar and the votable toggle stays reachable.
     await expect(editPage.votableToggle(0))
@@ -148,7 +154,10 @@ test.describe('Edit page horizontal overflow', () => {
 // phone it must stay fully inside the viewport — a horizontal cut-off here means
 // the rail overflows the layout.
 test.describe('Vote-dot count on phone', () => {
-  test('phone viewport: the vote-dot count of the first row is fully inside the viewport', async ({page, checkA11y}) => {
+  test('phone viewport: the vote-dot count of the first row is fully inside the viewport', async ({
+                                                                                                    page,
+                                                                                                    checkA11y,
+                                                                                                  }) => {
     await setViewport(page, 'phone');
     const {editPage} = await EditPage.createSession(page, ['2026-03-05T20:00']);
 
@@ -215,10 +224,11 @@ test.describe('Invitation link row on phone', () => {
     await setViewport(page, 'phone');
     const {editPage} = await EditPage.createSession(page);
 
-    for (const [link, copyBtn] of [
+    for (const linkAndBtn of [
       [editPage.homeInviteLink, editPage.homeCopyButton()],
-      [editPage.awayInviteLink, editPage.awayCopyButton()],
-    ] as const) {
+    ] as const)
+    {
+      const [link, copyBtn] = linkAndBtn;
       // Both controls stay fully inside the phone viewport.
       await expectFullyInViewport(link);
       await expectFullyInViewport(copyBtn);

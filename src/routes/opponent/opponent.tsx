@@ -8,7 +8,7 @@ import { StatusChip } from '../edit/id/status-chip';
 import { pageLayout } from '../layouts/main';
 import { type DateSort, groupByAvailability, groupByWeek, SortControl, sortedRows } from '../partials/sort-control';
 import { StatusAnnouncement } from '../partials/status-announcement';
-import { withOpponentPassword } from './opponent-utils';
+import { opponentTeam, withOpponentPassword } from './opponent-utils';
 
 export interface OpponentDateItem {
   id: string;
@@ -157,6 +157,15 @@ export function OpponentView(props: OpponentPageProps): JSX.Element {
                  ? groupByAvailability(rows, ownAvailability, props.t)
                  : groupByWeek(rows, props.locale, props.t);
 
+  const team = opponentTeam(props.session);
+  const teamName = team === 'home' ? props.session.homeTeam : props.session.guestTeam;
+  const inviteHref = `${props.baseUrl}/join/${props.session.id}/${team}?token=${
+    team === 'home' ? props.session.homePlayerPassword : props.session.awayPlayerPassword
+  }`;
+  const inviteLabel = teamName === undefined
+                      ? props.t('invite_link_own_label')
+                      : props.t('invite_link_own_label_named', {teamName});
+
   return (
     <div id="opponent-view" class="opponent-view">
       <div class="side-block">
@@ -186,6 +195,20 @@ export function OpponentView(props: OpponentPageProps): JSX.Element {
             </li>
           ))}
         </ul>
+        <div class="invite mt-4">
+          <span>
+            <a href={inviteHref}>{inviteLabel}</a>
+            <button
+              class="copy-btn"
+              data-copy={inviteHref}
+              data-copied-label={props.t('copied_to_clipboard')}
+              aria-label={props.t('copy_to_clipboard')}
+              type="button"
+            >
+              <i aria-hidden="true">content_copy</i>
+            </button>
+          </span>
+        </div>
         <form
           hx-post={withOpponentPassword(`/opponent/${props.session.id}/players`, props.opponentCaptainPassword)}
           hx-target="#opponent-view"

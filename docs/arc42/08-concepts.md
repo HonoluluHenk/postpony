@@ -25,13 +25,13 @@ save that races confirmation gets `HX-Refresh`. Out-of-band targets: `#error-con
 ## 8.6 Security
 
 - **Four secrets** (ADR-0025): organizer-captain (full edit, verified on edit GET/POST), opponent-captain (scoped to the side opposite `organizerTeam`), home-player and away-player (per-team vote access, carried as `?token=`). Hashing is PBKDF2-SHA256, 100 000 iterations, 16-byte salt, 64-byte hash, constant-time compare; ids via `crypto.randomUUID()`.
-- **Shareable plaintexts persisted.** The three shareable secrets — opponent-captain, home-player, away-player — are stored **plaintext** on the `Postponement` alongside their hashes, because the edit page renders share links (`models.ts`, `edit.tsx`). The organizer-captain plaintext is shown once and never persisted.
+- **Shareable plaintexts persisted.** The three shareable secrets — opponent-captain, home-player, away-player — are stored **plaintext** on the `Postponement` alongside their hashes, because the views render share links (own-team link via `edit.tsx`, opponent-team link via `opponent.tsx`). The organizer-captain plaintext is shown once and never persisted.
 - **Verification at the trust boundary.** `comparePassword` verifies the organizer-captain password on every edit GET/POST (`edit-auth.ts`), the opponent-captain password on `/opponent/:id` (`opponent-utils.ts`), and the per-team player password on every join route (`join-utils.ts`).
 - Team param whitelisted to `home|away`; the join token is checked against the matching team's player hash (a team/token mismatch is a 403). `readPendingVotes` echoes only structurally-valid ids/values. Assets guard blocks serving co-located `*.spec.*` client tests.
 
 ## 8.7 Accessibility
 
-WCAG 2.2 AA (ADR-0004). Concretely: skip link to `#main-content`, one `<h1>` with a visible-text accessible name, language nav with `aria-label`, `role="alert"` error container, visually-hidden `role="status"` announcements, `aria-live="polite"` spinner, decorative icons `aria-hidden`, `aria-invalid`/`aria-describedby` on invalid fields, `<fieldset>/<legend>` radio groups, the date/venue chips exposing their full venue name as visually-hidden text (`VenueChip`), focus management in `ui.js`. Enforced by axe (`checkA11y`, tags `wcag2a/2aa/21a/21aa/22a/22aa`) and dedicated e2e suites (`semantic-structure`, `focus-management`, `responsive`).
+WCAG 2.2 AA (ADR-0004). Concretely: skip link to `#main-content`, one `<h1>` with a visible-text accessible name, language nav with `aria-label`, `role="alert"` error container, visually-hidden `role="status"` announcements, `aria-live="polite"` spinner, decorative icons `aria-hidden`, `aria-invalid`/`aria-describedby` on invalid fields, `<fieldset>/<legend>` radio groups, the date/venue chips exposing their full venue name as visually-hidden text (`VenueChip`), vote-choice tooltips (`role="tooltip"` + `aria-describedby`, shown on hover and `:focus-within`/`:focus-visible`), focus management in `ui.js`. Enforced by axe (`checkA11y`, tags `wcag2a/2aa/21a/21aa/22a/22aa`) and dedicated e2e suites (`semantic-structure`, `focus-management`, `responsive`).
 
 ## 8.8 Observability
 

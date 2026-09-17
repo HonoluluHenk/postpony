@@ -51,7 +51,7 @@ One of the two captains: the person who creates and manages a Postponement, sitt
 
 ## Opponent Captain
 
-The captain of the side opposite the organizer (the team that is not `organizerTeam`). Identity is implicit, like the organizer's. Holds the **opponentCaptain** password and gets scoped edit rights over their own team only: alter opponent Players, turn a Proposed Date's `opponentVotable` off, and mark it `accepted`. Cannot propose dates, flip the symmetric `votable` switch, or confirm. Sees only their own team's Clash lines on each votable Proposed Date — never the organizer team's — with a "No other games" chip when their side is checked and clean, and may trigger a schedule re-check from the opponent page that refreshes only their own side's lines (plus Venue Occupancy when sitting on the home side). _Avoid_: away captain, guest captain, co-organizer
+The captain of the side opposite the organizer (the team that is not `organizerTeam`). Identity is implicit, like the organizer's. Holds the **opponentCaptain** password and gets scoped edit rights over their own team only: alter opponent Players, turn a Proposed Date's `opponentVotable` off, and mark it `accepted`, and shares their own team's player invitation link from the opponent page. Cannot propose dates, flip the symmetric `votable` switch, or confirm. Sees only their own team's Clash lines on each votable Proposed Date — never the organizer team's — with a "No other games" chip when their side is checked and clean, and may trigger a schedule re-check from the opponent page that refreshes only their own side's lines (plus Venue Occupancy when sitting on the home side). _Avoid_: away captain, guest captain, co-organizer
 
 ## Captain Password
 
@@ -72,6 +72,10 @@ A raw player from the roster, scraped from click-tt.ch or added by a captain: `{
 ## Participant
 
 A Player taking part in a Postponement — joined via their team's player-password link and able to Vote. Every Vote and availability record references a Participant (`participantId`). _Avoid_: player (when meaning "has joined"), attendee
+
+## Match Format
+
+How many players a side must field for a Match: `maxPlayers` (full strength) and `minPlayers` (the smallest side that can still play, at reduced strength), under a profile `name`. Persisted per Postponement; every new Postponement gets the default profile. Drives the availability grouping of Proposed Dates only — it gates nothing. _Avoid_: match config, team size, lineup
 
 ## Proposed Date
 

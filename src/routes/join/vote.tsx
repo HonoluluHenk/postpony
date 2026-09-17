@@ -75,30 +75,43 @@ export function VoteRegion(props: VotePageProps): JSX.Element {
              <fieldset class="vote-set-all">
                <legend>{props.t('vote_set_all')}</legend>
                <div class="row wrap">
-                 <button
-                   type="button"
-                   class="button"
-                   data-set-all="Yes"
-                   aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_yes')})}
-                 >
-                   {props.t('vote_yes')}
-                 </button>
-                 <button
-                   type="button"
-                   class="button"
-                   data-set-all="IfNecessary"
-                   aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_if_necessary')})}
-                 >
-                   {props.t('vote_if_necessary')}
-                 </button>
-                 <button
-                   type="button"
-                   class="button"
-                   data-set-all="No"
-                   aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_no')})}
-                 >
-                   {props.t('vote_no')}
-                 </button>
+                 <div class="vote-option">
+                   <button
+                     type="button"
+                     class="button"
+                     data-set-all="Yes"
+                     aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_yes')})}
+                     aria-describedby="set-all-yes-tooltip"
+                   >
+                     {props.t('vote_yes')}
+                   </button>
+                   <span class="tooltip" role="tooltip" id="set-all-yes-tooltip">{props.t('vote_yes_tooltip')}</span>
+                 </div>
+                 <div class="vote-option">
+                   <button
+                     type="button"
+                     class="button"
+                     data-set-all="IfNecessary"
+                     aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_if_necessary')})}
+                     aria-describedby="set-all-ifnecessary-tooltip"
+                   >
+                     {props.t('vote_if_necessary')}
+                   </button>
+                   <span class="tooltip" role="tooltip"
+                         id="set-all-ifnecessary-tooltip">{props.t('vote_if_necessary_tooltip')}</span>
+                 </div>
+                 <div class="vote-option">
+                   <button
+                     type="button"
+                     class="button"
+                     data-set-all="No"
+                     aria-label={props.t('vote_set_all_aria_label', {vote: props.t('vote_no')})}
+                     aria-describedby="set-all-no-tooltip"
+                   >
+                     {props.t('vote_no')}
+                   </button>
+                   <span class="tooltip" role="tooltip" id="set-all-no-tooltip">{props.t('vote_no_tooltip')}</span>
+                 </div>
                </div>
              </fieldset>
 
@@ -116,33 +129,48 @@ export function VoteRegion(props: VotePageProps): JSX.Element {
                             : undefined}
                    />
                  </legend>
-                 <label class="radio">
-                   <input
-                     type="radio"
-                     name={`vote-${pd.id}`}
-                     value="Yes"
-                     checked={pd.currentVote === 'Yes'}
-                   />
-                   <span>{props.t('vote_yes')}</span>
-                 </label>
-                 <label class="radio">
-                   <input
-                     type="radio"
-                     name={`vote-${pd.id}`}
-                     value="IfNecessary"
-                     checked={pd.currentVote === 'IfNecessary'}
-                   />
-                   <span>{props.t('vote_if_necessary')}</span>
-                 </label>
-                 <label class="radio">
-                   <input
-                     type="radio"
-                     name={`vote-${pd.id}`}
-                     value="No"
-                     checked={pd.currentVote === 'No'}
-                   />
-                   <span>{props.t('vote_no')}</span>
-                 </label>
+                 <div class="vote-option">
+                   <label class="radio">
+                     <input
+                       type="radio"
+                       name={`vote-${pd.id}`}
+                       value="Yes"
+                       checked={pd.currentVote === 'Yes'}
+                       aria-describedby={`vote-yes-${pd.id}-tooltip`}
+                     />
+                     <span>{props.t('vote_yes')}</span>
+                   </label>
+                   <span class="tooltip" role="tooltip"
+                         id={`vote-yes-${pd.id}-tooltip`}>{props.t('vote_yes_tooltip')}</span>
+                 </div>
+                 <div class="vote-option">
+                   <label class="radio">
+                     <input
+                       type="radio"
+                       name={`vote-${pd.id}`}
+                       value="IfNecessary"
+                       checked={pd.currentVote === 'IfNecessary'}
+                       aria-describedby={`vote-ifnecessary-${pd.id}-tooltip`}
+                     />
+                     <span>{props.t('vote_if_necessary')}</span>
+                   </label>
+                   <span class="tooltip" role="tooltip"
+                         id={`vote-ifnecessary-${pd.id}-tooltip`}>{props.t('vote_if_necessary_tooltip')}</span>
+                 </div>
+                 <div class="vote-option">
+                   <label class="radio">
+                     <input
+                       type="radio"
+                       name={`vote-${pd.id}`}
+                       value="No"
+                       checked={pd.currentVote === 'No'}
+                       aria-describedby={`vote-no-${pd.id}-tooltip`}
+                     />
+                     <span>{props.t('vote_no')}</span>
+                   </label>
+                   <span class="tooltip" role="tooltip"
+                         id={`vote-no-${pd.id}-tooltip`}>{props.t('vote_no_tooltip')}</span>
+                 </div>
                </fieldset>
              ))}
            </form>

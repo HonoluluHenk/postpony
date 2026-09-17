@@ -79,8 +79,9 @@ test.describe('Clash checks', () => {
     // date is shown.
 
     // 6. Vote page hides clash info entirely: neither the clashing date's
-    // line nor the clean date's "checked" chip appear in the poll.
-    const {awayHref} = await editPage.getInviteLinks();
+    // line nor the clean date's "checked" chip appear in the poll. The away
+    // invite link lives on the opponent captain page now.
+    const awayHref = await editPage.getOpponentTeamInviteHref();
     const joinPage = await new JoinPage(page)
       .goto(awayHref);
     await joinPage.join('Clash Watcher');
@@ -138,7 +139,7 @@ test.describe('Clash checks', () => {
 
     // 3. The participant poll folds the same count into the legend, without a
     // tooltip button.
-    const {homeHref} = await editPage.getInviteLinks();
+    const homeHref = (await editPage.homeInviteLink.getAttribute('href')) ?? '';
     const joinPage = await new JoinPage(page)
       .goto(homeHref);
     await joinPage.join('Occupancy Watcher');

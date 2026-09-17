@@ -4,7 +4,6 @@ import type { ViewContext } from '../../../app';
 import type { Postponement, Team } from '../../../lib/models';
 import { matchUpLine } from '../../../lib/postponement';
 import { pageLayout } from '../../layouts/main';
-import { opponentTeam } from '../../opponent/opponent-utils';
 import { StatusAnnouncement } from '../../partials/status-announcement';
 import { withOrganizerPassword } from './edit-auth';
 import { inviteLinkLabels } from './invite-link-labels';
@@ -35,17 +34,15 @@ function InviteLinks(props: InviteLinksProps): JSX.Element {
                                                    ? session.homePlayerPassword
                                                    : session.awayPlayerPassword}`;
 
-  const opponent = opponentTeam(session);
   const links: {
     href: string;
     label: string
   }[] = [
-    {href: joinLink(session.organizerTeam), label: labels[session.organizerTeam]},
+    {href: joinLink(session.organizerTeam), label: labels.own},
     {
       href: `${baseUrl}/opponent/${session.id}?opponentCaptainPassword=${session.opponentCaptainPassword}`,
       label: labels.opponentCaptain,
     },
-    {href: joinLink(opponent), label: labels[opponent]},
   ];
 
   return (
