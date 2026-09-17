@@ -6,6 +6,6 @@
 
 **Status:** ready-for-agent
 
-- [ ] The arc42 sections touched by the new domain concept and the ranking are updated (per the change-to-section mapping the docs skill defines).
-- [ ] The "last verified against commit" line in the arc42 README is bumped to the implementation commit.
-- [ ] No code or tests change.
+- [x] The arc42 sections touched by the new domain concept and the ranking are updated (per the change-to-section mapping the docs skill defines).
+- [x] The "last verified against commit" line in the arc42 README is bumped to the implementation commit.
+- [x] No code or tests change.
