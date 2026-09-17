@@ -13,3 +13,7 @@
 - [x] `fullStrength` is ordered by `yes` desc, then `ifNecessary` desc, then start asc; the other three by `availability` desc, then start asc; a stable id tie-break keeps equal starts deterministic.
 - [x] Empty groups are omitted.
 - [x] Unit coverage at the domain seam: each boundary just below, at, and above `minPlayers` / `maxPlayers`; a closed date with a full-strength tally; each group's within-group order; empty groups; both teams ranking on their own votes.
+
+## Comments
+
+`PostponementRules.availabilityRanking(session, team)` returns the four cascading groups with ranked dates (`AvailabilityGroup`/`AvailabilityGroupKind`); 17 new unit tests at the domain seam, lint + full suite green. Ticket done: e9545f7. No review fixes needed.
