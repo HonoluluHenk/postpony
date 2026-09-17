@@ -4,6 +4,7 @@ import { createApp } from '../../lib/__test-utils__/create-app';
 import {
   type DateSortableRow,
   availabilityGroupLabel,
+  availabilityGroupTooltip,
   currentSortParam,
   groupByAvailabilityBands,
   groupByWeek,
@@ -61,6 +62,21 @@ describe('availabilityGroupLabel', () => {
       .toBe('Reduced strength (1)');
     expect(availabilityGroupLabel('notPlayable', 0, t))
       .toBe('Not playable (0)');
+  });
+});
+
+describe('availabilityGroupTooltip', () => {
+  test('maps each domain band kind to its translated explanation', () => {
+    const {t} = translationApp();
+
+    expect(availabilityGroupTooltip('fullStrength', t))
+      .toBe('Enough firm Yes votes to field a full-strength side.');
+    expect(availabilityGroupTooltip('withIfNecessary', t))
+      .toBe('Full strength only if the if-necessary votes come through.');
+    expect(availabilityGroupTooltip('reducedStrength', t))
+      .toBe('Below full strength, but enough to play short-handed.');
+    expect(availabilityGroupTooltip('notPlayable', t))
+      .toBe('Not enough available players, or a date you closed.');
   });
 });
 

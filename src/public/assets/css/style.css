@@ -281,6 +281,10 @@
     .vote-option > .tooltip {
       transition: none;
     }
+
+    .week-head-label > .tooltip {
+      transition: none;
+    }
   }
 
   /* Delete-confirmation dialogs. BeerCSS's `dialog` runs an entrance
@@ -686,6 +690,25 @@
 
   .week-head .week-range {
     font-weight: 500;
+  }
+
+  /* Availability-band tooltips: same BeerCSS pattern as the vote tooltips. The
+     label is the positioned trigger; beer reveals .tooltip on :hover of it,
+     and :focus-within reveals it for keyboard users who tab to the heading. */
+  .week-head-label {
+    position: relative;
+  }
+
+  .week-head-label > .tooltip {
+    white-space: normal;
+    inline-size: max-content;
+    max-inline-size: min(16rem, 80vw);
+  }
+
+  .week-head-label:focus-within > .tooltip {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-50%, -100%) scale(1);
   }
 
   /* ---- Dense date row. ---- */

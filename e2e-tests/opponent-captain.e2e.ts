@@ -100,7 +100,11 @@ test.describe('Opponent Captain', () => {
     await expect(page)
       .toHaveURL(/sort=availability/);
     await expect(opponentPage.groupHeads)
-      .toHaveText(['Reduced strength (2)', 'Not playable (1)']);
+      .toHaveCount(2);
+    await expect(opponentPage.groupHeads.nth(0))
+      .toHaveAccessibleName('Reduced strength (2)');
+    await expect(opponentPage.groupHeads.nth(1))
+      .toHaveAccessibleName('Not playable (1)');
 
     // A mutation (accepted toggle) recovers the sort from the current URL.
     await opponentPage.toggleAccepted(0);
@@ -109,7 +113,11 @@ test.describe('Opponent Captain', () => {
     await expect(page)
       .toHaveURL(/sort=availability/);
     await expect(opponentPage.groupHeads)
-      .toHaveText(['Reduced strength (2)', 'Not playable (1)']);
+      .toHaveCount(2);
+    await expect(opponentPage.groupHeads.nth(0))
+      .toHaveAccessibleName('Reduced strength (2)');
+    await expect(opponentPage.groupHeads.nth(1))
+      .toHaveAccessibleName('Not playable (1)');
 
     // Switching back restores the ISO-week grouping; a reload keeps the sort.
     await opponentPage.sortBy('Date');

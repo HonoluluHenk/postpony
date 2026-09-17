@@ -427,6 +427,19 @@ describe('OpponentPage sort control', () => {
       .toContain('<span>Reduced strength (2)</span>');
     expect(html)
       .toContain('<span>Not playable (2)</span>');
+    // The rendered bands explain themselves in tooltips on the shared heading.
+    for (const [kind, tooltip] of [
+      ['reducedStrength', 'Below full strength, but enough to play short-handed.'],
+      ['notPlayable', 'Not enough available players, or a date you closed.'],
+    ] as const)
+    {
+      expect(html)
+        .toContain(`id="rail-group-${kind}-tooltip"`);
+      expect(html)
+        .toContain(`aria-describedby="rail-group-${kind}-tooltip"`);
+      expect(html)
+        .toContain(tooltip);
+    }
     // No band without dates is rendered; the availability sort never shows ISO weeks.
     expect(html)
       .not
@@ -464,6 +477,13 @@ describe('OpponentPage sort control', () => {
     expect(html)
       .not
       .toContain('Not playable (');
+    // Week heads are plain headings: no band tooltip, nothing keyboard-focusable.
+    expect(html)
+      .not
+      .toContain('rail-group-');
+    expect(html)
+      .not
+      .toContain('tabindex');
   });
 
   it('drives the availability bands from the opponent team when the organizer is away', () => {

@@ -11,6 +11,7 @@ import {
   type DateSort,
   groupByAvailabilityBands,
   groupByWeek,
+  RailGroupHeading,
   SortControl,
   sortedRows,
 } from '../partials/sort-control';
@@ -271,10 +272,7 @@ export function OpponentView(props: OpponentPageProps): JSX.Element {
         ) : (
            groups.map((group) => (
              <section key={group.key}>
-               <h3 class="week-head">
-                 <span>{group.label}</span>
-                 {group.range ? <span class="week-range">{group.range}</span> : null}
-               </h3>
+               <RailGroupHeading group={group} t={props.t}/>
                {group.rows.map((date) => {
                  const dt = parseIsoToPlainDateTime(date.dateTimeRange.start);
                  const hasClashes = date.ownClashes !== undefined && date.ownClashes.length > 0;

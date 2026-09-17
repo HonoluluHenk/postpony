@@ -337,12 +337,15 @@ test.describe('Postponement Editing', () => {
     await expect(page)
       .toHaveURL(/sort=availability/);
     await expect(editPage.groupHeads)
-      .toHaveText([
-        'Full strength (1)',
-        'With if-necessary (1)',
-        'Reduced strength (1)',
-        'Not playable (1)',
-      ]);
+      .toHaveCount(4);
+    await expect(editPage.groupHeads.nth(0))
+      .toHaveAccessibleName('Full strength (1)');
+    await expect(editPage.groupHeads.nth(1))
+      .toHaveAccessibleName('With if-necessary (1)');
+    await expect(editPage.groupHeads.nth(2))
+      .toHaveAccessibleName('Reduced strength (1)');
+    await expect(editPage.groupHeads.nth(3))
+      .toHaveAccessibleName('Not playable (1)');
     // June 8 (three firm Yes) leads, then June 1 (two Yes + one if-necessary),
     // June 22 (two available) and June 15 (one available).
     await expect(editPage.proposedDateDisplays())
@@ -364,12 +367,15 @@ test.describe('Postponement Editing', () => {
     await expect(page)
       .toHaveURL(/sort=availability/);
     await expect(editPage.groupHeads)
-      .toHaveText([
-        'Full strength (1)',
-        'With if-necessary (1)',
-        'Reduced strength (1)',
-        'Not playable (2)',
-      ]);
+      .toHaveCount(4);
+    await expect(editPage.groupHeads.nth(0))
+      .toHaveAccessibleName('Full strength (1)');
+    await expect(editPage.groupHeads.nth(1))
+      .toHaveAccessibleName('With if-necessary (1)');
+    await expect(editPage.groupHeads.nth(2))
+      .toHaveAccessibleName('Reduced strength (1)');
+    await expect(editPage.groupHeads.nth(3))
+      .toHaveAccessibleName('Not playable (2)');
 
     // Switching back restores the ISO-week grouping.
     await editPage.sortBy('Date');

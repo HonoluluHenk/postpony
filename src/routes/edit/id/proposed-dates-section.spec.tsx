@@ -64,6 +64,54 @@ function railProps(session: Postponement, overrides: Partial<EditGridProps> = {}
   };
 }
 
+/** A session whose votes land one date in every availability band (default format 2–3). */
+function allBandsSession(): Postponement {
+  return buildSession({
+    players: [
+      aPlayer({id: 'p1', name: 'Alice', teamId: 'home'}),
+      aPlayer({id: 'p2', name: 'Bob', teamId: 'home'}),
+      aPlayer({id: 'p3', name: 'Carol', teamId: 'home'}),
+    ],
+    proposedDates: [
+      aProposedDate({
+        id: 'pd-full',
+        dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+        votable: true,
+      }),
+      aProposedDate({
+        id: 'pd-with',
+        dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+        votable: true,
+      }),
+      aProposedDate({
+        id: 'pd-reduced',
+        dateTimeRange: {start: '2026-09-15T20:00', end: '2026-09-15T22:00'},
+        votable: true,
+      }),
+      aProposedDate({
+        id: 'pd-none',
+        dateTimeRange: {start: '2026-09-22T20:00', end: '2026-09-22T22:00'},
+        votable: true,
+      }),
+    ],
+    votes: [
+      // Full strength: three firm Yes.
+      aVote({id: 'v1', proposedDateId: 'pd-full', participantId: 'p1', type: 'Yes'}),
+      aVote({id: 'v2', proposedDateId: 'pd-full', participantId: 'p2', type: 'Yes'}),
+      aVote({id: 'v3', proposedDateId: 'pd-full', participantId: 'p3', type: 'Yes'}),
+      // With if-necessary: two Yes plus one If necessary reaches full strength.
+      aVote({id: 'v4', proposedDateId: 'pd-with', participantId: 'p1', type: 'Yes'}),
+      aVote({id: 'v5', proposedDateId: 'pd-with', participantId: 'p2', type: 'Yes'}),
+      aVote({id: 'v6', proposedDateId: 'pd-with', participantId: 'p3', type: 'IfNecessary'}),
+      // Reduced strength: two available, below full strength.
+      aVote({id: 'v7', proposedDateId: 'pd-reduced', participantId: 'p1', type: 'Yes'}),
+      aVote({id: 'v8', proposedDateId: 'pd-reduced', participantId: 'p2', type: 'IfNecessary'}),
+      // Not playable: one available, below the reduced-strength floor.
+      aVote({id: 'v9', proposedDateId: 'pd-none', participantId: 'p1', type: 'Yes'}),
+    ],
+  });
+}
+
 function renderToString(node: unknown): string {
   if (node === null || node === undefined) {
     return '';
@@ -654,50 +702,7 @@ describe('ProposedDatesRail sort control', () => {
   });
 
   it('renders the four domain band headers with counts in cascade order when sorted by availability', () => {
-    const session = buildSession({
-      players: [
-        aPlayer({id: 'p1', name: 'Alice', teamId: 'home'}),
-        aPlayer({id: 'p2', name: 'Bob', teamId: 'home'}),
-        aPlayer({id: 'p3', name: 'Carol', teamId: 'home'}),
-      ],
-      proposedDates: [
-        aProposedDate({
-          id: 'pd-full',
-          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
-          votable: true,
-        }),
-        aProposedDate({
-          id: 'pd-with',
-          dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
-          votable: true,
-        }),
-        aProposedDate({
-          id: 'pd-reduced',
-          dateTimeRange: {start: '2026-09-15T20:00', end: '2026-09-15T22:00'},
-          votable: true,
-        }),
-        aProposedDate({
-          id: 'pd-none',
-          dateTimeRange: {start: '2026-09-22T20:00', end: '2026-09-22T22:00'},
-          votable: true,
-        }),
-      ],
-      votes: [
-        // Full strength: three firm Yes.
-        aVote({id: 'v1', proposedDateId: 'pd-full', participantId: 'p1', type: 'Yes'}),
-        aVote({id: 'v2', proposedDateId: 'pd-full', participantId: 'p2', type: 'Yes'}),
-        aVote({id: 'v3', proposedDateId: 'pd-full', participantId: 'p3', type: 'Yes'}),
-        // With if-necessary: two Yes plus one If necessary reaches full strength.
-        aVote({id: 'v4', proposedDateId: 'pd-with', participantId: 'p1', type: 'Yes'}),
-        aVote({id: 'v5', proposedDateId: 'pd-with', participantId: 'p2', type: 'Yes'}),
-        aVote({id: 'v6', proposedDateId: 'pd-with', participantId: 'p3', type: 'IfNecessary'}),
-        // Reduced strength: two available, below full strength.
-        aVote({id: 'v7', proposedDateId: 'pd-reduced', participantId: 'p1', type: 'Yes'}),
-        aVote({id: 'v8', proposedDateId: 'pd-reduced', participantId: 'p2', type: 'IfNecessary'}),
-        // Not playable: one available, below the reduced-strength floor.
-        aVote({id: 'v9', proposedDateId: 'pd-none', participantId: 'p1', type: 'Yes'}),
-      ],
-    });
+    const session = allBandsSession();
     const html = renderToString(ProposedDatesRail(railProps(session, {sort: 'availability'})));
 
     for (const header of [
@@ -710,6 +715,25 @@ describe('ProposedDatesRail sort control', () => {
       expect(html)
         .toContain(header);
     }
+    // Every band header explains itself in a tooltip, reachable by keyboard and
+    // wired to the heading label via aria-describedby.
+    for (const [kind, tooltip] of [
+      ['fullStrength', 'Enough firm Yes votes to field a full-strength side.'],
+      ['withIfNecessary', 'Full strength only if the if-necessary votes come through.'],
+      ['reducedStrength', 'Below full strength, but enough to play short-handed.'],
+      ['notPlayable', 'Not enough available players, or a date you closed.'],
+    ] as const)
+    {
+      expect(html)
+        .toContain(`id="rail-group-${kind}-tooltip"`);
+      expect(html)
+        .toContain(`aria-describedby="rail-group-${kind}-tooltip"`);
+      expect(html)
+        .toContain(`tabindex="0"`);
+      const tooltipSpan = `${tooltip}</span>`;
+      expect(html)
+        .toContain(tooltipSpan);
+    }
     // The bands cascade strongest-first; the availability sort never shows ISO weeks.
     expect(html.indexOf('Full strength (1)'))
       .toBeLessThan(html.indexOf('With if-necessary (1)'));
@@ -720,6 +744,23 @@ describe('ProposedDatesRail sort control', () => {
     expect(html)
       .not
       .toContain('>Week ');
+  });
+
+  it('explains the availability bands in German', () => {
+    const deT = (key: TranslationKeys, params?: Record<string, string>): string =>
+      getTranslation('de-CH', key, params);
+    const html = renderToString(ProposedDatesRail(railProps(allBandsSession(), {sort: 'availability', t: deT})));
+
+    for (const tooltip of [
+      'Genug feste Ja-Stimmen für volle Besetzung.',
+      'Volle Stärke nur, wenn die Notfall-Stimmen mitmachen.',
+      'Unter voller Stärke, aber in reduzierter Besetzung spielbar.',
+      'Zu wenige verfügbare Spieler, oder ein geschlossenes Datum.',
+    ])
+    {
+      expect(html)
+        .toContain(tooltip);
+    }
   });
 
   it('ranks each band by availability then start and drops empty bands', () => {
@@ -810,6 +851,13 @@ describe('ProposedDatesRail sort control', () => {
     expect(html)
       .not
       .toContain('Not playable (');
+    // Week heads are plain headings: no band tooltip, nothing keyboard-focusable.
+    expect(html)
+      .not
+      .toContain('rail-group-');
+    expect(html)
+      .not
+      .toContain('tabindex');
   });
 
   it('drives the availability bands from the away tallies when the organizer is away', () => {

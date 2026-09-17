@@ -81,6 +81,24 @@ export function availabilityGroupLabel(kind: AvailabilityGroupKind, count: numbe
   return t(AVAILABILITY_LABEL_KEYS[kind], {count: String(count)});
 }
 
+/** The locale key for one availability band's explanatory tooltip. */
+const AVAILABILITY_TOOLTIP_KEYS: Record<AvailabilityGroupKind, TranslationKeys> = {
+  fullStrength: 'availability_full_strength_tooltip',
+  withIfNecessary: 'availability_with_if_necessary_tooltip',
+  reducedStrength: 'availability_reduced_strength_tooltip',
+  notPlayable: 'availability_not_playable_tooltip',
+};
+
+/** The translated tooltip text explaining one availability band (ADR-0027). */
+export function availabilityGroupTooltip(kind: AvailabilityGroupKind, t: TranslateFn): string {
+  return t(AVAILABILITY_TOOLTIP_KEYS[kind]);
+}
+
+/** Returns the band kind when the rail group key names one, undefined otherwise. */
+function availabilityKind(key: string): AvailabilityGroupKind | undefined {
+  return key in AVAILABILITY_TOOLTIP_KEYS ? (key as AvailabilityGroupKind) : undefined;
+}
+
 /**
  * Groups rows into the domain's ranked availability bands (ADR-0027): each band
  * keeps the ranking's own order, and its header is the fixed translated label
@@ -113,6 +131,39 @@ export function sortedRows<T extends DateSortableRow>(rows: readonly T[]): T[] {
     }
     return a.id < b.id ? -1 : 1;
   });
+}
+
+/**
+ * One rail group heading: the week or band label, the optional week range, and
+ * an explanatory tooltip for the four availability bands (ADR-0027). The tooltip
+ * is a BeerCSS `.tooltip` (revealed on hover); the label is keyboard-focusable
+ * so `:focus-within` reveals it to keyboard users too, mirroring the vote
+ * tooltips. Week groups carry no tooltip and stay non-focusable.
+ */
+export function RailGroupHeading(props: {
+  group: {
+    key: string;
+    label: string;
+    range?: string
+  };
+  t: TranslateFn;
+}): JSX.Element {
+  const kind = availabilityKind(props.group.key);
+  const tooltipId = kind ? `rail-group-${props.group.key}-tooltip` : undefined;
+  return (
+    <h3 class="week-head">
+      <span class="week-head-label" tabindex={kind ? 0 : undefined}
+            aria-describedby={kind ? tooltipId : undefined}>
+        <span>{props.group.label}</span>
+        {kind ? (
+          <span class="tooltip" role="tooltip" id={tooltipId}>
+            {availabilityGroupTooltip(kind, props.t)}
+          </span>
+        ) : null}
+      </span>
+      {props.group.range ? <span class="week-range">{props.group.range}</span> : null}
+    </h3>
+  );
 }
 
 /**
