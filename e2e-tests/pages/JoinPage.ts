@@ -70,6 +70,10 @@ export class JoinPage {
     return this.page.getByRole('link', {name: 'Export as calendar (.ics)'});
   }
 
+  get switchPlayerLink(): Locator {
+    return this.page.getByRole('link', {name: 'Not you? Vote as someone else'});
+  }
+
   voteRadio(vote: VoteType): Locator {
     return this.page.getByRole('radio', {name: VOTE_LABELS[vote]});
   }

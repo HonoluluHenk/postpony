@@ -238,6 +238,70 @@ test.describe('Join and Voting', () => {
     await checkA11y();
   });
 
+  test('lets a participant switch to vote as someone else', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await joinPage.join('Alice');
+    await joinPage.castVote(0, 'Yes');
+
+    // Switching drops the device identity and lands on the register step —
+    // not a bounce back to Alice's vote page.
+    await joinPage.switchPlayerLink.click();
+    await expect(joinPage.heading)
+      .toBeVisible();
+
+    // A second player registers from the same device and votes differently.
+    await joinPage.join('Bob');
+    await joinPage.castVote(0, 'IfNecessary');
+
+    // Both participants' votes count in the shared tally.
+    const tally = joinPage.voteSummaryTable()
+      .getByRole('rowgroup')
+      .last()
+      .getByRole('row')
+      .first();
+    await expect(tally.getByRole('cell')
+      .nth(1))
+      .toHaveText('1'); // Alice's yes
+    await expect(tally.getByRole('cell')
+      .nth(2))
+      .toHaveText('1'); // Bob's if necessary
+
+    // After the vote save the switch control is still offered below the region.
+    await expect(joinPage.switchPlayerLink)
+      .toBeVisible();
+
+    await checkA11y();
+  });
+
+  test('offers no switch control once the session is confirmed', async ({page, checkA11y}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+
+    const editPage = new EditPage(page);
+    await editPage.goto(session.editUrl);
+    const opponentPage = new OpponentPage(page);
+    await opponentPage.goto(session.opponentCaptainHref);
+    await opponentPage.toggleAccepted(0);
+    await editPage.goto(session.editUrl);
+    await editPage.confirmDate(0);
+    // The confirm posts via HTMX; wait until the server has actually locked it.
+    await expect(editPage.status)
+      .toContainText('Confirmed');
+
+    // The plain join link renders the confirmed view — no register step, no vote.
+    const joinPage = await new JoinPage(page)
+      .goto(session.homeHref);
+    await expect(joinPage.confirmedHeading)
+      .toBeVisible();
+
+    await expect(joinPage.switchPlayerLink)
+      .toHaveCount(0);
+
+    await checkA11y();
+  });
+
   test('shows a message when no dates are proposed yet', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page);
 

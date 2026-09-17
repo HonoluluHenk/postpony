@@ -71,7 +71,7 @@ A raw player from the roster, scraped from click-tt.ch or added by a captain: `{
 
 ## Participant
 
-A Player taking part in a Postponement — joined via their team's player-password link and able to Vote. Every Vote and availability record references a Participant (`participantId`). _Avoid_: player (when meaning "has joined"), attendee
+A Player taking part in a Postponement — joined via their team's player-password link and able to Vote. Every Vote and availability record references a Participant (`participantId`). A device holds at most one Participant identity per team; **Switch Participant** drops that identity so a different roster Player can join from the same device. Votes already cast stay with the outgoing Participant. _Avoid_: player (when meaning "has joined"), attendee, log out (there is no login — switching only drops the device-local identity)
 
 ## Match Format
 

@@ -620,6 +620,84 @@ describe('renderVoteStep', () => {
       .not
       .toContain('/join/test-session/home/calendar.ics');
   });
+
+  test('renders the switch-participant link below the vote region on a full page', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: true})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('Not you? Vote as someone else');
+    expect(body)
+      .toContain('href="/join/test-session/home?token=token"');
+    expect(body)
+      .toContain('removeItem(\'postpony-player-test-session-home\')');
+    // The link sits outside #vote-region, so an HTMX vote save never replaces it.
+    expect(body.indexOf('id="vote-region"'))
+      .toBeLessThan(body.indexOf('id="switch-participant"'));
+  });
+
+  test('omits the switch-participant link from the HTMX vote-region partial', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: true})],
+    });
+    const app = createApp({headers: {'HX-Request': 'true'}});
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .not
+      .toContain('Not you? Vote as someone else');
+  });
+
+  test('renders no switch-participant link once the session is Confirmed', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Confirmed',
+      confirmedProposedDateId: 'proposed-date-1',
+      players: [player],
+      proposedDates: [aProposedDate()],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('Voting is closed');
+    expect(body)
+      .not
+      .toContain('Not you? Vote as someone else');
+  });
 });
 
 describe('renderVoteStep availability description', () => {

@@ -4,6 +4,7 @@ import type { ViewContext } from '../../app';
 import type { Venue, VoteTallyItem } from '../../lib/models';
 import type { VenueOccupancy } from '../../lib/venue-occupancy';
 import { pageLayout } from '../layouts/main';
+import { SwitchParticipantLink } from '../partials/switch-participant';
 import { VenueChip } from '../partials/venues';
 import { VoteTally } from '../partials/vote-tally';
 import type { Team } from './join-utils';
@@ -212,6 +213,8 @@ export function VotePage(props: VotePageProps): JSX.Element {
       ) : null}
 
       <VoteRegion {...props}/>
+
+      <SwitchParticipantLink sessionId={props.sessionId} team={props.team} token={props.token} t={props.t}/>
 
       {/* ponytail: sessionId/team/playerId are generated or validated server-side, so
        raw() interpolation cannot carry user-typed markup; upgrade to a data
