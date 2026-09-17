@@ -13,3 +13,10 @@
 - [x] The test session builder returns the default format, and the builder drift spec asserts every required field including `matchFormat`.
 - [x] Unit coverage: creation, normalization (absent vs present, not rewritten), and builder drift.
 - [x] `name` is stored but read by no UI or logic.
+
+## Comments
+
+Foundational ticket: `MatchFormat` + `DEFAULT_MATCH_FORMAT` (`{ name: 'STT Mannschaft', minPlayers: 2, maxPlayers: 3 }`) live in `models.ts`; `create` stamps it, `normalize` defaults legacy rows at read time without writing back, `aSession` carries it, and all three seams (creation, normalization, builder drift) are covered. Review found 0 hard findings on either axis; no fixes needed; arc42 update deferred to ticket 05 by design.
+
+- ticket done: `17d4e8b`
+- review: `8a81f6c`
