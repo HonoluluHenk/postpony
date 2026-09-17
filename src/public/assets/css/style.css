@@ -980,8 +980,43 @@
     font-size: var(--font-size-md);
   }
 
+  /* BeerCSS hides the native disclosure marker
+     (`summary { list-style-type: none }` + `::-webkit-details-marker`). Re-add
+     a chevron that points right when collapsed and rotates down when open. */
+  details.side-block > summary::before {
+    content: '';
+    display: inline-block;
+    width: .35em;
+    height: .35em;
+    margin-inline-end: var(--space-2-5);
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 150ms ease;
+  }
+
+  details.side-block[open] > summary::before {
+    transform: rotate(45deg);
+  }
+
   .side-block .field label {
     color: var(--ink-soft);
+  }
+
+  /* The workflow steps are long prose; break overlong lines instead of
+     overflowing the sidebar block. */
+  .workflow-instructions summary,
+  .workflow-instructions li,
+  .workflow-instructions p {
+    overflow-wrap: anywhere;
+  }
+
+  /* The workflow steps are prose, not menu rows: BeerCSS `.list > li` forces a
+     3.5rem min-block-size, padding each step with empty space. Let the steps
+     take their natural height. */
+  .workflow-instructions ol.list > li {
+    min-block-size: 0;
+    padding-block: var(--space-1);
   }
 
   .invite {

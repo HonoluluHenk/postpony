@@ -63,7 +63,7 @@ export class JoinPage {
   }
 
   get calendarHint(): Locator {
-    return this.page.getByText('Tip: download the calendar file (.ics) and import it into your calendar app');
+    return this.page.getByText('Hint: download the calendar file (.ics) and import it into your calendar app');
   }
 
   get exportCalendarLink(): Locator {

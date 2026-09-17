@@ -207,7 +207,7 @@ export function VotePage(props: VotePageProps): JSX.Element {
             no: props.t('vote_no'),
             ifNecessary: props.t('vote_if_necessary'),
           }))}
-          <p>{props.t('vote_calendar_hint')}</p>
+          <p>{raw(props.t('vote_calendar_hint'))}</p>
         </>
       ) : null}
 

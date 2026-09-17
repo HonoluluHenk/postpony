@@ -12,7 +12,8 @@ import {
   initGeneratorTimePickers,
   initGeneratorDatePickers,
   initProposedDateTimePicker,
-  initRedesignDisclosures
+  initRedesignDisclosures,
+  initPersistedDetails
 } from './ui.js';
 
 // The Spinner only registers listeners in its constructor and reads
@@ -28,6 +29,11 @@ initVoteForm(spinner);
 // Registered before the load/pageshow events so the sort radio group is
 // re-synced after Firefox's form-state restore on reload.
 initSortRadios();
+
+// Runs the full persisted-open/closed apply + the delegated toggle listener for
+// `details[data-persist-details]` (the role instructions blocks). The module is
+// deferred, so the DOM is parsed by the time this runs.
+initPersistedDetails();
 
 window.addEventListener('load', () => {
   initTheme();

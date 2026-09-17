@@ -5,6 +5,7 @@ import type { Postponement, Team } from '../../../lib/models';
 import { matchUpLine } from '../../../lib/postponement';
 import { pageLayout } from '../../layouts/main';
 import { StatusAnnouncement } from '../../partials/status-announcement';
+import { OrganizerWorkflowInstructions } from '../../partials/workflow-instructions';
 import { withOrganizerPassword } from './edit-auth';
 import { inviteLinkLabels } from './invite-link-labels';
 import { GenerateForm, ProposedDatesRail, type EditGridProps } from './proposed-dates-section';
@@ -192,6 +193,11 @@ export function EditPage(props: EditPageProps): JSX.Element {
       ) : null}
 
       <StatusAnnouncement message={props.statusMessage} isOob={props.isPartial}/>
+
+      <OrganizerWorkflowInstructions
+        t={props.t}
+        confirmed={props.session.status === 'Confirmed'}
+      />
 
       <EditGrid {...props} />
     </div>

@@ -8,6 +8,7 @@ import { EditGrid, EditPage, type EditPageProps } from './edit';
 import { organizerPasswordFromRequest } from './edit-auth';
 import { ErrorContainer } from '../../partials/error-container';
 import { StatusAnnouncement } from '../../partials/status-announcement';
+import { OrganizerWorkflowInstructions } from '../../partials/workflow-instructions';
 import { currentSortParam, type DateSort } from '../../partials/sort-control';
 import type { EditGridProps, EditPartialsData } from './proposed-dates-section';
 
@@ -96,18 +97,31 @@ export function buildEditPartialsData(
 export type EditPartialExtras = Pick<
   EditGridProps,
   Exclude<keyof EditGridProps, keyof ViewContext | keyof EditPartialsData>
-> & Pick<EditPageProps, 'globalError'>;
+> & Pick<EditPageProps, 'globalError'> & {
+  /** Status-changing mutations re-render the OOB workflow instructions block. */
+  renderWorkflowInstructions?: boolean;
+};
 
 /**
  * The `#edit-grid` swap target as a standalone HTMX fragment, plus the
  * out-of-band error container and status announcement. The OOB elements live
  * outside the grid, so replacing the grid never destroys their targets.
  */
-export function renderEditGridPartial(app: App, props: EditPageProps): string {
+export function renderEditGridPartial(
+  app: App,
+  props: EditPageProps & Pick<EditPartialExtras, 'renderWorkflowInstructions'>,
+): string {
   return app.render(
     <>
       <ErrorContainer globalError={props.globalError} isOob={true}/>
       <StatusAnnouncement message={props.statusMessage} isOob={true}/>
+      {props.renderWorkflowInstructions ? (
+        <OrganizerWorkflowInstructions
+          t={props.t}
+          confirmed={props.session.status === 'Confirmed'}
+          isOob={true}
+        />
+      ) : null}
       <EditGrid {...props}/>
     </>,
   );

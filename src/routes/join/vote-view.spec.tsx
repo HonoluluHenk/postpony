@@ -652,7 +652,13 @@ describe('renderVoteStep availability description', () => {
     expect(body)
       .toContain('You can change your answers until the organizer confirms a date.');
     expect(body)
-      .toContain('<li><strong>No</strong> means you cannot participate.</li>');
+      .toContain('download the calendar file (.ics) and import it into your calendar app');
+    expect(body)
+      .toContain('<strong>Hint:</strong>');
+    expect(body)
+      .toContain('from your calendar.<br/>It is often easier');
+    expect(body)
+      .toContain('It is often easier to first accept all the dates and then decline');
     expect(body.indexOf('<li><strong>if necessary</strong>'))
       .toBeLessThan(body.indexOf('<li><strong>No</strong>'));
     expect(body.indexOf('Here you can state your availability'))
@@ -685,6 +691,12 @@ describe('renderVoteStep availability description', () => {
       .toBeLessThan(body.indexOf('<li><strong>Nein</strong>'));
     expect(body)
       .toContain('Lade die Kalenderdatei (.ics) herunter');
+    expect(body)
+      .toContain('<strong>Tipp:</strong>');
+    expect(body)
+      .toContain('ablehnen kannst.<br/>Oft ist es einfacher');
+    expect(body)
+      .toContain('Oft ist es einfacher, zuerst alle Termine zu akzeptieren');
   });
 
   test('keeps the description outside the HTMX-swapped vote region', async () => {

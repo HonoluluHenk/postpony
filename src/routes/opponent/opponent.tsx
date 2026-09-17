@@ -16,6 +16,7 @@ import {
   sortedRows,
 } from '../partials/sort-control';
 import { StatusAnnouncement } from '../partials/status-announcement';
+import { WorkflowInstructions } from '../partials/workflow-instructions';
 import { opponentTeam, withOpponentPassword } from './opponent-utils';
 
 export interface OpponentDateItem {
@@ -148,6 +149,19 @@ export function OpponentPage(props: OpponentPageProps): JSX.Element {
   const content = (
     <>
       <StatusAnnouncement message={props.statusMessage} isOob={props.isPartial}/>
+      <WorkflowInstructions
+        id="opponent-workflow"
+        storageKey="postpony-workflow-opponent"
+        heading={props.t('workflow_heading')}
+        steps={[
+          props.t('workflow_opponent_step1'),
+          props.t('workflow_opponent_step2'),
+          props.t('workflow_opponent_step3'),
+          props.t('workflow_opponent_step4'),
+        ]}
+        confirmed={props.session.status === 'Confirmed'}
+        confirmedNote={props.t('workflow_opponent_confirmed')}
+      />
       <OpponentView {...props}/>
     </>
   );

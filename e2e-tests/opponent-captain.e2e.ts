@@ -57,6 +57,32 @@ test.describe('Opponent Captain', () => {
     await checkA11y();
   });
 
+  test('shows the workflow instructions and remembers their collapsed state across reloads', async ({page}) => {
+    const {session} = await EditPage.createSession(page, ['2026-03-05T20:00']);
+    const opponentPage = await new OpponentPage(page)
+      .goto(session.opponentCaptainHref);
+
+    // The instructions render open with the four opponent-captain steps.
+    const instructions = opponentPage.workflowInstructions;
+    await expect(instructions)
+      .toHaveAttribute('open', '');
+    await expect(instructions.locator('summary'))
+      .toHaveText('How it works');
+    await expect(instructions.locator('li'))
+      .toHaveCount(4);
+
+    // Collapse; the closed state survives a reload.
+    await instructions.locator('summary')
+      .click();
+    await expect(instructions)
+      .not
+      .toHaveAttribute('open');
+    await page.reload();
+    await expect(opponentPage.workflowInstructions)
+      .not
+      .toHaveAttribute('open');
+  });
+
   test('sorts the proposed dates by availability and keeps the sort across a mutation', async ({page, checkA11y}) => {
     const {session} = await EditPage.createSession(page, [
       '2026-03-05T20:00',

@@ -98,6 +98,11 @@ export class EditPage {
     return this.page.locator('#status-chip');
   }
 
+  // The collapsible role instructions block on the organizer page.
+  get workflowInstructions(): Locator {
+    return this.page.locator('#organizer-workflow');
+  }
+
   get changeMatchDetailsLink(): Locator {
     return this.page.getByRole('link', {name: 'Change match details'});
   }

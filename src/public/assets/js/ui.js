@@ -640,3 +640,36 @@ export function initRedesignDisclosures() {
     mq.addEventListener('change', apply);
   }
 }
+
+/**
+ * Persists the open/closed state of every `details[data-persist-details]`
+ * element in localStorage under the attribute's value (e.g. the role
+ * instructions blocks on the organizer/opponent pages). State is read back on
+ * init; the `toggle` event is captured on `document` because it does not
+ * bubble. SSR renders the blocks open, so a first visit sees the guidance.
+ */
+export function initPersistedDetails() {
+  function apply() {
+    document.querySelectorAll('details[data-persist-details]')
+      .forEach(function (details) {
+        const stored = localStorage.getItem(details.dataset.persistDetails);
+        if (stored !== null) {
+          details.open = stored === 'true';
+        }
+      });
+  }
+
+  apply();
+
+  document.addEventListener('toggle', function (e) {
+    const details = e.target?.closest?.('details[data-persist-details]');
+    if (!details) {
+      return;
+    }
+    localStorage.setItem(details.dataset.persistDetails, String(details.open));
+  }, true);
+
+  // An OOB swap ships the SSR-open default; re-apply so a collapsed block
+  // stays collapsed (e.g. the organizer instructions after a confirm swap).
+  document.body.addEventListener('htmx:afterSwap', apply);
+}

@@ -37,11 +37,19 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!readEnv('CI'),
   reporter: [['html', {open: 'never'}]],
-  timeout: 20 * 1000,
+  timeout: 30 * 1000,
+  // One retry absorbs per-test contention flakes (the ~140 fully-parallel
+  // tests re-fetch the IBM Plex webfonts per fresh context while axe scans
+  // run, so slow font fetches can flip text metrics and slow scans); the
+  // `trace: 'on-first-retry'` above keeps diagnostics for the retry.
+  retries: 1,
   // Per-test budget. The heaviest flows (create session → join → one full-page
   // reload per vote → several sort swaps → add date) run ~10-12s even on an
   // idle machine, so the former 10s budget flaked under `fullyParallel`
-  // contention. 20s gives ~2x headroom without hiding genuine hangs.
+  // contention. The heaviest test (rank-dates: three join+vote rounds, sort
+  // swaps, axe scan) already runs ~17s alone, so the later 20s budget no
+  // longer held under load either; 30s gives ~2x headroom without hiding
+  // genuine hangs.
   // No global timeout: the former 15s budget for the *entire* run was far too
   // small (the suite alone already runs ~10s headless) and only caused
   // false "Timed out waiting 15s for the entire test run" failures on slower

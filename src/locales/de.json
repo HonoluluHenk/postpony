@@ -175,7 +175,7 @@
   "votable_short": "Abstimmbar",
   "votable_toggle": "Abstimmung zulassen",
   "vote_action_label": "Abstimmen",
-  "vote_calendar_hint": "Tipp: Lade die Kalenderdatei (.ics) herunter und importiere sie in deine Kalender-App, um die vorgeschlagenen Termine auf einen Blick zu sehen. Jeder Kalendereintrag enthält einen Link zu dieser Seite, mit dem du genau diesen Termin direkt aus deinem Kalender bestätigen oder ablehnen kannst.",
+  "vote_calendar_hint": "<strong>Tipp:</strong> Lade die Kalenderdatei (.ics) herunter und importiere sie in deine Kalender-App, um die vorgeschlagenen Termine auf einen Blick zu sehen. Jeder Kalendereintrag enthält einen Link zu dieser Seite, mit dem du genau diesen Termin direkt aus deinem Kalender bestätigen oder ablehnen kannst.<br/>Oft ist es einfacher, zuerst alle Termine zu akzeptieren und im Kalender einzelne Termine abzulehnen (oder andersrum).",
   "vote_if_necessary": "notfalls",
   "vote_if_necessary_tooltip": "Falls sonst niemand kann",
   "vote_intro": "Hier kannst du deine Verfügbarkeit für jeden vorgeschlagenen Termin angeben:<ul><li><strong><%= it.yes %></strong> bedeutet, dass du verfügbar bist.</li><li><strong><%= it.ifNecessary %></strong> bedeutet, dass du es ermöglichen kannst, wenn sonst niemand verfügbar ist.</li><li><strong><%= it.no %></strong> bedeutet, dass du nicht teilnehmen kannst.</li></ul>Du kannst deine Antworten ändern, bis der Organisator einen Termin bestätigt.",
@@ -196,5 +196,17 @@
   "voting_disabled": "Abstimmung deaktiviert",
   "voting_enabled": "Abstimmung aktiviert",
   "week_label": "Woche <%= it.week %>",
-  "welcome": "Willkommen bei PostPony"
+  "welcome": "Willkommen bei PostPony",
+  "workflow_heading": "So funktioniert's",
+  "workflow_opponent_confirmed": "Der Organisator hat einen Termin bestätigt — die Abstimmung ist geschlossen.",
+  "workflow_opponent_step1": "Aufstellung prüfen: Ergänze oder entferne Spieler unter «Deine Mannschaftsaufstellung».",
+  "workflow_opponent_step2": "Termine ausblenden, die nicht passen: Schalte «Abstimmbar» bei Terminen aus, die für euch nicht in Frage kommen. Sie verschwinden aus der Abstimmung deines Teams.",
+  "workflow_opponent_step3": "Einladung teilen: Deine Spieler stimmen über den Einladungslink im Bereich «Deine Mannschaftsaufstellung» ab.",
+  "workflow_opponent_step4": "Passende Termine markieren: Sobald dein Team abgestimmt hat, setze «Passt uns» bei den Terminen, die ihr wahrnehmen könnt.",
+  "workflow_organizer_confirmed": "Der Termin ist bestätigt — die Abstimmung ist geschlossen. Nutze «Wieder eröffnen», falls eine neue Verschiebung nötig ist.",
+  "workflow_organizer_step1": "Termine vorschlagen: Erzeuge Vorschläge mit dem Generator oder trage einzelne Termine von Hand ein.",
+  "workflow_organizer_step2": "Dein Team einladen: Schicke deiner Mannschaft den Link «Einladungslink für meine Mannschaft», damit sie abstimmen kann.",
+  "workflow_organizer_step3": "Gegenkapitän einladen: Nach der Abstimmung deines Teams schickst du den Link «Link für den Gegner-Kapitän». Der Gegenkapitän entfernt Termine, die für sein Team nicht passen, und startet dessen Abstimmung. Du kannst den Link auch schon vorher verschicken.",
+  "workflow_organizer_step4": "Antwort des Gegenkapitäns abwarten: Er markiert die Termine, die sein Team wahrnehmen kann, mit «Passt uns».",
+  "workflow_organizer_step5": "Termin bestätigen: Sobald ein Termin mit «Passt uns» markiert ist, klicke auf «Termin bestätigen». Nicht zwingend nötig, aber empfohlen, sobald ihr euch einig seid."
 }

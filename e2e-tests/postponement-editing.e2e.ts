@@ -482,6 +482,39 @@ test.describe('Postponement Editing', () => {
     await checkA11y();
   });
 
+  test('collapses the workflow instructions and remembers it across reloads', async ({page}) => {
+    const editPage = new EditPage(page);
+
+    // The instructions render open with the five organizer steps.
+    const instructions = editPage.workflowInstructions;
+    await expect(instructions)
+      .toHaveAttribute('open', '');
+    await expect(instructions.locator('summary'))
+      .toHaveText('How it works');
+    await expect(instructions.locator('li'))
+      .toHaveCount(5);
+
+    // Collapse; the closed state survives a reload.
+    await instructions.locator('summary')
+      .click();
+    await expect(instructions)
+      .not
+      .toHaveAttribute('open');
+    await page.reload();
+    await expect(editPage.workflowInstructions)
+      .not
+      .toHaveAttribute('open');
+
+    // Re-open; the open state survives a reload too.
+    await editPage.workflowInstructions.locator('summary')
+      .click();
+    await expect(editPage.workflowInstructions)
+      .toHaveAttribute('open', '');
+    await page.reload();
+    await expect(editPage.workflowInstructions)
+      .toHaveAttribute('open', '');
+  });
+
   test('should maintain accessibility on the editing interface', async ({page, checkA11y}) => {
     await checkA11y();
     // Language selector is a ≥24px tap target with explicit colors.
@@ -567,6 +600,12 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.proposedDateTimeInput)
       .toHaveCount(0);
     await expect(editPage.confirmButton(0))
+      .toHaveCount(0);
+
+    // The workflow instructions condense to a closing note once locked.
+    await expect(editPage.workflowInstructions)
+      .toContainText('The date is confirmed');
+    await expect(editPage.workflowInstructions.locator('li'))
       .toHaveCount(0);
 
     await checkA11y();

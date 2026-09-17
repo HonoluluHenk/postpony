@@ -175,7 +175,7 @@
   "votable_short": "Votable",
   "votable_toggle": "Allow voting",
   "vote_action_label": "Vote",
-  "vote_calendar_hint": "Tip: download the calendar file (.ics) and import it into your calendar app to see the proposed dates at a glance. Each calendar entry contains a link to this page, so you can confirm or decline that exact date right from your calendar.",
+  "vote_calendar_hint": "<strong>Hint:</strong> download the calendar file (.ics) and import it into your calendar app to see the proposed dates at a glance. Each calendar entry contains a link to this page, so you can confirm or decline that exact date right from your calendar.<br/>It is often easier to first accept all the dates and then decline individual ones in your calendar (or vice versa).",
   "vote_if_necessary": "if necessary",
   "vote_if_necessary_tooltip": "I'll make it work if needed",
   "vote_intro": "Here you can state your availability for each proposed date:<ul><li><strong><%= it.yes %></strong> means you are available.</li><li><strong><%= it.ifNecessary %></strong> means you can make it happen if nobody else is available.</li><li><strong><%= it.no %></strong> means you cannot participate.</li></ul>You can change your answers until the organizer confirms a date.",
@@ -196,5 +196,17 @@
   "voting_disabled": "Voting disabled",
   "voting_enabled": "Voting enabled",
   "week_label": "Week <%= it.week %>",
-  "welcome": "Welcome to PostPony"
+  "welcome": "Welcome to PostPony",
+  "workflow_heading": "How it works",
+  "workflow_opponent_confirmed": "The organizer has confirmed a date — voting is closed.",
+  "workflow_opponent_step1": "Check your roster: add or remove players in 'Your Team Roster'.",
+  "workflow_opponent_step2": "Remove dates that don't work: switch off 'Votable' — they disappear from your team's poll.",
+  "workflow_opponent_step3": "Share your team's invitation link: your players vote via the link in the roster section.",
+  "workflow_opponent_step4": "Accept the workable dates: once your team has voted, check 'Accepted' on the dates you can take and notify the organizing captain!.",
+  "workflow_organizer_confirmed": "The date is confirmed — voting is closed. Use 'Reopen' if a new postponement is needed.",
+  "workflow_organizer_step1": "Propose dates: use the generator or add single dates by hand.",
+  "workflow_organizer_step2": "Share your team's invitation link: send 'My team invitation link' to your team so they can vote.",
+  "workflow_organizer_step3": "Send the opponent captain link: once your team has voted, send 'Opponent captain link'. The opponent captain removes dates that don't work for their team and starts their team's voting. You may send it before your team votes too.",
+  "workflow_organizer_step4": "Await the opponent captains response: they mark the dates their team can take as 'Accepted'.",
+  "workflow_organizer_step5": "Confirm the date: once a date is 'Accepted', click 'Confirm Date'. Not strictly required, but recommended once both sides agree."
 }

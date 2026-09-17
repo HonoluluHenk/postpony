@@ -10,6 +10,7 @@ import {
   initHtmx,
   initLanguage,
   initOccupancyTooltips,
+  initPersistedDetails,
   initProposedDateTimePicker,
   initRedesignDisclosures,
   initSortRadios,
@@ -1417,6 +1418,87 @@ describe('additional branch coverage', () => {
       window.matchMedia = vi.fn(() => ({matches: true}));
 
       expect(() => initRedesignDisclosures()).not.toThrow();
+    });
+  });
+
+  describe('initPersistedDetails', () => {
+    beforeEach(() => {
+      document.body.innerHTML = '';
+      localStorage.clear();
+    });
+
+    function installDetails(open) {
+      const details = document.createElement('details');
+      details.setAttribute('data-persist-details', 'test-key');
+      if (open) {
+        details.setAttribute('open', '');
+      }
+      document.body.append(details);
+      return details;
+    }
+
+    it('applies a stored closed state over the SSR-open default', () => {
+      localStorage.setItem('test-key', 'false');
+      const details = installDetails(true);
+
+      initPersistedDetails();
+
+      expect(details.open).toBe(false);
+    });
+
+    it('applies a stored open state over a closed element', () => {
+      localStorage.setItem('test-key', 'true');
+      const details = installDetails(false);
+
+      initPersistedDetails();
+
+      expect(details.open).toBe(true);
+    });
+
+    it('keeps the rendered state when nothing is stored', () => {
+      const details = installDetails(false);
+
+      initPersistedDetails();
+
+      expect(details.open).toBe(false);
+    });
+
+    it('persists toggles under the storage key', () => {
+      const details = installDetails(true);
+      initPersistedDetails();
+
+      details.open = false;
+      details.dispatchEvent(new Event('toggle'));
+      expect(localStorage.getItem('test-key')).toBe('false');
+
+      details.open = true;
+      details.dispatchEvent(new Event('toggle'));
+      expect(localStorage.getItem('test-key')).toBe('true');
+    });
+
+    it('ignores toggles of details without a storage key', () => {
+      const untracked = document.createElement('details');
+      document.body.append(untracked);
+      initPersistedDetails();
+
+      untracked.open = true;
+      untracked.dispatchEvent(new Event('toggle', {bubbles: true}));
+
+      expect(localStorage.length).toBe(0);
+    });
+
+    it('re-applies the stored state after an htmx swap', () => {
+      const details = installDetails(true);
+      initPersistedDetails();
+
+      details.open = false;
+      details.dispatchEvent(new Event('toggle'));
+      // An OOB swap ships the SSR-open default again.
+      details.open = true;
+
+      document.body.dispatchEvent(new Event('htmx:afterSwap'));
+
+      expect(details.open).toBe(false);
     });
   });
 

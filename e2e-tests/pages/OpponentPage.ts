@@ -150,6 +150,13 @@ export class OpponentPage {
       .locator('.date-chips .chip--error');
   }
 
+  // The collapsible role instructions block on the opponent page.
+  get workflowInstructions(): Locator {
+    return this.page.locator('#opponent-workflow');
+  }
+
+  // The opponent side's cached clash snapshot might be stale (a player or a
+  // player job upstream changed); refreshes it.
   get refreshButton(): Locator {
     return this.page.getByRole('button', {name: 'Refresh Schedule Check'});
   }

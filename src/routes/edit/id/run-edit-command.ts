@@ -66,6 +66,9 @@ export async function runEditCommand(app: App, command: EditCommand): Promise<Re
     return app.html(renderEditPartials(app, updated, {
       ...extras,
       ...(message === undefined ? {} : {statusMessage: message}),
+      // Only status changes alter the workflow instructions; shipping them on
+      // every swap would pop a collapsed block open again.
+      renderWorkflowInstructions: session.status !== updated.status,
     }));
   }
 
