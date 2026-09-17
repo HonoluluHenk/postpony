@@ -97,3 +97,10 @@ url_api = "https://api.github.com/repos/tursodatabase/turso-cli/releases/assets/
 checksum = "sha256:d6ba8b73d7cafff8b6a318215f19a6933fe3fca6a74960b7c8ad42758eebbd6e"
 url = "https://github.com/tursodatabase/turso-cli/releases/download/v1.0.32/turso-cli_Darwin_x86_64.tar.gz"
 url_api = "https://api.github.com/repos/tursodatabase/turso-cli/releases/assets/518489482"
+
+[[tools.wrangler]]
+version = "4.133.0"
+backend = "npm:wrangler"
+
+[tools.wrangler.options]
+allow_builds = '["esbuild", "sharp", "workerd"]'

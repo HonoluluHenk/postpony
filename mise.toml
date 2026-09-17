@@ -2,3 +2,4 @@
 mkcert = "1"
 node = "26"
 turso = "latest"
+wrangler = { version = "4", allow_builds = ["esbuild", "sharp", "workerd"] }
