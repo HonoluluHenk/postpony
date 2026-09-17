@@ -7,6 +7,8 @@ description: Configure PostPony in a git worktree for parallel development — p
 
 The main worktree's `.env`, `developer-local-settings/`, certs, and SQLite DB are git-ignored, so a fresh worktree starts bare. This skill rebuilds them per worktree with parallel-safe ports and a dedicated DB so multiple worktrees can run dev, unit tests, and e2e concurrently.
 
+Create worktress in the `./worktrees` directory.
+
 ## Steps
 
 1. From the worktree root, run the setup script:
