@@ -14,3 +14,7 @@
 - [x] The shared count-based grouping helper is reduced to mapping a group kind to its label, or removed, so there is one availability sort.
 - [x] Component coverage: the four headers render with counts and translations, empty groups are absent, closed dates sit under *Not playable*.
 - [x] E2E coverage via the edit Page Object: switch to Availability, assert the new headers and ordering, mutate to confirm the sort sticks, switch back to weekly grouping. `checkA11y()` passes at the availability state.
+
+## Comments
+
+The edit page's Availability sort now renders the four domain bands via a shared `groupByAvailabilityBands`/`availabilityGroupLabel` (closed `Record<AvailabilityGroupKind, TranslationKeys>`); the count-based `groupByAvailability` and `available_group` key are gone. Because the ticket required "one availability sort", the opponent page moved onto the same helper too (its specs and e2e updated), which overlaps ticket 04's surface — ticket 04 should verify/refine rather than rebuild. Lint, full suite (coverage ~99%), all 139 e2e green. Ticket done: dfb3f4e. No review fixes needed.
