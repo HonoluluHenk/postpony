@@ -27,6 +27,19 @@ export interface VoteTally {
   ifNecessary: number;
 }
 
+/** The four cascading availability bands a date can rank into (ADR-0027). */
+export type AvailabilityGroupKind =
+  | 'fullStrength'
+  | 'withIfNecessary'
+  | 'reducedStrength'
+  | 'notPlayable';
+
+/** One availability group: its band kind plus its dates in ranked order (ADR-0027). */
+export interface AvailabilityGroup {
+  kind: AvailabilityGroupKind;
+  dates: ProposedDate[];
+}
+
 /** The accepted Vote values; the single source of truth for the value whitelist. */
 export function isVoteType(value: unknown): value is Vote['type'] {
   return value === 'Yes' || value === 'No' || value === 'IfNecessary';
@@ -354,6 +367,82 @@ export class PostponementRules {
       home: this.tally(session, 'home'),
       away: this.tally(session, 'away'),
     };
+  }
+
+  /**
+   * Ranks a team's votable Proposed Dates into the four cascading availability
+   * groups (ADR-0027): full strength, with-necessary, reduced strength, then not
+   * playable — each taking only what the earlier groups left, empty bands
+   * omitted. Counts the viewing team's own votes only (`yes` for firm votes,
+   * availability = `yes + ifNecessary`). The organizer team also sees non-votable
+   * (closed) dates, forced into the last band whatever their tally; the opponent
+   * page's votable-only surface never receives them.
+   */
+  availabilityRanking(session: Postponement, team: Team): AvailabilityGroup[] {
+    const tallies = this.tally(session, team);
+    const {minPlayers, maxPlayers} = session.matchFormat;
+    const empty: VoteTally = {yes: 0, no: 0, ifNecessary: 0};
+
+    const scoreOf = (pd: ProposedDate): VoteTally => tallies[pd.id] ?? empty;
+    const availabilityOf = (counts: VoteTally): number => counts.yes + counts.ifNecessary;
+
+    const byRank = (fullStrength: boolean) => (a: ProposedDate, b: ProposedDate): number => {
+      const aCounts = scoreOf(a);
+      const bCounts = scoreOf(b);
+      if (fullStrength) {
+        if (aCounts.yes !== bCounts.yes) {
+          return bCounts.yes - aCounts.yes;
+        }
+        if (aCounts.ifNecessary !== bCounts.ifNecessary) {
+          return bCounts.ifNecessary - aCounts.ifNecessary;
+        }
+      } else {
+        const aAvailability = availabilityOf(aCounts);
+        const bAvailability = availabilityOf(bCounts);
+        if (aAvailability !== bAvailability) {
+          return bAvailability - aAvailability;
+        }
+      }
+      if (a.dateTimeRange.start !== b.dateTimeRange.start) {
+        return a.dateTimeRange.start < b.dateTimeRange.start ? -1 : 1;
+      }
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    };
+
+    const fullStrength: ProposedDate[] = [];
+    const withIfNecessary: ProposedDate[] = [];
+    const reducedStrength: ProposedDate[] = [];
+    const notPlayable: ProposedDate[] = [];
+
+    for (const pd of this.votableDates(session)) {
+      const counts = scoreOf(pd);
+      const availability = availabilityOf(counts);
+      if (counts.yes >= maxPlayers) {
+        fullStrength.push(pd);
+      } else if (availability >= maxPlayers) {
+        withIfNecessary.push(pd);
+      } else if (availability >= minPlayers) {
+        reducedStrength.push(pd);
+      } else {
+        notPlayable.push(pd);
+      }
+    }
+
+    if (team === session.organizerTeam) {
+      for (const pd of session.proposedDates) {
+        if (!pd.votable) {
+          notPlayable.push(pd);
+        }
+      }
+    }
+
+    const groups: AvailabilityGroup[] = [
+      {kind: 'fullStrength', dates: fullStrength.sort(byRank(true))},
+      {kind: 'withIfNecessary', dates: withIfNecessary.sort(byRank(false))},
+      {kind: 'reducedStrength', dates: reducedStrength.sort(byRank(false))},
+      {kind: 'notPlayable', dates: notPlayable.sort(byRank(false))},
+    ];
+    return groups.filter((group) => group.dates.length > 0);
   }
 
   /**
