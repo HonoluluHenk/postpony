@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] A `MatchFormat` is `{ name: string; minPlayers: number; maxPlayers: number }` and a single exported default declares the value every new Postponement gets — `{ name: 'STT Mannschaft', minPlayers: 2, maxPlayers: 3 }`.
-- [ ] `Postponement` carries a required `matchFormat`; the handful of literal session constructions compile again after the change.
-- [ ] Creating a Postponement returns the default format, and the creation input does not expose the format (hardcoded in one place for now).
-- [ ] The read-time normalization gives a session without a `matchFormat` the default and leaves one that has a format alone; nothing is written back to storage.
-- [ ] The test session builder returns the default format, and the builder drift spec asserts every required field including `matchFormat`.
-- [ ] Unit coverage: creation, normalization (absent vs present, not rewritten), and builder drift.
-- [ ] `name` is stored but read by no UI or logic.
+- [x] A `MatchFormat` is `{ name: string; minPlayers: number; maxPlayers: number }` and a single exported default declares the value every new Postponement gets — `{ name: 'STT Mannschaft', minPlayers: 2, maxPlayers: 3 }`.
+- [x] `Postponement` carries a required `matchFormat`; the handful of literal session constructions compile again after the change.
+- [x] Creating a Postponement returns the default format, and the creation input does not expose the format (hardcoded in one place for now).
+- [x] The read-time normalization gives a session without a `matchFormat` the default and leaves one that has a format alone; nothing is written back to storage.
+- [x] The test session builder returns the default format, and the builder drift spec asserts every required field including `matchFormat`.
+- [x] Unit coverage: creation, normalization (absent vs present, not rewritten), and builder drift.
+- [x] `name` is stored but read by no UI or logic.

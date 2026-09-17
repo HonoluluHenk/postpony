@@ -1,7 +1,7 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, expectTypeOf, test } from 'vitest';
 import { aPlayer, aProposedDate, aSession, aVote } from './__test-utils__/builders';
-import { DEFAULT_CLUB_ID } from './models';
-import { derivePostponementName, PostponementRules, sortedProposedDates } from './postponement';
+import { DEFAULT_CLUB_ID, DEFAULT_MATCH_FORMAT } from './models';
+import { type CreatePostponementInput, derivePostponementName, PostponementRules, sortedProposedDates } from './postponement';
 
 /**
  * Deterministic PostponementRules for assertions: overrides the `newId` and `now` seams so ids
@@ -1074,6 +1074,7 @@ describe('postponement', () => {
           id: 'id-1',
           clubId: DEFAULT_CLUB_ID,
           name: 'Thun vs Ostermundigen – 29.08.2026 16:00',
+          matchFormat: DEFAULT_MATCH_FORMAT,
           homeTeam: 'Thun',
           guestTeam: 'Ostermundigen',
           organizerCaptainPasswordHash: 'organizer-captain-hash',
@@ -1093,6 +1094,30 @@ describe('postponement', () => {
           originalMatchDateTime: '2026-08-29T16:00',
           createdAt: '2025-01-01T00:00:00.000Z',
         });
+    });
+
+    test('stamps the default match format and the creation input exposes no format field', () => {
+      const session = new FakePostponementRules().create({
+        homeTeam: 'Home',
+        guestTeam: 'Guest',
+        locale: 'en-US',
+        organizerTeam: 'home',
+        players: [],
+        venues: [],
+        organizerCaptainPasswordHash: 'organizer-captain-hash',
+        opponentCaptainPasswordHash: 'opponent-captain-hash',
+        homePlayerPasswordHash: 'home-player-hash',
+        awayPlayerPasswordHash: 'away-player-hash',
+        opponentCaptainPassword: 'opponent-captain-pw',
+        homePlayerPassword: 'home-player-pw',
+        awayPlayerPassword: 'away-player-pw',
+      });
+
+      expect(session.matchFormat)
+        .toEqual(DEFAULT_MATCH_FORMAT);
+      expectTypeOf<CreatePostponementInput>()
+        .not
+        .toHaveProperty('matchFormat');
     });
 
     test('takes the club id when given and leaves hashing to the caller', () => {

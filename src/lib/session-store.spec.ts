@@ -3,7 +3,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
-import type { Postponement } from './models';
+import { DEFAULT_MATCH_FORMAT, type Postponement } from './models';
 import { MemorySessionStore, SqliteSessionStore, normalize } from './session-store';
 
 function tempDbUrl(): string {
@@ -318,6 +318,31 @@ describe('normalize', () => {
     expect(session.guestTeam)
       .toBeUndefined();
   });
+
+  test('defaults the match format for a row written before the field existed', () => {
+    const session = normalize(legacySession());
+
+    expect(session.matchFormat)
+      .toEqual(DEFAULT_MATCH_FORMAT);
+  });
+
+  test('keeps a stored match format unchanged on read', () => {
+    const custom = {name: 'Custom Format', minPlayers: 1, maxPlayers: 4};
+    const session = normalize(legacySession({matchFormat: custom}));
+
+    expect(session.matchFormat)
+      .toEqual(custom);
+  });
+
+  test('does not write the match format default back into the input row', () => {
+    const raw = legacySession();
+    const before = JSON.stringify(raw);
+
+    normalize(raw);
+
+    expect(JSON.stringify(raw))
+      .toBe(before);
+  });
 });
 
 describe('SqliteSessionStore', () => {
@@ -386,6 +411,7 @@ describe('MemorySessionStore.get', () => {
       id: 'current-1',
       clubId: 'test-club',
       name: 'Current Session',
+      matchFormat: DEFAULT_MATCH_FORMAT,
       organizerCaptainPasswordHash: 'h-org-captain',
       opponentCaptainPasswordHash: 'h-opp-captain',
       homePlayerPasswordHash: 'h-home-player',

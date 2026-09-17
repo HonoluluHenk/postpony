@@ -6,6 +6,20 @@ import type { VenueOccupancy } from './venue-occupancy';
 // club_id is retained as a forward-compatible column only.
 export const DEFAULT_CLUB_ID = 'default-club';
 
+/** How many players a side must field for a match: `maxPlayers` is full strength, `minPlayers` the smallest side that can still play (ADR-0027). */
+export interface MatchFormat {
+  name: string;
+  minPlayers: number;
+  maxPlayers: number;
+}
+
+/** The format every new Postponement gets (ADR-0027); the single declaration `create`, read-time normalization, and the test fixture read so they cannot drift. `name` is stored but read by no UI or logic yet. */
+export const DEFAULT_MATCH_FORMAT: MatchFormat = {
+  name: 'STT Mannschaft',
+  minPlayers: 2,
+  maxPlayers: 3,
+};
+
 export type Team = 'home' | 'away';
 
 export type PostponementStatus = 'Draft' | 'Voting' | 'Confirmed';
@@ -43,6 +57,7 @@ export interface Postponement {
   id: string;
   clubId: string;
   name: string;
+  matchFormat: MatchFormat;
   homeTeam?: string;
   guestTeam?: string;
   homeTeamIdentity?: ClickTtTeamIdentity;

@@ -3,6 +3,7 @@ import type { AppLocale } from '../locales';
 import { generateId } from './crypto-utils';
 import {
   DEFAULT_CLUB_ID,
+  DEFAULT_MATCH_FORMAT,
   type ClickTtTeamIdentity,
   type Player,
   type Postponement,
@@ -133,6 +134,7 @@ export class PostponementRules {
         input.originalMatchDateTime,
         input.locale,
       ),
+      matchFormat: DEFAULT_MATCH_FORMAT,
       homeTeam: input.homeTeam,
       guestTeam: input.guestTeam,
       organizerCaptainPasswordHash: input.organizerCaptainPasswordHash,
