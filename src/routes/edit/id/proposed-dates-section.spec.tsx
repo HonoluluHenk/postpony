@@ -653,34 +653,146 @@ describe('ProposedDatesRail sort control', () => {
       .toContain('hx-push-url="true"');
   });
 
-  it('groups by availability and orders by date within a group when sorted by availability', () => {
-    const session = buildSession({proposedDates: sortDates, votes: sortVotes});
+  it('renders the four domain band headers with counts in cascade order when sorted by availability', () => {
+    const session = buildSession({
+      players: [
+        aPlayer({id: 'p1', name: 'Alice', teamId: 'home'}),
+        aPlayer({id: 'p2', name: 'Bob', teamId: 'home'}),
+        aPlayer({id: 'p3', name: 'Carol', teamId: 'home'}),
+      ],
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-full',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+        }),
+        aProposedDate({
+          id: 'pd-with',
+          dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+          votable: true,
+        }),
+        aProposedDate({
+          id: 'pd-reduced',
+          dateTimeRange: {start: '2026-09-15T20:00', end: '2026-09-15T22:00'},
+          votable: true,
+        }),
+        aProposedDate({
+          id: 'pd-none',
+          dateTimeRange: {start: '2026-09-22T20:00', end: '2026-09-22T22:00'},
+          votable: true,
+        }),
+      ],
+      votes: [
+        // Full strength: three firm Yes.
+        aVote({id: 'v1', proposedDateId: 'pd-full', participantId: 'p1', type: 'Yes'}),
+        aVote({id: 'v2', proposedDateId: 'pd-full', participantId: 'p2', type: 'Yes'}),
+        aVote({id: 'v3', proposedDateId: 'pd-full', participantId: 'p3', type: 'Yes'}),
+        // With if-necessary: two Yes plus one If necessary reaches full strength.
+        aVote({id: 'v4', proposedDateId: 'pd-with', participantId: 'p1', type: 'Yes'}),
+        aVote({id: 'v5', proposedDateId: 'pd-with', participantId: 'p2', type: 'Yes'}),
+        aVote({id: 'v6', proposedDateId: 'pd-with', participantId: 'p3', type: 'IfNecessary'}),
+        // Reduced strength: two available, below full strength.
+        aVote({id: 'v7', proposedDateId: 'pd-reduced', participantId: 'p1', type: 'Yes'}),
+        aVote({id: 'v8', proposedDateId: 'pd-reduced', participantId: 'p2', type: 'IfNecessary'}),
+        // Not playable: one available, below the reduced-strength floor.
+        aVote({id: 'v9', proposedDateId: 'pd-none', participantId: 'p1', type: 'Yes'}),
+      ],
+    });
     const html = renderToString(ProposedDatesRail(railProps(session, {sort: 'availability'})));
 
-    expect(html)
-      .toContain('<span>Available: 2</span>');
-    expect(html)
-      .toContain('<span>Available: 1</span>');
-    expect(html)
-      .toContain('<span>Available: 0</span>');
-    // Availability grouping labels the groups by count, not ISO week.
+    for (const header of [
+      '<span>Full strength (1)</span>',
+      '<span>With if-necessary (1)</span>',
+      '<span>Reduced strength (1)</span>',
+      '<span>Not playable (1)</span>',
+    ])
+    {
+      expect(html)
+        .toContain(header);
+    }
+    // The bands cascade strongest-first; the availability sort never shows ISO weeks.
+    expect(html.indexOf('Full strength (1)'))
+      .toBeLessThan(html.indexOf('With if-necessary (1)'));
+    expect(html.indexOf('With if-necessary (1)'))
+      .toBeLessThan(html.indexOf('Reduced strength (1)'));
+    expect(html.indexOf('Reduced strength (1)'))
+      .toBeLessThan(html.indexOf('Not playable (1)'));
     expect(html)
       .not
       .toContain('>Week ');
+  });
 
-    // Within "Available: 2" Sep 8 precedes Sep 15; then the 1s and 0s groups.
+  it('ranks each band by availability then start and drops empty bands', () => {
+    const session = buildSession({proposedDates: sortDates, votes: sortVotes});
+    const html = renderToString(ProposedDatesRail(railProps(session, {sort: 'availability'})));
+
+    // Availability: pd-b=2, pd-c=2 (reduced), pd-a=1, pd-d=0 (not playable).
+    expect(html)
+      .toContain('<span>Reduced strength (2)</span>');
+    expect(html)
+      .toContain('<span>Not playable (2)</span>');
+    // No band without dates is rendered.
+    expect(html)
+      .not
+      .toContain('Full strength (');
+    expect(html)
+      .not
+      .toContain('With if-necessary (');
+
+    // Within reduced strength the equal-availability Sep 8 precedes Sep 15;
+    // not playable follows, ordered by availability (Sep 1 before Sep 22).
     const sep8 = html.indexOf('>September 8<');
     const sep15 = html.indexOf('>September 15<');
     const sep1 = html.indexOf('>September 1<');
     const sep22 = html.indexOf('>September 22<');
-    expect(sep8)
-      .toBeGreaterThan(-1);
     expect(sep8)
       .toBeLessThan(sep15);
     expect(sep15)
       .toBeLessThan(sep1);
     expect(sep1)
       .toBeLessThan(sep22);
+  });
+
+  it('renders non-votable dates under Not playable and never drops them', () => {
+    const session = buildSession({
+      players: [
+        aPlayer({id: 'p1', name: 'Alice', teamId: 'home'}),
+        aPlayer({id: 'p2', name: 'Bob', teamId: 'home'}),
+        aPlayer({id: 'p3', name: 'Carol', teamId: 'home'}),
+      ],
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-open',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+        }),
+        aProposedDate({
+          id: 'pd-closed',
+          dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+          votable: false,
+        }),
+      ],
+      votes: [
+        // The closed date has a full-strength tally; it must still rank Not playable.
+        aVote({id: 'c1', proposedDateId: 'pd-closed', participantId: 'p1', type: 'Yes'}),
+        aVote({id: 'c2', proposedDateId: 'pd-closed', participantId: 'p2', type: 'Yes'}),
+        aVote({id: 'c3', proposedDateId: 'pd-closed', participantId: 'p3', type: 'Yes'}),
+        aVote({id: 'o1', proposedDateId: 'pd-open', participantId: 'p1', type: 'Yes'}),
+        aVote({id: 'o2', proposedDateId: 'pd-open', participantId: 'p2', type: 'Yes'}),
+        aVote({id: 'o3', proposedDateId: 'pd-open', participantId: 'p3', type: 'Yes'}),
+      ],
+    });
+    const html = renderToString(ProposedDatesRail(railProps(session, {sort: 'availability'})));
+
+    expect(html)
+      .toContain('<span>Full strength (1)</span>');
+    expect(html)
+      .toContain('<span>Not playable (1)</span>');
+    // The closed date is still rendered, under Not playable.
+    expect(html)
+      .toContain('>September 8<');
+    expect(html.indexOf('Full strength (1)'))
+      .toBeLessThan(html.indexOf('Not playable (1)'));
   });
 
   it('restores ISO-week grouping when sorted by date', () => {
@@ -697,10 +809,10 @@ describe('ProposedDatesRail sort control', () => {
       .toContain('Week 39');
     expect(html)
       .not
-      .toContain('Available:');
+      .toContain('Not playable (');
   });
 
-  it('drives the availability grouping from the away tallies when the organizer is away', () => {
+  it('drives the availability bands from the away tallies when the organizer is away', () => {
     const session = buildSession({
       organizerTeam: 'away',
       proposedDates: sortDates,
@@ -717,8 +829,10 @@ describe('ProposedDatesRail sort control', () => {
     const html = renderToString(ProposedDatesRail(railProps(session, {sort: 'availability', organizerTeam: 'away'})));
 
     expect(html)
-      .toContain('<span>Available: 2</span>');
-    // Only pd-c has away availability, so it leads the list.
+      .toContain('<span>Reduced strength (1)</span>');
+    expect(html)
+      .toContain('<span>Not playable (3)</span>');
+    // Only pd-c reaches a playable band, so it leads the list.
     expect(html.indexOf('>September 15<'))
       .toBeLessThan(html.indexOf('>September 1<'));
   });

@@ -127,7 +127,7 @@ export class OpponentPage {
       .toBeHidden();
   }
 
-  // Availability groups ("Available: 1") and ISO-week groups share `.week-head`.
+  // Availability bands ("Reduced strength (2)") and ISO-week groups share `.week-head`.
   get groupHeads(): Locator {
     return this.page.locator('#opponent-dates .week-head');
   }

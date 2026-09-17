@@ -2573,7 +2573,7 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('value="availability" checked');
       expect(html)
-        .toContain('<span>Available: 0</span>');
+        .toContain('<span>Not playable (2)</span>');
     });
 
     test('handleEditGet answers an HTMX sort request with the bare grid fragment', async () => {
@@ -2608,7 +2608,7 @@ describe('edit handlers', () => {
       expect(html)
         .toContain('value="availability" checked');
       expect(html)
-        .toContain('<span>Available: 0</span>');
+        .toContain('<span>Not playable (2)</span>');
     });
 
     test('renderEditPartials defaults to date grouping without the header', () => {

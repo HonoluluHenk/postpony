@@ -169,7 +169,7 @@ describe('opponent handlers', () => {
       expect(html)
         .toContain('name="sort" value="availability" checked');
       expect(html)
-        .toContain('<span>Available: 0</span>');
+        .toContain('<span>Not playable (2)</span>');
     });
 
     test('handleOpponentGet treats an unknown sort value as date', async () => {
@@ -200,7 +200,7 @@ describe('opponent handlers', () => {
       expect(html)
         .toContain('name="sort" value="availability" checked');
       expect(html)
-        .toContain('<span>Available: 0</span>');
+        .toContain('<span>Not playable (2)</span>');
     });
   });
 
