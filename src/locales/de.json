@@ -20,6 +20,7 @@
   "clash_check_not_checked": "Nicht geprüft",
   "clash_check_refresh": "Spielplanprüfung aktualisieren",
   "clash_check_refresh_failed": "Spielplanprüfung konnte nicht aktualisiert werden — die vorherigen Ergebnisse werden angezeigt.",
+  "clash_check_refresh_tooltip": "Beide Team-Spielpläne auf click-tt.ch erneut auf Terminkollisionen mit diesen Terminen prüfen.",
   "clash_check_refreshed": "Spielplanprüfung aktualisiert",
   "clash_data_stale": "Spielplanprüfung fehlgeschlagen — die Termine wurden ohne Überschneidungsdaten gespeichert. Aktualisieren Sie die Prüfung, um es erneut zu versuchen.",
   "clash_line": "<%= it.time %> gegen <%= it.opponent %>",

@@ -20,6 +20,7 @@
   "clash_check_not_checked": "Not checked",
   "clash_check_refresh": "Refresh Schedule Check",
   "clash_check_refresh_failed": "Couldn't refresh the schedule check — showing the previous results.",
+  "clash_check_refresh_tooltip": "Re-check both teams' click-tt.ch schedules for clashes with these dates.",
   "clash_check_refreshed": "Schedule check refreshed",
   "clash_data_stale": "Schedule check failed — the dates were saved without clash data. Refresh the check to try again.",
   "clash_line": "<%= it.time %> vs <%= it.opponent %>",

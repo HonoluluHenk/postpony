@@ -508,6 +508,12 @@ describe('ProposedDatesRail rail-level controls', () => {
       .toContain(`href="${BASE_URL}/edit/test-session/calendar.ics"`);
     expect(html)
       .toContain('hx-post="/edit/test-session/refresh-clashes"');
+    expect(html)
+      .toContain('aria-describedby="edit-refresh-clash-tooltip"');
+    expect(html)
+      .toContain('<span class="tooltip" role="tooltip" id="edit-refresh-clash-tooltip">');
+    expect(html)
+      .toContain('click-tt.ch schedules for clashes with these dates.');
   });
 
   it('shows the empty message when no dates have been proposed', () => {

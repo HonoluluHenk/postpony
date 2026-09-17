@@ -551,6 +551,12 @@ describe('OpponentPage schedule re-check', () => {
       .toContain('/opponent/test-session/refresh-clashes');
     expect(html)
       .toContain('Refresh Schedule Check');
+    expect(html)
+      .toContain('aria-describedby="opponent-refresh-clash-tooltip"');
+    expect(html)
+      .toContain('<span class="tooltip" role="tooltip" id="opponent-refresh-clash-tooltip">');
+    expect(html)
+      .toContain('click-tt.ch schedules for clashes with these dates.');
   });
 
   it('offers no re-check button when the opponent side has no team identity', () => {

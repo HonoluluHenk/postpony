@@ -522,12 +522,18 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
           </a>
         ) : null}
         {props.clashCheckable && props.proposedDates.length > 0 ? (
-          <button type="button" class="button outline"
-                  hx-post={withOrganizerPassword(`/edit/${props.sessionId}/refresh-clashes`, props.organizerPassword)}
-                  hx-target="#edit-grid">
-            <i aria-hidden="true">refresh</i>
-            {props.t('clash_check_refresh')}
-          </button>
+          <div class="refresh-check-tooltip">
+            <button type="button" class="button outline"
+                    hx-post={withOrganizerPassword(`/edit/${props.sessionId}/refresh-clashes`, props.organizerPassword)}
+                    hx-target="#edit-grid"
+                    aria-describedby="edit-refresh-clash-tooltip">
+              <i aria-hidden="true">refresh</i>
+              {props.t('clash_check_refresh')}
+            </button>
+            <span class="tooltip" role="tooltip" id="edit-refresh-clash-tooltip">
+              {props.t('clash_check_refresh_tooltip')}
+            </span>
+          </div>
         ) : null}
       </div>
       {props.refreshError ? <p class="error mt-2" role="alert">{props.t('clash_check_refresh_failed')}</p> : null}
