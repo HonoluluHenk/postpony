@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] The opponent page's availability sort renders the four domain groups scoped to the opponent team's own votes, using the shared label mapping introduced on the edit page.
-- [ ] The page keeps sourcing only votable dates, so closed dates never appear here.
-- [ ] The existing `Available: N` group assertions are replaced with the new headers; the *Date* sort, the `?sort=` transport, and mutation-preserves-sort behaviour are unchanged.
-- [ ] E2E coverage via the opponent Page Object: switch to Availability, assert the new headers and ordering for the opponent side, and that a mutation keeps the sort. `checkA11y()` passes.
+- [x] The opponent page's availability sort renders the four domain groups scoped to the opponent team's own votes, using the shared label mapping introduced on the edit page.
+- [x] The page keeps sourcing only votable dates, so closed dates never appear here.
+- [x] The existing `Available: N` group assertions are replaced with the new headers; the *Date* sort, the `?sort=` transport, and mutation-preserves-sort behaviour are unchanged.
+- [x] E2E coverage via the opponent Page Object: switch to Availability, assert the new headers and ordering for the opponent side, and that a mutation keeps the sort. `checkA11y()` passes.

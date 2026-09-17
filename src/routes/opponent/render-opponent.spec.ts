@@ -53,10 +53,16 @@ describe('buildOpponentViewData', () => {
       votes: [aVote({proposedDateId: 'pd-1', participantId: 'ap', type: 'Yes'})],
     });
 
-    expect(buildOpponentViewData(session, 'en-US').dates)
+    const data = buildOpponentViewData(session, 'en-US');
+
+    expect(data.dates)
       .toMatchObject([
         {id: 'pd-1', opponentVotable: false, accepted: true, yes: 1, no: 0, ifNecessary: 0},
       ]);
+    // The closed date is absent from the availability bands too — the opponent
+    // surface never shows it, whatever the sort.
+    expect(data.availabilityBands)
+      .toEqual([{kind: 'notPlayable', ids: ['pd-1']}]);
   });
 
   test('selects the away side lines when the organizer is home', () => {
