@@ -9,6 +9,7 @@ The following capabilities describe the system **as built** (each is traceable t
 1. **Create a postponement** by walking a click-tt scrape wizard (league → group → team → match); the Match, both teams' click-tt identities, the rosters and the home club's venues are scraped and bound permanently. (`/create/scrape/*`, ADR-0024)
 2. **Manage the roster** — add players to the home or away team. (`POST /edit/:id/players`)
 3. **Propose dates** one at a time, or as a weekly slate through the fixed Monday–Sunday generator. (`POST /edit/:id/proposed-dates`, ADR-0021)
+4. **Rank proposed dates by availability** — the edit and opponent date rails group by the viewing team's own votes under the Postponement's Match Format: Full strength / With if-necessary / Reduced strength / Not playable, with dates closed to that team shown as Not playable. (`?sort=availability`, ADR-0027)
 4. **Detect clashes** — flag dates that collide with either team's click-tt schedule (±2 h) and the home venue's occupancy; newly-proposed clashing dates are auto-deselected. (ADR-0023)
 5. **Re-check clashes on demand** — the organizer refreshes both sides from the edit page; the opponent captain refreshes only their own side from the opponent page (plus Venue Occupancy when on the home side), never touching the other side's lines or the votable switch. (`POST /edit/:id/refresh-clashes`, `POST /opponent/:id/refresh-clashes`, ADR-0026)
 5. **Toggle votability** per proposed date. (`POST /edit/:id/proposed-date-visibility`)

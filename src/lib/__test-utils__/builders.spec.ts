@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { DEFAULT_MATCH_FORMAT } from '../models';
 import { aPlayer, aProposedDate, aSession, aVote } from './builders';
 
 describe('builders', () => {
@@ -75,6 +76,7 @@ describe('builders', () => {
           id: 'test-session',
           clubId: 'test-club',
           name: 'Test Postponement',
+          matchFormat: DEFAULT_MATCH_FORMAT,
           homeTeam: 'Home Team',
           guestTeam: 'Guest Team',
           organizerCaptainPasswordHash: 'hashed-organizer-captain-pw',

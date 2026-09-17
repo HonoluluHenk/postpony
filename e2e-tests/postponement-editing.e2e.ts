@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import { EditPage, JoinPage, OpponentPage } from './pages';
+import type { VoteType } from './pages/JoinPage';
 import type { SessionFixture } from './test-session';
 
 test.describe('Postponement Editing', () => {
@@ -284,21 +285,38 @@ test.describe('Postponement Editing', () => {
     await checkA11y();
   });
 
-  test('should re-group dates by availability and keep the sort across a mutation', async ({page, checkA11y}) => {
+  test('should rank dates into the four match-format groups and keep the sort across a mutation', async ({
+                                                                                                           page,
+                                                                                                           checkA11y,
+                                                                                                         }) => {
     const {session} = await EditPage.createSession(page, [
       '2026-06-01T20:00',
       '2026-06-08T20:00',
       '2026-06-15T20:00',
+      '2026-06-22T20:00',
     ]);
     const editPage = new EditPage(page);
 
-    // Alice (home) can play the first two dates but not the third.
-    const joinPage = await new JoinPage(page)
-      .goto(session.homeHref);
-    await joinPage.join('Alice');
-    await joinPage.castVote(0, 'Yes');
-    await joinPage.castVote(1, 'Yes');
-    await joinPage.castVote(2, 'No');
+    // Three home players vote so the default format (2–3 players) can reach
+    // every band: three firm Yes is full strength, two Yes plus an
+    // if-necessary still ranks below it, and one available player is not playable.
+    const joinPage = new JoinPage(page);
+    const voteAs = async (name: string, votes: VoteType[]): Promise<void> => {
+      await page.evaluate(
+        (sid) => {
+          localStorage.removeItem(`postpony-player-${sid}-home`);
+        },
+        session.id,
+      );
+      await joinPage.goto(session.homeHref);
+      await joinPage.join(name);
+      for (const [i, vote] of votes.entries()) {
+        await joinPage.castVote(i, vote);
+      }
+    };
+    await voteAs('Alice', ['Yes', 'Yes', 'IfNecessary', 'Yes']);
+    await voteAs('Bob', ['Yes', 'Yes', 'No', 'IfNecessary']);
+    await voteAs('Carol', ['IfNecessary', 'Yes', 'No', 'No']);
 
     await editPage.goto(session.editUrl);
 
@@ -306,47 +324,59 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.sortRadio('Date'))
       .toBeChecked();
     await expect(editPage.groupHeads)
-      .toHaveCount(3);
+      .toHaveCount(4);
     await expect(editPage.groupHeads.nth(0))
       .toContainText('Week 23');
-    await expect(editPage.groupHeads.nth(1))
-      .toContainText('Week 24');
-    await expect(editPage.groupHeads.nth(2))
-      .toContainText('Week 25');
+    await expect(editPage.groupHeads.nth(3))
+      .toContainText('Week 26');
 
-    // Availability sort: two groups, dates ascending within each group.
+    // Availability sort: the four domain bands, strongest first.
     await editPage.sortBy('Availability');
     await expect(editPage.sortRadio('Availability'))
       .toBeChecked();
     await expect(page)
       .toHaveURL(/sort=availability/);
     await expect(editPage.groupHeads)
-      .toHaveText(['Available: 1', 'Available: 0']);
+      .toHaveText([
+        'Full strength (1)',
+        'With if-necessary (1)',
+        'Reduced strength (1)',
+        'Not playable (1)',
+      ]);
+    // June 8 (three firm Yes) leads, then June 1 (two Yes + one if-necessary),
+    // June 22 (two available) and June 15 (one available).
     await expect(editPage.proposedDateDisplays())
       .resolves
       .toEqual([
-        expect.stringContaining('June 1 2026'),
         expect.stringContaining('June 8 2026'),
+        expect.stringContaining('June 1 2026'),
+        expect.stringContaining('June 22 2026'),
         expect.stringContaining('June 15 2026'),
       ]);
 
-    // A mutation (adding a date) recovers the sort from the current URL.
-    await editPage.addProposedDate('2026-06-22T20:00');
+    // A mutation (adding a date) recovers the sort from the current URL, and the
+    // new unvoted date joins Not playable.
+    await editPage.addProposedDate('2026-06-29T20:00');
     await expect(editPage.proposedDateRows)
-      .toHaveCount(4);
+      .toHaveCount(5);
     await expect(editPage.sortRadio('Availability'))
       .toBeChecked();
     await expect(page)
       .toHaveURL(/sort=availability/);
     await expect(editPage.groupHeads)
-      .toHaveText(['Available: 1', 'Available: 0']);
+      .toHaveText([
+        'Full strength (1)',
+        'With if-necessary (1)',
+        'Reduced strength (1)',
+        'Not playable (2)',
+      ]);
 
     // Switching back restores the ISO-week grouping.
     await editPage.sortBy('Date');
     await expect(editPage.groupHeads)
-      .toHaveCount(4);
-    await expect(editPage.groupHeads.nth(3))
-      .toContainText('Week 26');
+      .toHaveCount(5);
+    await expect(editPage.groupHeads.nth(4))
+      .toContainText('Week 27');
 
     // The URL keeps the organizer password and carries exactly one sort param,
     // so a reload keeps the Date radio checked.
@@ -356,12 +386,15 @@ test.describe('Postponement Editing', () => {
     await expect(editPage.sortRadio('Date'))
       .toBeChecked();
     await expect(editPage.groupHeads)
-      .toHaveCount(4);
+      .toHaveCount(5);
 
     await checkA11y();
   });
 
-  test('should render the three vote tables collapsed and expand the own-team detail on demand', async ({page, checkA11y}) => {
+  test('should render the three vote tables collapsed and expand the own-team detail on demand', async ({
+                                                                                                          page,
+                                                                                                          checkA11y,
+                                                                                                        }) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
     await expect(editPage.proposedDateRows)
@@ -566,7 +599,10 @@ test.describe('Postponement Editing', () => {
     await checkA11y();
   });
 
-  test('confirming a date the opponent made non-votable is refused until it is turned back on', async ({page, checkA11y}) => {
+  test('confirming a date the opponent made non-votable is refused until it is turned back on', async ({
+                                                                                                         page,
+                                                                                                         checkA11y,
+                                                                                                       }) => {
     const editPage = new EditPage(page);
     await editPage.addProposedDate('2026-06-01T20:00');
     await expect(editPage.proposedDateRows)

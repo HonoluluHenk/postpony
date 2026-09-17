@@ -1,7 +1,7 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, expectTypeOf, test } from 'vitest';
 import { aPlayer, aProposedDate, aSession, aVote } from './__test-utils__/builders';
-import { DEFAULT_CLUB_ID } from './models';
-import { derivePostponementName, PostponementRules, sortedProposedDates } from './postponement';
+import { DEFAULT_CLUB_ID, DEFAULT_MATCH_FORMAT, type ProposedDate, type Vote } from './models';
+import { type AvailabilityGroup, type AvailabilityGroupKind, type CreatePostponementInput, derivePostponementName, PostponementRules, sortedProposedDates } from './postponement';
 
 /**
  * Deterministic PostponementRules for assertions: overrides the `newId` and `now` seams so ids
@@ -1050,6 +1050,344 @@ describe('postponement', () => {
     });
   });
 
+  describe('availabilityRanking', () => {
+    const rules = new FakePostponementRules();
+
+    const homePlayers = [
+      aPlayer({id: 'h1', name: 'H1', teamId: 'home'}),
+      aPlayer({id: 'h2', name: 'H2', teamId: 'home'}),
+      aPlayer({id: 'h3', name: 'H3', teamId: 'home'}),
+      aPlayer({id: 'h4', name: 'H4', teamId: 'home'}),
+    ];
+    const awayPlayers = [
+      aPlayer({id: 'a1', name: 'A1', teamId: 'away'}),
+      aPlayer({id: 'a2', name: 'A2', teamId: 'away'}),
+      aPlayer({id: 'a3', name: 'A3', teamId: 'away'}),
+    ];
+
+    function votesFrom(rows: [string, string, Vote['type']][]): Vote[] {
+      return rows.map(([proposedDateId, participantId, type], index) =>
+        aVote({id: `v-${index}`, proposedDateId, participantId, type}));
+    }
+
+    function fullYesOn(dateId: string): [string, string, Vote['type']][] {
+      return ['h1', 'h2', 'h3', 'h4'].map((player) => [dateId, player, 'Yes']);
+    }
+
+    function rankingSession(proposedDates: ProposedDate[], votes: Vote[]): ReturnType<typeof aSession> {
+      return aSession({
+        status: 'Voting',
+        organizerTeam: 'home',
+        players: [...homePlayers, ...awayPlayers],
+        proposedDates,
+        votes,
+      });
+    }
+
+    function rankKinds(groups: AvailabilityGroup[]): AvailabilityGroupKind[] {
+      return groups.map((group) => group.kind);
+    }
+
+    function dateIds(groups: AvailabilityGroup[], kind: AvailabilityGroupKind): string[] {
+      return groups.find((group) => group.kind === kind)?.dates.map((pd) => pd.id) ?? [];
+    }
+
+    test('uses the closed union of the four group kinds', () => {
+      expectTypeOf<AvailabilityGroupKind>()
+        .toEqualTypeOf<'fullStrength' | 'withIfNecessary' | 'reducedStrength' | 'notPlayable'>();
+    });
+
+    test('ranks a date with firm Yes votes at maxPlayers in full strength', () => {
+      const session = rankingSession(
+        [aProposedDate({id: 'pd-at'})],
+        votesFrom([
+          ['pd-at', 'h1', 'Yes'],
+          ['pd-at', 'h2', 'Yes'],
+          ['pd-at', 'h3', 'Yes'],
+        ]),
+      );
+
+      const groups = rules.availabilityRanking(session, 'home');
+
+      expect(rankKinds(groups))
+        .toEqual(['fullStrength']);
+      expect(dateIds(groups, 'fullStrength'))
+        .toEqual(['pd-at']);
+    });
+
+    test('ranks a date with firm Yes votes above maxPlayers in full strength', () => {
+      const session = rankingSession(
+        [aProposedDate({id: 'pd-above'})],
+        votesFrom(fullYesOn('pd-above')),
+      );
+
+      expect(dateIds(rules.availabilityRanking(session, 'home'), 'fullStrength'))
+        .toEqual(['pd-above']);
+    });
+
+    test('ranks a date that reaches maxPlayers only via IfNecessary votes in with-necessary, not full strength', () => {
+      const session = rankingSession(
+        [aProposedDate({id: 'pd-if'})],
+        votesFrom([
+          ['pd-if', 'h1', 'Yes'],
+          ['pd-if', 'h2', 'Yes'],
+          ['pd-if', 'h3', 'IfNecessary'],
+        ]),
+      );
+
+      expect(rankKinds(rules.availabilityRanking(session, 'home')))
+        .toEqual(['withIfNecessary']);
+    });
+
+    test('ranks a date with availability above maxPlayers but not enough firm Yes in with-necessary', () => {
+      const session = rankingSession(
+        [aProposedDate({id: 'pd-if-above'})],
+        votesFrom([
+          ['pd-if-above', 'h1', 'Yes'],
+          ['pd-if-above', 'h2', 'IfNecessary'],
+          ['pd-if-above', 'h3', 'IfNecessary'],
+          ['pd-if-above', 'h4', 'IfNecessary'],
+        ]),
+      );
+
+      expect(dateIds(rules.availabilityRanking(session, 'home'), 'withIfNecessary'))
+        .toEqual(['pd-if-above']);
+    });
+
+    test('ranks a date just below maxPlayers availability (at the reduced-strength floor) in reduced strength', () => {
+      const session = rankingSession(
+        [aProposedDate({id: 'pd-reduced'})],
+        votesFrom([
+          ['pd-reduced', 'h1', 'Yes'],
+          ['pd-reduced', 'h2', 'Yes'],
+        ]),
+      );
+
+      expect(dateIds(rules.availabilityRanking(session, 'home'), 'reducedStrength'))
+        .toEqual(['pd-reduced']);
+    });
+
+    test('sinks a date just below the reduced-strength floor into not-playable', () => {
+      const session = rankingSession(
+        [aProposedDate({id: 'pd-short'})],
+        votesFrom([['pd-short', 'h1', 'Yes']]),
+      );
+
+      expect(dateIds(rules.availabilityRanking(session, 'home'), 'notPlayable'))
+        .toEqual(['pd-short']);
+    });
+
+    test('forces a non-votable date with a full-strength tally into not-playable for the organizer team', () => {
+      const session = rankingSession(
+        [aProposedDate({id: 'pd-closed', votable: false})],
+        votesFrom([
+          ['pd-closed', 'h1', 'Yes'],
+          ['pd-closed', 'h2', 'Yes'],
+          ['pd-closed', 'h3', 'Yes'],
+        ]),
+      );
+
+      const groups = rules.availabilityRanking(session, 'home');
+
+      expect(rankKinds(groups))
+        .toEqual(['notPlayable']);
+      expect(dateIds(groups, 'notPlayable'))
+        .toEqual(['pd-closed']);
+    });
+
+    test('hides non-votable dates entirely when ranking the non-organizer team', () => {
+      const session = rankingSession(
+        [aProposedDate({id: 'pd-closed', votable: false})],
+        votesFrom(fullYesOn('pd-closed')),
+      );
+
+      expect(rules.availabilityRanking(session, 'away'))
+        .toEqual([]);
+    });
+
+    test('cascades dates across all four groups, in order', () => {
+      const session = rankingSession(
+        [
+          aProposedDate({id: 'pd-full', dateTimeRange: {start: '2026-09-12T18:00'}}),
+          aProposedDate({id: 'pd-with', dateTimeRange: {start: '2026-09-12T18:00'}}),
+          aProposedDate({id: 'pd-reduced', dateTimeRange: {start: '2026-09-12T18:00'}}),
+          aProposedDate({id: 'pd-none', dateTimeRange: {start: '2026-09-12T18:00'}}),
+          aProposedDate({id: 'pd-closed', votable: false, dateTimeRange: {start: '2026-09-12T18:00'}}),
+        ],
+        votesFrom([
+          ['pd-full', 'h1', 'Yes'],
+          ['pd-full', 'h2', 'Yes'],
+          ['pd-full', 'h3', 'Yes'],
+          ['pd-with', 'h1', 'Yes'],
+          ['pd-with', 'h2', 'Yes'],
+          ['pd-with', 'h3', 'IfNecessary'],
+          ['pd-reduced', 'h1', 'Yes'],
+          ['pd-reduced', 'h2', 'IfNecessary'],
+          ['pd-closed', 'h1', 'Yes'],
+          ['pd-closed', 'h2', 'Yes'],
+          ['pd-closed', 'h3', 'Yes'],
+        ]),
+      );
+
+      expect(rules.availabilityRanking(session, 'home')
+        .map((group) => group.kind))
+        .toEqual(['fullStrength', 'withIfNecessary', 'reducedStrength', 'notPlayable']);
+    });
+
+    test('orders full strength by firm Yes desc, then IfNecessary desc, then start asc, then id', () => {
+      const session = rankingSession(
+        [
+          aProposedDate({id: 'pd-a', dateTimeRange: {start: '2026-09-12T09:00'}}),
+          aProposedDate({id: 'pd-b', dateTimeRange: {start: '2026-09-12T12:00'}}),
+          aProposedDate({id: 'pd-d', dateTimeRange: {start: '2026-09-12T12:00'}}),
+          aProposedDate({id: 'pd-c', dateTimeRange: {start: '2026-09-12T15:00'}}),
+          aProposedDate({id: 'pd-e', dateTimeRange: {start: '2026-09-12T10:00'}}),
+        ],
+        votesFrom([
+          ['pd-a', 'h1', 'Yes'],
+          ['pd-a', 'h2', 'Yes'],
+          ['pd-a', 'h3', 'Yes'],
+          ['pd-b', 'h1', 'Yes'],
+          ['pd-b', 'h2', 'Yes'],
+          ['pd-b', 'h3', 'Yes'],
+          ['pd-b', 'h4', 'IfNecessary'],
+          ['pd-d', 'h1', 'Yes'],
+          ['pd-d', 'h2', 'Yes'],
+          ['pd-d', 'h3', 'Yes'],
+          ['pd-d', 'h4', 'IfNecessary'],
+          ['pd-c', 'h1', 'Yes'],
+          ['pd-c', 'h2', 'Yes'],
+          ['pd-c', 'h3', 'Yes'],
+          ['pd-c', 'h4', 'Yes'],
+          ['pd-e', 'h1', 'Yes'],
+          ['pd-e', 'h2', 'Yes'],
+          ['pd-e', 'h3', 'Yes'],
+          ['pd-e', 'h4', 'IfNecessary'],
+        ]),
+      );
+
+      expect(dateIds(rules.availabilityRanking(session, 'home'), 'fullStrength'))
+        .toEqual(['pd-c', 'pd-e', 'pd-b', 'pd-d', 'pd-a']);
+    });
+
+    test('orders with-necessary by availability desc, then start asc, then id', () => {
+      const session = rankingSession(
+        [
+          aProposedDate({id: 'pd-f', dateTimeRange: {start: '2026-09-12T11:00'}}),
+          aProposedDate({id: 'pd-g', dateTimeRange: {start: '2026-09-12T09:00'}}),
+          aProposedDate({id: 'pd-h', dateTimeRange: {start: '2026-09-12T09:00'}}),
+          aProposedDate({id: 'pd-i', dateTimeRange: {start: '2026-09-12T10:00'}}),
+        ],
+        votesFrom([
+          ['pd-f', 'h1', 'Yes'],
+          ['pd-f', 'h2', 'IfNecessary'],
+          ['pd-f', 'h3', 'IfNecessary'],
+          ['pd-f', 'h4', 'IfNecessary'],
+          ['pd-g', 'h1', 'Yes'],
+          ['pd-g', 'h2', 'Yes'],
+          ['pd-g', 'h3', 'IfNecessary'],
+          ['pd-h', 'h1', 'Yes'],
+          ['pd-h', 'h2', 'Yes'],
+          ['pd-h', 'h3', 'IfNecessary'],
+          ['pd-i', 'h1', 'Yes'],
+          ['pd-i', 'h2', 'IfNecessary'],
+          ['pd-i', 'h3', 'IfNecessary'],
+          ['pd-i', 'h4', 'IfNecessary'],
+        ]),
+      );
+
+      expect(dateIds(rules.availabilityRanking(session, 'home'), 'withIfNecessary'))
+        .toEqual(['pd-i', 'pd-f', 'pd-g', 'pd-h']);
+    });
+
+    test('orders reduced strength by availability desc, then start asc, then id', () => {
+      const session = rankingSession(
+        [
+          aProposedDate({id: 'pd-j', dateTimeRange: {start: '2026-09-12T14:00'}}),
+          aProposedDate({id: 'pd-k', dateTimeRange: {start: '2026-09-12T09:00'}}),
+        ],
+        votesFrom([
+          ['pd-j', 'h1', 'Yes'],
+          ['pd-j', 'h2', 'Yes'],
+          ['pd-k', 'h1', 'Yes'],
+          ['pd-k', 'h2', 'IfNecessary'],
+        ]),
+      );
+
+      expect(dateIds(rules.availabilityRanking(session, 'home'), 'reducedStrength'))
+        .toEqual(['pd-k', 'pd-j']);
+    });
+
+    test('orders not-playable by availability desc, then start asc, with non-votable dates among them', () => {
+      const session = rankingSession(
+        [
+          aProposedDate({id: 'pd-l', dateTimeRange: {start: '2026-09-12T13:00'}}),
+          aProposedDate({id: 'pd-m', dateTimeRange: {start: '2026-09-12T09:00'}}),
+          aProposedDate({id: 'pd-n', votable: false, dateTimeRange: {start: '2026-09-12T08:00'}}),
+        ],
+        votesFrom([
+          ['pd-n', 'h1', 'Yes'],
+          ['pd-n', 'h2', 'Yes'],
+          ['pd-n', 'h3', 'Yes'],
+          ['pd-m', 'h1', 'Yes'],
+        ]),
+      );
+
+      expect(dateIds(rules.availabilityRanking(session, 'home'), 'notPlayable'))
+        .toEqual(['pd-n', 'pd-m', 'pd-l']);
+    });
+
+    test('omits empty groups and returns an empty list when there are no dates', () => {
+      const reducedOnly = rankingSession(
+        [aProposedDate({id: 'pd-reduced'})],
+        votesFrom([
+          ['pd-reduced', 'h1', 'Yes'],
+          ['pd-reduced', 'h2', 'Yes'],
+        ]),
+      );
+
+      expect(rankKinds(rules.availabilityRanking(reducedOnly, 'home')))
+        .toEqual(['reducedStrength']);
+      expect(rules.availabilityRanking(aSession(), 'home'))
+        .toEqual([]);
+    });
+
+    test('ranks each team by its own votes only', () => {
+      const session = rankingSession(
+        [
+          aProposedDate({id: 'pd-1', dateTimeRange: {start: '2026-09-12T18:00'}}),
+          aProposedDate({id: 'pd-2', dateTimeRange: {start: '2026-09-12T19:00'}}),
+        ],
+        votesFrom([
+          ['pd-1', 'h1', 'Yes'],
+          ['pd-1', 'h2', 'Yes'],
+          ['pd-1', 'h3', 'Yes'],
+          ['pd-1', 'a1', 'Yes'],
+          ['pd-2', 'h1', 'Yes'],
+          ['pd-2', 'a1', 'Yes'],
+          ['pd-2', 'a2', 'Yes'],
+          ['pd-2', 'a3', 'IfNecessary'],
+        ]),
+      );
+
+      const home = rules.availabilityRanking(session, 'home');
+      expect(rankKinds(home))
+        .toEqual(['fullStrength', 'notPlayable']);
+      expect(dateIds(home, 'fullStrength'))
+        .toEqual(['pd-1']);
+      expect(dateIds(home, 'notPlayable'))
+        .toEqual(['pd-2']);
+
+      const away = rules.availabilityRanking(session, 'away');
+      expect(rankKinds(away))
+        .toEqual(['withIfNecessary', 'notPlayable']);
+      expect(dateIds(away, 'withIfNecessary'))
+        .toEqual(['pd-2']);
+      expect(dateIds(away, 'notPlayable'))
+        .toEqual(['pd-1']);
+    });
+  });
+
   describe('create', () => {
     test('builds a Draft Postponement with the draft invariants and the id/clock from the seam', () => {
       const session = new FakePostponementRules().create({
@@ -1074,6 +1412,7 @@ describe('postponement', () => {
           id: 'id-1',
           clubId: DEFAULT_CLUB_ID,
           name: 'Thun vs Ostermundigen – 29.08.2026 16:00',
+          matchFormat: DEFAULT_MATCH_FORMAT,
           homeTeam: 'Thun',
           guestTeam: 'Ostermundigen',
           organizerCaptainPasswordHash: 'organizer-captain-hash',
@@ -1093,6 +1432,30 @@ describe('postponement', () => {
           originalMatchDateTime: '2026-08-29T16:00',
           createdAt: '2025-01-01T00:00:00.000Z',
         });
+    });
+
+    test('stamps the default match format and the creation input exposes no format field', () => {
+      const session = new FakePostponementRules().create({
+        homeTeam: 'Home',
+        guestTeam: 'Guest',
+        locale: 'en-US',
+        organizerTeam: 'home',
+        players: [],
+        venues: [],
+        organizerCaptainPasswordHash: 'organizer-captain-hash',
+        opponentCaptainPasswordHash: 'opponent-captain-hash',
+        homePlayerPasswordHash: 'home-player-hash',
+        awayPlayerPasswordHash: 'away-player-hash',
+        opponentCaptainPassword: 'opponent-captain-pw',
+        homePlayerPassword: 'home-player-pw',
+        awayPlayerPassword: 'away-player-pw',
+      });
+
+      expect(session.matchFormat)
+        .toEqual(DEFAULT_MATCH_FORMAT);
+      expectTypeOf<CreatePostponementInput>()
+        .not
+        .toHaveProperty('matchFormat');
     });
 
     test('takes the club id when given and leaves hashing to the caller', () => {

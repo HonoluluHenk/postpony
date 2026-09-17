@@ -420,21 +420,22 @@ describe('OpponentPage sort control', () => {
       .toContain('hx-push-url="true"');
   });
 
-  it('groups by the opponent team availability when sorted by availability', () => {
+  it('groups by the opponent team availability bands when sorted by availability', () => {
     const html = renderToString(OpponentPage(pageProps(session, 'en-US', {sort: 'availability'})));
 
     expect(html)
-      .toContain('<span>Available: 2</span>');
+      .toContain('<span>Reduced strength (2)</span>');
     expect(html)
-      .toContain('<span>Available: 1</span>');
+      .toContain('<span>Not playable (2)</span>');
+    // No band without dates is rendered; the availability sort never shows ISO weeks.
     expect(html)
-      .toContain('<span>Available: 0</span>');
-    // Availability grouping labels the groups by count, not ISO week.
+      .not
+      .toContain('Full strength (');
     expect(html)
       .not
       .toContain('>Week ');
 
-    // Within "Available: 2" Sep 8 precedes Sep 15; then the 1s and 0s groups.
+    // Within "Reduced strength" Sep 8 precedes Sep 15; not playable follows.
     const sep8 = html.indexOf('>September 8<');
     const sep15 = html.indexOf('>September 15<');
     const sep1 = html.indexOf('>September 1<');
@@ -462,10 +463,10 @@ describe('OpponentPage sort control', () => {
       .toContain('Week 39');
     expect(html)
       .not
-      .toContain('Available:');
+      .toContain('Not playable (');
   });
 
-  it('drives the availability grouping from the opponent team when the organizer is away', () => {
+  it('drives the availability bands from the opponent team when the organizer is away', () => {
     const awaySession = aSession({
       organizerTeam: 'away',
       players: [aPlayer({id: 'hp1', teamId: 'home'}), aPlayer({id: 'hp2', teamId: 'home'})],
@@ -475,10 +476,10 @@ describe('OpponentPage sort control', () => {
     const html = renderToString(OpponentPage(pageProps(awaySession, 'en-US', {sort: 'availability'})));
 
     expect(html)
-      .toContain('<span>Available: 1</span>');
+      .toContain('<span>Not playable (4)</span>');
     expect(html)
       .not
-      .toContain('<span>Available: 2</span>');
+      .toContain('<span>Reduced strength (');
     // Only pd-a has home availability, so it leads the list.
     expect(html.indexOf('>September 1<'))
       .toBeLessThan(html.indexOf('>September 8<'));

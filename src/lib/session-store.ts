@@ -1,5 +1,5 @@
 import type { Client } from '@libsql/client/web';
-import type { Postponement, PostponementStatus, ProposedDate, Venue } from './models';
+import { DEFAULT_MATCH_FORMAT, type MatchFormat, type Postponement, type PostponementStatus, type ProposedDate, type Venue } from './models';
 
 export interface SessionStore {
   migrate(): Promise<void>;
@@ -79,6 +79,7 @@ export function normalize(data: Record<string, unknown>): Postponement {
     status,
     proposedDates,
     venues,
+    matchFormat: (data['matchFormat'] as MatchFormat | undefined) ?? DEFAULT_MATCH_FORMAT,
   };
 }
 

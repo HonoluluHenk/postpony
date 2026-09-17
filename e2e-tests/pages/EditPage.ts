@@ -345,7 +345,7 @@ export class EditPage {
       .click();
   }
 
-  // Availability groups ("Available: 2") and ISO-week groups share `.week-head`.
+  // Availability bands ("Full strength (2)") and ISO-week groups share `.week-head`.
   get groupHeads(): Locator {
     return this.proposedDateList.locator('.week-head');
   }

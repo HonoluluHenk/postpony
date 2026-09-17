@@ -3,8 +3,9 @@ import { type AppLocale, type TranslationKeys } from '../../locales';
 import { createApp } from '../../lib/__test-utils__/create-app';
 import {
   type DateSortableRow,
+  availabilityGroupLabel,
   currentSortParam,
-  groupByAvailability,
+  groupByAvailabilityBands,
   groupByWeek,
   sortedRows,
 } from './sort-control';
@@ -48,43 +49,58 @@ describe('groupByWeek', () => {
   });
 });
 
-describe('groupByAvailability', () => {
-  test('orders by count descending (ties chronologically) and merges adjacent groups', () => {
+describe('availabilityGroupLabel', () => {
+  test('maps each domain band kind to its translated header with the date count', () => {
+    const {t} = translationApp();
+
+    expect(availabilityGroupLabel('fullStrength', 3, t))
+      .toBe('Full strength (3)');
+    expect(availabilityGroupLabel('withIfNecessary', 2, t))
+      .toBe('With if-necessary (2)');
+    expect(availabilityGroupLabel('reducedStrength', 1, t))
+      .toBe('Reduced strength (1)');
+    expect(availabilityGroupLabel('notPlayable', 0, t))
+      .toBe('Not playable (0)');
+  });
+});
+
+describe('groupByAvailabilityBands', () => {
+  test('renders the domain bands in order with labelled counts and ranked rows', () => {
     const {t} = translationApp();
     const rows = [
       row('d', '2026-09-15T20:00'),
       row('a', '2026-09-08T20:00'),
       row('c', '2026-09-01T20:00'),
       row('b', '2026-09-22T20:00'),
-      row('e', '2026-09-08T20:00'),
     ];
-    const availability = new Map([['a', 1], ['b', 0], ['c', 2], ['d', 1], ['e', 1]]);
 
-    const groups = groupByAvailability(rows, availability, t);
+    const groups = groupByAvailabilityBands(rows, [
+      {kind: 'fullStrength', ids: ['c']},
+      {kind: 'withIfNecessary', ids: []},
+      {kind: 'reducedStrength', ids: ['a', 'd']},
+      {kind: 'notPlayable', ids: ['b']},
+    ], t);
 
-    expect(groups.map((group) => ({label: group.label, ids: group.rows.map(({id}) => id)})))
+    expect(groups.map((group) => ({key: group.key, label: group.label, ids: group.rows.map(({id}) => id)})))
       .toEqual([
-        {label: 'Available: 2', ids: ['c']},
-        {label: 'Available: 1', ids: ['a', 'e', 'd']},
-        {label: 'Available: 0', ids: ['b']},
+        {key: 'fullStrength', label: 'Full strength (1)', ids: ['c']},
+        {key: 'withIfNecessary', label: 'With if-necessary (0)', ids: []},
+        {key: 'reducedStrength', label: 'Reduced strength (2)', ids: ['a', 'd']},
+        {key: 'notPlayable', label: 'Not playable (1)', ids: ['b']},
       ]);
   });
 
-  test('counts a date missing from the availability map as 0', () => {
+  test('drops band ids with no matching row and counts only the rendered rows', () => {
     const {t} = translationApp();
-    const availability = new Map([['y', 2]]);
 
-    // Both operand orders, so each comparator operand hits the `?? 0` fallback.
-    for (const rows of [
-      [row('y', '2026-09-08T20:00'), row('x', '2026-09-01T20:00')],
-      [row('x', '2026-09-01T20:00'), row('y', '2026-09-08T20:00')],
-    ])
-    {
-      const groups = groupByAvailability(rows, availability, t);
+    const groups = groupByAvailabilityBands([row('a', '2026-09-08T20:00')], [
+      {kind: 'fullStrength', ids: ['a', 'missing']},
+    ], t);
 
-      expect(groups.map((group) => group.label))
-        .toEqual(['Available: 2', 'Available: 0']);
-    }
+    expect(groups[0]?.label)
+      .toBe('Full strength (1)');
+    expect(groups[0]?.rows.map(({id}) => id))
+      .toEqual(['a']);
   });
 });
 

@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import { EditPage, JoinPage, OpponentPage } from './pages';
+import type { VoteType } from './pages/JoinPage';
 
 test.describe('Opponent Captain', () => {
   test('manages the own roster, votable and accepted flags within the scoped view', async ({page, checkA11y}) => {
@@ -63,13 +64,24 @@ test.describe('Opponent Captain', () => {
       '2026-03-19T20:00',
     ]);
 
-    // Alice (opponent side) can play the first two dates but not the third.
-    const joinPage = await new JoinPage(page)
-      .goto(session.awayHref);
-    await joinPage.join('Alice');
-    await joinPage.castVote(0, 'Yes');
-    await joinPage.castVote(1, 'Yes');
-    await joinPage.castVote(2, 'No');
+    // Two opponent-side players vote so the default format (2–3 players) has
+    // playable dates: the first two reach two available, the third none.
+    const joinPage = new JoinPage(page);
+    const voteAs = async (name: string, votes: VoteType[]): Promise<void> => {
+      await page.evaluate(
+        (sid) => {
+          localStorage.removeItem(`postpony-player-${sid}-away`);
+        },
+        session.id,
+      );
+      await joinPage.goto(session.awayHref);
+      await joinPage.join(name);
+      for (const [i, vote] of votes.entries()) {
+        await joinPage.castVote(i, vote);
+      }
+    };
+    await voteAs('Alice', ['Yes', 'Yes', 'No']);
+    await voteAs('Bob', ['Yes', 'IfNecessary', 'No']);
 
     const opponentPage = await new OpponentPage(page)
       .goto(session.opponentCaptainHref);
@@ -80,14 +92,15 @@ test.describe('Opponent Captain', () => {
     await expect(opponentPage.groupHeads)
       .toHaveCount(3);
 
-    // Availability sort: two groups, dates ascending within the first group.
+    // Availability sort: two available dates rank reduced strength, the
+    // unplayable one follows; dates stay ascending within each band.
     await opponentPage.sortBy('Availability');
     await expect(opponentPage.sortRadio('Availability'))
       .toBeChecked();
     await expect(page)
       .toHaveURL(/sort=availability/);
     await expect(opponentPage.groupHeads)
-      .toHaveText(['Available: 1', 'Available: 0']);
+      .toHaveText(['Reduced strength (2)', 'Not playable (1)']);
 
     // A mutation (accepted toggle) recovers the sort from the current URL.
     await opponentPage.toggleAccepted(0);
@@ -96,7 +109,7 @@ test.describe('Opponent Captain', () => {
     await expect(page)
       .toHaveURL(/sort=availability/);
     await expect(opponentPage.groupHeads)
-      .toHaveText(['Available: 1', 'Available: 0']);
+      .toHaveText(['Reduced strength (2)', 'Not playable (1)']);
 
     // Switching back restores the ISO-week grouping; a reload keeps the sort.
     await opponentPage.sortBy('Date');

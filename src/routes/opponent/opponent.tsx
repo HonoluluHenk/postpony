@@ -6,7 +6,14 @@ import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temp
 import { type AppLocale, type TranslateFn, weekdayLabels } from '../../locales';
 import { StatusChip } from '../edit/id/status-chip';
 import { pageLayout } from '../layouts/main';
-import { type DateSort, groupByAvailability, groupByWeek, SortControl, sortedRows } from '../partials/sort-control';
+import {
+  type AvailabilityBand,
+  type DateSort,
+  groupByAvailabilityBands,
+  groupByWeek,
+  SortControl,
+  sortedRows,
+} from '../partials/sort-control';
 import { StatusAnnouncement } from '../partials/status-announcement';
 import { opponentTeam, withOpponentPassword } from './opponent-utils';
 
@@ -34,8 +41,10 @@ export interface OpponentViewData {
   opponentTeamName: string;
   players: Player[];
   dates: OpponentDateItem[];
-  /** List ordering; `date` is week-grouped, `availability` groups by the opponent team's own votes. */
+  /** List ordering; `date` is week-grouped, `availability` renders the domain bands. */
   sort: DateSort;
+  /** The opponent team's ranked availability bands, in the domain's order (ADR-0027). */
+  availabilityBands: AvailabilityBand[];
   /**
    * Whether the opponent side carries a click-tt team identity, i.e. the
    * re-check button can run. Without an identity the page offers no check.
@@ -152,9 +161,8 @@ export function OpponentPage(props: OpponentPageProps): JSX.Element {
  */
 export function OpponentView(props: OpponentPageProps): JSX.Element {
   const rows = sortedRows(props.dates);
-  const ownAvailability = new Map(props.dates.map((date) => [date.id, date.yes + date.ifNecessary]));
   const groups = props.sort === 'availability'
-                 ? groupByAvailability(rows, ownAvailability, props.t)
+                 ? groupByAvailabilityBands(rows, props.availabilityBands, props.t)
                  : groupByWeek(rows, props.locale, props.t);
 
   const team = opponentTeam(props.session);

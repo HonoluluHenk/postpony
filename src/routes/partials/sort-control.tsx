@@ -1,6 +1,7 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import type { App } from '../../app';
-import type { AppLocale, TranslateFn } from '../../locales';
+import type { AvailabilityGroupKind } from '../../lib/postponement';
+import type { AppLocale, TranslateFn, TranslationKeys } from '../../locales';
 import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../lib/temporal-utils';
 
 /** How a proposed-dates list orders its rows. */
@@ -61,33 +62,47 @@ export function groupByWeek<T extends DateSortableRow>(
   return groups;
 }
 
+/** One ranked availability band: a domain group kind plus its date ids in ranked order. */
+export interface AvailabilityBand {
+  kind: AvailabilityGroupKind;
+  ids: string[];
+}
+
+/** The locale key for each availability band kind; keeps the mapping closed and typed. */
+const AVAILABILITY_LABEL_KEYS: Record<AvailabilityGroupKind, TranslationKeys> = {
+  fullStrength: 'availability_full_strength',
+  withIfNecessary: 'availability_with_if_necessary',
+  reducedStrength: 'availability_reduced_strength',
+  notPlayable: 'availability_not_playable',
+};
+
+/** The translated group header for one availability band kind, with its date count. */
+export function availabilityGroupLabel(kind: AvailabilityGroupKind, count: number, t: TranslateFn): string {
+  return t(AVAILABILITY_LABEL_KEYS[kind], {count: String(count)});
+}
+
 /**
- * Groups rows by how many available players (Yes + If necessary) each date has.
- * The callers slice the tallies to the viewing captain's own team.
+ * Groups rows into the domain's ranked availability bands (ADR-0027): each band
+ * keeps the ranking's own order, and its header is the fixed translated label
+ * plus the band's date count. The domain owns which band a date lands in and in
+ * what order, so both captain pages share one availability sort.
  */
-export function groupByAvailability<T extends DateSortableRow>(
+export function groupByAvailabilityBands<T extends DateSortableRow>(
   rows: readonly T[],
-  availability: Map<string, number>,
+  bands: readonly AvailabilityBand[],
   t: TranslateFn,
 ): RailGroup<T>[] {
-  const sorted = [...rows].sort((a, b) => {
-    const diff = (availability.get(b.id) ?? 0) - (availability.get(a.id) ?? 0);
-    if (diff !== 0) {
-      return diff;
-    }
-    return a.dateTimeRange.start < b.dateTimeRange.start ? -1 : a.dateTimeRange.start > b.dateTimeRange.start ? 1 : 0;
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return bands.map((band) => {
+    const bandRows = band.ids
+      .map((id) => byId.get(id))
+      .filter((row): row is T => row !== undefined);
+    return {
+      key: band.kind,
+      label: availabilityGroupLabel(band.kind, bandRows.length, t),
+      rows: bandRows,
+    };
   });
-  const groups: RailGroup<T>[] = [];
-  for (const row of sorted) {
-    const key = String(availability.get(row.id) ?? 0);
-    const last = groups[groups.length - 1];
-    if (last?.key !== key) {
-      groups.push({key, label: t('available_group', {count: key}), rows: [row]});
-    } else {
-      last.rows.push(row);
-    }
-  }
-  return groups;
 }
 
 /** Chronological order by start, id tie-break — the stable base for both sorts. */

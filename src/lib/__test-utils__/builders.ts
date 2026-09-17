@@ -1,5 +1,5 @@
 import merge from 'lodash-es/merge';
-import type { Player, Postponement, ProposedDate, Vote } from '../models';
+import { DEFAULT_MATCH_FORMAT, type Player, type Postponement, type ProposedDate, type Vote } from '../models';
 
 /**
  * Deep-partial so nested objects (e.g. `dateTimeRange`) can be overridden field-by-field,
@@ -56,6 +56,7 @@ export function aSession(overrides: DeepPartial<Postponement> = {}): Postponemen
     id: 'test-session',
     clubId: 'test-club',
     name: 'Test Postponement',
+    matchFormat: DEFAULT_MATCH_FORMAT,
     homeTeam: 'Home Team',
     guestTeam: 'Guest Team',
     organizerCaptainPasswordHash: 'hashed-organizer-captain-pw',

@@ -53,6 +53,8 @@ export function buildOpponentViewData(
     players: session.players.filter((p) => p.teamId === team),
     dates,
     sort,
+    availabilityBands: rules.availabilityRanking(session, team)
+      .map((group) => ({kind: group.kind, ids: group.dates.map((date) => date.id)})),
     refreshCheckable: (team === 'home' ? session.homeTeamIdentity : session.guestTeamIdentity) !== undefined,
   };
 }

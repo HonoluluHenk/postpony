@@ -5,7 +5,14 @@ import { formatLocalizedDateTime, parseIsoToPlainDateTime } from '../../../lib/t
 import type { VenueOccupancy } from '../../../lib/venue-occupancy';
 import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
-import { type DateSort, groupByAvailability, groupByWeek, SortControl, sortedRows } from '../../partials/sort-control';
+import {
+  type AvailabilityBand,
+  type DateSort,
+  groupByAvailabilityBands,
+  groupByWeek,
+  SortControl,
+  sortedRows,
+} from '../../partials/sort-control';
 import { VoteTally } from '../../partials/vote-tally';
 import { VenueChip } from '../../partials/venues';
 import { withOrganizerPassword } from './edit-auth';
@@ -45,8 +52,10 @@ export type EditPartialsData = OwnTeamView & {
   organizerTeam: Team;
   homeTeam?: string;
   guestTeam?: string;
-  /** Rail ordering; `date` is week-grouped, `availability` sorts per team. */
+  /** Rail ordering; `date` is week-grouped, `availability` renders the domain bands. */
   sort: DateSort;
+  /** The organizer team's ranked availability bands, in the domain's order (ADR-0027). */
+  availabilityBands: AvailabilityBand[];
   proposedDates: ProposedDateTallyItem[];
   homeProposedDates: VoteTallyItem[];
   awayProposedDates: VoteTallyItem[];
@@ -83,15 +92,6 @@ export interface EditGridProps extends EditPartialsData {
   statusMessage?: string;
   /** Organizer-captain password, appended to every edit-mutation URL so the guard passes. */
   organizerPassword?: string;
-}
-
-/**
- * Own-team availability per date: the players who can play, i.e. voted Yes or
- * If necessary. Drives the "Available" sort/grouping.
- */
-function ownAvailabilityById(props: EditGridProps): Map<string, number> {
-  const own = props.organizerTeam === 'home' ? props.homeProposedDates : props.awayProposedDates;
-  return new Map(own.map((item) => [item.id, item.yes + item.ifNecessary]));
 }
 
 /* ------------------------------------------------------------------ */
@@ -504,7 +504,7 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
   const homeTallies = tallyById(props.homeProposedDates);
   const awayTallies = tallyById(props.awayProposedDates);
   const groups = sort === 'availability'
-                 ? groupByAvailability(rows, ownAvailabilityById(props), props.t)
+                 ? groupByAvailabilityBands(rows, props.availabilityBands, props.t)
                  : groupByWeek(rows, props.locale, props.t);
   const homeTeam = props.homeTeam ?? props.t('home_team');
   const guestTeam = props.guestTeam ?? props.t('away_team');

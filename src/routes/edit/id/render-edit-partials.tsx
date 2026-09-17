@@ -75,6 +75,8 @@ export function buildEditPartialsData(
     homeTeam: session.homeTeam,
     guestTeam: session.guestTeam,
     sort,
+    availabilityBands: rules.availabilityRanking(session, session.organizerTeam)
+      .map((group) => ({kind: group.kind, ids: group.dates.map((date) => date.id)})),
     proposedDates,
     homeProposedDates: toVoteTallyItems(dates, homeTallies, locale),
     awayProposedDates: toVoteTallyItems(dates, awayTallies, locale),
