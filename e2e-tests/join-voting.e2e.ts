@@ -39,6 +39,15 @@ test.describe('Join and Voting', () => {
       .goto(session.homeHref);
     await joinPage.join('Alice');
 
+    // The availability description and the calendar tip sit between the heading
+    // and the vote form, outside the HTMX-swapped region.
+    await expect(joinPage.voteIntro)
+      .toBeVisible();
+    await expect(joinPage.calendarHint)
+      .toBeVisible();
+    await expect(joinPage.voteIntro)
+      .toContainText('Yes means you are available');
+
     // Step 2: cast a vote — a radio change posts the form directly. beer.css
     // visually hides the radio input, so we toggle it via its label text
     // (scoped to the form to avoid the summary table headers).
@@ -46,6 +55,10 @@ test.describe('Join and Voting', () => {
 
     await expect(joinPage.voteRadio('Yes'))
       .toBeChecked();
+
+    // A vote save swaps only #vote-region, so the description stays in place.
+    await expect(joinPage.voteIntro)
+      .toBeVisible();
 
     // Change the vote; the new radio click submits again.
     await joinPage.castVote(0, 'No');

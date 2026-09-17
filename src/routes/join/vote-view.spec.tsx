@@ -622,6 +622,126 @@ describe('renderVoteStep', () => {
   });
 });
 
+describe('renderVoteStep availability description', () => {
+  test('explains the vote choices and the calendar export on a full page render', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: true})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('Here you can state your availability for each proposed date:<ul>');
+    expect(body)
+      .toContain('<li><strong>Yes</strong> means you are available.</li>');
+    expect(body)
+      .toContain('<li><strong>if necessary</strong> means you can make it happen if nobody else is available.</li>');
+    expect(body)
+      .toContain('<li><strong>No</strong> means you cannot participate.</li>');
+    expect(body)
+      .toContain('You can change your answers until the organizer confirms a date.');
+    expect(body)
+      .toContain('<li><strong>No</strong> means you cannot participate.</li>');
+    expect(body.indexOf('<li><strong>if necessary</strong>'))
+      .toBeLessThan(body.indexOf('<li><strong>No</strong>'));
+    expect(body.indexOf('Here you can state your availability'))
+      .toBeLessThan(body.indexOf('name="vote-proposed-date-1"'));
+  });
+
+  test('renders the description in German for de-CH and uses the German vote labels', async () => {
+    const player = aPlayer({id: 'player-1'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: true})],
+    });
+    const app = createApp({locale: 'de-CH'});
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('Hier kannst du deine Verfügbarkeit für jeden vorgeschlagenen Termin angeben:<ul>');
+    expect(body)
+      .toContain('<li><strong>Ja</strong> bedeutet, dass du verfügbar bist.</li>');
+    expect(body.indexOf('<li><strong>notfalls</strong>'))
+      .toBeLessThan(body.indexOf('<li><strong>Nein</strong>'));
+    expect(body)
+      .toContain('Lade die Kalenderdatei (.ics) herunter');
+  });
+
+  test('keeps the description outside the HTMX-swapped vote region', async () => {
+    const player = aPlayer({id: 'player-1'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: true})],
+    });
+    const app = createApp({headers: {'HX-Request': 'true'}});
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('<div id="vote-region">');
+    expect(body)
+      .not
+      .toContain('Here you can state your availability');
+    expect(body)
+      .not
+      .toContain('calendar file (.ics)');
+  });
+
+  test('hides the description when no date is votable', async () => {
+    const player = aPlayer({id: 'player-1'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: false})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .not
+      .toContain('Here you can state your availability');
+    expect(body)
+      .not
+      .toContain('calendar file (.ics)');
+  });
+});
+
 describe('renderVoteStep hides clash info', () => {
   test('renders no clash lines for a date with home and away clashes', async () => {
     const player = aPlayer();

@@ -58,6 +58,14 @@ export class JoinPage {
     return this.page.getByText('No dates have been proposed yet');
   }
 
+  get voteIntro(): Locator {
+    return this.page.getByText('Here you can state your availability for each proposed date');
+  }
+
+  get calendarHint(): Locator {
+    return this.page.getByText('Tip: download the calendar file (.ics) and import it into your calendar app');
+  }
+
   get exportCalendarLink(): Locator {
     return this.page.getByRole('link', {name: 'Export as calendar (.ics)'});
   }

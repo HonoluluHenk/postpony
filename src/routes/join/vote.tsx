@@ -198,6 +198,19 @@ export function VotePage(props: VotePageProps): JSX.Element {
         <h2>{title}</h2>
       </header>
 
+      {props.proposedDates.length > 0 ? (
+        <>
+          {/* ponytail: markup lives in the locale string (ul/strong), labels are
+           our own literals, so raw() cannot carry user-typed HTML. */}
+          {raw(props.t('vote_intro', {
+            yes: props.t('vote_yes'),
+            no: props.t('vote_no'),
+            ifNecessary: props.t('vote_if_necessary'),
+          }))}
+          <p>{props.t('vote_calendar_hint')}</p>
+        </>
+      ) : null}
+
       <VoteRegion {...props}/>
 
       {/* ponytail: sessionId/team/playerId are generated or validated server-side, so
