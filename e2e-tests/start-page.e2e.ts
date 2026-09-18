@@ -18,12 +18,12 @@ test.describe('Start Page', () => {
 
   test('should display the main action links', async ({page, checkA11y}) => {
     // These navigate, so they must be links (not buttons) for correct semantics.
-    // The scrape wizard is the single creation path; only it and the edit path
-    // remain.
+    // The scrape wizard is the single creation path; the edit path was removed —
+    // an edit page is only reachable via the created postponement's edit link.
     await expect(startPage.scrapeLink)
       .toHaveAttribute('href', '/create/scrape');
-    await expect(startPage.editLink)
-      .toHaveAttribute('href', '/edit');
+    await expect(page.getByRole('link', {name: /edit an existing postponement/i}))
+      .toHaveCount(0);
     await expect(page.getByRole('link', {name: /create a new postponement/i}))
       .toHaveCount(0);
 

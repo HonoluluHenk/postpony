@@ -1,6 +1,6 @@
 # Organizer password is never verified
 
-Status: needs-triage
+Status: resolved
 
 ## Summary
 
@@ -17,13 +17,6 @@ The organizer password is generated, hashed, and stored, but never verified. Any
 
 Contradicts ADR-0002 and the "organizer password = edit access" model. Session ids are UUIDs (unguessable), but the edit link is shared freely, so URL-knowledge is the de facto access control.
 
-## Open question (product decision)
+## Resolution
 
-Is edit access meant to be password-gated, or is the session-id URL the intended capability? If gated, decide where the password lives across requests (query param vs cookie vs session store) and how HTMX partials and bookmarked links behave.
-
-## Suggested approach (once the product decision is made)
-
-1. Add a guard to `runEditCommand` and `handleEditGet` that verifies `organizerPassword` against `organizerPasswordHash` (`comparePassword`).
-2. Decide the transport (cookie likely, to avoid the password leaking into logs/referers).
-3. Keep the iCal edit endpoint's public-read behaviour explicit (see `src/routes/edit/id/ical-get.ts:4-8`).
-4. Update e2e to cover the unauthenticated (403) and authenticated paths.
+Resolved by commit `308acad` ("feat (edit): require organizer-captain password for edit access"): `requireOrganizerCaptain` in `src/routes/edit/id/edit-auth.ts` now verifies the password via `comparePassword` on `handleEditGet` and on every edit POST through `runEditCommand`. The reconnect/landing workflow this issue's open question anticipated was later removed entirely (see issue 02), so password transport stays as `?organizerPassword=`.

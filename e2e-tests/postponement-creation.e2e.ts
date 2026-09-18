@@ -42,14 +42,9 @@ test.describe('Postponement Creation', () => {
     await expect(page.getByRole('heading', {name: 'Proposed Dates', level: 2}))
       .toBeVisible();
 
-    // 6. Verify the organizer password is displayed.
-    await expect(editPage.organizerPasswordToast)
+    // 6. Verify the bookmark hint is displayed.
+    await expect(editPage.bookmarkToast)
       .toBeVisible();
-    const password = await editPage.organizerPassword;
-    expect(password)
-      .toBeTruthy();
-    expect(password?.length)
-      .toBeGreaterThan(0);
 
     // 7. Verify status and invite links.
     await expect(editPage.status)

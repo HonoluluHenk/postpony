@@ -95,16 +95,16 @@ test.describe('Invitation Link', () => {
     await checkA11y();
   });
 
-  test('should announce "Copied to clipboard" when the organizer password copy button is pressed', async ({
-                                                                                                            page,
-                                                                                                            checkA11y,
-                                                                                                          }) => {
+  test('should announce "Copied to clipboard" when the bookmark copy button is pressed', async ({
+                                                                                                  page,
+                                                                                                  checkA11y,
+                                                                                                }) => {
     const {editPage} = await EditPage.createSession(page);
 
-    await expect(editPage.organizerPasswordToast)
+    await expect(editPage.bookmarkToast)
       .toBeVisible();
 
-    await editPage.organizerPasswordCopyButton.click();
+    await editPage.bookmarkCopyButton.click();
 
     await expect(editPage.clipboardStatus)
       .toHaveText('Copied to clipboard');

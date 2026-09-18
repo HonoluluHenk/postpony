@@ -9,9 +9,7 @@ This use case describes how a Team Captain starts the process of rescheduling a 
 ### 1.1. Steps
 
 1. **Open Application**: The Team Captain opens the application.
-2. **Selection**: The user is asked to choose between:
-    * **Create a new ReSchedule**
-    * **Edit an existing ReSchedule**
+2. **Create New ReSchedule**: The Team Captain creates the postponement via the scrape wizard.
 3. **Create New ReSchedule**:
     * The system asks for a **ReSchedule name**.
     * Once entered, the system:
@@ -19,11 +17,6 @@ This use case describes how a Team Captain starts the process of rescheduling a 
         * Generates a random **Organizer Captain Password** (see [ADR 0025](adr/0025-two-captain-security-model.md)).
         * Presents the password to the user.
         * Proceeds to the **Editing Step**.
-4. **Edit Existing ReSchedule**:
-    * The system asks for the **ReSchedule Admin (Organizer) Password**.
-    * The user enters the password.
-    * If the password is correct, the system proceeds to the **Editing Step**.
-    * If incorrect, the system displays an error and allows the user to retry.
 
 2. Editing the Reschedule
 

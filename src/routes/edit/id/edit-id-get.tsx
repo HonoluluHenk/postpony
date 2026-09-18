@@ -32,6 +32,7 @@ export const handleEditGet = async (app: App): Promise<Response> => {
     title: app.t('edit_postponement_title', {name: session.name}),
     session,
     organizerPassword,
+    currentUrl: app.currentUrl(),
     proposedDateTime: originalMatchDateTime,
     proposedDateTimeDisplay: originalMatchDateTimeDisplay,
     fromDate,

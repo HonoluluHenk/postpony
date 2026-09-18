@@ -107,19 +107,14 @@ export class EditPage {
     return this.page.getByRole('link', {name: 'Change match details'});
   }
 
-  get organizerPasswordToast(): Locator {
+  // The bookmark hint ("Bookmark this page") shown on the full edit page.
+  get bookmarkToast(): Locator {
     return this.page.getByRole('status')
-      .filter({hasText: 'Your Organizer Password is'});
+      .filter({hasText: 'Bookmark this page'});
   }
 
-  get organizerPasswordCopyButton(): Locator {
-    return this.organizerPasswordToast.locator('button.copy-btn');
-  }
-
-  get organizerPassword(): Promise<string | null> {
-    return this.page.getByText('Your Organizer Password is')
-      .locator('span')
-      .textContent();
+  get bookmarkCopyButton(): Locator {
+    return this.bookmarkToast.locator('button.copy-btn');
   }
 
   get playerItems(): Locator {

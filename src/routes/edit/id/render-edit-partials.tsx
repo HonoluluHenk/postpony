@@ -146,6 +146,7 @@ export function renderEditPartials(
     session,
     title: app.t('edit_postponement_title', {name: session.name}),
     organizerPassword: organizerPasswordFromRequest(app),
+    currentUrl: app.currentUrl(),
   };
   if (!app.isPartial) {
     return app.render(<EditPage {...props} />);

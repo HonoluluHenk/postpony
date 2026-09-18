@@ -64,6 +64,8 @@ interface PageOptions {
   session?: Postponement;
   organizerPassword?: string;
   proposedDateTimeDisplay?: string;
+  isPartial?: boolean;
+  currentUrl?: string;
 }
 
 function baseProps(options: PageOptions = {}): EditPageProps {
@@ -72,12 +74,13 @@ function baseProps(options: PageOptions = {}): EditPageProps {
     session,
     t,
     locale: 'en-US',
-    isPartial: false,
+    isPartial: options.isPartial ?? false,
     baseUrl: BASE_URL,
     inputFormat: inputFormat('en-US'),
     languageOptions: languageOptions(),
     ...buildEditPartialsData(session, 'en-US'),
     organizerPassword: options.organizerPassword,
+    currentUrl: options.currentUrl ?? `${BASE_URL}/edit/sess-1`,
     proposedDateTimeDisplay: options.proposedDateTimeDisplay ?? 'Tue, Sep 1, 2026, 8:00 PM',
   };
 }
@@ -127,42 +130,46 @@ describe('EditPage single-line header', () => {
   });
 });
 
-describe('EditPage organizer-password toast', () => {
-  it('announces the success notice as a status and protects the password from translation', () => {
+describe('EditPage bookmark toast', () => {
+  it('announces the bookmark hint as a status with a copy button for the current URL', () => {
     const html = renderToString(EditPage(baseProps({organizerPassword: 'pw-123'})));
 
     expect(html)
       .toContain('<div class="toast primary white-text top" role="status">');
     expect(html)
-      .toContain('Postponement created successfully!');
+      .toContain('Bookmark this page');
     expect(html)
-      .toContain('<strong>Organizer Password</strong>');
+      .toContain('without this link, you can never access it again');
     expect(html)
-      .toContain('<span class="password-display" translate="no">pw-123</span>');
+      .not
+      .toContain('Your Organizer Password');
+    expect(html)
+      .not
+      .toContain('password-display');
     expect(html)
       .not
       .toContain('role="alert"');
   });
 
-  it('renders a copy button beside the password with the password as the copy payload', () => {
+  it('renders a copy button with the page-link label on the line above', () => {
     const html = renderToString(EditPage(baseProps({organizerPassword: 'pw-123'})));
 
     expect(html)
-      .toMatch(/<span class="password-display" translate="no">pw-123<\/span>\s*<button/);
+      .toContain('Copy link to this page: ');
     expect(html)
-      .toContain('data-copy="pw-123"');
+      .toMatch(/Copy link to this page: <button[^>]*data-copy="https:\/\/game-scheduler\.localhost:3000\/edit\/sess-1[^"]*"/);
     expect(html)
-      .toContain('aria-label="Copy organizer password"');
+      .toContain('aria-label="Copy the page address"');
     expect(html)
       .toContain('data-copied-label="Copied to clipboard"');
   });
 
-  it('omits the toast when there is no organizer password', () => {
-    const html = renderToString(EditPage(baseProps({organizerPassword: undefined})));
+  it('omits the toast on a partial render', () => {
+    const html = renderToString(EditPage(baseProps({isPartial: true})));
 
     expect(html)
       .not
-      .toContain('Postponement created successfully!');
+      .toContain('Bookmark this page');
   });
 });
 

@@ -1,6 +1,7 @@
 import { HTTPException } from 'hono/http-exception';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { App } from './app';
+import { aiTxt, isBotUserAgent, isCrawlerAllowedPath, robotsTxt } from './lib/crawl-policy';
 import { AppError, ClickTTError } from './lib/errors';
 import { factory, handleAppRequest } from './lib/hono-factory';
 import { logger } from './lib/logger';
@@ -61,7 +62,32 @@ export function buildApp(sessionStore: SessionStore): BuiltApp {
     return next();
   });
 
+  function handleRobotsTxt(app: App): Response {
+    return app.text(robotsTxt());
+  }
+
+  function handleAiTxt(app: App): Response {
+    return app.text(aiTxt());
+  }
+
+  // Crawl policy: only the start page may be crawled and indexed. The policy
+  // text files are advisory (RFC 9309); this filter adds a hard 403 for known
+  // bot user agents so agents that ignore robots.txt still get nothing.
+  // X-Robots-Tag guards against indexing of disallowed URLs (robots.txt blocks
+  // crawling, not indexing).
+  app.use('*', async (c, next) => {
+    if (!isCrawlerAllowedPath(c.req.path)) {
+      c.header('X-Robots-Tag', 'noindex');
+      if (isBotUserAgent(c.req.header('user-agent'))) {
+        return c.text('Forbidden', 403);
+      }
+    }
+    return next();
+  });
+
   app.get('/', handleAppRequest(handleIndexGet));
+  app.get('/robots.txt', handleAppRequest(handleRobotsTxt));
+  app.get('/ai.txt', handleAppRequest(handleAiTxt));
   app.route('/create', createRouter);
   app.route('/edit', editRouter);
   app.route('/join', joinRouter);

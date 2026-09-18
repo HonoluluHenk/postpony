@@ -122,16 +122,6 @@
     color: var(--on-surface);
   }
 
-  /* Specific UI Elements */
-  .password-display {
-    font-family: var(--monospace-font), monospace;
-    background: var(--surface-variant);
-    color: var(--on-surface-variant);
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--border-radius);
-    font-weight: bold;
-  }
-
   /* Utility Classes */
   .visually-hidden {
     position: absolute;

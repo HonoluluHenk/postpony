@@ -19,6 +19,7 @@ The following capabilities describe the system **as built** (each is traceable t
 9. **Reopen** a confirmed postponement back to `Voting`, preserving history and incrementing `reopenCount`. (`POST /edit/:id/reopen`)
 10. **Export** the candidate dates as an iCal feed with per-date one-click vote links. (`/edit/:id/calendar.ics`, `/join/:id/:team/calendar.ics`)
 11. **Opponent-captain scoped view** — the opposing captain manages their own team's roster, shares their team's player invitation link, turns a date's Votable off (which also takes it out of their own team's poll), and marks dates accepted, seeing only their own team's tallies and clash lines (with a clean chip on checked-clean dates), and re-checks their own side's schedule on demand. (`/opponent/:id`, ADR-0025, ADR-0026)
+12. **Restrict crawling and indexing to the start page** — `robots.txt` and `ai.txt` express the policy, a request filter 403s known bot/AI user-agents off every non-start route, and non-start pages carry `X-Robots-Tag: noindex`. (`/robots.txt`, `/ai.txt`, §8.10)
 
 ### 1.1.1 Explicitly not built
 

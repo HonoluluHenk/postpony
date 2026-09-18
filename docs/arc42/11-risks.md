@@ -30,7 +30,6 @@ The three shareable secrets — opponent-captain, home-player, away-player — a
 
 | Item                                  | Detail                                                                             | Ticket                         |
 |---------------------------------------|------------------------------------------------------------------------------------|--------------------------------|
-| Bare `/edit` is a reachable 404       | home page links `/edit`; no handler serves it                                      | `.scratch/edit-authorization/` |
 | Dead `AvailabilityRecord` type        | declared, zero references (`models.ts:37-40`)                                      | `.scratch/dead-code/`          |
 | Unenforced coverage thresholds        | no vitest `thresholds` block                                                       | `.scratch/ci-pipeline/`        |
 | README drift                          | Eta, `npm run certs`, `npm run test:e2e`, stale multi-tenancy claims             | fixed this pass                |

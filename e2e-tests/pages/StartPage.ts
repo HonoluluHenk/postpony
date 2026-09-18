@@ -17,10 +17,6 @@ export class StartPage {
     return this.page.getByRole('link', {name: 'Find your match (click-tt.ch)'});
   }
 
-  get editLink(): Locator {
-    return this.page.getByRole('link', {name: 'Edit an existing Postponement'});
-  }
-
   get spinner(): Locator {
     return this.page.locator('#global-spinner');
   }

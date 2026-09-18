@@ -1,5 +1,4 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
-import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../../app';
 import type { Postponement, Team } from '../../../lib/models';
 import { matchUpLine } from '../../../lib/postponement';
@@ -17,6 +16,8 @@ export interface EditPageProps extends ViewContext, EditGridProps {
   session: Postponement;
   /** Original match datetime in the locale's Intl reading format (page heading). */
   proposedDateTimeDisplay?: string;
+  /** The URL the organizer should bookmark to get back to this page. */
+  currentUrl?: string;
   globalError?: string;
 }
 
@@ -169,25 +170,24 @@ export function EditPage(props: EditPageProps): JSX.Element {
 
   const content = (
     <div class="edit-redesign">
-      {props.organizerPassword && !props.isPartial ? (
+      {!props.isPartial ? (
         <div class="toast primary white-text top" role="status">
           <i aria-hidden="true">info</i>
           <div class="max">
-            <p><strong>{props.t('postponement_created_success')}</strong></p>
+            <p><strong>{props.t('bookmark_edit_title')}</strong></p>
+            <p>{props.t('bookmark_edit_hint')}</p>
             <p>
-              {raw(props.t('organizer_password_label'))} <span class="password-display"
-                                                               translate="no">{props.organizerPassword}</span>
+              {props.t('copy_edit_url_label')}
               <button
                 class="copy-btn"
-                data-copy={props.organizerPassword}
+                data-copy={props.currentUrl ?? props.baseUrl}
                 data-copied-label={props.t('copied_to_clipboard')}
-                aria-label={props.t('copy_organizer_password')}
+                aria-label={props.t('copy_edit_url')}
                 type="button"
               >
                 <i aria-hidden="true">content_copy</i>
               </button>
             </p>
-            <p>{props.t('save_password_warning')}</p>
           </div>
         </div>
       ) : null}

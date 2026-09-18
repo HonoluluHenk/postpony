@@ -32,8 +32,8 @@ flowchart TB
 
 | Module                        | Responsibility                                                                                                                                                                                                                 |
 |-------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `models.ts`                   | type core: `Team`, `PostponementStatus`, `ClickTtTeamIdentity`, `Player`, `Venue`, `Postponement`, `ProposedDate`, `Vote`, `VoteTallyItem`, `MatchFormat`, `DEFAULT_CLUB_ID`, `DEFAULT_MATCH_FORMAT`                                          |
-| `postponement.ts`             | `PostponementRules` pure domain ops (incl. `availabilityRanking`) + `newId()/now()` seam                                                                                                                                        |
+| `models.ts`                   | type core: `Team`, `PostponementStatus`, `ClickTtTeamIdentity`, `Player`, `Venue`, `Postponement`, `ProposedDate`, `Vote`, `VoteTallyItem`, `MatchFormat`, `DEFAULT_CLUB_ID`, `DEFAULT_MATCH_FORMAT`                           |
+| `postponement.ts`             | `PostponementRules` pure domain ops (incl. `availabilityRanking`) + `newId()/now()` seam                                                                                                                                       |
 | `session-store.ts`            | `SessionStore` interface, `normalize()` read-time upgrade, `MemorySessionStore`, `SqliteSessionStore`                                                                                                                          |
 | `click-tt-scraper.ts`         | all scraping + HTML parsing + fixture seam                                                                                                                                                                                     |
 | `clashes.ts`                  | clash domain (pure): `±2h` buffer, `computeClashes`, auto-deselect, `mergeOwnSideClashes` (single-side merge, never touches `votable`)                                                                                         |
@@ -48,6 +48,7 @@ flowchart TB
 | `errors.ts`                   | `AppError(400)`, `InternalError(500)`, `StateError(404)`, `ClickTTError`                                                                                                                                                       |
 | `map-validation-to-errors.ts` | Valibot result → `{fields, global}`                                                                                                                                                                                            |
 | `hono-factory.ts`             | `factory`, `handleAppRequest` adapter Context→`App`                                                                                                                                                                            |
+| `crawl-policy.ts`             | sole source of the crawl policy: `robots.txt`/`ai.txt` text, bot user-agent detection, allowed-path classifier (drives the bot filter + `X-Robots-Tag`)                                                                        |
 | `logger.ts`                   | `AppLogger` façade; console always, pino on Node                                                                                                                                                                               |
 | `middleware/language.ts`      | `?lang=` → cookie → `Accept-Language` → default locale resolution                                                                                                                                                              |
 
@@ -58,6 +59,8 @@ Routers mounted in `src/build-app.tsx`: `/create`, `/edit`, `/join`, `/opponent`
 | Method | Path                                 | Handler                                                        |
 |--------|--------------------------------------|----------------------------------------------------------------|
 | GET    | `/`                                  | `handleIndexGet`                                               |
+| GET    | `/robots.txt`                        | `handleRobotsTxt` (crawl policy, see §8.10)                    |
+| GET    | `/ai.txt`                            | `handleAiTxt` (AI-agent policy mirror, see §8.10)              |
 | GET    | `/create/scrape`                     | `handleScrapeLeaguesGet`                                       |
 | GET    | `/create/scrape/groups`              | `handleScrapeGroupsGet`                                        |
 | GET    | `/create/scrape/teams`               | `handleScrapeTeamsGet`                                         |
@@ -83,8 +86,6 @@ Routers mounted in `src/build-app.tsx`: `/create`, `/edit`, `/join`, `/opponent`
 | POST   | `/opponent/:id/accepted`             | `handleOpponentAcceptedPost`                                   |
 | POST   | `/opponent/:id/refresh-clashes`      | `handleOpponentRefreshPost` (own-side-only re-check, ADR-0026) |
 | —      | `/assets/*`                          | `serveStatic` (Node) / Workers Assets; `.spec.` paths blocked  |
-
-Known gap: the home page links `/edit`, but no handler serves bare `GET /edit` (404) — see §11.
 
 ## 5.4 View components and partials
 
