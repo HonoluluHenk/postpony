@@ -200,6 +200,7 @@
   "week_label": "Week <%= it.week %>",
   "welcome": "Welcome to PostPony",
   "workflow_heading": "How it works",
+  "workflow_sort_tip": "<strong>Tip:</strong> sorting by availability groups the dates by your team's availability — full strength first, then with if-necessary, reduced strength, and not playable; dates stay chronological within each group.",
   "workflow_opponent_confirmed": "The organizer has confirmed a date — voting is closed.",
   "workflow_opponent_step1": "Check your roster: add or remove players in 'Your Team Roster'.",
   "workflow_opponent_step2": "Remove dates that don't work: switch off 'Votable' — they disappear from your team's poll.",

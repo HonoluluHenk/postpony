@@ -197,6 +197,7 @@ export function EditPage(props: EditPageProps): JSX.Element {
       <OrganizerWorkflowInstructions
         t={props.t}
         confirmed={props.session.status === 'Confirmed'}
+        tip={props.t('workflow_sort_tip')}
       />
 
       <EditGrid {...props} />

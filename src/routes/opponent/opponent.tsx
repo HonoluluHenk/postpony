@@ -159,6 +159,7 @@ export function OpponentPage(props: OpponentPageProps): JSX.Element {
           props.t('workflow_opponent_step3'),
           props.t('workflow_opponent_step4'),
         ]}
+        tip={props.t('workflow_sort_tip')}
         confirmed={props.session.status === 'Confirmed'}
         confirmedNote={props.t('workflow_opponent_confirmed')}
       />

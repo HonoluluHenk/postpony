@@ -200,6 +200,7 @@
   "week_label": "Woche <%= it.week %>",
   "welcome": "Willkommen bei PostPony",
   "workflow_heading": "So funktioniert's",
+  "workflow_sort_tip": "<strong>Tipp:</strong> Die Sortierung nach Verfügbarkeit gruppiert die Termine nach der Verfügbarkeit deiner Mannschaft — zuerst volle Stärke, dann mit Notfall, reduzierte Stärke und nicht spielbar; innerhalb jeder Gruppe chronologisch.",
   "workflow_opponent_confirmed": "Der Organisator hat einen Termin bestätigt — die Abstimmung ist geschlossen.",
   "workflow_opponent_step1": "Aufstellung prüfen: Ergänze oder entferne Spieler unter «Deine Mannschaftsaufstellung».",
   "workflow_opponent_step2": "Termine ausblenden, die nicht passen: Schalte «Abstimmbar» bei Terminen aus, die für euch nicht in Frage kommen. Sie verschwinden aus der Abstimmung deines Teams.",

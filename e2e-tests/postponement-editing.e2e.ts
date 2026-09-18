@@ -493,6 +493,9 @@ test.describe('Postponement Editing', () => {
       .toHaveText('How it works');
     await expect(instructions.locator('li'))
       .toHaveCount(5);
+    // The availability-sort explanation rides along in the block.
+    await expect(instructions)
+      .toContainText('Tip: sorting by availability');
 
     // Collapse; the closed state survives a reload.
     await instructions.locator('summary')

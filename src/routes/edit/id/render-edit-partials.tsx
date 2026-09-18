@@ -119,6 +119,7 @@ export function renderEditGridPartial(
         <OrganizerWorkflowInstructions
           t={props.t}
           confirmed={props.session.status === 'Confirmed'}
+          tip={props.t('workflow_sort_tip')}
           isOob={true}
         />
       ) : null}

@@ -1,4 +1,5 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
+import { raw } from 'hono/utils/html';
 import type { TranslateFn } from '../../locales';
 
 export interface WorkflowInstructionsProps {
@@ -8,6 +9,8 @@ export interface WorkflowInstructionsProps {
   storageKey: string;
   heading: string;
   steps: string[];
+  /** Optional explanatory tip rendered after the step list. */
+  tip?: string;
   confirmedNote: string;
   confirmed: boolean;
   /** Out-of-band re-render for status-changing swaps (confirm/reopen). */
@@ -33,9 +36,14 @@ export function WorkflowInstructions(props: WorkflowInstructionsProps): JSX.Elem
       {props.confirmed
        ? <p class="mt-2">{props.confirmedNote}</p>
        : (
-         <ol class="list mt-2">
-           {props.steps.map((step) => <li key={step}>{step}</li>)}
-         </ol>
+         <>
+           <ol class="list mt-2">
+             {props.steps.map((step) => <li key={step}>{step}</li>)}
+           </ol>
+           {/* Locale strings are our own literals, so raw() cannot carry
+            user-typed HTML — same as the vote description. */}
+           {props.tip ? <p class="mt-2">{raw(props.tip)}</p> : null}
+         </>
        )}
     </details>
   );
@@ -49,6 +57,8 @@ export function WorkflowInstructions(props: WorkflowInstructionsProps): JSX.Elem
 export function OrganizerWorkflowInstructions(props: {
   t: TranslateFn;
   confirmed: boolean;
+  /** Optional explanatory tip rendered after the step list. */
+  tip?: string;
   isOob?: boolean;
 }): JSX.Element {
   return (
@@ -63,6 +73,7 @@ export function OrganizerWorkflowInstructions(props: {
         props.t('workflow_organizer_step4'),
         props.t('workflow_organizer_step5'),
       ]}
+      tip={props.tip}
       confirmedNote={props.t('workflow_organizer_confirmed')}
       confirmed={props.confirmed}
       isOob={props.isOob}
