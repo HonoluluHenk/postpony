@@ -735,3 +735,66 @@ test.describe('Click-to-vote from the calendar export', () => {
     await checkA11y();
   });
 });
+
+test.describe('Scriptless vote submission', () => {
+  test('happy path: a no-JS participant registers, saves a vote, and it persists', async ({
+    browser,
+    page,
+  }) => {
+    const {session} = await EditPage.createSession(page, ['2026-06-01T20:00']);
+
+    const context = await browser.newContext({javaScriptEnabled: false});
+    const noJsPage = await context.newPage();
+    const joinPage = new JoinPage(noJsPage);
+
+    // Registration is a plain form POST, so it works without the runtime.
+    await joinPage.goto(session.homeHref);
+    await joinPage.identify('Joy');
+    await expect(joinPage.voteHeading)
+      .toBeVisible();
+
+    // Toggle the first date's choice by label, then submit the raw form.
+    await joinPage.voteGroup(0)
+      .getByText('Yes', {exact: true})
+      .click();
+    await joinPage.voteForm.getByRole('button', {name: 'Save votes'})
+      .click();
+    await expect(noJsPage.getByRole('status')
+      .filter({hasText: 'Your votes have been saved!'}))
+      .toBeVisible();
+
+    // The choice is stored: still checked after a plain reload.
+    await noJsPage.reload();
+    await expect(joinPage.voteGroup(0)
+      .getByRole('radio', {name: 'Yes'}))
+      .toBeChecked();
+
+    await context.close();
+  });
+
+  test('likely error path: submitting as an unknown player routes back to identify', async ({
+    browser,
+    page,
+  }) => {
+    const {session} = await EditPage.createSession(page, ['2026-06-01T20:00']);
+
+    const context = await browser.newContext({javaScriptEnabled: false});
+    const noJsPage = await context.newPage();
+    const joinPage = new JoinPage(noJsPage);
+    await joinPage.goto(session.homeHref);
+    await joinPage.identify('Joy');
+
+    // A stale vote link (valid session+token, unknown player) must not lose the
+    // participant: the server sends the register step instead of an error page.
+    const voteUrl = new URL(noJsPage.url());
+    voteUrl.searchParams.set('playerId', 'no-such-player');
+    await noJsPage.goto(voteUrl.toString());
+
+    await expect(joinPage.heading)
+      .toBeVisible();
+    await expect(joinPage.voteHeading)
+      .toHaveCount(0);
+
+    await context.close();
+  });
+});
