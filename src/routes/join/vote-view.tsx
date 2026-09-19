@@ -76,6 +76,7 @@ export function renderVoteStep(app: App, options: VoteViewOptions): Response {
     return {
       id: pd.id,
       display: formatProposedDateDisplay(pd.dateTimeRange.start, locale),
+      dateTimeRange: {start: pd.dateTimeRange.start},
       currentVote: current?.type ?? '',
       yes: counts.yes,
       ifNecessary: counts.ifNecessary,

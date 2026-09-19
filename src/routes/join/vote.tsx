@@ -1,15 +1,21 @@
 import type { JSX } from 'hono/jsx/jsx-runtime';
 import { raw } from 'hono/utils/html';
 import type { ViewContext } from '../../app';
+import type { TranslateFn } from '../../locales';
 import type { Venue, VoteTallyItem } from '../../lib/models';
 import type { VenueOccupancy } from '../../lib/venue-occupancy';
+import { defaultVenueNumber } from '../../lib/venues';
 import { pageLayout } from '../layouts/main';
+import { groupByWeek, RailGroupHeading } from '../partials/sort-control';
 import { SwitchParticipantLink } from '../partials/switch-participant';
 import { VenueChip } from '../partials/venues';
 import { VoteTally } from '../partials/vote-tally';
 import type { Team } from './join-utils';
 
 export interface VotePageDate extends VoteTallyItem {
+  dateTimeRange: {
+    start: string
+  };
   currentVote: string;
   /** venue number the date applies to; absent means venue 1 (legacy dates predate venues). */
   venueNumber?: number;
@@ -29,6 +35,15 @@ export interface VotePageProps extends ViewContext {
   globalError?: string;
 }
 
+/** The occupancy clause appended to a date's venue chip; absent on no/empty data. */
+function occupancyClause(date: VotePageDate, t: TranslateFn): string | undefined {
+  return date.venueOccupancy !== undefined && date.venueOccupancy.count > 0
+         ? date.venueOccupancy.count === 1
+           ? t('venue_legend_occupancy_one')
+           : t('venue_legend_occupancy', {count: String(date.venueOccupancy.count)})
+         : undefined;
+}
+
 /**
  * The swap target of an HTMX vote save: the saved-toast, the calendar export
  * link, the vote form and the shared tally. Rendered inside `VotePage` on a full
@@ -37,6 +52,7 @@ export interface VotePageProps extends ViewContext {
  */
 export function VoteRegion(props: VotePageProps): JSX.Element {
   const action = `/join/${props.sessionId}/${props.team}/vote?playerId=${props.playerId}&token=${props.token}`;
+  const groups = groupByWeek(props.proposedDates, props.locale, props.t);
 
   return (
     <div id="vote-region">
@@ -116,64 +132,87 @@ export function VoteRegion(props: VotePageProps): JSX.Element {
                </div>
              </fieldset>
 
-             {props.proposedDates.map((pd) => (
-               <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
-                 <legend>
-                   {pd.display}{' '}
-                   <VenueChip
-                     venueNumber={pd.venueNumber}
-                     venues={props.venues}
-                     extra={pd.venueOccupancy !== undefined && pd.venueOccupancy.count > 0
-                            ? pd.venueOccupancy.count === 1
-                              ? props.t('venue_legend_occupancy_one')
-                              : props.t('venue_legend_occupancy', {count: String(pd.venueOccupancy.count)})
-                            : undefined}
+             {groups.map((group) => {
+               const first = group.rows[0];
+               const uniformVenue = first !== undefined && group.rows.every(
+                 (row) => defaultVenueNumber(row.venueNumber) === defaultVenueNumber(first.venueNumber),
+               );
+               const sharedClause = uniformVenue && group.rows.every(
+                 (row) => occupancyClause(row, props.t) === occupancyClause(first, props.t),
+               )
+                                    ? occupancyClause(first, props.t)
+                                    : undefined;
+               return (
+                 <section class="vote-week" key={group.key}>
+                   <RailGroupHeading
+                     group={group}
+                     t={props.t}
+                     trailing={uniformVenue ? (
+                       <VenueChip venueNumber={first.venueNumber} venues={props.venues} extra={sharedClause}/>
+                     ) : undefined}
                    />
-                 </legend>
-                 <div class="vote-option">
-                   <label class="radio">
-                     <input
-                       type="radio"
-                       name={`vote-${pd.id}`}
-                       value="Yes"
-                       checked={pd.currentVote === 'Yes'}
-                       aria-describedby={`vote-yes-${pd.id}-tooltip`}
-                     />
-                     <span>{props.t('vote_yes')}</span>
-                   </label>
-                   <span class="tooltip" role="tooltip"
-                         id={`vote-yes-${pd.id}-tooltip`}>{props.t('vote_yes_tooltip')}</span>
-                 </div>
-                 <div class="vote-option">
-                   <label class="radio">
-                     <input
-                       type="radio"
-                       name={`vote-${pd.id}`}
-                       value="IfNecessary"
-                       checked={pd.currentVote === 'IfNecessary'}
-                       aria-describedby={`vote-ifnecessary-${pd.id}-tooltip`}
-                     />
-                     <span>{props.t('vote_if_necessary')}</span>
-                   </label>
-                   <span class="tooltip" role="tooltip"
-                         id={`vote-ifnecessary-${pd.id}-tooltip`}>{props.t('vote_if_necessary_tooltip')}</span>
-                 </div>
-                 <div class="vote-option">
-                   <label class="radio">
-                     <input
-                       type="radio"
-                       name={`vote-${pd.id}`}
-                       value="No"
-                       checked={pd.currentVote === 'No'}
-                       aria-describedby={`vote-no-${pd.id}-tooltip`}
-                     />
-                     <span>{props.t('vote_no')}</span>
-                   </label>
-                   <span class="tooltip" role="tooltip"
-                         id={`vote-no-${pd.id}-tooltip`}>{props.t('vote_no_tooltip')}</span>
-                 </div>
-               </fieldset>
-             ))}
+                   {group.rows.map((pd) => (
+                     <fieldset class="field border radio-group vote-radio-group" key={pd.id}>
+                       <legend>
+                         {pd.display}
+                         {uniformVenue ? null : (
+                           <>
+                             {' '}
+                             <VenueChip
+                               venueNumber={pd.venueNumber}
+                               venues={props.venues}
+                               extra={occupancyClause(pd, props.t)}
+                             />
+                           </>
+                         )}
+                       </legend>
+                       <div class="vote-option">
+                         <label class="radio">
+                           <input
+                             type="radio"
+                             name={`vote-${pd.id}`}
+                             value="Yes"
+                             checked={pd.currentVote === 'Yes'}
+                             aria-describedby={`vote-yes-${pd.id}-tooltip`}
+                           />
+                           <span>{props.t('vote_yes')}</span>
+                         </label>
+                         <span class="tooltip" role="tooltip"
+                               id={`vote-yes-${pd.id}-tooltip`}>{props.t('vote_yes_tooltip')}</span>
+                       </div>
+                       <div class="vote-option">
+                         <label class="radio">
+                           <input
+                             type="radio"
+                             name={`vote-${pd.id}`}
+                             value="IfNecessary"
+                             checked={pd.currentVote === 'IfNecessary'}
+                             aria-describedby={`vote-ifnecessary-${pd.id}-tooltip`}
+                           />
+                           <span>{props.t('vote_if_necessary')}</span>
+                         </label>
+                         <span class="tooltip" role="tooltip"
+                               id={`vote-ifnecessary-${pd.id}-tooltip`}>{props.t('vote_if_necessary_tooltip')}</span>
+                       </div>
+                       <div class="vote-option">
+                         <label class="radio">
+                           <input
+                             type="radio"
+                             name={`vote-${pd.id}`}
+                             value="No"
+                             checked={pd.currentVote === 'No'}
+                             aria-describedby={`vote-no-${pd.id}-tooltip`}
+                           />
+                           <span>{props.t('vote_no')}</span>
+                         </label>
+                         <span class="tooltip" role="tooltip"
+                               id={`vote-no-${pd.id}-tooltip`}>{props.t('vote_no_tooltip')}</span>
+                       </div>
+                     </fieldset>
+                   ))}
+                 </section>
+               );
+             })}
            </form>
 
            <section aria-labelledby="vote-summary-title">

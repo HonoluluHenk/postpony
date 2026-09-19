@@ -502,7 +502,7 @@ describe('renderVoteStep', () => {
       .toContain('>(1) Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange</span>');
   });
 
-  test('renders just the venue number in the pill when no venue name is known', async () => {
+  test('renders just the venue number in the pill in the group heading when no venue name is known', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -523,10 +523,13 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
+      .toContain('>(4)</span></h3>');
+    expect(body)
+      .not
       .toContain('>(4)</span></legend>');
   });
 
-  test('appends the occupancy count to the number-only pill when the venue is unknown', async () => {
+  test('appends the occupancy count to the number-only pill in the group heading when the venue is unknown', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -552,7 +555,10 @@ describe('renderVoteStep', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('>(4), 2 other games</span></legend>');
+      .toContain('>(4), 2 other games</span></h3>');
+    expect(body)
+      .not
+      .toContain('other games</span></legend>');
   });
 
   test('truncates a multi-line venue name at the first comma in the vote pill', async () => {
@@ -1015,7 +1021,7 @@ describe('renderVoteStep hides clash info', () => {
 });
 
 describe('renderVoteStep venue occupancy info', () => {
-  test('renders the occupancy count beside the venue in the legend', async () => {
+  test('renders the occupancy count beside the venue in the hoisted group-heading chip', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -1058,10 +1064,13 @@ describe('renderVoteStep venue occupancy info', () => {
       .toContain('>(1) Turnhalle orange, 2 other games<span class="visually-hidden">1 – Turnhalle orange</span>');
     expect(body)
       .not
+      .toContain('2 other games</span></legend>');
+    expect(body)
+      .not
       .toContain('2 other games at this venue');
   });
 
-  test('renders the singular occupancy text for a count of one', async () => {
+  test('renders the singular occupancy text in the hoisted group-heading chip for a count of one', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -1127,14 +1136,14 @@ describe('renderVoteStep venue occupancy info', () => {
     });
     const body = await response.text();
 
-    // The occupancy count surfaces in the legend, never as a clickable trigger
-    // (vote-choice tooltips carry role="tooltip"/aria-describedby legitimately).
+    // The occupancy count may surface inside a chip, never as a clickable
+    // trigger (vote-choice tooltips carry role="tooltip"/aria-describedby legitimately).
     expect(body)
       .not
       .toContain('data-occupancy-trigger');
   });
 
-  test('omits the count clause from the legend when the occupancy check ran clean', async () => {
+  test('omits the count clause from the hoisted chip when the occupancy check ran clean', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -1203,7 +1212,7 @@ describe('renderVoteStep venue occupancy info', () => {
       .toContain('Venue empty');
   });
 
-  test('renders the localized de-CH occupancy count in the legend', async () => {
+  test('renders the localized de-CH occupancy count in the per-date venue chip when the group is not venue-uniform', async () => {
     const player = aPlayer();
     const session = aSession({
       status: 'Voting',
@@ -1216,11 +1225,19 @@ describe('renderVoteStep venue occupancy info', () => {
           postalCode: '3072',
           city: 'Ostermundigen',
         },
+        {
+          venueNumber: 2,
+          name: 'Turnhalle grün',
+          shortName: 'Turnhalle grün',
+          address: 'Dennigkofenweg 170',
+          postalCode: '3072',
+          city: 'Ostermundigen',
+        },
       ],
       players: [player],
       proposedDates: [
         aProposedDate({id: 'date-1', votable: true, venueOccupancy: {count: 2, matches: []}}),
-        aProposedDate({id: 'date-2', votable: true, venueOccupancy: {count: 0, matches: []}}),
+        aProposedDate({id: 'date-2', votable: true, venueNumber: 2, venueOccupancy: {count: 0, matches: []}}),
       ],
     });
     const app = createApp({locale: 'de-CH'});
@@ -1235,7 +1252,10 @@ describe('renderVoteStep venue occupancy info', () => {
     const body = await response.text();
 
     expect(body)
-      .toContain('2 weitere Spiele');
+      .toContain('2 weitere Spiele<span class="visually-hidden">1 – Turnhalle orange</span></span></legend>');
+    expect(body)
+      .not
+      .toContain('2 weitere Spiele</span></h3>');
     expect(body)
       .not
       .toContain('Halle leer');
@@ -1359,5 +1379,197 @@ describe('renderConfirmedInfo', () => {
 
     expect(html)
       .toContain('<h2>Postponement Confirmed</h2>');
+  });
+});
+
+describe('renderVoteStep week grouping', () => {
+  const orange = {
+    venueNumber: 1,
+    name: 'Turnhalle orange',
+    shortName: 'Turnhalle orange',
+    address: 'Dennigkofenweg 169',
+    postalCode: '3072',
+    city: 'Ostermundigen',
+  };
+  const green = {
+    venueNumber: 2,
+    name: 'Turnhalle grün',
+    shortName: 'Turnhalle grün',
+    address: 'Dennigkofenweg 170',
+    postalCode: '3072',
+    city: 'Ostermundigen',
+  };
+
+  function weekSession(options: {
+    dates: Parameters<typeof aProposedDate>[0][];
+    venues?: typeof orange[];
+  }): ReturnType<typeof aSession> {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    return aSession({
+      status: 'Voting',
+      players: [player],
+      venues: options.venues ?? [],
+      proposedDates: options.dates.map((overrides) => aProposedDate({votable: true, ...overrides})),
+    });
+  }
+
+  async function voteBody(session: ReturnType<typeof weekSession>): Promise<string> {
+    const app = createApp();
+    await app.store.save(session);
+    const player = session.players[0];
+    if (!player) {
+      throw new Error('expected a player');
+    }
+    const response = renderVoteStep(app, {session, team: 'home', token: 'token', player});
+    return response.text();
+  }
+
+  test('groups two same-week dates under one week head with the ISO week label and range', async () => {
+    const body = await voteBody(weekSession({
+      dates: [
+        {id: 'date-a', dateTimeRange: {start: '2026-09-01T20:00'}},
+        {id: 'date-b', dateTimeRange: {start: '2026-09-02T20:00'}},
+      ],
+    }));
+
+    expect(body.split('class="week-head"').length - 1)
+      .toBe(1);
+    expect(body)
+      .toContain('Week 36');
+    expect(body)
+      .toContain('<span class="week-range">Aug 31 – Sep 6</span>');
+    expect(body)
+      .toContain('name="vote-date-a"');
+    expect(body)
+      .toContain('name="vote-date-b"');
+  });
+
+  test('splits dates across week boundaries into separate week heads', async () => {
+    const body = await voteBody(weekSession({
+      dates: [
+        {id: 'date-a', dateTimeRange: {start: '2026-09-01T20:00'}},
+        {id: 'date-c', dateTimeRange: {start: '2026-09-08T20:00'}},
+      ],
+    }));
+
+    expect(body.split('class="week-head"').length - 1)
+      .toBe(2);
+    expect(body)
+      .toContain('Week 36');
+    expect(body)
+      .toContain('Week 37');
+    expect(body)
+      .toContain('<span class="week-range">Aug 31 – Sep 6</span>');
+    expect(body)
+      .toContain('<span class="week-range">Sep 7 – Sep 13</span>');
+  });
+
+  test('hoists the venue chip into the group heading once when every date shares the venue', async () => {
+    const body = await voteBody(weekSession({
+      venues: [orange],
+      dates: [
+        {id: 'date-a', venueNumber: 1, dateTimeRange: {start: '2026-09-01T20:00'}},
+        {id: 'date-b', venueNumber: 1, dateTimeRange: {start: '2026-09-02T20:00'}},
+      ],
+    }));
+
+    expect(body.split('(1) Turnhalle orange').length - 1)
+      .toBe(1);
+    expect(body)
+      .toContain('<span class="week-range">Aug 31 – Sep 6</span><span class="chip venue-chip">(1) Turnhalle orange');
+    expect(body)
+      .not
+      .toContain('Turnhalle orange</span></legend>');
+  });
+
+  test('treats a legacy date without a venue number as venue 1 for the hoist', async () => {
+    const body = await voteBody(weekSession({
+      venues: [orange],
+      dates: [
+        {id: 'date-a', venueNumber: 1, dateTimeRange: {start: '2026-09-01T20:00'}},
+        {...aProposedDate({id: 'date-b', dateTimeRange: {start: '2026-09-02T20:00'}}), venueNumber: undefined},
+      ],
+    }));
+
+    expect(body.split('(1) Turnhalle orange').length - 1)
+      .toBe(1);
+    expect(body)
+      .not
+      .toContain('Turnhalle orange</span></legend>');
+  });
+
+  test('keeps the venue chip in each legend when venues differ within a group', async () => {
+    const body = await voteBody(weekSession({
+      venues: [orange, green],
+      dates: [
+        {id: 'date-a', venueNumber: 1, dateTimeRange: {start: '2026-09-01T20:00'}},
+        {id: 'date-b', venueNumber: 2, dateTimeRange: {start: '2026-09-02T20:00'}},
+      ],
+    }));
+
+    expect(body.split('class="chip venue-chip"').length - 1)
+      .toBe(2);
+    expect(body)
+      .toContain('>(1) Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange</span></span></legend>');
+    expect(body)
+      .toContain('>(2) Turnhalle grün<span class="visually-hidden">2 – Turnhalle grün</span></span></legend>');
+    expect(body)
+      .not
+      .toContain('<span class="chip venue-chip">(1) Turnhalle orange</h3>');
+  });
+
+  test('hoists the shared venue-occupancy claim with the chip when every date agrees', async () => {
+    const body = await voteBody(weekSession({
+      venues: [orange],
+      dates: [
+        {
+          id: 'date-a',
+          venueNumber: 1,
+          venueOccupancy: {count: 2, matches: [{opponent: 'Port', start: '2025-09-01T20:15'}]},
+          dateTimeRange: {start: '2026-09-01T20:00'},
+        },
+        {
+          id: 'date-b',
+          venueNumber: 1,
+          venueOccupancy: {count: 2, matches: [{opponent: 'Bern', start: '2025-09-01T19:30'}]},
+          dateTimeRange: {start: '2026-09-02T20:00'},
+        },
+      ],
+    }));
+
+    expect(body)
+      .toContain('(1) Turnhalle orange, 2 other games<span class="visually-hidden">1 – Turnhalle orange</span>');
+    expect(body)
+      .not
+      .toContain('other games</span></legend>');
+  });
+
+  test('drops the per-date occupancy claim when dates in the hoisted group disagree', async () => {
+    const body = await voteBody(weekSession({
+      venues: [orange],
+      dates: [
+        {
+          id: 'date-a',
+          venueNumber: 1,
+          venueOccupancy: {count: 2, matches: [{opponent: 'Port', start: '2025-09-01T20:15'}]},
+          dateTimeRange: {start: '2026-09-01T20:00'},
+        },
+        {
+          id: 'date-b',
+          venueNumber: 1,
+          venueOccupancy: {count: 0, matches: []},
+          dateTimeRange: {start: '2026-09-02T20:00'},
+        },
+      ],
+    }));
+
+    expect(body)
+      .toContain('<span class="week-range">Aug 31 – Sep 6</span><span class="chip venue-chip">(1) Turnhalle orange<span class="visually-hidden">1 – Turnhalle orange</span></span>');
+    expect(body)
+      .not
+      .toContain('other games');
+    expect(body)
+      .not
+      .toContain('Turnhalle orange</span></legend>');
   });
 });

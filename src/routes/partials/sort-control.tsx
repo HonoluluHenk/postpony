@@ -147,6 +147,9 @@ export function RailGroupHeading(props: {
     range?: string
   };
   t: TranslateFn;
+  /** An element rendered after the week range — e.g. the venue chip the vote
+   *  page hoists into the heading of a same-venue week group. */
+  trailing?: JSX.Element;
 }): JSX.Element {
   const kind = availabilityKind(props.group.key);
   const tooltipId = kind ? `rail-group-${props.group.key}-tooltip` : undefined;
@@ -162,6 +165,7 @@ export function RailGroupHeading(props: {
         ) : null}
       </span>
       {props.group.range ? <span class="week-range">{props.group.range}</span> : null}
+      {props.trailing}
     </h3>
   );
 }
