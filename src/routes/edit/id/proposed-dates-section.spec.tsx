@@ -418,8 +418,11 @@ describe('ProposedDatesRail date actions', () => {
       .toContain('hx-post="/edit/test-session/proposed-date-visibility?proposedDateId=pd-open&amp;votable=false"');
     expect(html)
       .toContain('hx-post="/edit/test-session/proposed-date-visibility?proposedDateId=pd-closed&amp;votable=true"');
+    // Every per-row control's accessible name carries the row's display string.
     expect(html)
-      .toContain('aria-label="Allow voting"');
+      .toContain('aria-label="Allow voting · Tu, Sep 1, 2026, 8:00 PM"');
+    expect(html)
+      .toContain('aria-label="Allow voting · Tu, Sep 8, 2026, 8:00 PM"');
     // The switch label stays plain; the checkbox itself carries the state.
     expect(html)
       .toContain('Votable');
@@ -436,11 +439,62 @@ describe('ProposedDatesRail date actions', () => {
     expect(html)
       .toContain('data-open-dialog="delete-proposed-date-pd-open"');
     expect(html)
-      .toContain('aria-label="Delete"');
+      .toContain('aria-label="Delete · Tu, Sep 1, 2026, 8:00 PM"');
+    expect(html)
+      .toContain('aria-label="Delete · Tu, Sep 8, 2026, 8:00 PM"');
     expect(html)
       .toContain('hx-post="/edit/test-session/proposed-date-delete?proposedDateId=pd-open"');
     expect(html)
       .toContain('>Delete</button>');
+  });
+
+  it('announces the Confirm Date control with its date', () => {
+    const session = buildSession({
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-open',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
+      ],
+    });
+    const html = renderToString(ProposedDatesRail(railProps(session)));
+
+    expect(html)
+      .toContain('aria-label="Confirm Date · Tu, Sep 1, 2026, 8:00 PM"');
+    // The visible button text stays the plain control name.
+    expect(html)
+      .toContain('>Confirm Date</button>');
+  });
+
+  it('keeps accessible names of two rows apart via their different dates', () => {
+    const session = buildSession({
+      proposedDates: [
+        aProposedDate({
+          id: 'pd-a',
+          dateTimeRange: {start: '2026-09-01T20:00', end: '2026-09-01T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
+        aProposedDate({
+          id: 'pd-b',
+          dateTimeRange: {start: '2026-09-08T20:00', end: '2026-09-08T22:00'},
+          votable: true,
+          venueNumber: 1,
+        }),
+      ],
+    });
+    const html = renderToString(ProposedDatesRail(railProps(session)));
+
+    // No bare control label appears without its date in an aria-label.
+    expect(html)
+      .not
+      .toMatch(/aria-label="(Delete|Allow voting|Confirm Date)"/);
+    expect(html)
+      .toContain('aria-label="Delete · Tu, Sep 1, 2026, 8:00 PM"');
+    expect(html)
+      .toContain('aria-label="Delete · Tu, Sep 8, 2026, 8:00 PM"');
   });
 
   it('renders the delete opener before the confirm control on a votable row', () => {

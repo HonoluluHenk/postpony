@@ -401,9 +401,11 @@ export class EditPage {
   }
 
   confirmButton(dateIndex: number): Locator {
+    // The accessible name carries the row's date ("Confirm Date · Tu, Sep 1,
+    // …"), so match on the control substring rather than the full name.
     return this.proposedDateRows
       .nth(dateIndex)
-      .getByRole('button', {name: 'Confirm Date', exact: true});
+      .getByRole('button', {name: 'Confirm Date'});
   }
 
   deleteButton(dateIndex: number): Locator {

@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Each Delete, Votable-toggle, and Confirm Date control on a row announces its control name plus the row's date; two rows never share an indistinguishable accessible name.
-- [ ] The accessible name uses the row's existing display wording, so what a screenreader hears matches the visible card.
-- [ ] The labels exist in en and de; the composing step is shared and reusable rather than per-control.
-- [ ] The edit surface passes the axe/`checkA11y` pass with no critical or serious issues, and the render spec asserts the per-row accessible names behaviourally (not by selector).
+- [x] Each Delete, Votable-toggle, and Confirm Date control on a row announces its control name plus the row's date; two rows never share an indistinguishable accessible name.
+- [x] The accessible name uses the row's existing display wording, so what a screenreader hears matches the visible card.
+- [x] The labels exist in en and de; the composing step is shared and reusable rather than per-control.
+- [x] The edit surface passes the axe/`checkA11y` pass with no critical or serious issues, and the render spec asserts the per-row accessible names behaviourally (not by selector).

@@ -16,6 +16,7 @@ import {
 } from '../../partials/sort-control';
 import { VoteTally } from '../../partials/vote-tally';
 import { VenueChip } from '../../partials/venues';
+import { controlNameWithDate } from '../../partials/control-with-date';
 import { withOrganizerPassword } from './edit-auth';
 import type { OwnTeamView } from './own-team-view';
 import { OwnTeamVotes } from './own-team-votes';
@@ -221,6 +222,9 @@ function DateActions(props: {
   organizerPassword?: string
 }): JSX.Element {
   const {row, sessionId, t, organizerPassword} = props;
+  const votableName = controlNameWithDate(t, 'votable_toggle', row.display);
+  const deleteName = controlNameWithDate(t, 'delete_proposed_date', row.display);
+  const confirmName = controlNameWithDate(t, 'confirm_date', row.display);
   return (
     <div class="date-actions">
       <label class="action action--votable" title={t('votable_toggle')}>
@@ -230,7 +234,7 @@ function DateActions(props: {
           hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-date-visibility?proposedDateId=${row.id}&votable=${!row.votable}`, organizerPassword)}
           hx-target="#edit-grid"
           checked={row.votable}
-          aria-label={t('votable_toggle')}
+          aria-label={votableName}
         />
         {t('votable_short')}
       </label>
@@ -238,7 +242,7 @@ function DateActions(props: {
         type="button"
         class="action action--outline"
         data-open-dialog={`delete-proposed-date-${row.id}`}
-        aria-label={t('delete_proposed_date')}
+        aria-label={deleteName}
         title={t('delete_proposed_date')}
       >
         <i aria-hidden="true">delete</i>
@@ -249,6 +253,7 @@ function DateActions(props: {
           class="action action--primary"
           hx-post={withOrganizerPassword(`/edit/${sessionId}/proposed-date-confirm?proposedDateId=${row.id}`, organizerPassword)}
           hx-target="#edit-grid"
+          aria-label={confirmName}
         >
           {t('confirm_date')}
         </button>
