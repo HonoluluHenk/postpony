@@ -184,6 +184,7 @@
   "vote_no": "No",
   "vote_no_tooltip": "I don't have time",
   "vote_no_dates": "No dates have been proposed yet. The organizer is still deciding which dates to propose.",
+  "vote_save": "Save votes",
   "vote_set_all": "Set all:",
   "vote_set_all_aria_label": "Set all: <%= it.vote %>",
   "vote_summary": "Vote Summary",

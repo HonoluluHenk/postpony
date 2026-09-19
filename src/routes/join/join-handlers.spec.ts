@@ -846,6 +846,57 @@ describe('join handlers', () => {
       expect(stored?.votes)
         .toHaveLength(0);
     });
+
+    test('persists a plain no-JS form POST and renders the saved status on the full page', async () => {
+      const session = await seedSession({
+        players: [aPlayer()],
+        proposedDates: [aProposedDate()],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'player-1'},
+        body: {'vote-proposed-date-1': 'Yes'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVotePost(app);
+      const body = await response.text();
+
+      expect((await app.store.get(session.id))?.votes)
+        .toMatchObject([{proposedDateId: 'proposed-date-1', participantId: 'player-1', type: 'Yes'}]);
+      expect(response.status)
+        .toBe(200);
+      // No HX header: the native fallback gets a full page, not a region fragment.
+      expect(body)
+        .toContain('<!DOCTYPE html>');
+      expect(body)
+        .toContain('class="toast success top" role="status"');
+      expect(body)
+        .toContain('Your votes have been saved!');
+    });
+
+    test('ignores a malformed vote value instead of failing the no-JS submission', async () => {
+      const session = await seedSession({
+        players: [aPlayer()],
+        proposedDates: [aProposedDate()],
+      });
+      const app = createApp({
+        params: {id: session.id, team: 'home'},
+        queries: {token: TOKEN, playerId: 'player-1'},
+        body: {'vote-proposed-date-1': 'definitely-not-a-vote'},
+      });
+      await app.store.save(session);
+
+      const response = await handleJoinVotePost(app);
+      const body = await response.text();
+
+      expect((await app.store.get(session.id))?.votes)
+        .toHaveLength(0);
+      expect(response.status)
+        .toBe(200);
+      expect(body)
+        .toContain('name="vote-proposed-date-1"');
+    });
   });
 
   describe('JoinPage direct render', () => {

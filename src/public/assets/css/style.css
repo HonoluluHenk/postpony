@@ -346,6 +346,12 @@
     max-inline-size: min(16rem, 80vw);
   }
 
+  /* No-JS save: buffer the fallback submit control below the date list. It
+     only renders inside <noscript>, so JS users never see it. */
+  .vote-save-actions {
+    margin-block-start: var(--space-4);
+  }
+
   /* Beer's hover-only trigger would strand keyboard users: focus shows the
      tooltip for both radio wrappers and the set-all buttons. */
   .vote-option:focus-within > .tooltip {

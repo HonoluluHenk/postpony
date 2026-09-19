@@ -184,6 +184,7 @@
   "vote_no": "Nein",
   "vote_no_tooltip": "Ich habe keine Zeit",
   "vote_no_dates": "Es wurden noch keine Termine vorgeschlagen. Der Organisator entscheidet noch, welche Termine vorgeschlagen werden.",
+  "vote_save": "Stimmen speichern",
   "vote_set_all": "Alle Termine umstellen:",
   "vote_set_all_aria_label": "Alle: <%= it.vote %>",
   "vote_summary": "Abstimmungsübersicht",

@@ -335,6 +335,66 @@ describe('renderVoteStep', () => {
       .toContain('hx-target="#vote-region"');
   });
 
+  test('offers a no-JS submit control that posts the raw radio form', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({id: 'date-1', votable: true})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    // The form already posts natively; the <noscript> control gives a scriptless
+    // browser a submit device without ever existing for JS users.
+    expect(body)
+      .toContain('method="post"');
+    expect(body)
+      .toContain('action="/join/test-session/home/vote?playerId=player-1&amp;token=token"');
+    expect(body)
+      .toContain('<noscript>');
+    expect(body)
+      .toContain('<button type="submit" class="button">Save votes</button>');
+    // The control sits inside the vote form, after the htmx wiring and before </form>.
+    expect(body.indexOf('<noscript>'))
+      .toBeGreaterThan(body.indexOf('hx-post="/join/test-session/home/vote'));
+    expect(body.indexOf('<button type="submit"'))
+      .toBeLessThan(body.lastIndexOf('</form>'));
+  });
+
+  test.each([
+    ['en-US', 'Save votes'],
+    ['de-CH', 'Stimmen speichern'],
+  ] as const)('labels the no-JS save control in %s', async (locale, label) => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: true})],
+    });
+    const app = createApp({locale});
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain(`>${label}</button>`);
+  });
+
   test('renders just the vote region for an HTMX request', async () => {
     const player = aPlayer({id: 'player-1', name: 'Alice'});
     const session = aSession({

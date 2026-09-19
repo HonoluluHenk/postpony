@@ -209,11 +209,21 @@ export function VoteRegion(props: VotePageProps): JSX.Element {
                                id={`vote-no-${pd.id}-tooltip`}>{props.t('vote_no_tooltip')}</span>
                        </div>
                      </fieldset>
-                   ))}
-                 </section>
-               );
-             })}
-           </form>
+                     ))}
+                   </section>
+                 );
+               })}
+
+               {/* ponytail: the fallback submit device lives only inside
+                <noscript>, so a scriptless page gets a native POST path while
+                a JS page has no submit control and the htmx auto-save can never
+                race a fallback request. */}
+               <noscript>
+                 <div class="vote-save-actions">
+                   <button type="submit" class="button">{props.t('vote_save')}</button>
+                 </div>
+               </noscript>
+             </form>
 
            <section aria-labelledby="vote-summary-title">
              <VoteTally

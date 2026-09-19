@@ -79,7 +79,7 @@ H -->> P: VotePage
 end
 ```
 
-A vote save is an in-place HTMX swap of `#vote-region` (`VoteRegion` in `vote.tsx`), not a page reload: `ui.js` fills the set-all radios, calls `requestSubmit()`, debounces single-radio changes, and restores focus to the changed control after the swap. An unknown `playerId` answers an HTMX save with `HX-Redirect`, and a save that finds the session Confirmed answers `HX-Refresh` so the info view loads whole.
+A vote save is an in-place HTMX swap of `#vote-region` (`VoteRegion` in `vote.tsx`), not a page reload: `ui.js` fills the set-all radios, calls `requestSubmit()`, debounces single-radio changes, and restores focus to the changed control after the swap. An unknown `playerId` answers an HTMX save with `HX-Redirect`, and a save that finds the session Confirmed answers `HX-Refresh` so the info view loads whole. A scriptless browser still saves: the form carries `method="post"`/`action` natively and a `<noscript>`-wrapped submit button (in `vote.tsx`) triggers the raw radio POST, which lands in the same `handleJoinVotePost` and renders the full page with the saved toast; the control exists only when JavaScript is off, so the two save paths can never both fire.
 
 A documented deliberate **state-changing GET** (`GET /join/:id/:team/vote`) applies votes read from `?vote-<dateId>` query params, so one-click calendar vote links work (`join-vote-get.ts`). Player identity is stored in `localStorage` key `postpony-player-<sessionId>-<team>`. The join token is the matching team's player password (home path → home-player password, away path → away-player password); a team/token mismatch is a 403.
 

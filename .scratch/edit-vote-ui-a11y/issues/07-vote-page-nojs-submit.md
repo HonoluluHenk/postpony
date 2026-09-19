@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] With JavaScript disabled after load, the vote form submits via its POST path and the vote persists.
-- [ ] With JavaScript enabled, auto-save-on-change still works and the fallback never fires a second request.
-- [ ] The saved confirmation is announced (toast + aria-live) for both paths.
-- [ ] A scripts-disabled e2e on the vote page covers the happy path (one vote persists) and a likely error path (a malformed submission shows the error treatment), asserting what the user sees.
+- [x] With JavaScript disabled after load, the vote form submits via its POST path and the vote persists.
+- [x] With JavaScript enabled, auto-save-on-change still works and the fallback never fires a second request.
+- [x] The saved confirmation is announced (toast + aria-live) for both paths.
+- [x] A scripts-disabled e2e on the vote page covers the happy path (one vote persists) and a likely error path (a malformed submission shows the error treatment), asserting what the user sees.
