@@ -8,7 +8,7 @@
 
 - [x] The document outline contains a single "Vote on Proposed Dates" heading; an in-article heading either reads distinctly or is removed.
 - [x] The new/varied heading text exists in en and de (fr-CH/it-CH reuse English per ADR-0016).
-- [ ] The semantic-structure and axe e2e passes show no duplicate-heading or heading-order violation on the vote page.
+- [x] The semantic-structure and axe e2e passes show no duplicate-heading or heading-order violation on the vote page.
 
 ## Comments
 
