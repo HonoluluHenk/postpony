@@ -26,11 +26,14 @@ function renderToString(node: unknown): string {
 }
 
 describe('Layout page shell', () => {
-  it('declares a theme-color meta matching the light-surface body background', () => {
+  it('renders the theme-color meta without a hardcoded hex (sourced from the design token at runtime)', () => {
     const html = renderToString(Layout(baseProps()));
 
     expect(html)
-      .toContain('<meta name="theme-color" content="#fdf8fd"/>');
+      .toContain('<meta name="theme-color"/>');
+    expect(html)
+      .not
+      .toContain('#fdf8fd');
   });
 
   it('sizes the logo image from the SVG aspect ratio at height 40', () => {

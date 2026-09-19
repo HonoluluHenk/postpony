@@ -15,6 +15,7 @@ import {
   initRedesignDisclosures,
   initSortRadios,
   initTheme,
+  initThemeColor,
   initVoteForm,
   resyncSortRadios,
   shouldSwapErrorBody,
@@ -1324,6 +1325,40 @@ describe('additional branch coverage', () => {
 
       expect(ui).toHaveBeenCalledWith('theme', '#1a237e');
       vi.unstubAllGlobals();
+    });
+  });
+
+  describe('initThemeColor', () => {
+    afterEach(() => {
+      document.querySelectorAll('meta[name="theme-color"]').forEach((el) => el.remove());
+      document.body.style.removeProperty('--theme-color');
+    });
+
+    it('copies the --theme-color token into the theme-color meta', () => {
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.append(meta);
+      document.body.style.setProperty('--theme-color', '#fdf8fd');
+
+      initThemeColor();
+
+      expect(meta.getAttribute('content')).toBe('#fdf8fd');
+    });
+
+    it('leaves the meta untouched when the token is not declared', () => {
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.append(meta);
+
+      initThemeColor();
+
+      expect(meta.hasAttribute('content')).toBe(false);
+    });
+
+    it('is a no-op when the theme-color meta is absent', () => {
+      document.body.style.setProperty('--theme-color', '#fdf8fd');
+
+      expect(() => initThemeColor()).not.toThrow();
     });
   });
 

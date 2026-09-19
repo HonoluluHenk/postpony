@@ -19,7 +19,9 @@ export function Layout(props: LayoutProps): JSX.Element {
       <head>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <meta name="theme-color" content="#fdf8fd"/>
+        {/* The theme-color hex lives once, in the design-token file
+            (--theme-color -> --surface); ui.js copies it into this meta. */}
+        <meta name="theme-color"/>
         <title>{props.title}</title>
         <link rel="icon" type="image/svg+xml" href="/assets/logos/favicon.svg"/>
         <script src="/assets/vendor/js/htmx.min.js"></script>

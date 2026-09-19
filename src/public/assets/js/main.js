@@ -1,6 +1,7 @@
 import {Spinner} from './spinner-module.js';
 import {
   initTheme,
+  initThemeColor,
   initLanguage,
   initHtmx,
   initClipboard,
@@ -37,6 +38,7 @@ initPersistedDetails();
 
 window.addEventListener('load', () => {
   initTheme();
+  initThemeColor();
   initLanguage();
   initHtmx(spinner);
   initClipboard();

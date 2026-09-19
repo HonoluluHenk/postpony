@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] All page types render body text in the single self-hosted family; the condensed face appears only where the edit rail's date cells use it.
-- [ ] The document declares `color-scheme` such that native controls render against the light theme on dark-mode OSes; no dark palette is introduced.
-- [ ] The theme-color meta equals the surface token and is sourced from it, not a duplicate literal.
-- [ ] A spot accessibility pass across start, vote, join, and edit finds no regressions from the shared family swap.
+- [x] All page types render body text in the single self-hosted family; the condensed face appears only where the edit rail's date cells use it.
+- [x] The document declares `color-scheme` such that native controls render against the light theme on dark-mode OSes; no dark palette is introduced.
+- [x] The theme-color meta equals the surface token and is sourced from it, not a duplicate literal.
+- [x] A spot accessibility pass across start, vote, join, and edit finds no regressions from the shared family swap.

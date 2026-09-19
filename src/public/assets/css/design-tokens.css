@@ -25,9 +25,19 @@
     --h6-size: calc(var(--h5-size) * var(--heading-scale));
     --monospace-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-    /* Typography — edit-page redesign (one family, two widths, self-hosted) */
-    --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    /* Typography — one self-hosted family app-wide, two widths. --font is the
+       plain text family for every page; the BeerCSS/Inter stack stays as an
+       exhausted fallback. --font-condensed stays scoped to the edit date cells. */
+    --font: 'IBM Plex Sans', 'Inter', 'Roboto', 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', 'Noto Sans', 'Arial', sans-serif;
+    --font-sans: var(--font);
     --font-condensed: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif;
+
+    /* Theme — single light scheme. Declaring color-scheme keeps native
+       scrollbars, selects and date-picker dialogs light on dark-mode OSes; no
+       dark palette is defined. --theme-color feeds the theme-color meta and
+       resolves to the BeerCSS .light --surface on the body. */
+    --theme-color: var(--surface);
+    color-scheme: light;
 
     /* Type scale — edit-page redesign */
     --font-size-xs: 0.75rem;

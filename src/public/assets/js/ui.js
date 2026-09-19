@@ -62,6 +62,17 @@ export function initTheme() {
 }
 
 /**
+ * Copies the --theme-color design token into the theme-color meta, so the
+ * surface hex lives in one place (the token files) instead of the layout.
+ */
+export function initThemeColor() {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta === null) return;
+  const value = getComputedStyle(document.body).getPropertyValue('--theme-color').trim();
+  if (value !== '') meta.content = value;
+}
+
+/**
  * Handles language persistence using localStorage and URL parameters.
  */
 export function initLanguage() {
