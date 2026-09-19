@@ -215,12 +215,42 @@ describe('renderVoteStep', () => {
     expect(body)
       .toContain('aria-label="Set all: Yes"');
     expect(body)
-      .toContain('aria-label="Set all: if necessary"');
+      .toContain('aria-label="Set all: If necessary"');
     expect(body)
       .toContain('aria-label="Set all: No"');
     expect(body.indexOf('data-set-all="Yes"'))
       .toBeLessThan(body.indexOf('name="vote-date-1"'));
   });
+
+  test.each([
+    ['en-US', 'Yes', 'If necessary', 'No'],
+    ['de-CH', 'Ja', 'Notfalls', 'Nein'],
+  ] as const)(
+    'title-cases the middle choice between the yes and no radio labels for %s',
+    async (locale, yes, ifNecessary, no) => {
+      const player = aPlayer({id: 'player-1', name: 'Alice'});
+      const session = aSession({
+        status: 'Voting',
+        players: [player],
+        proposedDates: [aProposedDate({id: 'date-1', votable: true})],
+      });
+      const app = createApp({locale});
+      await app.store.save(session);
+
+      const response = renderVoteStep(app, {session, team: 'home', token: 'token', player});
+      const body = await response.text();
+
+      // Only the label copy is title-cased; the stored/sent value stays PascalCase.
+      expect(body).toContain('value="IfNecessary"');
+      expect(body).toContain(`<span>${yes}</span>`);
+      expect(body).toContain(`<span>${ifNecessary}</span>`);
+      expect(body).toContain(`<span>${no}</span>`);
+      expect(body.indexOf(`<span>${ifNecessary}</span>`))
+        .toBeGreaterThan(body.indexOf(`<span>${yes}</span>`));
+      expect(body.indexOf(`<span>${ifNecessary}</span>`))
+        .toBeLessThan(body.indexOf(`<span>${no}</span>`));
+    },
+  );
 
   test('omits the set-all group when no date is votable', async () => {
     const player = aPlayer({id: 'player-1', name: 'Alice'});
@@ -783,7 +813,7 @@ describe('renderVoteStep availability description', () => {
     expect(body)
       .toContain('<li><strong>Yes</strong> means you are available.</li>');
     expect(body)
-      .toContain('<li><strong>if necessary</strong> means you can make it happen if nobody else is available.</li>');
+      .toContain('<li><strong>If necessary</strong> means you can make it happen if nobody else is available.</li>');
     expect(body)
       .toContain('<li><strong>No</strong> means you cannot participate.</li>');
     expect(body)
@@ -796,7 +826,7 @@ describe('renderVoteStep availability description', () => {
       .toContain('from your calendar.<br/>It is often easier');
     expect(body)
       .toContain('It is often easier to first accept all the dates and then decline');
-    expect(body.indexOf('<li><strong>if necessary</strong>'))
+    expect(body.indexOf('<li><strong>If necessary</strong>'))
       .toBeLessThan(body.indexOf('<li><strong>No</strong>'));
     expect(body.indexOf('Here you can state your availability'))
       .toBeLessThan(body.indexOf('name="vote-proposed-date-1"'));
@@ -824,7 +854,7 @@ describe('renderVoteStep availability description', () => {
       .toContain('Hier kannst du deine Verfügbarkeit für jeden vorgeschlagenen Termin angeben:<ul>');
     expect(body)
       .toContain('<li><strong>Ja</strong> bedeutet, dass du verfügbar bist.</li>');
-    expect(body.indexOf('<li><strong>notfalls</strong>'))
+    expect(body.indexOf('<li><strong>Notfalls</strong>'))
       .toBeLessThan(body.indexOf('<li><strong>Nein</strong>'));
     expect(body)
       .toContain('Lade die Kalenderdatei (.ics) herunter');

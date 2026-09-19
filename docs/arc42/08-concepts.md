@@ -32,7 +32,7 @@ save that races confirmation gets `HX-Refresh`. Out-of-band targets: `#error-con
 
 ## 8.7 Accessibility
 
-WCAG 2.2 AA (ADR-0004). Concretely: skip link to `#main-content`, one `<h1>` with a visible-text accessible name, language nav with `aria-label`, `role="alert"` error container, visually-hidden `role="status"` announcements, `aria-live="polite"` spinner, decorative icons `aria-hidden`, `aria-invalid`/`aria-describedby` on invalid fields, `<fieldset>/<legend>` radio groups, the date/venue chips exposing their full venue name as visually-hidden text (`VenueChip`), vote-choice tooltips (`role="tooltip"` + `aria-describedby`, shown on hover and `:focus-within`/`:focus-visible`), focus management in `ui.js`. Enforced by axe (`checkA11y`, tags `wcag2a/2aa/21a/21aa/22a/22aa`) and dedicated e2e suites (`semantic-structure`, `focus-management`, `responsive`).
+WCAG 2.2 AA (ADR-0004). Concretely: skip link to `#main-content`, one `<h1>` with a visible-text accessible name, language nav with `aria-label`, `role="alert"` error container, visually-hidden `role="status"` announcements, `aria-live="polite"` spinner, decorative icons `aria-hidden`, `aria-invalid`/`aria-describedby` on invalid fields, `<fieldset>/<legend>` radio groups, the date/venue chips exposing their full venue name as visually-hidden text (`VenueChip`), vote-choice tooltips (`role="tooltip"` + `aria-describedby`, shown on hover and `:focus-within`/`:focus-visible`), focus management in `ui.js`. Interactive vote and sort controls meet WCAG 2.5.8 (target size): the wrapped labels (`.vote-radio-group .radio`, `.sort-option`, `.action--votable`) carry an explicit 24×24 CSS px floor. Enforced by axe (`checkA11y`, tags `wcag2a/2aa/21a/21aa/22a/22aa`) and dedicated e2e suites (`semantic-structure`, `focus-management`, `responsive`).
 
 ## 8.8 Observability
 
@@ -52,7 +52,7 @@ Only the start page (`/`) may be crawled or indexed; every other route is off-li
 
 ## 8.11 UI theme & typography
 
-One self-hosted type family app-wide: the design-layer `:root` overrides BeerCSS's `--font` with `'IBM Plex Sans'` first and the vendor Inter/Roboto stack as an exhausted fallback (`--font-sans` aliases `--font`); the condensed Plex face stays scoped to the edit rail's date cells. The same `:root` declares `color-scheme: light` so native scrollbars, selects, and date-picker dialogs stay light on dark-mode OSes (no dark palette exists). The `theme-color` meta renders without content and `ui.js`'s `initThemeColor` fills it from the `--theme-color` token (`= --surface`), keeping the surface hex in the token files as the single source.
+One self-hosted type family app-wide: the design-layer `:root` overrides BeerCSS's `--font` with `'IBM Plex Sans'` first and the vendor Inter/Roboto stack as an exhausted fallback (`--font-sans` aliases `--font`); the condensed Plex face stays scoped to the edit rail's date cells. The same `:root` declares `color-scheme: light` so native scrollbars, selects, and date-picker dialogs stay light on dark-mode OSes (no dark palette exists). Count columns and count labels (`.num`, `.team-tally`, `.vote-dot-count`) share the `font-variant-numeric: tabular-nums` + `text-align: end` convention so compared numbers stop jittering as values change. The `theme-color` meta renders without content and `ui.js`'s `initThemeColor` fills it from the `--theme-color` token (`= --surface`), keeping the surface hex in the token files as the single source.
 
 ## 8.12 Collapsible availability bands
 

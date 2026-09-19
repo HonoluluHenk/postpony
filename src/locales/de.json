@@ -178,7 +178,7 @@
   "vote_action_label": "Abstimmen",
   "vote_availability_heading": "Deine Verfügbarkeit",
   "vote_calendar_hint": "<strong>Tipp:</strong> Lade die Kalenderdatei (.ics) herunter und importiere sie in deine Kalender-App, um die vorgeschlagenen Termine auf einen Blick zu sehen. Jeder Kalendereintrag enthält einen Link zu dieser Seite, mit dem du genau diesen Termin direkt aus deinem Kalender bestätigen oder ablehnen kannst.<br/>Oft ist es einfacher, zuerst alle Termine zu akzeptieren und im Kalender einzelne Termine abzulehnen (oder andersrum).",
-  "vote_if_necessary": "notfalls",
+  "vote_if_necessary": "Notfalls",
   "vote_if_necessary_tooltip": "Falls sonst niemand kann",
   "vote_intro": "Hier kannst du deine Verfügbarkeit für jeden vorgeschlagenen Termin angeben:<ul><li><strong><%= it.yes %></strong> bedeutet, dass du verfügbar bist.</li><li><strong><%= it.ifNecessary %></strong> bedeutet, dass du es ermöglichen kannst, wenn sonst niemand verfügbar ist.</li><li><strong><%= it.no %></strong> bedeutet, dass du nicht teilnehmen kannst.</li></ul>Du kannst deine Antworten ändern, bis der Organisator einen Termin bestätigt.",
   "vote_no": "Nein",

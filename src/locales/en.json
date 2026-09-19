@@ -178,7 +178,7 @@
   "vote_action_label": "Vote",
   "vote_availability_heading": "Your availability",
   "vote_calendar_hint": "<strong>Hint:</strong> download the calendar file (.ics) and import it into your calendar app to see the proposed dates at a glance. Each calendar entry contains a link to this page, so you can confirm or decline that exact date right from your calendar.<br/>It is often easier to first accept all the dates and then decline individual ones in your calendar (or vice versa).",
-  "vote_if_necessary": "if necessary",
+  "vote_if_necessary": "If necessary",
   "vote_if_necessary_tooltip": "I'll make it work if needed",
   "vote_intro": "Here you can state your availability for each proposed date:<ul><li><strong><%= it.yes %></strong> means you are available.</li><li><strong><%= it.ifNecessary %></strong> means you can make it happen if nobody else is available.</li><li><strong><%= it.no %></strong> means you cannot participate.</li></ul>You can change your answers until the organizer confirms a date.",
   "vote_no": "No",

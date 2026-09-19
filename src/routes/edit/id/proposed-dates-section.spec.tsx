@@ -396,7 +396,7 @@ describe('ProposedDatesRail vote dots', () => {
     const html = renderToString(ProposedDatesRail(railProps(session)));
 
     expect(html)
-      .toContain('<span role="listitem" class="vote-dot vote-dot--ifnecessary" aria-label="Alice: if necessary"></span>');
+      .toContain('<span role="listitem" class="vote-dot vote-dot--ifnecessary" aria-label="Alice: If necessary"></span>');
   });
 });
 

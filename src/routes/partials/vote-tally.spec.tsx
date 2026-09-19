@@ -79,17 +79,17 @@ describe('VoteTally component', () => {
 
     expect(html).toContain('<th scope="col">Proposed Date &amp; Time</th>');
     expect(html).toContain('<th scope="col" class="num">Yes</th>');
-    expect(html).toContain('<th scope="col" class="num">if necessary</th>');
+    expect(html).toContain('<th scope="col" class="num">If necessary</th>');
     expect(html).toContain('<th scope="col" class="num">No</th>');
 
     expect(html).toContain('<td data-label="Proposed Date &amp; Time">10.10.2026 19:00</td>');
     expect(html).toContain('<td data-label="Yes" class="num">3</td>');
-    expect(html).toContain('<td data-label="if necessary" class="num">1</td>');
+    expect(html).toContain('<td data-label="If necessary" class="num">1</td>');
     expect(html).toContain('<td data-label="No" class="num">0</td>');
 
     expect(html).toContain('<td data-label="Proposed Date &amp; Time">12.10.2026 20:00</td>');
     expect(html).toContain('<td data-label="Yes" class="num">1</td>');
-    expect(html).toContain('<td data-label="if necessary" class="num">2</td>');
+    expect(html).toContain('<td data-label="If necessary" class="num">2</td>');
     expect(html).toContain('<td data-label="No" class="num">2</td>');
   });
 });

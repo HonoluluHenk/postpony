@@ -135,11 +135,14 @@
     border: 0;
   }
 
-  /* Numeric table cells (vote counts, voted column): tabular numerals so
-     columns line up for at-a-glance comparison, right-aligned. In the
-     stacked mobile layout the cell stays display:block, so the label and
-     value both align to the end — still readable as a labelled card. */
-  .num {
+  /* Numeric cells and count labels (vote counts, voted column, edit-rail
+     team tallies): tabular numerals so columns line up for at-a-glance
+     comparison, right-aligned. In the stacked mobile layout the cell stays
+     display:block, so the label and value both align to the end — still
+     readable as a labelled card. */
+  .num,
+  .team-tally,
+  .vote-dot-count {
     font-variant-numeric: tabular-nums;
     text-align: end;
   }
@@ -313,7 +316,8 @@
 
   /* Vote radio group: horizontal Yes/Maybe/No row that wraps on narrow
      screens. Each .vote-option wraps one label + its tooltip; the block
-     padding on the label gives it a >=44px touch target. */
+     padding on the label gives it a >=44px touch target, and the explicit
+     24x24 minimum covers the WCAG 2.5.8 target-size floor. */
   .vote-radio-group {
     flex-direction: row;
     flex-wrap: wrap;
@@ -322,6 +326,8 @@
 
   .vote-radio-group .radio {
     padding-block: var(--space-3);
+    min-width: 24px;
+    min-height: 24px;
   }
 
   /* Vote tooltips: beer.css shows .tooltip only on :hover of its parent. Each
@@ -900,10 +906,15 @@
     color: var(--ink-soft);
   }
 
+  /* WCAG 2.5.8 target size: the wrapped label is the click target for the
+     sort radios and the votable toggle, so pin both label boxes to the
+     24x24 CSS px floor; the native control alone is taller than it is wide. */
   .sort-option {
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
+    min-width: 24px;
+    min-height: 24px;
     cursor: pointer;
   }
 
@@ -1031,6 +1042,8 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-1-5);
+    min-width: 24px;
+    min-height: 24px;
   }
 
   /* ---- Sidebar blocks. ---- */

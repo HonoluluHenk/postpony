@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] The middle choice displays "If necessary" next to "Yes"/"No" in en and de; the underlying vote value is unchanged so no existing data or domain logic moves.
-- [ ] Radio/checkbox hit targets on the vote page and the edit rail pass the target-size rule; axe reports no target-size violation on either surface.
-- [ ] The vote summary counts and the edit team tallies are end-aligned and set to tabular numerals, so equal counts render at equal width.
-- [ ] A browser-level spec asserts the target geometry and the computed tabular alignment, and the existing axe checks pass on both surfaces.
+- [x] The middle choice displays "If necessary" next to "Yes"/"No" in en and de; the underlying vote value is unchanged so no existing data or domain logic moves.
+- [x] Radio/checkbox hit targets on the vote page and the edit rail pass the target-size rule; axe reports no target-size violation on either surface.
+- [x] The vote summary counts and the edit team tallies are end-aligned and set to tabular numerals, so equal counts render at equal width.
+- [x] A browser-level spec asserts the target geometry and the computed tabular alignment, and the existing axe checks pass on both surfaces.
