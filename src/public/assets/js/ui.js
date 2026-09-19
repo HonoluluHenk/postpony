@@ -673,3 +673,184 @@ export function initPersistedDetails() {
   // stays collapsed (e.g. the organizer instructions after a confirm swap).
   document.body.addEventListener('htmx:afterSwap', apply);
 }
+
+/* ------------------------------------------------------------------ */
+/* Generator slate memory                                             */
+
+/* ------------------------------------------------------------------ */
+
+/**
+ * Formats a 24h `{h, m}` into the locale's time token, mirroring the server's
+ * `formatIsoToLocaleTokens` time portion: 24h locales `HH:mm`, 12h locales
+ * `hh:mm aa` with a lowercase `am`/`pm` marker.
+ * @param {number} h - hour of day (0–23)
+ * @param {number} m - minute (0–59)
+ * @param {boolean} clock24 - whether the locale is a 24-hour clock
+ * @returns {string}
+ */
+export function toTimeToken(h, m, clock24) {
+  const minute = String(m).padStart(2, '0');
+  if (clock24) {
+    return `${String(h).padStart(2, '0')}:${minute}`;
+  }
+  const hour12 = h % 12 || 12;
+  const marker = h < 12 ? 'am' : 'pm';
+  return `${String(hour12).padStart(2, '0')}:${minute} ${marker}`;
+}
+
+/**
+ * Parses a user-typed time token into 24h `{h, m}`, mirroring the server's
+ * `parseLocaleTimeOnly` grammar: 24h accepts `HH:mm` (optional seconds), 12h
+ * requires `hh:mm aa` with a case-insensitive marker and performs the am/pm
+ * normalisation. Returns undefined for empty, unparseable, or out-of-range
+ * input (hour ≥ 24, minute ≥ 60) instead of throwing.
+ * @param {string} value
+ * @param {boolean} clock24
+ * @returns {{h: number, m: number} | undefined}
+ */
+export function parseTimeToken(value, clock24) {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return undefined;
+  const match = clock24
+    ? /^(\d{1,2}):(\d{1,2})(?::\d{1,2})?$/.exec(trimmed)
+    : /^(\d{1,2}):(\d{1,2})(?::\d{1,2})?\s*(am|pm)$/i.exec(trimmed);
+  if (!match) return undefined;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (minute > 59) return undefined;
+  let h = hour;
+  if (clock24) {
+    if (h > 23) return undefined;
+  } else {
+    if (h < 1 || h > 12) return undefined;
+    const isPm = match[3]?.toLowerCase() === 'pm';
+    if (h === 12) {
+      h = isPm ? 12 : 0;
+    } else if (isPm) {
+      h += 12;
+    }
+  }
+  return {h, m: minute};
+}
+
+/**
+ * Resolves whether the current locale uses a 24-hour clock from the same
+ * `timeFormat` vocabulary the server's `localeConfig` uses (`HH:mm` vs
+ * `hh:mm aa`). Falls back to 24h when the vendored locale bundle is absent.
+ * @returns {boolean}
+ */
+function resolveClock24() {
+  const locales = window.AirDatepickerLocale || {};
+  const locale = locales[document.documentElement.lang] || locales['de-CH'];
+  const timeFormat = (locale && locale.timeFormat) || 'HH:mm';
+  return timeFormat.indexOf('aa') === -1;
+}
+
+/**
+ * Reads the remembered generator slate (unversioned JSON `{venue, times}`)
+ * under `key`. Best-effort: returns undefined on absent, unparseable, or
+ * shape-mismatched storage (including a browser with localStorage disabled).
+ * @param {string} key
+ * @returns {{venue?: number, times?: Record<string, {h: number, m: number}>} | undefined}
+ */
+export function readGeneratorSlate(key) {
+  let raw;
+  try {
+    raw = localStorage.getItem(key);
+  } catch {
+    return undefined;
+  }
+  if (!raw) return undefined;
+  let slate;
+  try {
+    slate = JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+  if (typeof slate !== 'object' || slate === null) return undefined;
+  return slate;
+}
+
+/**
+ * Writes the canonical slate (unversioned JSON) under `key`. Best-effort: a
+ * browser with localStorage disabled (private mode) silences the write.
+ * @param {string} key
+ * @param {{venue?: number, times: Record<string, {h: number, m: number}>}} slate
+ */
+export function writeGeneratorSlate(key, slate) {
+  try {
+    localStorage.setItem(key, JSON.stringify(slate));
+  } catch {
+    // ponytail: private mode / storage disabled — no memory, no error.
+  }
+}
+
+/**
+ * Prefills one generator form from its remembered slate: empty time rows only
+ * (so the server's authoritative `extras.times` echo always wins on an error
+ * re-render), and the venue only when the stored number is still a selectable
+ * option. A cleared grid (no stored `times`) leaves every row empty.
+ * @param {HTMLFormElement} form
+ */
+function prefillGeneratorForm(form) {
+  const key = form.dataset.generatorMemoryKey;
+  if (!key) return;
+  const slate = readGeneratorSlate(key);
+  if (!slate) return;
+  const clock24 = resolveClock24();
+  const times = slate.times;
+  if (times && typeof times === 'object') {
+    form.querySelectorAll('input[name="time[]"]')
+      .forEach((input, index) => {
+        if (input.value !== '') return;
+        const stored = times[String(index)];
+        if (stored && typeof stored.h === 'number' && typeof stored.m === 'number') {
+          input.value = toTimeToken(stored.h, stored.m, clock24);
+        }
+      });
+  }
+  if (typeof slate.venue === 'number') {
+    const select = form.querySelector('#generateVenueNumber');
+    if (!select) return;
+    const option = Array.from(select.options).find((o) => Number(o.value) === slate.venue);
+    if (option) select.value = option.value;
+  }
+}
+
+/**
+ * Wires the generator "slate memory": a delegated submit listener that
+ * canonicalises the `time[]` rows plus the venue and saves them on every
+ * generator submit (including failed validation), and a prefill pass run on
+ * initial load and re-run after every HTMX settle. Scoped to
+ * `form[data-generator-memory-key]`, so the memory is inert when the organizer
+ * team has no click-tt identity.
+ */
+export function initGeneratorMemory() {
+  const prefillAll = () => {
+    document.querySelectorAll('form[data-generator-memory-key]')
+      .forEach((form) => prefillGeneratorForm(form));
+  };
+
+  document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-generator-memory-key')) return;
+    const key = form.dataset.generatorMemoryKey;
+    if (!key) return;
+    const clock24 = resolveClock24();
+    const times = {};
+    form.querySelectorAll('input[name="time[]"]')
+      .forEach((input, index) => {
+        const parsed = parseTimeToken(input.value, clock24);
+        if (parsed) times[String(index)] = parsed;
+      });
+    const slate = {times};
+    const select = form.querySelector('#generateVenueNumber');
+    if (select && select.selectedIndex > 0) {
+      slate.venue = Number(select.value);
+    }
+    writeGeneratorSlate(key, slate);
+  });
+
+  prefillAll();
+  document.addEventListener('htmx:afterSettle', prefillAll);
+}

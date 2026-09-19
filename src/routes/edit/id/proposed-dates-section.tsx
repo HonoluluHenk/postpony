@@ -64,6 +64,8 @@ export type EditPartialsData = OwnTeamView & {
   /** The last schedule check failed transiently; clash data may be out of date. */
   clashDataStale: boolean;
   venues: Venue[];
+  /** Storage key the generator's "slate memory" uses; absent when the organizer team has no click-tt identity. */
+  generatorMemoryKey?: string;
 };
 
 /** The edit view interface: the data builder's output plus the view/extra fields the page and its partials take. */
@@ -289,6 +291,7 @@ export interface GenerateFormProps {
   fromDate?: string;
   toDate?: string;
   organizerPassword?: string;
+  generatorMemoryKey?: string;
 }
 
 export function GenerateForm(props: GenerateFormProps): JSX.Element {
@@ -304,7 +307,7 @@ export function GenerateForm(props: GenerateFormProps): JSX.Element {
   const fromValue = fromDate ?? '';
   const toValue = toDate ?? '';
   return (
-    <form hx-post={rowAction} hx-target="#edit-grid">
+    <form hx-post={rowAction} hx-target="#edit-grid" data-generator-memory-key={props.generatorMemoryKey}>
       <p class="muted">{t('proposed_dates_generate_help')}</p>
       <input type="hidden" name="generate" value="tuple"/>
       <div class="generate-controls mt-2">

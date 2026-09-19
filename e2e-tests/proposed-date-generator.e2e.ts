@@ -560,4 +560,52 @@ test.describe('Proposed Date Generator', () => {
 
     await checkA11y();
   });
+
+  test('remembers the slate across reload, reformats on locale switch, and survives a votable-toggle swap',
+    async ({page}) => {
+      // Scrape + generate + reload + locale switch + votable swap: tripled to
+      // survive full-suite parallel contention, as with the main generator test.
+      test.slow();
+      const {editPage, session} = await EditPage.createSession(page);
+
+      await editPage.generateVenueSelect.selectOption('2');
+      await editPage.generateProposedDates([...TUPLES]);
+
+      const successToast = page.locator('.toast.success')
+        .filter({hasText: /\d+ dates? added/});
+      await expect(successToast)
+        .toBeVisible();
+
+      // Full reload: the generator prefilters the remembered weekday times and
+      // venue from localStorage (Saturday 20:00, Wednesday 19:30, venue 2).
+      await page.reload();
+      await expect(editPage.generateTimeInput(5))
+        .toHaveValue('08:00 pm');
+      await expect(editPage.generateTimeInput(2))
+        .toHaveValue('07:30 pm');
+      await expect(editPage.generateVenueSelect)
+        .toHaveValue('2');
+
+      // Same device, different locale: the canonical slate re-renders in 24h.
+      await page.goto(`${session.editUrl}&lang=de-CH`);
+      await expect(page.locator('html'))
+        .toHaveAttribute('lang', 'de-CH');
+      await expect(editPage.generateTimeInput(5))
+        .toHaveValue('20:00');
+      await expect(editPage.generateTimeInput(2))
+        .toHaveValue('19:30');
+      // The venue label is localized ("Halle"), so read the select by id.
+      await expect(page.locator('#generateVenueNumber'))
+        .toHaveValue('2');
+
+      // A votable-toggle HTMX swap re-renders the (empty server-side) generator;
+      // the afterSettle prefill restores the remembered grid.
+      await editPage.toggleVotable(0);
+      await expect(editPage.generateTimeInput(5))
+        .toHaveValue('20:00');
+      await expect(editPage.generateTimeInput(2))
+        .toHaveValue('19:30');
+      await expect(page.locator('#generateVenueNumber'))
+        .toHaveValue('2');
+    });
 });

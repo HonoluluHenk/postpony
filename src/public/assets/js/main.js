@@ -13,7 +13,8 @@ import {
   initGeneratorDatePickers,
   initProposedDateTimePicker,
   initRedesignDisclosures,
-  initPersistedDetails
+  initPersistedDetails,
+  initGeneratorMemory
 } from './ui.js';
 
 // The Spinner only registers listeners in its constructor and reads
@@ -47,4 +48,5 @@ window.addEventListener('load', () => {
   initGeneratorTimePickers();
   initGeneratorDatePickers();
   initRedesignDisclosures();
+  initGeneratorMemory();
 });

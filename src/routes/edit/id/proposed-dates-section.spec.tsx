@@ -967,4 +967,30 @@ describe('GenerateForm', () => {
     expect(html)
       .toContain('role="alert"');
   });
+
+  it('emits the memory key on the form when provided', () => {
+    const html = renderToString(GenerateForm({
+      sessionId: 'test-session',
+      t,
+      locale: 'en-US',
+      venueOptions: [],
+      generatorMemoryKey: 'postpony-generator-key',
+    }));
+
+    expect(html)
+      .toContain('data-generator-memory-key="postpony-generator-key"');
+  });
+
+  it('omits the memory key on the form when undefined', () => {
+    const html = renderToString(GenerateForm({
+      sessionId: 'test-session',
+      t,
+      locale: 'en-US',
+      venueOptions: [],
+    }));
+
+    expect(html)
+      .not
+      .toContain('data-generator-memory-key');
+  });
 });

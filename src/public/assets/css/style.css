@@ -82,6 +82,17 @@
     flex: 1;
   }
 
+  /* BeerCSS sets `main.responsive` to `overflow-x: hidden`. With one axis
+     `hidden` and the other `visible`, the browser computes `overflow-y: auto`,
+     making <main> a scroll container — and the nearest scroll container wins,
+     so nothing inside it can stick to the viewport. `overflow-x: clip` clips
+     the same horizontal overflow but is not a scroll container, restoring
+     viewport-relative `position: sticky` (the edit sidebar and the vote
+     set-all bar both rely on it). */
+  main.responsive {
+    overflow-x: clip;
+  }
+
   /* Headings: Beer.css defaults (h1 = 3.5625rem) are oversized for this app.
      Pin h1 to a clamp between a phone size and 2rem (desktop) and derive the
      rest from a modular scale via calc(), exposing each computed size as its
@@ -279,6 +290,12 @@
     .week-head-label > .tooltip {
       transition: none;
     }
+
+    /* No movement under reduced motion: the set-all bar falls back to its
+       natural in-flow slot instead of pinning against the viewport. */
+    .vote-set-all {
+      position: static;
+    }
   }
 
   /* Delete-confirmation dialogs. BeerCSS's `dialog` runs an entrance
@@ -342,6 +359,19 @@
     visibility: visible;
     opacity: 1;
     transform: translate(-50%, -100%) scale(1);
+  }
+
+  /* "Set all" stays in reach while the vote list scrolls. Sticky pins the bar
+     to the top of the viewport inside the vote form (its containing block), so
+     it only ever sticks within the vote region — on a short list there is no
+     scroll range, so it stays in-flow with no extra logic. The solid background
+     keeps the date rows that slide underneath from bleeding through the bar;
+     the Beer border still separates it from the week groups. */
+  .vote-set-all {
+    position: sticky;
+    top: var(--space-4);
+    z-index: 10;
+    background-color: var(--surface-container-low);
   }
 
   /* Refresh-schedule-check tooltip: same BeerCSS pattern as the vote and

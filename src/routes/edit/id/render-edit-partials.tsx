@@ -2,6 +2,7 @@ import type { App, ViewContext } from '../../../app';
 import type { AppLocale } from '../../../locales';
 import type { Postponement, ProposedDate, VoteTallyItem } from '../../../lib/models';
 import { PostponementRules, sortedProposedDates, type VoteTally } from '../../../lib/postponement';
+import { generatorMemoryKey } from '../../../lib/generator-memory';
 import { formatProposedDateDisplay, formatProposedDateDisplayShort } from '../../../lib/temporal-utils';
 import { buildOwnTeamView } from './own-team-view';
 import { EditGrid, EditPage, type EditPageProps } from './edit';
@@ -84,6 +85,7 @@ export function buildEditPartialsData(
     clashCheckable: session.homeTeamIdentity !== undefined && session.guestTeamIdentity !== undefined,
     clashDataStale: session.clashDataStale === true,
     venues: session.venues,
+    generatorMemoryKey: generatorMemoryKey(session),
     ...buildOwnTeamView(session, locale),
   };
 }

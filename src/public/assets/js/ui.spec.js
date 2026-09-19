@@ -16,8 +16,13 @@ import {
   initSortRadios,
   initTheme,
   initVoteForm,
+  initGeneratorMemory,
+  parseTimeToken,
+  readGeneratorSlate,
   resyncSortRadios,
   shouldSwapErrorBody,
+  toTimeToken,
+  writeGeneratorSlate,
 } from './ui.js';
 
 describe('shouldSwapErrorBody', () => {
@@ -1731,5 +1736,199 @@ describe('additional branch coverage', () => {
       expect(document.querySelector('.vote-radio-group')).toBe(null);
       sessionStorage.clear();
     });
+  });
+});
+
+describe('toTimeToken', () => {
+  it('formats a 24h clock with zero-padded HH:mm', () => {
+    expect(toTimeToken(18, 0, true)).toBe('18:00');
+    expect(toTimeToken(8, 5, true)).toBe('08:05');
+  });
+
+  it('formats a 12h clock with an am/pm marker', () => {
+    expect(toTimeToken(18, 0, false)).toBe('06:00 pm');
+    expect(toTimeToken(6, 5, false)).toBe('06:05 am');
+    expect(toTimeToken(0, 30, false)).toBe('12:30 am');
+    expect(toTimeToken(12, 0, false)).toBe('12:00 pm');
+  });
+});
+
+describe('parseTimeToken', () => {
+  it('round-trips 24h tokens', () => {
+    expect(parseTimeToken('18:00', true)).toEqual({h: 18, m: 0});
+    expect(parseTimeToken('8:05', true)).toEqual({h: 8, m: 5});
+  });
+
+  it('round-trips 12h tokens with am/pm normalisation', () => {
+    expect(parseTimeToken('06:00 pm', false)).toEqual({h: 18, m: 0});
+    expect(parseTimeToken('12:30 am', false)).toEqual({h: 0, m: 30});
+    expect(parseTimeToken('12:00 pm', false)).toEqual({h: 12, m: 0});
+  });
+
+  it('rejects empty, unparseable, and out-of-range input', () => {
+    expect(parseTimeToken('', true)).toBeUndefined();
+    expect(parseTimeToken('abc', true)).toBeUndefined();
+    expect(parseTimeToken('24:00', true)).toBeUndefined();
+    expect(parseTimeToken('18:60', true)).toBeUndefined();
+    expect(parseTimeToken('6:00', false)).toBeUndefined();
+    expect(parseTimeToken('13:00 pm', false)).toBeUndefined();
+  });
+});
+
+describe('generator slate storage', () => {
+  afterEach(() => {
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  it('writes and reads a slate round-trip', () => {
+    writeGeneratorSlate('k', {times: {'0': {h: 18, m: 0}}, venue: 2});
+    expect(readGeneratorSlate('k')).toEqual({times: {'0': {h: 18, m: 0}}, venue: 2});
+  });
+
+  it('returns undefined when no slate is stored', () => {
+    expect(readGeneratorSlate('missing')).toBeUndefined();
+  });
+
+  it('returns undefined on corrupt JSON', () => {
+    localStorage.setItem('k', '{not json');
+    expect(readGeneratorSlate('k')).toBeUndefined();
+  });
+
+  it('returns undefined on a non-object value', () => {
+    localStorage.setItem('k', '"just a string"');
+    expect(readGeneratorSlate('k')).toBeUndefined();
+  });
+
+  it('no-ops when localStorage is unavailable', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('denied');
+    });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('denied');
+    });
+    expect(readGeneratorSlate('k')).toBeUndefined();
+    expect(() => writeGeneratorSlate('k', {times: {}})).not.toThrow();
+  });
+});
+
+describe('initGeneratorMemory', () => {
+  function installGeneratorForm(key = 'postpony-generator-test') {
+    const form = document.createElement('form');
+    form.setAttribute('data-generator-memory-key', key);
+    for (let i = 0; i < 7; i += 1) {
+      const input = document.createElement('input');
+      input.setAttribute('name', 'time[]');
+      form.appendChild(input);
+    }
+    const select = document.createElement('select');
+    select.id = 'generateVenueNumber';
+    for (let v = 1; v <= 3; v += 1) {
+      const option = document.createElement('option');
+      option.value = String(v);
+      option.textContent = String(v);
+      select.appendChild(option);
+    }
+    form.appendChild(select);
+    document.body.appendChild(form);
+    return form;
+  }
+
+  let realLocale;
+  let realLang;
+
+  beforeAll(() => {
+    initGeneratorMemory();
+  });
+
+  beforeEach(() => {
+    realLocale = window.AirDatepickerLocale;
+    realLang = document.documentElement.lang;
+    window.AirDatepickerLocale = {'en-US': {timeFormat: 'hh:mm aa'}};
+    document.documentElement.lang = 'en-US';
+    document.body.innerHTML = '';
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    window.AirDatepickerLocale = realLocale;
+    document.documentElement.lang = realLang;
+    document.body.innerHTML = '';
+    localStorage.clear();
+  });
+
+  it('persists the slate on submit and clears times for an empty grid', () => {
+    const form = installGeneratorForm();
+    const inputs = form.querySelectorAll('input[name="time[]"]');
+    inputs[0].value = '06:00 pm';
+    inputs[3].value = '08:00 pm';
+    form.querySelector('#generateVenueNumber').value = '2';
+    form.dispatchEvent(new Event('submit', {bubbles: true}));
+
+    expect(JSON.parse(localStorage.getItem('postpony-generator-test')))
+      .toEqual({times: {'0': {h: 18, m: 0}, '3': {h: 20, m: 0}}, venue: 2});
+
+    inputs[0].value = '';
+    inputs[3].value = '';
+    form.querySelector('#generateVenueNumber').value = '1';
+    form.dispatchEvent(new Event('submit', {bubbles: true}));
+
+    expect(JSON.parse(localStorage.getItem('postpony-generator-test')))
+      .toEqual({times: {}});
+  });
+
+  it('drops unparseable rows from the captured slate', () => {
+    const form = installGeneratorForm();
+    const inputs = form.querySelectorAll('input[name="time[]"]');
+    inputs[0].value = '06:00 pm';
+    inputs[1].value = 'not a time';
+    form.dispatchEvent(new Event('submit', {bubbles: true}));
+
+    expect(JSON.parse(localStorage.getItem('postpony-generator-test')))
+      .toEqual({times: {'0': {h: 18, m: 0}}});
+  });
+
+  it('ignores submits from forms without the memory key', () => {
+    const form = document.createElement('form');
+    document.body.appendChild(form);
+    form.dispatchEvent(new Event('submit', {bubbles: true}));
+
+    expect(localStorage.length).toBe(0);
+  });
+
+  it('prefills empty time rows and the venue from the stored slate', () => {
+    localStorage.setItem(
+      'postpony-generator-test',
+      JSON.stringify({times: {'0': {h: 18, m: 0}, '3': {h: 20, m: 0}}, venue: 2}),
+    );
+    const form = installGeneratorForm();
+    document.dispatchEvent(new Event('htmx:afterSettle'));
+
+    const inputs = form.querySelectorAll('input[name="time[]"]');
+    expect(inputs[0].value).toBe('06:00 pm');
+    expect(inputs[1].value).toBe('');
+    expect(inputs[3].value).toBe('08:00 pm');
+    expect(form.querySelector('#generateVenueNumber').value).toBe('2');
+  });
+
+  it('does not overwrite a non-empty (server-echoed) row', () => {
+    localStorage.setItem('postpony-generator-test', JSON.stringify({times: {'0': {h: 18, m: 0}}}));
+    const form = installGeneratorForm();
+    form.querySelectorAll('input[name="time[]"]')[0].value = '07:00 pm';
+    document.dispatchEvent(new Event('htmx:afterSettle'));
+
+    expect(form.querySelectorAll('input[name="time[]"]')[0].value).toBe('07:00 pm');
+  });
+
+  it('keeps the default venue when the stored number is not an option', () => {
+    localStorage.setItem(
+      'postpony-generator-test',
+      JSON.stringify({times: {'0': {h: 18, m: 0}}, venue: 99}),
+    );
+    const form = installGeneratorForm();
+    document.dispatchEvent(new Event('htmx:afterSettle'));
+
+    expect(form.querySelector('#generateVenueNumber').value).toBe('1');
+    expect(form.querySelectorAll('input[name="time[]"]')[0].value).toBe('06:00 pm');
   });
 });
