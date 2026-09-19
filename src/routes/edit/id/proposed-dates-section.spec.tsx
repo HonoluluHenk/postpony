@@ -952,6 +952,116 @@ describe('ProposedDatesRail sort control', () => {
   });
 });
 
+describe('ProposedDatesRail availability band collapse', () => {
+  const nDates = (n: number, voted: boolean): Postponement => buildSession({
+    players: [
+      aPlayer({id: 'p1', name: 'Alice', teamId: 'home'}),
+      aPlayer({id: 'p2', name: 'Bob', teamId: 'home'}),
+      aPlayer({id: 'p3', name: 'Carol', teamId: 'home'}),
+    ],
+    proposedDates: Array.from({length: n}, (_, index) => aProposedDate({
+      id: `pd-${index}`,
+      dateTimeRange: {
+        start: `2026-09-${String(index + 1).padStart(2, '0')}T20:00`,
+        end: `2026-09-${String(index + 1).padStart(2, '0')}T22:00`,
+      },
+      votable: true,
+      venueNumber: 1,
+    })),
+    votes: voted
+           ? Array.from({length: n}, (_, index) => [
+      aVote({id: `v-${index}-1`, proposedDateId: `pd-${index}`, participantId: 'p1', type: 'Yes'}),
+      aVote({id: `v-${index}-2`, proposedDateId: `pd-${index}`, participantId: 'p2', type: 'Yes'}),
+      aVote({id: `v-${index}-3`, proposedDateId: `pd-${index}`, participantId: 'p3', type: 'Yes'}),
+    ])
+          .flat()
+           : [],
+  });
+
+  it('renders a band at the threshold as a plain section, unchanged', () => {
+    const html = renderToString(ProposedDatesRail(railProps(nDates(6, false), {sort: 'availability'})));
+
+    expect(html)
+      .not
+      .toContain('availability-band');
+    expect(html)
+      .toContain('<span>Not playable (6)</span>');
+    expect(html)
+      .toContain('class="date-row"');
+  });
+
+  it('collapses a band over the threshold into a closed disclosure with the band heading', () => {
+    const html = renderToString(ProposedDatesRail(railProps(nDates(7, false), {sort: 'availability'})));
+
+    expect(html)
+      .toContain('<details class="availability-band">');
+    // Not the full-strength band: closed by default.
+    expect(html)
+      .not
+      .toContain('<details class="availability-band" open="">');
+    expect(html)
+      .toContain('<span>Not playable (7)</span>');
+    // The heading is the disclosure summary, tooltip and all.
+    expect(html)
+      .toContain('<summary>');
+    expect(html)
+      .toContain('aria-describedby="rail-group-notPlayable-tooltip"');
+    // All rows stay inside the disclosure, hidden while collapsed.
+    expect(html.match(/class="date-row"/g))
+      .toHaveLength(7);
+    const detailsOpen = html.indexOf('<details class="availability-band">');
+    const firstRow = html.indexOf('class="date-row"');
+    const detailsClosed = html.indexOf('</details>');
+    expect(firstRow)
+      .toBeGreaterThan(detailsOpen);
+    expect(detailsClosed)
+      .toBeGreaterThan(firstRow);
+  });
+
+  it('opens the full-strength band by default once it exceeds the threshold', () => {
+    const html = renderToString(ProposedDatesRail(railProps(nDates(7, true), {sort: 'availability'})));
+
+    expect(html)
+      .toContain('<details class="availability-band" open="">');
+    expect(html)
+      .toContain('<span>Full strength (7)</span>');
+  });
+
+  it('keeps the Delete / Votable / Confirm Date controls inside the disclosure', () => {
+    const html = renderToString(ProposedDatesRail(railProps(nDates(7, false), {sort: 'availability'})));
+
+    const detailsOpen = html.indexOf('<details class="availability-band">');
+    expect(detailsOpen)
+      .toBeGreaterThan(-1);
+    // A row at the tail of the collapsed band keeps every per-row control,
+    // so dates stay cleanable in place once the band is expanded.
+    expect(html.indexOf('data-open-dialog="delete-proposed-date-pd-6"'))
+      .toBeGreaterThan(detailsOpen);
+    expect(html.indexOf('proposed-date-visibility?proposedDateId=pd-6'))
+      .toBeGreaterThan(detailsOpen);
+    expect(html.indexOf('proposed-date-confirm?proposedDateId=pd-6'))
+      .toBeGreaterThan(detailsOpen);
+    expect(html)
+      .toContain('aria-label="Allow voting · ');
+    expect(html)
+      .toContain('aria-label="Delete · ');
+  });
+
+  it('never collapses the week-grouped date list', () => {
+    const html = renderToString(ProposedDatesRail(railProps(nDates(7, false), {sort: 'date'})));
+
+    expect(html)
+      .not
+      .toContain('availability-band');
+    expect(html)
+      .toContain('Week 36');
+    expect(html)
+      .toContain('Week 37');
+    expect(html)
+      .toContain('class="date-row"');
+  });
+});
+
 describe('GenerateForm', () => {
   it('renders the Monday–Sunday weekday grid with the from/to/venue controls', () => {
     const html = renderToString(GenerateForm({

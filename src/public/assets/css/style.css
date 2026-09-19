@@ -279,6 +279,10 @@
     .week-head-label > .tooltip {
       transition: none;
     }
+
+    details.availability-band > summary::before {
+      transition: none;
+    }
   }
 
   /* Delete-confirmation dialogs. BeerCSS's `dialog` runs an entrance
@@ -901,6 +905,61 @@
     align-items: center;
     gap: var(--space-1);
     cursor: pointer;
+  }
+
+  /* ---- Collapsible availability bands (rows > BAND_COLLAPSE_THRESHOLD). ---- */
+  details.availability-band {
+    border: 1px solid var(--line);
+    background: var(--surface-container-lowest);
+    border-radius: var(--radius-card);
+    margin-top: var(--space-3);
+  }
+
+  details.availability-band > summary {
+    cursor: pointer;
+    padding: var(--space-2-5) var(--space-4);
+    border-radius: var(--radius-card);
+    background: var(--surface-container-lowest);
+  }
+
+  /* BeerCSS kills the summary outline (`summary:focus { outline: none }`);
+     restore a visible focus ring so keyboard users can find the toggle. */
+  details.availability-band > summary:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+  }
+
+  /* The native disclosure marker is hidden by BeerCSS; re-add a chevron that
+     points right collapsed and rotates down when open (matches
+     `details.side-block`). */
+  details.availability-band > summary::before {
+    content: '';
+    display: inline-block;
+    width: .35em;
+    height: .35em;
+    margin-inline-end: var(--space-2-5);
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 150ms ease;
+  }
+
+  details.availability-band[open] > summary::before {
+    transform: rotate(45deg);
+  }
+
+  /* The `.week-head` is the band's summary heading; drop its standalone
+     padding so the disclosure owns the card chrome. */
+  details.availability-band > summary .week-head {
+    display: inline;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Rows inside the card keep the rail's row chrome but respect the card
+     padding, so they never touch the disclosure border. */
+  details.availability-band .date-row {
+    padding-inline: var(--space-4);
   }
 
   /* ---- Vote tables, collapsed into disclosures. ---- */

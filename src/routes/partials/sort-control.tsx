@@ -68,6 +68,10 @@ export interface AvailabilityBand {
   ids: string[];
 }
 
+/** A band whose row count exceeds this renders its rows behind a native
+ *  disclosure; bands at or under the threshold render as plain sections. */
+export const BAND_COLLAPSE_THRESHOLD = 6;
+
 /** The locale key for each availability band kind; keeps the mapping closed and typed. */
 const AVAILABILITY_LABEL_KEYS: Record<AvailabilityGroupKind, TranslationKeys> = {
   fullStrength: 'availability_full_strength',

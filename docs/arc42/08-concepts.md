@@ -53,3 +53,9 @@ Only the start page (`/`) may be crawled or indexed; every other route is off-li
 ## 8.11 UI theme & typography
 
 One self-hosted type family app-wide: the design-layer `:root` overrides BeerCSS's `--font` with `'IBM Plex Sans'` first and the vendor Inter/Roboto stack as an exhausted fallback (`--font-sans` aliases `--font`); the condensed Plex face stays scoped to the edit rail's date cells. The same `:root` declares `color-scheme: light` so native scrollbars, selects, and date-picker dialogs stay light on dark-mode OSes (no dark palette exists). The `theme-color` meta renders without content and `ui.js`'s `initThemeColor` fills it from the `--theme-color` token (`= --surface`), keeping the surface hex in the token files as the single source.
+
+## 8.12 Collapsible availability bands
+
+Under the availability sort, a band whose row count exceeds 6 (`BAND_COLLAPSE_THRESHOLD` in `src/routes/partials/sort-control.tsx`) renders behind a native `<details>` disclosure whose `<summary>` is the band heading (label + count), so a wall of repeated tallies never buries the stronger bands. The full-strength band opens by default; every other band renders closed. The default is purely deterministic (threshold + band kind, never user memory), so each re-render after an HTMX fragment swap lands on the same default and can never strand the rail in a collapsed/expanded mismatch. The week-grouped date sort never collapses.
+
+Accessibility is native: `<summary>` is a keyboard-operable disclosure toggle, BeerCSS's outline reset is countered with a `:focus-visible` ring, the hidden marker is replaced with a CSS chevron that rotates under `prefers-reduced-motion` it keeps its rotation but loses its transition, and axe runs over the expanded rail.

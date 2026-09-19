@@ -7,6 +7,7 @@ import type { AppLocale, TranslateFn } from '../../../locales';
 import { localeConfig, weekdayLabels } from '../../../locales';
 import {
   type AvailabilityBand,
+  BAND_COLLAPSE_THRESHOLD,
   type DateSort,
   groupByAvailabilityBands,
   groupByWeek,
@@ -560,42 +561,63 @@ export function ProposedDatesRail(props: EditGridProps): JSX.Element {
                                                      selectUrl={withOrganizerPassword(`/edit/${props.sessionId}`, props.organizerPassword)}
                                                      target="#edit-grid"/> : null}
 
-      {groups.map((group) => (
-        <section key={group.key}>
-          <RailGroupHeading group={group} t={props.t}/>
-          {group.rows.map((row) => {
-            const dt = parseIsoToPlainDateTime(row.dateTimeRange.start);
-            const hasClashes = isDateClashing(row.clashes);
-            const isClean = row.clashes !== undefined && !hasClashes;
-            const ariaLabel = hasClashes ? props.t('clash_row_label', {date: row.display}) : isClean
-                                                                                             ? props.t('clash_row_clean_label', {date: row.display})
-                                                                                             : undefined;
-            return (
-              <article key={row.id} class={`date-row${hasClashes ? ' clash-row' : ''}`}
-                       role={ariaLabel ? 'group' : undefined} aria-label={ariaLabel}>
-                <div class="date-cell">
-                  <span class="date-day">{weekdayLabels[props.locale][dt.dayOfWeek - 1] ?? ''}</span>
-                  <span class="date-num">{formatLocalizedDateTime(dt, props.locale, {
-                    month: 'long',
-                    day: 'numeric',
-                  })}</span>
-                  <span class="date-time">{formatLocalizedDateTime(dt, props.locale, {timeStyle: 'short'})}</span>
-                  <span class="date-year">{dt.year}</span>
-                </div>
-                <div class="date-main">
-                  <DateChips row={row} clashCheckable={props.clashCheckable} venues={props.venues} t={props.t}
-                             locale={props.locale}/>
-                  <TeamTallies row={row} homeTeam={homeTeam} guestTeam={guestTeam} homeTallies={homeTallies}
-                               awayTallies={awayTallies}/>
-                  <VoteDots row={row} roster={roster} ownTeamResults={props.ownTeamResults} t={props.t}/>
-                  <DateActions row={row} sessionId={props.sessionId} t={props.t} confirmed={confirmed}
-                               organizerPassword={props.organizerPassword}/>
-                </div>
-              </article>
-            );
-          })}
-        </section>
-      ))}
+      {groups.map((group) => {
+        const rows = group.rows.map((row) => {
+          const dt = parseIsoToPlainDateTime(row.dateTimeRange.start);
+          const hasClashes = isDateClashing(row.clashes);
+          const isClean = row.clashes !== undefined && !hasClashes;
+          const ariaLabel = hasClashes ? props.t('clash_row_label', {date: row.display}) : isClean
+                                                                                           ? props.t('clash_row_clean_label', {date: row.display})
+                                                                                           : undefined;
+          return (
+            <article key={row.id} class={`date-row${hasClashes ? ' clash-row' : ''}`}
+                     role={ariaLabel ? 'group' : undefined} aria-label={ariaLabel}>
+              <div class="date-cell">
+                <span class="date-day">{weekdayLabels[props.locale][dt.dayOfWeek - 1] ?? ''}</span>
+                <span class="date-num">{formatLocalizedDateTime(dt, props.locale, {
+                  month: 'long',
+                  day: 'numeric',
+                })}</span>
+                <span class="date-time">{formatLocalizedDateTime(dt, props.locale, {timeStyle: 'short'})}</span>
+                <span class="date-year">{dt.year}</span>
+              </div>
+              <div class="date-main">
+                <DateChips row={row} clashCheckable={props.clashCheckable} venues={props.venues} t={props.t}
+                           locale={props.locale}/>
+                <TeamTallies row={row} homeTeam={homeTeam} guestTeam={guestTeam} homeTallies={homeTallies}
+                             awayTallies={awayTallies}/>
+                <VoteDots row={row} roster={roster} ownTeamResults={props.ownTeamResults} t={props.t}/>
+                <DateActions row={row} sessionId={props.sessionId} t={props.t} confirmed={confirmed}
+                             organizerPassword={props.organizerPassword}/>
+              </div>
+            </article>
+          );
+        });
+        // A long availability band collapses behind a native disclosure so a
+        // wall of repeated tallies does not bury the stronger bands. The
+        // default state is deterministic (threshold + band kind, never user
+        // memory), so every re-render after an HTMX swap lands on the same
+        // default and can never strand a collapsed/expanded mismatch. Only the
+        // availability sort collapses; the week-grouped date view is plain.
+        const collapsible = sort === 'availability' && group.rows.length > BAND_COLLAPSE_THRESHOLD;
+        return (
+          <section key={group.key}>
+            {collapsible ? (
+              <details class="availability-band" open={group.key === 'fullStrength'}>
+                <summary>
+                  <RailGroupHeading group={group} t={props.t}/>
+                </summary>
+                {rows}
+              </details>
+            ) : (
+              <>
+                <RailGroupHeading group={group} t={props.t}/>
+                {rows}
+              </>
+            )}
+          </section>
+        );
+      })}
 
       {props.proposedDates.length === 0 ? (
         <p class="muted mt-2">{props.t('proposed_dates_none')}</p>
