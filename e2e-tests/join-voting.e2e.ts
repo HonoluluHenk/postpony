@@ -180,10 +180,16 @@ test.describe('Join and Voting', () => {
     await expect(joinPage.setAllControls.getByRole('button', {name: 'Set all: Yes', exact: true}))
       .toHaveText('Yes');
 
-    // The full venue name reaches assistive tech through the legend, not a title.
-    await expect(joinPage.voteForm.getByRole('group', {name: /Turnhalle orange, UG, Schule Dennigkofen/})
-      .first())
-      .toBeVisible();
+    // The full venue name reaches assistive tech through the weekly group
+    // heading (hoisted once per homogeneous group), not a hover title or each
+    // date's legend.
+    await expect(joinPage.voteForm.getByRole('heading', {name: /Turnhalle orange, UG, Schule Dennigkofen/}))
+      .toHaveCount(2);
+    // The per-date radio groups keep date-only legends once the chip is hoisted.
+    for (const legend of ['3/5/2026', '3/12/2026']) {
+      await expect(joinPage.voteForm.getByRole('group', {name: legend}))
+        .toBeVisible();
+    }
 
     // A routine save is announced politely as a status, not as an alert.
     await joinPage.setAllVotes('Yes');
