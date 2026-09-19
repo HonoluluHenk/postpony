@@ -10,3 +10,8 @@
 - [x] With JavaScript enabled, auto-save-on-change still works and the fallback never fires a second request.
 - [x] The saved confirmation is announced (toast + aria-live) for both paths.
 - [x] A scripts-disabled e2e on the vote page covers the happy path (one vote persists) and a likely error path (a malformed submission shows the error treatment), asserting what the user sees.
+
+## Comments
+
+- `9c5c52e` (`ticket done`) — `<noscript>`-wrapped submit control posts the raw radio form; no handler/JS change; `vote_save` locale key + `.vote-save-actions` spacing; render + handler specs at the no-JS seams; arc42 §§5.4/6.3/8 updated.
+- `8e5f22b` (`review`) — two-axis review; no fixes required. Scripts-disabled e2e (criterion 4) is coordinator-delegated: see `reviews/07-vote-page-nojs-submit.md`.
