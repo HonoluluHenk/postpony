@@ -129,6 +129,59 @@ describe('renderVoteStep', () => {
       .toContain('<h3 id="vote-summary-title">Vote Summary</h3>');
   });
 
+  test('keeps "Vote on Proposed Dates" only on the page heading and leads the section with "Your availability"', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: true})],
+    });
+    const app = createApp();
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    // the shared page <h1> keeps the title…
+    expect(body)
+      .toContain('<h1 class="max center-align">Vote on Proposed Dates</h1>');
+    // …and the in-article heading is a distinct informant, not a duplicate.
+    expect(body)
+      .toContain('<h2>Your availability</h2>');
+    expect(body)
+      .not
+      .toContain('<h2>Vote on Proposed Dates</h2>');
+  });
+
+  test('leads the German vote section with "Deine Verfügbarkeit" while the title stays singular', async () => {
+    const player = aPlayer({id: 'player-1', name: 'Alice'});
+    const session = aSession({
+      status: 'Voting',
+      players: [player],
+      proposedDates: [aProposedDate({votable: true})],
+    });
+    const app = createApp({locale: 'de-CH'});
+    await app.store.save(session);
+
+    const response = renderVoteStep(app, {
+      session,
+      team: 'home',
+      token: 'token',
+      player,
+    });
+    const body = await response.text();
+
+    expect(body)
+      .toContain('<h1 class="max center-align">Über vorgeschlagene Termine abstimmen</h1>');
+    expect(body)
+      .toContain('<h2>Deine Verfügbarkeit</h2>');
+  });
+
   test('renders the set-all button group above the date fieldsets', async () => {
     const player = aPlayer({id: 'player-1', name: 'Alice'});
     const session = aSession({

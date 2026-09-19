@@ -196,7 +196,7 @@ export function VotePage(props: VotePageProps): JSX.Element {
   const content = (
     <>
       <header>
-        <h2>{title}</h2>
+        <h2>{props.t('vote_availability_heading')}</h2>
       </header>
 
       {props.proposedDates.length > 0 ? (
