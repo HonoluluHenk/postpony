@@ -10,3 +10,8 @@
 - [x] Radio/checkbox hit targets on the vote page and the edit rail pass the target-size rule; axe reports no target-size violation on either surface.
 - [x] The vote summary counts and the edit team tallies are end-aligned and set to tabular numerals, so equal counts render at equal width.
 - [x] A browser-level spec asserts the target geometry and the computed tabular alignment, and the existing axe checks pass on both surfaces.
+
+## Comments
+
+- `4f6db02` ticket done: 06-labels-hit-targets-tabular — title-cased label copy (value unchanged), 24×24 wrapped-label target floor, tabular/end-aligned tallies, `target-size.spec.js`, arc42 §8.7/§8.11.
+- `9c988f9` review: 06-labels-hit-targets-tabular — no standards violations. Open cross-lane follow-up: `e2e-tests/pages/JoinPage.ts:9,17` and `join-voting.e2e.ts:175` use case-sensitive `exact: true` literals (`if necessary` / `Set all: if necessary`) that must be title-cased or `npm run e2e` fails. Real-server axe pass still delegated to the coordinator.
