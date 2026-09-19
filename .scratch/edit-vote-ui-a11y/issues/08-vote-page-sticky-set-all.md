@@ -10,3 +10,12 @@
 - [x] The existing aria labels and tooltips are intact, the control has a visible focus, and reduced-motion preference degrades it to in-flow.
 - [x] Bulk-setting a value updates that value across all visible dates and the summary, and the usual save confirmation still appears.
 - [ ] The vote e2e and axe checks pass with the sticky active.
+
+## Comments
+
+- `8dfaba4` — ticket done: sticky `Set all` bar via `position: sticky`, plus
+  the `main.responsive { overflow-x: clip }` override that fixes BeerCSS's
+  `overflow-x: hidden` silently breaking sticky (this also repairs the edit
+  sidebar sticky). Reduced-motion degrades to in-flow.
+- `efeb311` — review: 0 standards + 0 spec findings (noted deviation: bar pins
+  to viewport top, there is no fixed header to sit below).
