@@ -19,7 +19,7 @@ import { VenueChip } from '../../partials/venues';
 import { controlNameWithDate } from '../../partials/control-with-date';
 import { withOrganizerPassword } from './edit-auth';
 import type { OwnTeamView } from './own-team-view';
-import { OwnTeamVotes } from './own-team-votes';
+import { OwnTeamVotes, VOTE_KEYS } from './own-team-votes';
 
 export interface ProposedDateTallyItem extends VoteTallyItem {
   votable: boolean;
@@ -114,10 +114,6 @@ function dotClass(vote: OwnTeamView['ownTeamResults'][number]['votes'][number]['
   return 'vote-dot--none';
 }
 
-function voteTitle(playerName: string, vote: OwnTeamView['ownTeamResults'][number]['votes'][number]['vote']): string {
-  return vote ? `${playerName}: ${vote}` : `${playerName}: no vote`;
-}
-
 function VoteDots(props: {
   row: ProposedDateTallyItem;
   roster: readonly {
@@ -127,6 +123,7 @@ function VoteDots(props: {
   ownTeamResults: EditGridProps['ownTeamResults'];
   t: TranslateFn
 }): JSX.Element {
+  const {t} = props;
   const result = props.ownTeamResults.find((r) => r.dateId === props.row.id);
   const voteFor = (playerId: string): OwnTeamView['ownTeamResults'][number]['votes'][number]['vote'] =>
     result?.votes.find((v) => v.playerId === playerId)?.vote ?? null;
@@ -134,14 +131,22 @@ function VoteDots(props: {
   const total = result?.total ?? 0;
   return (
     <div class="vote-dots">
-      <span class="vote-dots-label">{props.t('own_team_votes')}</span>
-      <div class="vote-dots-group">
+      <span class="vote-dots-label">{t('own_team_votes')}</span>
+      <div class="vote-dots-group" role="list">
         {props.roster.map((player) => {
           const vote = voteFor(player.id);
-          return <span key={player.id} class={`vote-dot ${dotClass(vote)}`} title={voteTitle(player.name, vote)}/>;
+          const voteText = vote ? t(VOTE_KEYS[vote]) : t('no_vote');
+          return (
+            <span
+              key={player.id}
+              role="listitem"
+              class={`vote-dot ${dotClass(vote)}`}
+              aria-label={`${player.name}: ${voteText}`}
+            />
+          );
         })}
       </div>
-      <span class="vote-dot-count">{props.t('voted_count', {voted: String(voted), total: String(total)})}</span>
+      <span class="vote-dot-count">{t('voted_count', {voted: String(voted), total: String(total)})}</span>
     </div>
   );
 }

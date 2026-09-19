@@ -4,7 +4,7 @@ import type { Vote } from '../../../lib/models';
 import type { TranslateFn, TranslationKeys } from '../../../locales';
 import type { OwnTeamView } from './own-team-view';
 
-const VOTE_KEYS: Record<Vote['type'], TranslationKeys> = {
+export const VOTE_KEYS: Record<Vote['type'], TranslationKeys> = {
   Yes: 'vote_yes',
   No: 'vote_no',
   IfNecessary: 'vote_if_necessary',

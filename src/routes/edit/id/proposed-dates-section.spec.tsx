@@ -364,11 +364,17 @@ describe('ProposedDatesRail vote dots', () => {
     expect(html)
       .toContain('<span class="vote-dots-label">Your Team Votes</span>');
     expect(html)
-      .toContain('<span class="vote-dot vote-dot--yes" title="Alice: Yes"></span>');
+      .toContain('<div class="vote-dots-group" role="list">');
     expect(html)
-      .toContain('<span class="vote-dot vote-dot--no" title="Bob: No"></span>');
+      .toContain('<span role="listitem" class="vote-dot vote-dot--yes" aria-label="Alice: Yes"></span>');
     expect(html)
-      .toContain('<span class="vote-dot vote-dot--none" title="Dave: no vote"></span>');
+      .toContain('<span role="listitem" class="vote-dot vote-dot--no" aria-label="Bob: No"></span>');
+    expect(html)
+      .toContain('<span role="listitem" class="vote-dot vote-dot--none" aria-label="Dave: No vote"></span>');
+    // The meaning no longer lives only in a hover title.
+    expect(html)
+      .not
+      .toContain('title="Alice: Yes"');
     expect(html)
       .toContain('>2/3 voted<');
   });
@@ -390,7 +396,7 @@ describe('ProposedDatesRail vote dots', () => {
     const html = renderToString(ProposedDatesRail(railProps(session)));
 
     expect(html)
-      .toContain('<span class="vote-dot vote-dot--ifnecessary" title="Alice: IfNecessary"></span>');
+      .toContain('<span role="listitem" class="vote-dot vote-dot--ifnecessary" aria-label="Alice: if necessary"></span>');
   });
 });
 

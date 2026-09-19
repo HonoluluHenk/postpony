@@ -6,6 +6,6 @@
 
 **Status:** ready-for-agent
 
-- [ ] The vote-dot group announces each player's vote ("Yes"/"If necessary"/"No"/"no vote") through the accessibility tree; no meaning lives only in `title`.
-- [ ] Each dot is reachable and comprehensible without sight and without a pointer; the visual dots and the numeric count text are unchanged.
-- [ ] The render spec asserts that the group's accessible labels map players to their votes and abstentions; a render spec or a11y check passes on the edit rail.
+- [x] The vote-dot group announces each player's vote ("Yes"/"If necessary"/"No"/"no vote") through the accessibility tree; no meaning lives only in `title`.
+- [x] Each dot is reachable and comprehensible without sight and without a pointer; the visual dots and the numeric count text are unchanged.
+- [x] The render spec asserts that the group's accessible labels map players to their votes and abstentions; a render spec or a11y check passes on the edit rail.

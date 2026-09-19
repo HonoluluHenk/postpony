@@ -265,9 +265,9 @@ describe('EditPage week-grouped date rows', () => {
     expect(html)
       .toContain('class="vote-dots"');
     expect(html)
-      .toContain('<span class="vote-dot vote-dot--yes"');
+      .toContain('<span role="listitem" class="vote-dot vote-dot--yes" aria-label="Alice: Yes"></span>');
     expect(html)
-      .toContain('<span class="vote-dot vote-dot--no"');
+      .toContain('<span role="listitem" class="vote-dot vote-dot--no" aria-label="Bob: No"></span>');
     // The redesign keeps the dots but restores the three vote tables.
     expect(html)
       .toContain('<details id="own-team-votes" class="votes-details">');
