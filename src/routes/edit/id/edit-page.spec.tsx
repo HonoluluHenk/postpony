@@ -3,7 +3,7 @@ import merge from 'lodash-es/merge';
 import { aPlayer, aProposedDate, aSession, aVote } from '../../../lib/__test-utils__/builders';
 import type { Postponement } from '../../../lib/models';
 import { getTranslation, inputFormat, languageOptions, type TranslationKeys } from '../../../locales';
-import { EditPage, type EditPageProps } from './edit';
+import { EditGrid, EditPage, type EditPageProps } from './edit';
 import { buildEditPartialsData } from './render-edit-partials';
 
 const t = (key: TranslationKeys, params?: Record<string, string>): string =>
@@ -322,6 +322,44 @@ describe('EditPage sidebar roster and generator', () => {
     expect(html)
       .not
       .toContain('Match:');
+  });
+});
+
+describe('EditPage generator memory key', () => {
+  const home = {championship: 'MTTV 26/27', group: '219397', teamtable: '1732195'};
+  const away = {championship: 'MTTV 26/27', group: '219397', teamtable: '1732193'};
+  const expectedKey = `postpony-generator-${encodeURIComponent('MTTV 26/27|219397|1732195')}`;
+
+  it('emits the memory key on the generator form when the organizer has an identity', () => {
+    const session = buildSession({homeTeamIdentity: home, guestTeamIdentity: away});
+    const html = renderToString(EditPage(baseProps({session})));
+
+    expect(html)
+      .toContain(`data-generator-memory-key="${expectedKey}"`);
+  });
+
+  it('omits the memory key on the full page when the organizer has no identity', () => {
+    const html = renderToString(EditPage(baseProps()));
+
+    expect(html)
+      .not
+      .toContain('data-generator-memory-key');
+  });
+
+  it('carries the memory key in a partial grid re-render', () => {
+    const session = buildSession({homeTeamIdentity: home, guestTeamIdentity: away});
+    const html = renderToString(EditGrid(baseProps({session})));
+
+    expect(html)
+      .toContain(`data-generator-memory-key="${expectedKey}"`);
+  });
+
+  it('omits the memory key in a partial grid re-render without an identity', () => {
+    const html = renderToString(EditGrid(baseProps()));
+
+    expect(html)
+      .not
+      .toContain('data-generator-memory-key');
   });
 });
 

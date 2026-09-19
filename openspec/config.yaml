@@ -1,0 +1,49 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  PostPony — a web app for postponing sports matches (club table tennis). SSR (Hono + JSX + HTMX), no SPA framework.
+
+  Domain vocabulary lives in CONTEXT.md at the repo root and ADRs in docs/adr/ — read them before writing and use the glossary's exact terms, never synonyms. Story/spec work for NEW features goes through OpenSpec changes (openspec/changes/), NOT the legacy .scratch/ tracker. .scratch/ remains only as archives of finished features.
+
+  Tech stack: TypeScript (strict), Hono, JSX templates, HTMX (default swap style is 'outerHTML'), BeerCSS (Material 3) in @layer vendor with a custom design-token layer, Valibot for validation, Temporal (lib) via @js-temporal for locale-aware dates. Sessions: SQLite via libSQL/Turso; MemorySessionStore only in tests. Deploy: Cloudflare Worker (wrangler, worker.ts) with Workers Assets for static files.
+
+  Repo layout: src/routes/<feature>/ per-feature routers with *-get.ts / *-post.ts handlers and .tsx JSX components; src/lib/<domain>.ts pure domain modules with overridable newId()/now() seams; src/locales/{en.json,de.json} for translations; src/public/assets/css/design-tokens.css for design tokens. e2e-tests/ uses Playwright with a Page Object Model in e2e-tests/pages/.
+
+  Framework conventions: every handler wraps with handleAppRequest(fn) and receives the App wrapper (app.t(), app.render(), app.requireParam(), app.failure(), app.notFound(), app.isPartial), not the raw Hono Context. Any UI element an HTMX partial renders must also exist in the initial template — tests hit the initial render. Errors render via hx-swap-oob="true" into #error-container.
+
+  Localization: AppLocale = 'de-CH' | 'fr-CH' | 'it-CH' | 'en-US' (default de-CH), resolved from ?lang= → 'lang' cookie → Accept-Language prefix. fr-CH/it-CH reuse the English UI text (ADR-0016). Add new user-facing strings to BOTH locales/en.json and locales/de.json. User-facing German uses informal "du".
+
+  Testing: `npm run test` (unit + browser Vitest projects, coverage on, keep >= 90%), `npm run lint` (tsc + eslint --max-warnings 0), `npm run e2e` (Playwright, starts its own server), `npm run verify` = lint → test → build → e2e (full CI gate). E2E tests test what the user or screenreader sees — behavior, not CSS selectors — for the happy path and likely error paths.
+
+rules:
+  proposal:
+    - "Always include a \"Non-goals\" section."
+    - "List capabilities with their exact paths under openspec/specs/ (reuse existing capability paths verbatim; new ones kebab-case). If no REQUIREMENT changes (pure refactor, tooling, docs), set skip_specs: true on the change instead of inventing requirements."
+    - "Map the change to the ADRs it touches, and say explicitly when it contradicts one."
+  specs:
+    - "Use ONLY the vocabulary defined in CONTEXT.md. For a term not yet in the glossary, define it in the spec and add it to CONTEXT.md in the same change."
+    - "Requirements use SHALL/MUST wording and every one has at least one WHEN/THEN scenario (4 hashtags)."
+    - "Capture externally observable behavior (dates, votes, clashes, secrets, locale, URLs) — never internal class/function names or framework choices."
+    - "Accessibility is a hard requirement: Use semantic html. Note when a partial must be reflected in the initial render."
+  design:
+    - "Decisions that transcend the current feature (domain rules, security, new external dependency, deploy shape) become a new ADR in docs/adr/NNNN-<slug>.md following the existing format. Note which decisions do NOT need an ADR."
+    - "Use typed data over \"stringly\" typings; Valibot schemas for input validation mapped to UI errors with mapValidationToErrors()."
+    - "Consider the `ponytail` lazyc senior developer skill"
+  tasks:
+    - "One task per line, checkbox format \"- [ ] N.N description — verify: <test|command|observable behavior>\"."
+    - "Progress markers: each task may be tracked by commits; start a task by committing progress as 'in-progress', end by updating to 'done'. Update tasks.md checkboxes as they complete."
+    - "Every task includes its tests and completes only when `npm run verify` (lint → test → build → e2e) is green for the change."
+    - "Follow the 'implement' skill: one subagent per ticket, commit after each task."
+    - "Coverage must stay >= 90% for all metrics."
+
+operations:
+  apply:
+    guidance:
+      - "Keep test summaries concise."
+      - "Run `npm run verify` before finishing and report the gate result."
+  archive:
+    guidance:
+      - "Summarize the archive outcome before finishing."
+      - "When the change touched code, update the matching docs/arc42 sections and bump the \"last verified against commit\" line in docs/arc42/README.md (app-arc42-docs skill). Add ADR references to specs/ when a capability spec already encodes the decision."

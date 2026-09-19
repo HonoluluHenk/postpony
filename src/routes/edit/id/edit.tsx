@@ -146,6 +146,7 @@ export function EditGrid(props: EditPageProps): JSX.Element {
             fromDate={props.fromDate}
             toDate={props.toDate}
             organizerPassword={props.organizerPassword}
+            generatorMemoryKey={props.generatorMemoryKey}
           />
         </details>
       </div>
