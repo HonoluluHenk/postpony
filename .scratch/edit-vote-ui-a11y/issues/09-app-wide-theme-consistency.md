@@ -10,3 +10,11 @@
 - [x] The document declares `color-scheme` such that native controls render against the light theme on dark-mode OSes; no dark palette is introduced.
 - [x] The theme-color meta equals the surface token and is sourced from it, not a duplicate literal.
 - [x] A spot accessibility pass across start, vote, join, and edit finds no regressions from the shared family swap.
+
+## Comments
+
+- `fdebf01` ticket done: 09-app-wide-theme-consistency — one `--font` (Plex + vendor fallback) app-wide, `color-scheme: light`, theme-color meta sourced from `--theme-color`/`--surface` via `initThemeColor`, guard specs, arc42 8.11.
+- `3745023` review: 09-app-wide-theme-consistency
+- `7bf0e95` review-fixed: 09-app-wide-theme-consistency — trailing newline in `design-tokens.spec.ts`.
+
+Coordinator: run the e2e + axe spot check across start/vote/join/edit (criterion 4 verification is delegated here — no e2e run in this subtree).
