@@ -31,7 +31,7 @@ export class JoinPage {
   }
 
   get voteHeading(): Locator {
-    return this.page.getByRole('heading', {name: 'Vote on Proposed Dates', level: 2});
+    return this.page.getByRole('heading', {name: 'Your availability', level: 2});
   }
 
   get confirmedHeading(): Locator {
