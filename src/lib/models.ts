@@ -1,5 +1,4 @@
 import type { DateClashes } from './clashes';
-import { DateTimeRange } from './temporal-utils';
 import type { VenueOccupancy } from './venue-occupancy';
 
 // ponytail: single-club by design (multi-tenancy withdrawn, ADR-0001);
@@ -46,11 +45,6 @@ export interface Venue {
   address: string;
   postalCode: string;
   city: string;
-}
-
-export interface AvailabilityRecord {
-  participantId: string;
-  ranges: DateTimeRange[];
 }
 
 export interface Postponement {

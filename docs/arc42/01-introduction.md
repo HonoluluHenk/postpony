@@ -27,7 +27,7 @@ These appeared in earlier planning documents and were dropped (see §11 and the 
 
 - Club Manager role, club registration and onboarding tokens.
 - Venue CRUD with operating hours, blackout dates, or maximum-overlap limits.
-- Player availability entry (the `AvailabilityRecord` type is dead code).
+- Player availability entry.
 - Participant-side date proposals (only the organizer proposes).
 - In-app gating of the voting phases or an "opponent is ready" handshake (the opponent captain accepts dates in-app, but sequencing stays out-of-app).
 - WhatsApp / Email message template generation (only raw-link clipboard copy).

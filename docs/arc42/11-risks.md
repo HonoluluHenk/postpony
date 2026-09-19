@@ -30,7 +30,6 @@ The three shareable secrets — opponent-captain, home-player, away-player — a
 
 | Item                                  | Detail                                                                             | Ticket                         |
 |---------------------------------------|------------------------------------------------------------------------------------|--------------------------------|
-| Dead `AvailabilityRecord` type        | declared, zero references (`models.ts:37-40`)                                      | `.scratch/dead-code/`          |
 | Unenforced coverage thresholds        | no vitest `thresholds` block                                                       | `.scratch/ci-pipeline/`        |
 | README drift                          | Eta, `npm run certs`, `npm run test:e2e`, stale multi-tenancy claims             | fixed this pass                |
 | Stale ADR statuses                    | 0003/0009/0010/0011 were `Proposed` and described Firestore/Docker                 | fixed this pass                |
