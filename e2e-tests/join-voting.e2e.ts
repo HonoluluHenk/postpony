@@ -172,7 +172,7 @@ test.describe('Join and Voting', () => {
     await joinPage.join('Alice');
 
     // Screen readers hear what each set-all button does, not just "Yes".
-    for (const name of ['Set all: Yes', 'Set all: if necessary', 'Set all: No']) {
+    for (const name of ['Set all: Yes', 'Set all: If necessary', 'Set all: No']) {
       await expect(joinPage.setAllControls.getByRole('button', {name, exact: true}))
         .toBeVisible();
     }

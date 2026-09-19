@@ -6,7 +6,7 @@ export type VoteType = 'Yes' | 'No' | 'IfNecessary';
 const VOTE_LABELS: Record<VoteType, string> = {
   Yes: 'Yes',
   No: 'No',
-  IfNecessary: 'if necessary',
+  IfNecessary: 'If necessary',
 };
 
 // The set-all buttons carry an aria-label that names the action ("Set all: Yes"),
@@ -14,7 +14,7 @@ const VOTE_LABELS: Record<VoteType, string> = {
 const SET_ALL_ARIA_LABELS: Record<VoteType, string> = {
   Yes: 'Set all: Yes',
   No: 'Set all: No',
-  IfNecessary: 'Set all: if necessary',
+  IfNecessary: 'Set all: If necessary',
 };
 
 export class JoinPage {
