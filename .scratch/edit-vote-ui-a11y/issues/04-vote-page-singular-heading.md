@@ -9,3 +9,13 @@
 - [x] The document outline contains a single "Vote on Proposed Dates" heading; an in-article heading either reads distinctly or is removed.
 - [x] The new/varied heading text exists in en and de (fr-CH/it-CH reuse English per ADR-0016).
 - [ ] The semantic-structure and axe e2e passes show no duplicate-heading or heading-order violation on the vote page.
+
+## Comments
+
+- `a65fc06` ticket done: 04-vote-page-singular-heading
+- `de4a7f6` review: 04-vote-page-singular-heading
+
+Summary: the vote page's in-article `<h2>` now reads "Your availability" (en) /
+"Deine Verfügbarkeit" (de) instead of duplicating the "Vote on Proposed Dates" h1;
+locale keys + render specs added. Axe/semantic-structure e2e criterion is the
+coordinator's, who must also update `JoinPage.voteHeading` / `join()` (see review).
