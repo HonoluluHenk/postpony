@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] While the vote list is long enough to scroll, "Set all" stays within reach against the top of the viewport; on short lists it stays in-flow.
-- [ ] The existing aria labels and tooltips are intact, the control has a visible focus, and reduced-motion preference degrades it to in-flow.
-- [ ] Bulk-setting a value updates that value across all visible dates and the summary, and the usual save confirmation still appears.
+- [x] While the vote list is long enough to scroll, "Set all" stays within reach against the top of the viewport; on short lists it stays in-flow.
+- [x] The existing aria labels and tooltips are intact, the control has a visible focus, and reduced-motion preference degrades it to in-flow.
+- [x] Bulk-setting a value updates that value across all visible dates and the summary, and the usual save confirmation still appears.
 - [ ] The vote e2e and axe checks pass with the sticky active.

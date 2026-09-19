@@ -82,6 +82,16 @@
     flex: 1;
   }
 
+  /* BeerCSS gives `main.responsive` `overflow-x: hidden`, which turns it into
+     a scroll container and silently breaks `position: sticky` for every
+     sticky descendant (the edit sidebar AND the vote "Set all" bar): they pin
+     to main's non-scrolling box instead of the viewport. `clip` clamps the
+     same horizontal overflow without creating a scroll container, so sticky
+     elements pin to the viewport again. */
+  main.responsive {
+    overflow-x: clip;
+  }
+
   /* Headings: Beer.css defaults (h1 = 3.5625rem) are oversized for this app.
      Pin h1 to a clamp between a phone size and 2rem (desktop) and derive the
      rest from a modular scale via calc(), exposing each computed size as its
@@ -271,6 +281,12 @@
       transition: none;
     }
 
+    /* Reduced motion: the sticky Set-all bar degrades to in-flow so nothing
+       moves or repositions while a Participant scrolls the vote list. */
+    .vote-set-all {
+      position: static;
+    }
+
     .vote-option > .tooltip {
       transition: none;
     }
@@ -350,6 +366,21 @@
      only renders inside <noscript>, so JS users never see it. */
   .vote-save-actions {
     margin-block-start: var(--space-4);
+  }
+
+  /* Set-all stays in reach: on a long vote list the fieldset pins to the top
+     of the vote region while the Participant scrolls, so they can re-bulk
+     without scrolling back up. `sticky` is position-in-flow when the list is
+     too short to scroll, and reduced-motion (below) forces it fully in-flow.
+     The solid surface keeps the overlapping date rows from showing through. */
+  .vote-set-all {
+    position: sticky;
+    top: var(--space-2);
+    z-index: 1;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--border-radius);
+    padding: var(--space-2) var(--space-4);
   }
 
   /* Beer's hover-only trigger would strand keyboard users: focus shows the
