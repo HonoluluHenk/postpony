@@ -248,7 +248,7 @@ test.describe('Postponement Editing', () => {
     await expect(firstRow.locator('.vote-dot--yes'))
       .toHaveCount(1);
     await expect(firstRow.locator('.vote-dot--yes'))
-      .toHaveAttribute('title', 'John Doe: Yes');
+      .toHaveAttribute('aria-label', 'John Doe: Yes');
     await expect(firstRow.locator('.vote-dot--none'))
       .toHaveCount(4);
 
@@ -256,7 +256,7 @@ test.describe('Postponement Editing', () => {
     await expect(secondRow.locator('.vote-dot-count'))
       .toHaveText('1/5 voted');
     await expect(secondRow.locator('.vote-dot--no'))
-      .toHaveAttribute('title', 'John Doe: No');
+      .toHaveAttribute('aria-label', 'John Doe: No');
 
     await checkA11y();
   });

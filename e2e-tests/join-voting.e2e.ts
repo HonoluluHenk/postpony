@@ -186,7 +186,7 @@ test.describe('Join and Voting', () => {
     await expect(joinPage.voteForm.getByRole('heading', {name: /Turnhalle orange, UG, Schule Dennigkofen/}))
       .toHaveCount(2);
     // The per-date radio groups keep date-only legends once the chip is hoisted.
-    for (const legend of ['3/5/2026', '3/12/2026']) {
+    for (const legend of ['Mar 5, 2026', 'Mar 12, 2026']) {
       await expect(joinPage.voteForm.getByRole('group', {name: legend}))
         .toBeVisible();
     }
