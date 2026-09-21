@@ -30,5 +30,13 @@
     // Turso DB URL — wired as a text var. Replace with your instance URL, or set it
     // with `wrangler secret put TURSO_DB_URL` for a non-committed value.
     "TURSO_DB_URL": "libsql://einsatzplaan-honoluluhenk.aws-eu-west-1.turso.io"
+  },
+  "env": {
+    "staging": {
+      "routes": [],
+      "vars": {
+        "TURSO_DB_URL": "libsql://einsatzplan-staging-honoluluhenk.aws-eu-west-1.turso.io"
+      }
+    }
   }
 }
