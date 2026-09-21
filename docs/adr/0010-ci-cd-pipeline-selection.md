@@ -1,9 +1,9 @@
 # ADR 0010: CI/CD Pipeline Selection
 
 ## Status
-Superseded by ADR-0018
+Superseded by ADR-0018 and ADR-0028
 
-> Superseded (2026): this ADR's premise was Dockerized delivery via Coolify, which ADR-0018 replaced with Cloudflare Workers + Turso. No CI/CD pipeline is currently implemented (see arc42 §11).
+> Superseded (2026): this ADR's premise was Dockerized delivery via Coolify, which ADR-0018 replaced with Cloudflare Workers + Turso. ADR-0028 re-selects GitHub Actions for the Workers path: the Verify Gate runs on push/PR, staging deploys on `main` merges, production deploys on `v*` tag pushes. GitHub Actions as the CI tool survived from this ADR; the delivery target did not.
 
 ## Context
 The application is designed as a Dockerized TypeScript SSR application to be deployed via Coolify. To ensure reliable and automated deployments, a CI/CD pipeline is required to build the Docker images and trigger deployments.

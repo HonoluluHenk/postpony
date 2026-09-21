@@ -57,4 +57,4 @@ Single table `sessions (id TEXT PRIMARY KEY, club_id TEXT NOT NULL, data TEXT NO
 
 ## 7.5 CI
 
-**There is no CI.** `.github/workflows` does not exist. `npm run verify` (lint → test → build → e2e) is the manual gate, run locally. ADR-0010 (GitHub Actions) is superseded and was never implemented — see §11.
+**There is no CI yet.** `.github/workflows` does not exist; `npm run verify` (lint → test → build → e2e) is the manual gate, run locally. ADR-0010 (GitHub Actions) is superseded and was never implemented — see §11. The CI/CD pipeline is specified in `.scratch/ci-pipeline/` and recorded in ADR-0028 (GitHub Actions verify gate; staging deploys on `main` merges, production on `v*` tag pushes). This section is updated when the workflow ships.

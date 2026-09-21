@@ -16,14 +16,14 @@
 
 ## 2.2 Organisational Constraints
 
-| Constraint                                       | Detail                                                                         |
-|--------------------------------------------------|--------------------------------------------------------------------------------|
-| Code coverage ≥ 90% for all metrics              | policy in `AGENTS.md`; **not** machine-enforced (no vitest `thresholds` block) |
-| ESLint, all rules at `error`                     | flat config, `strictTypeChecked` + `stylisticTypeChecked`, `--max-warnings 0`  |
-| `explicit-function-return-type`                  | enforced except IIFEs and const arrow assertions                               |
-| `<section>` requires a heading as first child    | accessibility convention                                                       |
-| One context (`CONTEXT.md`) + ADRs in `docs/adr/` | no `CONTEXT-MAP.md` (single domain)                                            |
-| Two Vitest projects under one `vitest run`       | `unit` (node) + `browser` (headless Chromium)                                  |
+| Constraint                                       | Detail                                                                        |
+|--------------------------------------------------|-------------------------------------------------------------------------------|
+| Code coverage ≥ 90% for all metrics              | machine-enforced (`vitest` `thresholds`, per-file, 90 on all four metrics)    |
+| ESLint, all rules at `error`                     | flat config, `strictTypeChecked` + `stylisticTypeChecked`, `--max-warnings 0` |
+| `explicit-function-return-type`                  | enforced except IIFEs and const arrow assertions                              |
+| `<section>` requires a heading as first child    | accessibility convention                                                      |
+| One context (`CONTEXT.md`) + ADRs in `docs/adr/` | no `CONTEXT-MAP.md` (single domain)                                           |
+| Two Vitest projects under one `vitest run`       | `unit` (node) + `browser` (headless Chromium)                                 |
 
 ## 2.3 Conventions and Frameworks
 
