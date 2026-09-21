@@ -2,29 +2,30 @@
 
 ## 2.1 Technical Constraints
 
-| Constraint                                    | Rationale                                        | Source                                                                          |
-|-----------------------------------------------|--------------------------------------------------|---------------------------------------------------------------------------------|
-| TypeScript, strict + extra strictness         | type safety for scheduling logic                 | `tsconfig.json` (`strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`, …) |
-| `jsx: react-jsx`, `jsxImportSource: hono/jsx` | JSX views are Hono components                    | `tsconfig.json`, ADR-0019                                                       |
-| Hono (SSR) + HTMX, no SPA framework           | hypermedia-driven, minimal client JS             | ADR-0003, ADR-0009                                                              |
-| SQLite via `@libsql/client` (Turso in prod)   | one JSON-blob document per session               | ADR-0007/0014, ADR-0018                                                         |
-| Cloudflare Workers + Workers Assets           | production compute + static assets               | ADR-0018                                                                        |
-| Node ≥ 26 (native `Temporal`)                   | date/time handling without a polyfill at runtime | `README.md`, `mise.toml`, `package.json` (`engines.node`)                        |
-| Web Crypto only (PBKDF2-SHA256)               | password hashing portable to Workers             | `src/lib/crypto-utils.ts`                                                       |
-| No traditional accounts / login               | players join via token link                      | ADR-0002, ADR-0013                                                              |
-| Valibot for input validation                  | tree-shakeable schema validation                 | ADR-0012                                                                        |
+| Constraint                                         | Rationale                                        | Source                                                                          |
+|----------------------------------------------------|--------------------------------------------------|---------------------------------------------------------------------------------|
+| TypeScript, strict + extra strictness              | type safety for scheduling logic                 | `tsconfig.json` (`strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`, …) |
+| `jsx: react-jsx`, `jsxImportSource: hono/jsx`      | JSX views are Hono components                    | `tsconfig.json`, ADR-0019                                                       |
+| Hono (SSR) + HTMX, no SPA framework                | hypermedia-driven, minimal client JS             | ADR-0003, ADR-0009                                                              |
+| SQLite via `@libsql/client` (Turso in prod)        | one JSON-blob document per session               | ADR-0007/0014, ADR-0018                                                         |
+| Cloudflare Workers + Workers Assets                | production compute + static assets               | ADR-0018                                                                        |
+| Node ≥ 26 (native `Temporal`)                      | date/time handling without a polyfill at runtime | `mise.toml`, `package.json` (`engines.node`), README                            |
+| Single toolchain via mise (Node 26, mkcert, turso) | same runtime across local and CI, no drift       | `mise.toml`, `.github/workflows/ci.yml` (ADR-0028)                              |
+| Web Crypto only (PBKDF2-SHA256)                    | password hashing portable to Workers             | `src/lib/crypto-utils.ts`                                                       |
+| No traditional accounts / login                    | players join via token link                      | ADR-0002, ADR-0013                                                              |
+| Valibot for input validation                       | tree-shakeable schema validation                 | ADR-0012                                                                        |
 
 ## 2.2 Organisational Constraints
 
-| Constraint                                       | Detail                                                                        |
-|--------------------------------------------------|-------------------------------------------------------------------------------|
-| Code coverage ≥ 90% for all metrics              | machine-enforced (`vitest` `thresholds`, per-file, 90 on all four metrics)    |
-| ESLint, all rules at `error`                     | flat config, `strictTypeChecked` + `stylisticTypeChecked`, `--max-warnings 0` |
-| `explicit-function-return-type`                  | enforced except IIFEs and const arrow assertions                              |
-| `<section>` requires a heading as first child    | accessibility convention                                                      |
-| One context (`CONTEXT.md`) + ADRs in `docs/adr/` | no `CONTEXT-MAP.md` (single domain)                                           |
-| Two Vitest projects under one `vitest run`       | `unit` (node) + `browser` (headless Chromium)                                 |
-| GitHub Actions gate on every push/PR/dispatch    | `unit` + `e2e` required checks, no secrets (see §7.5)                         |
+| Constraint                                       | Detail                                                                            |
+|--------------------------------------------------|-----------------------------------------------------------------------------------|
+| Code coverage ≥ 90% for all metrics              | machine-enforced (`vitest` `thresholds`, per-file, 90 on all four metrics)        |
+| ESLint, all rules at `error`                     | flat config, `strictTypeChecked` + `stylisticTypeChecked`, `--max-warnings 0`     |
+| `explicit-function-return-type`                  | enforced except IIFEs and const arrow assertions                                  |
+| `<section>` requires a heading as first child    | accessibility convention                                                          |
+| One context (`CONTEXT.md`) + ADRs in `docs/adr/` | no `CONTEXT-MAP.md` (single domain)                                               |
+| Two Vitest projects under one `vitest run`       | `unit` (node) + `browser` (headless Chromium)                                     |
+| GitHub Actions gate on every push/PR/dispatch    | `unit` + `e2e` are the required checks on `main`; gate jobs use no secrets (§7.5) |
 
 ## 2.3 Conventions and Frameworks
 
