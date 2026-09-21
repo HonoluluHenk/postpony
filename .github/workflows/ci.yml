@@ -50,8 +50,11 @@ jobs:
         run: npm run build
 
       # Separate step, not part of `npm run verify`: validates the Worker
-      # bundle via wrangler --dry-run. Keeps the local gate fast while CI owns
-      # disposable bundle validation.
+      # bundle via wrangler --dry-run. `--env=""` pins the top-level
+      # (production) config explicitly — once wrangler.jsonc defines
+      # environments, an unpinned dry-run still works but leaves the target
+      # ambiguous. Keeps the local gate fast while CI owns disposable bundle
+      # validation; the staging bundle gets its own dry-run in deploy-staging.
       - name: Validate Worker bundle
         run: npm run worker:build
 
@@ -108,12 +111,27 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      # Cheap fast-fail before anything touches the account: the staging env
+      # config and bundle are validated here (no credentials needed), so a bad
+      # env block or bundle breaks the pipeline before it reaches the deploy.
+      - name: Validate staging Worker bundle (dry-run)
+        run: npx wrangler deploy --dry-run --env staging
+
       # The worker reads TURSO_DB_AUTH_TOKEN as its Turso auth. It stays a
       # Worker secret — `--env staging` scopes it to postpony-staging, never the
       # production worker — and is refreshed from the GitHub secret on every
-      # deploy, so a token rotation is just a secret edit.
+      # deploy, so a token rotation is just a secret edit. Fail-loud guard: with
+      # a missing secret the pipe would otherwise mint a worker with dead DB
+      # auth and still report a successful deploy.
       - name: Set staging Turso auth token (secret)
-        run: echo "${{ secrets.TURSO_DB_AUTH_TOKEN_STAGING }}" | npx wrangler secret put TURSO_DB_AUTH_TOKEN --env staging
+        env:
+          TURSO_DB_AUTH_TOKEN: ${{ secrets.TURSO_DB_AUTH_TOKEN_STAGING }}
+        run: |
+          if [ -z "$TURSO_DB_AUTH_TOKEN" ]; then
+            echo "::error::GitHub secret TURSO_DB_AUTH_TOKEN_STAGING is empty; refusing to deploy staging."
+            exit 1
+          fi
+          printf '%s' "$TURSO_DB_AUTH_TOKEN" | npx wrangler secret put TURSO_DB_AUTH_TOKEN --env staging
 
       # Lazy migration lives in the worker (first request migrates the store),
       # so a deploy is just a deploy — no migration step in the pipeline.
