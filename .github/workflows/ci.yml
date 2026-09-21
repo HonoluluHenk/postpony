@@ -1,12 +1,12 @@
 name: CI
 
-# Verify gate + staging deploy, ADR-0028. Runs the full gate (lint → test with
+# Verify gate + deploy jobs, ADR-0028. Runs the full gate (lint → test with
 # 90 % per-file coverage → build → e2e) plus the Worker bundle dry-run on every
 # push (any branch or tag), pull request, and manual dispatch. Consistent with
 # the Cloudflare Workers target (ADR-0018) — there is no Docker/Coolify
-# anywhere. `deploy-staging` (ticket 05) then feeds the shared staging slot on
-# main merges and manual dispatch; `deploy-prod` (ticket 06) lands in this same
-# file for `v*` tag pushes.
+# anywhere. `deploy-staging` feeds the shared staging slot on main merges and
+# manual dispatch; `deploy-prod` promotes to production (`spielverlegung.date`)
+# only when a `v*` release tag is pushed.
 on:
   push:
   pull_request:
@@ -17,10 +17,10 @@ permissions:
   contents: read
 
 # ponytail: the checkout → mise → npm ci provisioning block is duplicated per
-# job (three here; the gate jobs add playwright-install, deploy-prod in ticket
-# 06 makes it four). Upgrade path: extract one local composite action
-# (actions/...) reusing this block with a `uses:` per job — only worth it once
-# the fourth copy lands.
+# job (four here; the gate jobs add playwright-install). With the fourth copy
+# landed, the named upgrade path — extract one local composite action reusing
+# this block with a `uses:` per job — is now worth it; deferred here to keep
+# this ticket scoped to the deploy path and its tag/version guard.
 jobs:
   unit:
     runs-on: ubuntu-latest
@@ -137,3 +137,65 @@ jobs:
       # so a deploy is just a deploy — no migration step in the pipeline.
       - name: Deploy staging Worker
         run: npm run worker:deploy -- --env staging
+
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: [unit, e2e]
+    # Production is promote-only via an explicit release tag (ADR-0028): a `v*`
+    # tag push is the single release gesture. The unfiltered `push:` trigger
+    # also fires for branches, PRs and dispatches, so this guard is what keeps
+    # production unreachable by a merge, a PR, or a stray dispatch — and a
+    # branch named like a tag can never slip in: the ref prefix pins the event
+    # to an actual tag push.
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    env:
+      # Credentials come from GitHub secrets only; nothing sensitive is
+      # committed. Account id is a secret, never a wrangler.jsonc entry.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install toolchain (mise)
+        uses: jdx/mise-action@v4
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # Belt-and-suspenders veto: the release script (ticket 03) produces
+      # matching tag/manifest pairs from its side; this guard rejects
+      # mismatches from the other side. Anything a human hand-tags whose name
+      # is not `v${npm_package_version}` at this commit is not a release and
+      # must not touch production. Fails before any account operation.
+      - name: Guard — tag must equal the package.json version
+        run: |
+          EXPECTED_TAG="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$EXPECTED_TAG" ]; then
+            echo "::error::Refusing production deploy: pushed tag '$GITHUB_REF_NAME' does not match package.json version '$EXPECTED_TAG' at this commit."
+            exit 1
+          fi
+
+      # The worker reads TURSO_DB_AUTH_TOKEN as its Turso auth. It stays a
+      # Worker secret on the production worker (no --env → the top-level
+      # `postpony` config, same target as the deploy below) and is refreshed
+      # from the GitHub secret on every release deploy, so a token rotation is
+      # just a secret edit — the same flow staging proved. Fail-loud guard: a
+      # missing secret would otherwise mint a worker with dead DB auth and
+      # still report a successful deploy.
+      - name: Set production Turso auth token (secret)
+        env:
+          TURSO_DB_AUTH_TOKEN: ${{ secrets.TURSO_DB_AUTH_TOKEN }}
+        run: |
+          if [ -z "$TURSO_DB_AUTH_TOKEN" ]; then
+            echo "::error::GitHub secret TURSO_DB_AUTH_TOKEN is empty; refusing to deploy production."
+            exit 1
+          fi
+          printf '%s' "$TURSO_DB_AUTH_TOKEN" | npx wrangler secret put TURSO_DB_AUTH_TOKEN
+
+      # Lazy migration lives in the worker (first request migrates the store),
+      # so a deploy is just a deploy — no migration step in the pipeline. No
+      # --env: the default target is the top-level `postpony` production
+      # config with the custom-domain route.
+      - name: Deploy production Worker
+        run: npm run worker:deploy
