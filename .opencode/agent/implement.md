@@ -22,9 +22,9 @@ Your dispatch brief always carries: the worktree path, the spec path, and the ti
 
 Work the ticket end to end:
 
-1. Load the `implement` skill and follow it: use /tdd where possible at the pre-agreed seams; run typechecking regularly and single test files regularly; run the full test suite once at the end; once done, use /code-review to review the work.
+1. Load the `implement` skill and follow it
 2. Ticking: tick each `- [ ]` box in your ticket file as soon as that acceptance criterion is implemented; intermediate ticks stay uncommitted so progress is visible live in the worktree.
-3. Commits (implement-all rules, baked in): the worktree is shared, so stage only your ticket's own files — never `git add -A`. Commit per step with explicit paths and a step-naming message:
+3. Commits: the worktree is shared, so stage only your ticket's own files — never `git add -A`. Commit per step with explicit paths and a step-naming message:
     - `ticket done: <NN>-<slug>` — implementation plus the ticked ticket file;
     - `review: <NN>-<slug>` — code-review findings saved to `.scratch/<feature>/reviews/<NN>-<slug>.md`;
     - `review-fixed: <NN>-<slug>` — only when the review found fixes to make;

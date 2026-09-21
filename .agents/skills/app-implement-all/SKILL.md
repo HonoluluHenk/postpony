@@ -41,6 +41,8 @@ Done when: every ticket is ticked and committed on the feature branch.
 
 ## 5. Final gate
 
+Set the status in the spec file to done and commit.
+
 If the source branch (usually `main`) changed in the meantime:
 
 - reintegrate it into the feature branch
