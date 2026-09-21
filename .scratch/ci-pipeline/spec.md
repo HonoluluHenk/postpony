@@ -1,6 +1,6 @@
 # ci-pipeline: GitHub Actions Verify Gate + Tag-Driven Workers Deploy
 
-Status: ready-for-agent
+Status: done
 
 ## Problem Statement
 
