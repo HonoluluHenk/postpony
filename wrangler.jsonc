@@ -33,9 +33,14 @@
   },
   "env": {
     "staging": {
+      "name": "postpony-staging",
+      "workers_dev": true,
       "routes": [],
       "vars": {
-        "TURSO_DB_URL": "libsql://einsatzplan-staging-honoluluhenk.aws-eu-west-1.turso.io"
+        // Staging DB URL — committed var, never the token (that stays a secret).
+        // REPLACE with the URL of the `postpony-staging` Turso DB created in
+        // ticket 01 (`.scratch/ci-pipeline/issues/01-manual-github-setup.md`).
+        "TURSO_DB_URL": "libsql://postpony-staging.aws-eu-west-1.turso.io"
       }
     }
   }
