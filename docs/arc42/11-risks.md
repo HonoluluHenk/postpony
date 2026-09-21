@@ -12,11 +12,9 @@ The system is single-club by design (`DEFAULT_CLUB_ID`). `club_id` is retained a
 
 - **Evidence:** `src/lib/models.ts` `DEFAULT_CLUB_ID`; `session-store.ts` `get()` filters by `id` only.
 
-### R3 — No CI (verify gate is manual)
+### R3 — Resolved: no CI (verify gate was manual)
 
-`.github/workflows` does not exist; ADR-0010 is superseded. Coverage is now machine-enforced (vitest `thresholds`, §02.2), but the `npm run verify` gate is still manual, so the full lint→test→build→e2e sequence only runs locally. Risk: regressions get caught late.
-
-- **Ticket:** `.scratch/ci-pipeline/` (once implemented, mark this risk resolved and point to ADR-0028).
+Historical: `.github/workflows` did not exist; coverage was machine-enforced (vitest `thresholds`, §02.2) but the full `npm run verify` gate only ran locally, so regressions could be caught late. Resolved by the GitHub Actions gate (ADR-0028, §7.5): every push/PR/dispatch now runs lint → test → build → e2e as the `unit` and `e2e` checks. Kept here as history, per the R1/R2 pattern.
 
 ### R4 — Scrape coupling to a third-party site
 
@@ -30,7 +28,6 @@ The three shareable secrets — opponent-captain, home-player, away-player — a
 
 | Item                                  | Detail                                                               | Ticket                  |
 |---------------------------------------|----------------------------------------------------------------------|-------------------------|
-| Manual verify gate (no CI)            | `npm run verify` runs only locally                                   | `.scratch/ci-pipeline/` |
 | README drift                          | Eta, `npm run certs`, `npm run test:e2e`, stale multi-tenancy claims | fixed this pass         |
 | Stale ADR statuses                    | 0003/0009/0010/0011 were `Proposed` and described Firestore/Docker   | fixed this pass         |
 | Worker observability                  | console logger only (pino can't bundle)                              | accepted                |

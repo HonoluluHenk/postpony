@@ -57,4 +57,11 @@ Single table `sessions (id TEXT PRIMARY KEY, club_id TEXT NOT NULL, data TEXT NO
 
 ## 7.5 CI
 
-**There is no CI yet.** `.github/workflows` does not exist; `npm run verify` (lint → test → build → e2e) is the manual gate, run locally. ADR-0010 (GitHub Actions) is superseded and was never implemented — see §11. The CI/CD pipeline is specified in `.scratch/ci-pipeline/` and recorded in ADR-0028 (GitHub Actions verify gate; staging deploys on `main` merges, production on `v*` tag pushes). This section is updated when the workflow ships.
+`ci.yml` (`.github/workflows/`, ADR-0028) runs the full Verify Gate on every push (any branch or tag), pull request, and `workflow_dispatch`, as two parallel jobs — `unit` and `e2e` are the required status checks on `main` (repo-admin step, ticket 01). Neither job uses secrets.
+
+- **`unit`** (`ubuntu-latest`): `jdx/mise-action` installs the mise toolchain from `mise.toml` (Node 26, mkcert, turso), then `npm ci`, Playwright Chromium (for the vitest `browser` project), `npm run lint`, `npm run test` (unit + browser, 90 % per-file coverage), `npm run build`, and — as a separate step — `npm run worker:build` (wrangler `--dry-run` bundle validation, deliberately not part of `npm run verify`).
+- **`e2e`**: same provisioning, plus `/etc/hosts` maps `game-scheduler.localhost` to loopback (RFC 6761 resolution is not guaranteed on the runner) and `scripts/create-certs.sh` regenerates the self-signed TLS cert (mkcert) before `npm run e2e`. The suite runs over HTTPS with the click-tt fixtures — the same shape as local development.
+
+`npm run verify` (lint → test → build → e2e) remains the manual local gate; `npm run check:actionlint` lints the workflow YAML but is deliberately not wired into `verify` or CI (the workflow is validated by running it, not by linting it in the gate).
+
+The staging (`postpony-staging`) and production (`postpony`, `spielverlegung.date`) deploy jobs recorded in ADR-0028 join this workflow later — see §11.

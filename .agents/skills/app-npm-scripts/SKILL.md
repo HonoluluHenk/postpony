@@ -25,6 +25,7 @@ Use this skill whenever you need to:
 | `npm run dev`             | `NODE_ENV=development tsx watch src/index.ts` | Start the Hono server in watch mode for local development.                                       |
 | `npm run dev:test`        | `vitest`                                      | Run Vitest in interactive watch mode for unit tests.                                             |
 | `npm run dev:lint`        | `tsc --noEmit --watch`                        | Continuously type-check `src/` (no JS emitted).                                                  |
+| `npm run check:actionlint`| `actionlint`                                  | MANUAL-only lint of `.github/workflows/*.yml` (via `@kjanat/actionlint`). Deliberately outside the `lint:*` wildcard, so `npm run lint`/`verify` never run it. |
 | `npm run clean`           | `rimraf dist playwright-report test-results`  | Remove build output and Playwright reports.                                                      |
 | `npm start`               | `node dist/index.js`                          | Run the built server (requires `npm run build` first).                                           |
 | `npm run lint`            | `run-s -l lint:*`                             | Aggregator: runs every `lint:*` script in sequence (`lint:source` + `lint:e2e` + `lint:eslint`). |
@@ -87,7 +88,8 @@ itself fans out to `lint:source` + `lint:e2e`). Treat any failure as blocking â€
 
 ## Conventions and Gotchas
 
-- Node.js is pinned to **v26** via `mise.toml`; run `mise install` if your local Node version is wrong.
+- Node.js is pinned to **v26** via `mise.toml`; run `mise install` if your local Node version is wrong. `package.json` documents the floor as `"engines": { "node": ">=26" }`.
+- Manual-only scripts that must never join `npm run lint`/`verify` get a **non-`lint:` name** (e.g. `check:actionlint`): the `lint:*` aggregator wildcard matches every single-level `lint:<name>` script, so a `lint:actionlint` name would silently be wired into `verify` and CI.
 - `tsx` is used as the dev runner; production runs plain `node` on the Vite output.
 - `npm test` runs Vitest **once**. Use `npm run dev:test` for watch mode.
 - `npm run e2e` requires Playwright browsers; if they are missing run

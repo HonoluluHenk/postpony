@@ -4,11 +4,15 @@
   "description": "PostPony - postponing games as quick and easy as the Pony Express",
   "main": "src/index.ts",
   "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
   "scripts": {
     "dev": "APP_USE_FIXTURES=true tsx watch --env-file-if-exists=.env src/index.ts",
     "dev:live": "tsx watch --env-file-if-exists=.env src/index.ts",
     "dev:test": "vitest",
     "dev:lint": "tsc --noEmit --watch",
+    "check:actionlint": "actionlint",
     "clean": "rimraf dist playwright-report test-results coverage",
     "build": "vite build",
     "start": "run-s -n start:*",
@@ -47,6 +51,7 @@
     "@axe-core/playwright": "^4.11.3",
     "@eslint/js": "^10.0.1",
     "@fission-ai/openspec": "^1.13.0",
+    "@kjanat/actionlint": "^1.17.0",
     "@playwright/test": "^1.61.0",
     "@types/convict": "^6.1.6",
     "@types/lodash-es": "^4.17.12",

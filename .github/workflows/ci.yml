@@ -1,0 +1,80 @@
+name: CI
+
+# Verify gate, ADR-0028. Runs the full gate (lint → test with 90 % per-file
+# coverage → build → e2e) plus the Worker bundle dry-run on every push (any
+# branch or tag), pull request, and manual dispatch. Consistent with the
+# Cloudflare Workers target (ADR-0018) — there is no Docker/Coolify anywhere.
+# Deploy jobs (staging/prod) are intentionally absent: they land in the same
+# file via tickets 05/06 and need only the two gate jobs below as `needs` input.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# Gate jobs need no secrets and read the repo only.
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # Repo's single toolchain source: Node 26 (+ mkcert + turso) via mise.toml.
+      - name: Install toolchain (mise)
+        uses: jdx/mise-action@v4
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # The vitest 'browser' project runs headless Chromium through
+      # @vitest/browser-playwright, which reuses Playwright's browser cache.
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit + browser tests (90 % per-file coverage enforced)
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      # Separate step, not part of `npm run verify`: validates the Worker
+      # bundle via wrangler --dry-run. Keeps the local gate fast while CI owns
+      # disposable bundle validation.
+      - name: Validate Worker bundle
+        run: npm run worker:build
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install toolchain (mise)
+        uses: jdx/mise-action@v4
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # The e2e server (and Playwright) use hostname game-scheduler.localhost.
+      # RFC-6761 loopback resolution is not guaranteed on the runner, so map it
+      # explicitly before anything binds.
+      - name: Map game-scheduler.localhost to loopback
+        run: echo "127.0.0.1 game-scheduler.localhost" | sudo tee -a /etc/hosts > /dev/null
+
+      # developer-local-settings/ is gitignored, so the self-signed TLS cert is
+      # regenerated on the runner (mkcert installed by mise above). Playwright
+      # already sets ignoreHTTPSErrors for the self-signed cert.
+      - name: Generate local TLS certificate
+        run: ./scripts/create-certs.sh
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e suite (HTTPS with fixtures)
+        run: npm run e2e
