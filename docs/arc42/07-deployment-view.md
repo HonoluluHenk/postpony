@@ -65,3 +65,7 @@ Single table `sessions (id TEXT PRIMARY KEY, club_id TEXT NOT NULL, data TEXT NO
 `npm run verify` (lint → test → build → e2e) remains the manual local gate; `npm run check:actionlint` lints the workflow YAML but is deliberately not wired into `verify` or CI (the workflow is validated by running it, not by linting it in the gate).
 
 The staging (`postpony-staging`) and production (`postpony`, `spielverlegung.date`) deploy jobs recorded in ADR-0028 join this workflow later — see §11.
+
+## 7.6 Release script
+
+`npm run release` (`scripts/release.mjs`) keeps the release tag and the `package.json` version in lock step. It fails loudly — before any git mutation — on a dirty working tree, an existing `vX.Y.Z` tag, or a version that is neither `X.Y.Z-dev` nor a plain `X.Y.Z` awaiting its first tag; then it runs the Verify Gate (`npm run verify`) and aborts the whole release if that fails; then it bumps `package.json` to the release `X.Y.Z`, commits, creates the annotated `vX.Y.Z` tag at that commit, bumps back to the next `X.Y.0-dev` and commits. It never pushes: it prints `git push` and `git push --tags` for the human, because pushing the tag is what triggers the production deploy (ticket 06). Purely local tooling, deliberately kept out of the vitest coverage include and not unit-tested (see ADR-0028).

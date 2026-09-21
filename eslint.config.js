@@ -114,4 +114,14 @@ export default tseslint.config(
     files: ['scripts/**/*.ts'],
     ...tseslint.configs.disableTypeChecked,
   },
+  {
+    // Standalone Node tooling scripts (e.g. `scripts/release.mjs`) run under
+    // plain Node, not the browser or the type-checked program.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
 );

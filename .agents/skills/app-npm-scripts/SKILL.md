@@ -37,6 +37,7 @@ Use this skill whenever you need to:
 | `npm run build`           | `vite build`                                  | Produce a production bundle in `dist/`.                                                          |
 | `npm run e2e`             | `playwright test e2e-tests`                   | Run Playwright tests in `e2e-tests/` (`*.e2e.ts`).                                               |
 | `npm run verify`          | `npm-run-all lint test build e2e`             | Full verification pipeline. Run this before submitting any change.                               |
+| `npm run release`         | `node scripts/release.mjs`                    | Release bookkeeping for the tag-driven prod deploys: fails on a dirty tree / existing tag / non-`-dev` version, runs `npm run verify`, bumps to the release `X.Y.Z`, commits, annotated `vX.Y.Z` tag, bumps back to `X.Y.0-dev`, prints push commands â€” never pushes. |
 | `npm run playwright:ui`   | `playwright test --ui`                        | Open Playwright's interactive UI runner (local debugging only).                                  |
 
 ## Detailed Guidance
@@ -90,6 +91,7 @@ itself fans out to `lint:source` + `lint:e2e`). Treat any failure as blocking â€
 
 - Node.js is pinned to **v26** via `mise.toml`; run `mise install` if your local Node version is wrong. `package.json` documents the floor as `"engines": { "node": ">=26" }`.
 - Manual-only scripts that must never join `npm run lint`/`verify` get a **non-`lint:` name** (e.g. `check:actionlint`): the `lint:*` aggregator wildcard matches every single-level `lint:<name>` script, so a `lint:actionlint` name would silently be wired into `verify` and CI.
+- `npm run release` is a **shell-out seam, deliberately not unit-tested** (spec "Testing Decisions" exempts it from the vitest coverage surface; it lives in `scripts/`, outside the `src/` coverage include). Its mechanics are exercised by the manual first-release run pushed as a `v*` tag.
 - `tsx` is used as the dev runner; production runs plain `node` on the Vite output.
 - `npm test` runs Vitest **once**. Use `npm run dev:test` for watch mode.
 - `npm run e2e` requires Playwright browsers; if they are missing run
