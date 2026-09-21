@@ -90,12 +90,16 @@ whole point of pinning versions in `mise.toml` and `mise.lock`.
 
 The canonical list lives in `mise.toml`. As of this writing:
 
-| Tool       | Pin (`mise.toml`) | Resolved (`mise.lock`) | Purpose                                                                                         |
-|------------|-------------------|------------------------|-------------------------------------------------------------------------------------------------|
-| `node`     | `26`              | `26.1.0`               | Runtime for the Hono server and all npm scripts.                                                |
-| `mkcert`   | `1`               | `1.4.4`                | Generate local HTTPS certs (`scripts/create-certs.sh`).                                         |
-| `turso`    | `latest`          | `1.0.32`               | Turso CLI (manage the production SQLite database).                                              |
-| `wrangler` | `4`               | `4.133.0`              | Deploy/validate the Cloudflare Worker (`worker:build`, `worker:deploy`, `secret put`, `types`). |
+| Tool     | Pin (`mise.toml`) | Resolved (`mise.lock`) | Purpose                                                 |
+|----------|-------------------|------------------------|---------------------------------------------------------|
+| `node`   | `26`              | `26.9.0`               | Runtime for the Hono server and all npm scripts.        |
+| `mkcert` | `1`               | `1.4.4`                | Generate local HTTPS certs (`scripts/create-certs.sh`). |
+| `turso`  | `latest`          | `1.0.32`               | Turso CLI (manage the production SQLite database).      |
+
+Note: `wrangler` (Cloudflare Worker deploy/validate: `worker:build`,
+`worker:deploy`, `secret put`, `types`) is a `devDependency` in
+`package.json`, resolved from `node_modules/.bin` — the default choice
+for project-local JS CLIs.
 
 Note: `node` is currently pinned to the `26.x` line (a non-LTS release).
 If a task requires LTS guarantees, propose moving to `24` or `22` via an
@@ -128,10 +132,9 @@ mise upgrade                 # upgrade tools within the pinned constraints
 - Do **not** add language runtimes globally on the host; pin them via
   `mise` so CI and local environments agree.
 - Prefer `package.json` for project-local JS dependencies (Vitest,
-  Playwright, TypeScript, Vite, etc.); use `mise` for system-level CLIs
-  and language runtimes. `mise`'s `npm:` backend exists but should be
-  reserved for CLIs that need to be available outside `npm` scripts.
-  `wrangler` is the current example: it is pinned via `mise` (also used
-  outside npm scripts for `secret put` / `types`) and is deliberately **not** a `devDependency` — do not re-add it there.
+  Playwright, TypeScript, Vite, wrangler, etc.); use `mise` for
+  system-level CLIs and language runtimes. `mise`'s `npm:` backend is
+  reserved for CLIs that need to be available outside an `npm install`
+  (e.g. in a bare shell or CI step that has not run `npm ci`).
 - If a tool genuinely cannot be installed via `mise`, document the reason
   in the PR/commit and propose an ADR if it becomes a recurring need.

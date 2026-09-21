@@ -29,7 +29,7 @@ flowchart TB
 ## 7.2 Cloudflare Workers (production)
 
 - `wrangler.jsonc`: name `postpony`, `main: worker.ts`, `compatibility_date 2026-09-11`, custom domain route `spielverlegung.date`, Workers Assets directory `src/public` (binding `ASSETS`).
-- `wrangler` itself is a mise-managed CLI (`wrangler = "4"` in `mise.toml`), not an npm dependency; `npm run worker:build` / `worker:deploy` resolve it via the mise-managed `PATH`, and CI must install mise tools first (§7.5).
+- `wrangler` is an npm `devDependency` (see `package.json`); `npm run worker:build` / `worker:deploy` resolve it via `node_modules/.bin`, so an `npm ci`/`npm install` is all that's needed to get it.
 - Vars: `TURSO_DB_URL` (committed) + secret `TURSO_DB_AUTH_TOKEN` (via `wrangler secret put`, never committed). Turso region: AWS eu-west-1.
 - `worker.ts` constructs a module-scope singleton app + store (lazily migrated) and bridges Worker bindings into `process.env` via `applyWorkerEnv`; a 404 falls back to `env.ASSETS.fetch(request)`.
 - `src/worker-runtime.ts` fabricates `globalThis.process` so convict loads.
