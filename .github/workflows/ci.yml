@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read
 
+# ponytail: the checkout → mise → npm ci → playwright-install provisioning block
+# is duplicated per job (two here, four once tickets 05/06 add the deploy jobs).
+# Upgrade path: extract one local composite action (actions/...) reusing this
+# block with a `uses:` per job — only worth it once the third/fourth copy lands.
 jobs:
   unit:
     runs-on: ubuntu-latest
