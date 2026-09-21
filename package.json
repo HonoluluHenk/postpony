@@ -30,6 +30,7 @@
     "db:migrate": "tsx --env-file-if-exists=.env scripts/run-migration.ts",
     "worker:build": "wrangler deploy --dry-run --outdir dist-worker --env=\"\"",
     "worker:deploy": "wrangler deploy",
+    "worker:deploy:staging": "wrangler deploy --env=\"staging\"",
     "verify": "npm-run-all -l lint:* test build e2e",
     "release": "node scripts/release.mjs",
     "playwright:ui": "playwright test --ui"
