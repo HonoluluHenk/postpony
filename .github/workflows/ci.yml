@@ -89,7 +89,7 @@ jobs:
         run: npm run e2e
 
       - name: Upload screenshots
-        if: always()
+        if: '!cancelled()'
         uses: actions/upload-artifact@v7
         with:
           name: Screenshots
