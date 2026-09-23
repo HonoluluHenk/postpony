@@ -56,6 +56,10 @@ export default defineConfig({
   // machines / under contention.
   use: {
     baseURL: E2E_BASE_URL,
+    colorScheme: 'light',
+    contextOptions: {reducedMotion: 'no-preference'},
+    locale: 'en-US',
+    timezoneId: 'UTC',
     // Explicit desktop default so the committed screenshot baselines have a
     // documented, stable width dependency. Keep in sync with `desktop` in
     // e2e-tests/viewports.ts.
