@@ -107,6 +107,9 @@ test.describe('Join and Voting', () => {
     expect(await page.evaluate(() => window.scrollY))
       .toBe(0);
 
+    // Wait for the focused choice's tooltip fade before measuring contrast.
+    await expect(page.getByRole('tooltip', {name: 'I don\'t have time'}))
+      .toHaveCSS('opacity', '1');
     await checkA11y();
   });
 
@@ -738,9 +741,9 @@ test.describe('Click-to-vote from the calendar export', () => {
 
 test.describe('Scriptless vote submission', () => {
   test('happy path: a no-JS participant registers, saves a vote, and it persists', async ({
-    browser,
-    page,
-  }) => {
+                                                                                            browser,
+                                                                                            page,
+                                                                                          }) => {
     const {session} = await EditPage.createSession(page, ['2026-06-01T20:00']);
 
     const context = await browser.newContext({javaScriptEnabled: false});
@@ -773,9 +776,9 @@ test.describe('Scriptless vote submission', () => {
   });
 
   test('likely error path: submitting as an unknown player routes back to identify', async ({
-    browser,
-    page,
-  }) => {
+                                                                                              browser,
+                                                                                              page,
+                                                                                            }) => {
     const {session} = await EditPage.createSession(page, ['2026-06-01T20:00']);
 
     const context = await browser.newContext({javaScriptEnabled: false});
