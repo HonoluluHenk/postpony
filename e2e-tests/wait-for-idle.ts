@@ -1,9 +1,26 @@
 import type { Page } from '@playwright/test';
 
-// Await web-font loading before taking a screenshot. A screenshot captured
-// while a fallback font is still swapping in has different text metrics than
-// the committed baseline, which trips the 2 % screenshot tolerance. `ready`
-// resolves once every font requested so far has finished loading.
 export async function waitForIdle(page: Page): Promise<void> {
-  await page.evaluate(() => document.fonts.ready);
+  await page.waitForLoadState('load');
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(
+      Array.from(document.images, async image => image.decode()
+        .catch(() => undefined)),
+    );
+  });
+  await page.waitForLoadState('networkidle');
+  await page.evaluate(
+    () => new Promise<void>(resolve => {
+      function onFrame(): void {
+        requestAnimationFrame(resolveFrame);
+      }
+
+      function resolveFrame(): void {
+        resolve();
+      }
+
+      requestAnimationFrame(onFrame);
+    }),
+  );
 }
