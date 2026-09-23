@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import { EditPage, JoinPage, OpponentPage } from './pages';
+import { waitForIdle } from './wait-for-idle';
 
 // Pulls one `vote-<dateId>=<choice>` link out of an exported .ics, proving the
 // external contract a calendar client consumes. Unfolds RFC 5545 line folding
@@ -477,6 +478,7 @@ test.describe('Join and Voting', () => {
     await expect(joinPage.heading)
       .toBeVisible();
     await checkA11y();
+    await waitForIdle(page);
     await expect(page)
       .toHaveScreenshot('join.png', {fullPage: true});
 

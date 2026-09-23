@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import { EditPage, ScrapePage, StartPage } from './pages';
+import { waitForIdle } from './wait-for-idle';
 
 test.describe('Postponement Creation', () => {
   let startPage: StartPage;
@@ -65,6 +66,7 @@ test.describe('Postponement Creation', () => {
     await expect(scrapePage.heading)
       .toBeVisible();
     await checkA11y();
+    await waitForIdle(page);
     await expect(page)
       .toHaveScreenshot('scrape-leagues.png', {fullPage: true});
 

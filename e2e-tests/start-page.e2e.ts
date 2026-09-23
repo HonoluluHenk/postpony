@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
 import { StartPage } from './pages';
+import { waitForIdle } from './wait-for-idle';
 
 test.describe('Start Page', () => {
   let startPage: StartPage;
@@ -104,6 +105,8 @@ test.describe('Start Page', () => {
       .toBeVisible();
 
     await checkA11y();
-    await expect(page).toHaveScreenshot('start.png', {fullPage: true});
+    await waitForIdle(page);
+    await expect(page)
+      .toHaveScreenshot('start.png', {fullPage: true});
   });
 });

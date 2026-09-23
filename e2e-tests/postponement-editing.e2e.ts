@@ -2,6 +2,7 @@ import { expect, test } from './fixtures';
 import { EditPage, JoinPage, OpponentPage } from './pages';
 import type { VoteType } from './pages/JoinPage';
 import type { SessionFixture } from './test-session';
+import { waitForIdle } from './wait-for-idle';
 
 test.describe('Postponement Editing', () => {
   let session: SessionFixture;
@@ -59,6 +60,7 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(2);
 
     await checkA11y();
+    await waitForIdle(page);
     await expect(page)
       .toHaveScreenshot('edit-with-dates.png', {fullPage: true});
   });
@@ -154,6 +156,7 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(1);
 
     await checkA11y();
+    await waitForIdle(page);
     await expect(page)
       .toHaveScreenshot('edit-with-votes.png', {fullPage: true});
   });
@@ -523,6 +526,7 @@ test.describe('Postponement Editing', () => {
     // Language selector is a ≥24px tap target with explicit colors.
     await expect(page.locator('#language-select'))
       .toHaveCSS('min-height', '24px');
+    await waitForIdle(page);
     await expect(page)
       .toHaveScreenshot('edit-empty.png', {fullPage: true});
   });
@@ -612,6 +616,7 @@ test.describe('Postponement Editing', () => {
       .toHaveCount(0);
 
     await checkA11y();
+    await waitForIdle(page);
     await expect(page)
       .toHaveScreenshot('edit-confirmed.png', {fullPage: true});
   });
