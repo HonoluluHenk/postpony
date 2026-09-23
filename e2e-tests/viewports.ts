@@ -7,7 +7,7 @@ export const viewports = {
   phoneSmall: {width: 360, height: 740},
   phone: {width: 390, height: 844},
   tablet: {width: 820, height: 1180},
-  desktop: {width: 1282, height: 745},
+  desktop: {width: 1280, height: 720},
 } as const;
 
 export type ViewportName = keyof typeof viewports;

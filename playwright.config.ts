@@ -56,6 +56,10 @@ export default defineConfig({
   // machines / under contention.
   use: {
     baseURL: E2E_BASE_URL,
+    // Explicit desktop default so the committed screenshot baselines have a
+    // documented, stable width dependency. Keep in sync with `desktop` in
+    // e2e-tests/viewports.ts.
+    viewport: {width: 1280, height: 720},
     trace: 'on-first-retry',
     ignoreHTTPSErrors: true,
   },
