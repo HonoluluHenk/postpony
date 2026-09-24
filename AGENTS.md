@@ -23,14 +23,15 @@ A web app for postponing sports matches. SSR (Hono + JSX + HTMX), no SPA framewo
 
 ## Quick reference
 
-| Command            | What it does                                                                       |
-|--------------------|------------------------------------------------------------------------------------|
-| `npm run dev`      | Dev server with fixtures on port 3000                                              |
-| `npm run dev:live` | Dev server against live click-tt.ch                                                |
-| `npm run test`     | Vitest (coverage on, `@/` → `src/`)                                                |
-| `npm run lint`     | `tsc --noEmit` → `tsc -p tsconfig.e2e.json --noEmit` → `eslint . --max-warnings 0` |
-| `npm run e2e`      | Playwright (starts its own server on `$E2E_APP_PORT`, default 3001)                |
-| `npm run verify`   | lint → test → build → e2e (full CI gate)                                           |
+| Command                | What it does                                                                       |
+|------------------------|------------------------------------------------------------------------------------|
+| `npm run dev`          | Dev server with fixtures on port 3000                                              |
+| `npm run dev:live`     | Dev server against live click-tt.ch                                                |
+| `npm run test`         | Vitest (coverage on, `@/` → `src/`)                                                |
+| `npm run lint`         | `tsc --noEmit` → `tsc -p tsconfig.e2e.json --noEmit` → `eslint . --max-warnings 0` |
+| `npm run e2e`          | Playwright (starts its own server on `$E2E_APP_PORT`, default 3001)                |
+| `npm run e2e-baseline` | Build and regenerate all Playwright screenshot baselines (local maintenance only)  |
+| `npm run verify`       | lint → test → build → e2e (full CI gate)                                           |
 
 Full script catalog, watch loops, and gotchas: the `app-npm-scripts` skill.
 
@@ -126,6 +127,7 @@ docs/adr/             — 19 ADRs
 Unit and e2e conventions live in the `testing` skill: Page Objects and `createSession`, beer.css radio/checkbox toggling, heading levels, fixture builders, `toMatchObject` vs `toEqual`, a11y via `checkA11y`, screenshot baselines. Facts not covered there:
 
 - **Two Vitest projects** run under one `vitest run`: `unit` (node environment, TypeScript specs) and `browser` (headless Chromium, client-side JS specs). No separate npm script.
+- `npm run e2e-baseline` regenerates all screenshot baselines locally; it is intentionally excluded from `npm run verify` and CI, which compare against committed baselines.
 - **`<section>` must have a heading** (`<h1>`–`<h6>`) as first child; layout wrappers use `<div>`. Don't nest `<section>` inside `<section>` unless the inner one is a true subsection.
 
 ## Security model

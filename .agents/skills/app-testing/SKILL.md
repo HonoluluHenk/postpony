@@ -160,10 +160,10 @@ Visual regression via `toHaveScreenshot()` guards against unintended UI/CSS drif
 
 - **Co-location**: assertions live in the existing behavioural test files (e.g. `postponement-editing.e2e.ts`), **not** in a separate `e2e-tests/screenshots/` directory.
 - **Config**: `maxDiffPixelRatio: 0.02` in `playwright.config.ts` under `expect.toHaveScreenshot` — tune the tolerance in one place.
-- **Baseline management**: `npx playwright test --update-snapshots` generates/regenerates baselines. They are written to `e2e-tests/<file>.e2e.ts-snapshots/*.png`, live alongside test results, and are committed to git.
+- **Baseline management**: `npm run e2e-baseline` builds the app, runs the E2E suite, and regenerates all baselines with Playwright's `--update-snapshots all`. Baselines live in `e2e-tests/<file>.e2e.ts-snapshots/*.png` and are committed to git.
 - **Naming convention**: `name` encodes page + state (e.g. `edit-empty`, `edit-with-dates`, `join`).
 - **Full-page**: always pass `fullPage: true` to capture below-fold layout.
-- **Update baselines after CSS/BeerCSS changes**: run `--update-snapshots`, visually verify the diff, then commit.
+- **Update baselines after CSS/BeerCSS changes**: run `npm run e2e-baseline`, visually verify every PNG diff, then commit only intentional changes. Normal verification remains `npm run e2e` / `npm run verify`; CI never regenerates baselines.
 
 ## Conventions
 

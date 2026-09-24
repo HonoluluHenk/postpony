@@ -15,7 +15,7 @@ context: |
 
   Localization: AppLocale = 'de-CH' | 'fr-CH' | 'it-CH' | 'en-US' (default de-CH), resolved from ?lang= → 'lang' cookie → Accept-Language prefix. fr-CH/it-CH reuse the English UI text (ADR-0016). Add new user-facing strings to BOTH locales/en.json and locales/de.json. User-facing German uses informal "du".
 
-  Testing: `npm run test` (unit + browser Vitest projects, coverage on, keep >= 90%), `npm run lint` (tsc + eslint --max-warnings 0), `npm run e2e` (Playwright, starts its own server), `npm run verify` = lint → test → build → e2e (full CI gate). E2E tests test what the user or screenreader sees — behavior, not CSS selectors — for the happy path and likely error paths.
+  Testing: `npm run test` (unit + browser Vitest projects, coverage on, keep >= 90%), `npm run lint` (tsc + eslint --max-warnings 0), `npm run e2e` (Playwright, starts its own server), `npm run e2e-baseline` (local-only build + regenerate all screenshot baselines), `npm run verify` = lint → test → build → e2e (full CI gate; compares committed baselines). E2E tests test what the user or screenreader sees — behavior, not CSS selectors — for the happy path and likely error paths.
 
 rules:
   proposal:

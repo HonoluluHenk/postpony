@@ -88,6 +88,7 @@ npm run verify
 - `npm run lint:e2e`: Run TypeScript type checking on E2E tests.
 - `npm test`: Run unit tests using Vitest.
 - `npm run e2e`: Run end-to-end tests using Playwright (includes accessibility audits).
+- `npm run e2e-baseline`: Build and run Playwright while regenerating all screenshot baselines for local maintenance; review the image diff before committing.
 - `npm run clean`: Remove build and test artifacts.
 
 ### Watch Mode

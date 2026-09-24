@@ -42,7 +42,7 @@ hears e.g. "Delete · Tu, Sep 1, 2026, 8:00 PM" rather than a bare control name.
 
 ## 8.9 Testing architecture
 
-Two Vitest projects under one `vitest run`: `unit` (node, `src/**/*.spec.{ts,tsx}`) and `browser` (headless Chromium, `src/public/assets/js/*.spec.js`) — ADR-0020. Coverage via v8 over `src/**` including client JS. Playwright e2e runs its own server in fixture mode (`https://game-scheduler.localhost:<E2E_APP_PORT>`), with `ignoreHTTPSErrors`, 2 % screenshot tolerance, and Page Objects in `e2e-tests/pages/`.
+Two Vitest projects under one `vitest run`: `unit` (node, `src/**/*.spec.{ts,tsx}`) and `browser` (headless Chromium, `src/public/assets/js/*.spec.js`) — ADR-0020. Coverage via v8 over `src/**` including client JS. Playwright e2e runs its own server in fixture mode (`https://game-scheduler.localhost:<E2E_APP_PORT>`), with `ignoreHTTPSErrors`, 2 % screenshot tolerance, and Page Objects in `e2e-tests/pages/`. Normal runs compare against committed screenshots; local `npm run e2e-baseline` builds and regenerates all screenshots with `--update-snapshots all`, and stays outside `verify` and CI.
 
 ## 8.10 Crawling & indexing policy
 
