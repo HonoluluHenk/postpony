@@ -3,7 +3,7 @@
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: block;
   src: url('../vendor/fonts/IBMPlexSans-Regular.woff2') format('woff2');
 }
 
@@ -11,7 +11,7 @@
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 500;
-  font-display: swap;
+  font-display: block;
   src: url('../vendor/fonts/IBMPlexSans-Medium.woff2') format('woff2');
 }
 
@@ -19,7 +19,7 @@
   font-family: 'IBM Plex Sans';
   font-style: normal;
   font-weight: 600;
-  font-display: swap;
+  font-display: block;
   src: url('../vendor/fonts/IBMPlexSans-SemiBold.woff2') format('woff2');
 }
 
@@ -27,7 +27,7 @@
   font-family: 'IBM Plex Sans Condensed';
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: block;
   src: url('../vendor/fonts/IBMPlexSansCondensed-Regular.woff2') format('woff2');
 }
 
@@ -35,7 +35,7 @@
   font-family: 'IBM Plex Sans Condensed';
   font-style: normal;
   font-weight: 500;
-  font-display: swap;
+  font-display: block;
   src: url('../vendor/fonts/IBMPlexSansCondensed-Medium.woff2') format('woff2');
 }
 
@@ -43,7 +43,7 @@
   font-family: 'IBM Plex Sans Condensed';
   font-style: normal;
   font-weight: 600;
-  font-display: swap;
+  font-display: block;
   src: url('../vendor/fonts/IBMPlexSansCondensed-SemiBold.woff2') format('woff2');
 }
 
